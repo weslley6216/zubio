@@ -27,7 +27,7 @@ bundle exec rspec           # suíte completa
 bundle exec rubocop
 ```
 
-Postgres precisa estar acessível via `config/database.yml` (hoje aponta para localhost). Setup de Docker Compose para Postgres, gems de teste (RSpec/FactoryBot/SimpleCov) e CI ainda estão pendentes — checklist de execução em `01-Arquitetura/Handoff — Setup de Infra Local.md` do vault.
+Postgres precisa estar acessível via `config/database.yml` (hoje aponta para localhost). Docker Compose para Postgres, gems de teste (RSpec/FactoryBot/SimpleCov) e job de teste no CI ainda estão pendentes.
 
 ## Arquitetura em uma linha
 
