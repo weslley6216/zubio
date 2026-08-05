@@ -17,17 +17,18 @@ Decisões completas e o porquê de cada uma: ADRs em `01-Arquitetura/ADR/` do va
 
 ## Comandos essenciais
 
-Ainda não há Docker Compose neste repo — os comandos rodam direto:
+Ambiente via Docker Compose (`docker-compose.yml` + `Dockerfile.dev`), serviços `app` + `db` (Postgres 16, sem Redis). Copiar `.env.example` para `.env` antes do primeiro uso.
 
 ```bash
-bin/rails server            # sobe o app (ou bin/dev, que já roda Tailwind watch + Puma via Procfile.dev)
-bin/rails console
-bin/rails db:create db:migrate
-bundle exec rspec           # suíte completa
-bundle exec rubocop
+docker compose up                                    # sobe app (bin/dev: Puma + Tailwind watch) + db
+docker compose run --rm app bin/rails console
+docker compose run --rm app bin/rails db:create db:migrate
+docker compose run --rm app bundle exec rspec        # suíte completa
+docker compose run --rm app bundle exec rubocop
+docker compose run --rm app bundle install            # após alterar o Gemfile
 ```
 
-Postgres precisa estar acessível via `config/database.yml` (hoje aponta para localhost). Docker Compose para Postgres, gems de teste (RSpec/FactoryBot/SimpleCov) e job de teste no CI ainda estão pendentes.
+`config/database.yml` lê `POSTGRES_HOST`/`POSTGRES_USER`/`POSTGRES_PASSWORD` do `.env` (default local: `localhost`/`postgres`/`postgres`, coerente com o app rodando fora do compose se preciso). CI usa o mesmo `database.yml` com um serviço `postgres:16-alpine` e essas variáveis.
 
 ## Arquitetura em uma linha
 

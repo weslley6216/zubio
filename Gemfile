@@ -18,9 +18,14 @@ gem "stimulus-rails"
 gem "tailwindcss-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
+# Ruby components instead of ERB views [https://www.phlex.fun]
+gem "phlex-rails"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
-# gem "bcrypt", "~> 3.1.7"
+gem "bcrypt", "~> 3.1.7"
+
+# Row-level multi-tenancy scoped by tenant_id [https://github.com/ErwinM/acts_as_tenant]
+gem "acts_as_tenant"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
@@ -54,9 +59,23 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
+
+  # RSpec integration and generators for Rails [https://github.com/rspec/rspec-rails]
+  gem "rspec-rails"
+
+  # Factories instead of fixtures for test data [https://github.com/thoughtbot/factory_bot_rails]
+  gem "factory_bot_rails"
 end
 
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+end
+
+group :test do
+  # Ready-made RSpec matchers for common Rails functionality [https://github.com/thoughtbot/shoulda-matchers]
+  gem "shoulda-matchers"
+
+  # Enforces 100% test coverage [https://github.com/simplecov-ruby/simplecov]
+  gem "simplecov", require: false
 end
