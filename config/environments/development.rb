@@ -15,6 +15,11 @@ Rails.application.configure do
   # Enable server timing.
   config.server_timing = true
 
+  # Allows accessing subdomains via lvh.me (resolves any *.lvh.me to 127.0.0.1)
+  # without touching /etc/hosts. Doesn't affect test: HostAuthorization only
+  # runs when config.hosts isn't empty, and in test config.hosts is always [].
+  config.hosts << ".lvh.me"
+
   # Enable/disable Action Controller caching. By default Action Controller caching is disabled.
   # Run rails dev:cache to toggle Action Controller caching.
   if Rails.root.join("tmp/caching-dev.txt").exist?
