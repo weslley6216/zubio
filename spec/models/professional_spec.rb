@@ -38,6 +38,31 @@ RSpec.describe Professional, type: :model do
     end
   end
 
+  describe "user uniqueness" do
+    it "is invalid when the user is already linked to another professional" do
+      tenant = create(:tenant)
+      user = create(:user, tenant: tenant)
+      create(:professional, :without_user, tenant: tenant, user: user)
+      professional = build(:professional, :without_user, tenant: tenant, user: user)
+
+      is_valid = ActsAsTenant.with_tenant(tenant) { professional.valid? }
+
+      expect(is_valid).to be false
+    end
+
+    it "is valid when each professional has a different user" do
+      tenant = create(:tenant)
+      user_one = create(:user, tenant: tenant)
+      user_two = create(:user, tenant: tenant)
+      create(:professional, :without_user, tenant: tenant, user: user_one)
+      professional = build(:professional, :without_user, tenant: tenant, user: user_two)
+
+      is_valid = ActsAsTenant.with_tenant(tenant) { professional.valid? }
+
+      expect(is_valid).to be true
+    end
+  end
+
   describe "tenant isolation" do
     it "does not include professionals from another tenant" do
       tenant_a = create(:tenant)
