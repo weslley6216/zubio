@@ -38,5 +38,9 @@ module Zubio
 
     # Don't generate system test files.
     config.generators.system_tests = nil
+
+    # "zubio.com.br" has a 2-part TLD (com.br); without this, "zubio" leaks
+    # into request.subdomains and request.subdomain comes out wrong.
+    config.action_dispatch.tld_length = 2
   end
 end
