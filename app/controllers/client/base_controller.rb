@@ -1,4 +1,2 @@
-module Client
-  class BaseController < ApplicationController
-  end
+class Client::BaseController < ApplicationController
 end

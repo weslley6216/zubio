@@ -1,4 +1,2 @@
-module Owner
-  class BaseController < ApplicationController
-  end
+class Owner::BaseController < ApplicationController
 end
