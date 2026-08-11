@@ -19,14 +19,14 @@ class Views::Layouts::Application < Views::Base
         javascript_importmap_tags
         style { raw safe(css_variables) }
       end
-      body(class: "min-h-dvh bg-background text-foreground font-sans", &block)
+      body(class: "min-h-dvh font-sans", &block)
     end
   end
 
   private
 
-  # safe() aqui é seguro porque css_variables só concatena valores que já
-  # passaram pela allowlist de Branding::ColorScale — nunca texto cru de input.
+  # safe() is sound here because css_variables only concatenates values that
+  # already passed Branding::ColorScale's allowlist — never raw user input.
   def css_variables
     ":root{#{@branding.css_variables}}"
   end
