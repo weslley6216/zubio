@@ -49,6 +49,12 @@ RSpec.describe Branding::ColorScale do
       )
     end
 
+    it "assigns RGB channels to the correct hue bucket for fully saturated primary colors" do
+      expect(described_class.new("#FF0000").tokens[900]).to eq("#700000")
+      expect(described_class.new("#00FF00").tokens[900]).to eq("#007000")
+      expect(described_class.new("#0000FF").tokens[900]).to eq("#000070")
+    end
+
     it "returns a well-formed 10-step scale across the hue spectrum, always echoing step 600 verbatim" do
       hues = %w[#E11D48 #16A34A #2563EB #4F46E5 #CA8A04 #0D9488 #DB2777 #84CC16]
 
