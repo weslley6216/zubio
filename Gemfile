@@ -65,6 +65,10 @@ group :development, :test do
 
   # Factories instead of fixtures for test data [https://github.com/thoughtbot/factory_bot_rails]
   gem "factory_bot_rails"
+
+  # Splits the suite across processes/CI jobs so pipeline time scales with
+  # cores instead of test count [https://github.com/grosser/parallel_tests]
+  gem "parallel_tests"
 end
 
 group :development do
@@ -78,4 +82,11 @@ group :test do
 
   # Enforces 100% test coverage [https://github.com/simplecov-ruby/simplecov]
   gem "simplecov", require: false
+
+  # Browser-driven system specs [https://github.com/teamcapybara/capybara]
+  gem "capybara"
+
+  # Drives headless Chrome over CDP directly, no Selenium/chromedriver
+  # in the middle [https://github.com/rubycdp/cuprite]
+  gem "cuprite"
 end
