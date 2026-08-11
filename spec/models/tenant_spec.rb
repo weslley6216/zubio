@@ -67,4 +67,36 @@ RSpec.describe Tenant, type: :model do
       expect(tenant).to be_active
     end
   end
+
+  describe "#cache_key_prefix" do
+    it "includes the tenant id and the branding's updated_at timestamp" do
+      tenant = create(:tenant)
+      branding = create(:branding, tenant: tenant)
+
+      expect(tenant.cache_key_prefix).to eq("t/#{tenant.id}/#{branding.updated_at.to_i}")
+    end
+
+    it "omits the timestamp when the tenant has no branding" do
+      tenant = create(:tenant)
+
+      expect(tenant.cache_key_prefix).to eq("t/#{tenant.id}/")
+    end
+
+    it "differs between tenants" do
+      tenant_a = create(:tenant)
+      tenant_b = create(:tenant)
+
+      expect(tenant_a.cache_key_prefix).not_to eq(tenant_b.cache_key_prefix)
+    end
+
+    it "changes when the tenant's branding is updated" do
+      tenant = create(:tenant)
+      branding = create(:branding, tenant: tenant)
+      prefix_before = tenant.cache_key_prefix
+
+      branding.update_column(:updated_at, branding.updated_at + 1.hour)
+
+      expect(tenant.reload.cache_key_prefix).not_to eq(prefix_before)
+    end
+  end
 end
