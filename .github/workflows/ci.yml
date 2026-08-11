@@ -92,7 +92,10 @@ jobs:
         with:
           bundler-cache: true
 
-      - name: Set up parallel test databases
+      - name: Verify migrations apply cleanly
+        run: bin/rails db:create db:migrate
+
+      - name: Set up remaining parallel test databases
         run: bin/rails parallel:create parallel:load_schema
 
       - name: Run tests in parallel
