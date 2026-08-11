@@ -35,6 +35,14 @@ Convenções de spec compartilhadas por todas as camadas do Zubio. Testes são R
 | Model | `spec/models/` | `:model` | **arch-model** |
 | Controller | `spec/requests/` | `:request` | **arch-controller** |
 | View/Component | `spec/components/` (a criar quando a primeira view existir) | `:component` | **arch-view** |
+| System (e2e) | `spec/system/` (a criar quando a primeira página real existir) | `:system` | esta seção |
+
+## System specs (e2e)
+
+Driver default é `rack_test` (config em `spec/support/capybara.rb`); a tag `js: true` troca para Cuprite (Chrome headless real via CDP) — só quando o teste precisa que CSS/JS realmente rode no browser (ex: token de whitelabel resolvido via `@theme inline`, comportamento de Stimulus/Turbo). Sem `:js`, fica em `rack_test` — mais barato, sem browser real.
+
+- **Um spec de sistema por página/fluxo real, só o happy path.** Casos de borda (validação, isolamento entre tenants, variação de estado) continuam em model/request spec — mais barato e já prova a lógica; repetir a matriz de edge cases em Cuprite só paga custo de browser sem cobrir nada novo.
+- Ainda não existe página real no harness (só `/up` e os probe controllers dos specs em `spec/requests/`) — o primeiro `spec/system/*_spec.rb` de domínio nasce junto com a primeira tela real, e é o momento de fixar o *shape* aqui.
 
 ## Arquivos desta skill
 
