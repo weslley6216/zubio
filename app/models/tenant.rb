@@ -1,6 +1,8 @@
 class Tenant < ApplicationRecord
   RESERVED = %w[www api admin app assets cdn mail status help blog].freeze
 
+  has_one :branding, dependent: :destroy
+
   enum :status, { active: "active", suspended: "suspended" }
 
   validates :subdomain,
