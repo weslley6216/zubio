@@ -1,0 +1,2 @@
+class Branding < ApplicationRecord
+end
