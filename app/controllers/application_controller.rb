@@ -18,6 +18,6 @@ class ApplicationController < ActionController::Base
   end
 
   def cache_key_prefix
-    "t/#{ActsAsTenant.current_tenant.id}/#{ActsAsTenant.current_tenant.branding&.updated_at&.to_i}"
+    ActsAsTenant.current_tenant.cache_key_prefix
   end
 end

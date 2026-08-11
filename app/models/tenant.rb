@@ -12,4 +12,8 @@ class Tenant < ApplicationRecord
     length: { in: 3..63 },
     exclusion: { in: RESERVED }
   validates :name, presence: true
+
+  def cache_key_prefix
+    "t/#{id}/#{branding&.updated_at&.to_i}"
+  end
 end
