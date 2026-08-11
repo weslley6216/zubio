@@ -50,8 +50,8 @@ class Branding::ColorScale
 
   def to_hsl
     r, g, b = rgb
-    max = [r, g, b].max
-    min = [r, g, b].min
+    max = [ r, g, b ].max
+    min = [ r, g, b ].min
     delta = max - min
     lightness = (max + min) / 2.0
     saturation = delta.zero? ? 0.0 : delta / (1 - (2 * lightness - 1).abs)
@@ -67,7 +67,7 @@ class Branding::ColorScale
         60 * (((r - g) / delta) + 4)
       end
 
-    [hue, saturation, lightness]
+    [ hue, saturation, lightness ]
   end
 
   def from_hsl(hue, saturation, lightness)
@@ -77,15 +77,15 @@ class Branding::ColorScale
 
     r, g, b =
       case hue
-      when 0...60 then [c, x, 0]
-      when 60...120 then [x, c, 0]
-      when 120...180 then [0, c, x]
-      when 180...240 then [0, x, c]
-      when 240...300 then [x, 0, c]
-      else [c, 0, x]
+      when 0...60 then [ c, x, 0 ]
+      when 60...120 then [ x, c, 0 ]
+      when 120...180 then [ 0, c, x ]
+      when 180...240 then [ 0, x, c ]
+      when 240...300 then [ x, 0, c ]
+      else [ c, 0, x ]
       end
 
-    [r, g, b]
+    [ r, g, b ]
       .map { |channel| ((channel + m) * 255).round.clamp(0, 255) }
       .map { |value| value.to_s(16).rjust(2, "0") }
       .then { |parts| "##{parts.join}" }
@@ -100,7 +100,7 @@ class Branding::ColorScale
   end
 
   def contrast_ratio(luminance_a, luminance_b)
-    lighter, darker = [luminance_a, luminance_b].max, [luminance_a, luminance_b].min
+    lighter, darker = [ luminance_a, luminance_b ].max, [ luminance_a, luminance_b ].min
     (lighter + 0.05) / (darker + 0.05)
   end
 end
