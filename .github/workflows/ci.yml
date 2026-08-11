@@ -92,9 +92,9 @@ jobs:
         with:
           bundler-cache: true
 
-      - name: Set up database
-        run: bin/rails db:create db:migrate
+      - name: Set up parallel test databases
+        run: bin/rails parallel:create parallel:load_schema
 
-      - name: Run tests
-        run: bundle exec rspec
+      - name: Run tests in parallel
+        run: bin/rails parallel:spec
 
