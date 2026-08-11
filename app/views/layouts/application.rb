@@ -1,8 +1,9 @@
 class Views::Layouts::Application < Views::Base
   include Phlex::Rails::Layout
 
-  def initialize(title:)
+  def initialize(title:, branding:)
     @title = title
+    @branding = branding
   end
 
   def view_template(&block)
@@ -24,13 +25,9 @@ class Views::Layouts::Application < Views::Base
 
   private
 
-  def branding
-    @branding ||= ActsAsTenant.current_tenant.branding || Branding.platform_default
-  end
-
   # safe() aqui é seguro porque css_variables só concatena valores que já
   # passaram pela allowlist de Branding::ColorScale — nunca texto cru de input.
   def css_variables
-    ":root{#{branding.css_variables}}"
+    ":root{#{@branding.css_variables}}"
   end
 end

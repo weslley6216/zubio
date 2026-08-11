@@ -4,7 +4,8 @@ RSpec.describe "Application layout branding", type: :request do
   before do
     stub_const("LayoutProbeController", Class.new(ApplicationController) do
       def show
-        render Views::Layouts::Application.new(title: "Zubio")
+        branding = ActsAsTenant.current_tenant.branding || Branding.platform_default
+        render Views::Layouts::Application.new(title: "Zubio", branding: branding)
       end
     end)
 
