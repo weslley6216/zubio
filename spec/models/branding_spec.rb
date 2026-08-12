@@ -31,6 +31,28 @@ RSpec.describe Branding, type: :model do
 
       expect(branding).not_to be_valid
     end
+
+    it "is invalid when logo content type is not png, jpeg or webp" do
+      branding = build(:branding)
+      branding.logo.attach(
+        io: StringIO.new("%PDF-1.4 fake pdf content"),
+        filename: "logo.pdf",
+        content_type: "application/pdf"
+      )
+
+      expect(branding).not_to be_valid
+    end
+
+    it "is invalid when logo exceeds the maximum upload size" do
+      branding = build(:branding)
+      branding.logo.attach(
+        io: StringIO.new("a" * (Branding::LOGO_MAX_BYTES + 1)),
+        filename: "logo.png",
+        content_type: "image/png"
+      )
+
+      expect(branding).not_to be_valid
+    end
   end
 
   describe ".platform_default" do
