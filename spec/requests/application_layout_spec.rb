@@ -11,8 +11,6 @@ RSpec.describe "Application layout branding", type: :request do
 
     Rails.application.routes.draw do
       get "/layout_probe", to: "layout_probe#show"
-      # pwa_manifest_path is needed here because Rails.application.routes.draw
-      # replaces the whole route set, and the layout under test links to it.
       get "manifest.webmanifest" => "pwa#manifest", as: :pwa_manifest
     end
   end
