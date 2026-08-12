@@ -3,10 +3,7 @@ require "rails_helper"
 RSpec.describe "Owner session", type: :request do
   let(:tenant) { create(:tenant, subdomain: "joes-barbershop") }
 
-  before do
-    host! "#{tenant.subdomain}.zubio.com.br"
-    Rails.cache.clear
-  end
+  before { host! "#{tenant.subdomain}.zubio.com.br" }
 
   describe "GET /owner/session/new" do
     it "renders the login form" do
