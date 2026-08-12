@@ -19,4 +19,16 @@ RSpec.describe "Owner base controller authentication", type: :request do
 
     expect(response).to have_http_status(:ok)
   end
+
+  it "does not restore a session created for another tenant's owner" do
+    other_tenant = create(:tenant, subdomain: "other-salon")
+    owner = create(:user, tenant: other_tenant, email: "owner@example.com", password: "s3cr3t123")
+    host! "#{other_tenant.subdomain}.zubio.com.br"
+    post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
+
+    host! "#{tenant.subdomain}.zubio.com.br"
+    get owner_dashboard_path
+
+    expect(response).to redirect_to(new_owner_session_path)
+  end
 end
