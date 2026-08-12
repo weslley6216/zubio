@@ -28,6 +28,30 @@ RSpec.describe User, type: :model do
 
       expect(user).to be_valid
     end
+
+    it "is invalid without a role" do
+      user = build(:user, role: nil)
+
+      expect(user).not_to be_valid
+    end
+
+    it "rejects a role outside the enum" do
+      expect { build(:user, role: "superadmin") }.to raise_error(ArgumentError)
+    end
+  end
+
+  describe "authentication" do
+    it "authenticates with the correct password" do
+      user = create(:user, password: "s3cr3t123")
+
+      expect(user.authenticate("s3cr3t123")).to eq(user)
+    end
+
+    it "does not authenticate with an incorrect password" do
+      user = create(:user, password: "s3cr3t123")
+
+      expect(user.authenticate("wrong")).to be false
+    end
   end
 
   describe "tenant isolation" do
