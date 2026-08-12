@@ -16,8 +16,11 @@ class Branding < ApplicationRecord
     new(brand_600: DEFAULT_BRAND_600)
   end
 
+  # Falls back to the default color so re-rendering a rejected in-memory
+  # brand_600 (failed form submission) never crashes the layout's CSS
+  # custom properties, which always render regardless of validation state.
   def color_scale
-    @color_scale ||= ColorScale.new(brand_600)
+    @color_scale ||= ColorScale.new(valid_hex_brand_600? ? brand_600 : DEFAULT_BRAND_600)
   end
 
   def css_variables
@@ -40,8 +43,12 @@ class Branding < ApplicationRecord
 
   private
 
+  def valid_hex_brand_600?
+    brand_600.present? && brand_600.match?(ColorScale::HEX)
+  end
+
   def brand_600_meets_contrast_minimum
-    return unless brand_600.present? && brand_600.match?(ColorScale::HEX)
+    return unless valid_hex_brand_600?
     return if ColorScale.new(brand_600).contrast_against_white >= ColorScale::MIN_CONTRAST
 
     errors.add(:brand_600, "não tem contraste suficiente contra branco (mínimo 4.5:1)")

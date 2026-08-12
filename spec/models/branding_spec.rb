@@ -53,6 +53,18 @@ RSpec.describe Branding, type: :model do
 
       expect(branding).not_to be_valid
     end
+
+    it "is invalid when a spoofed image/png header does not match the file's real (PDF) bytes" do
+      branding = build(:branding)
+      branding.logo.attach(
+        io: StringIO.new("%PDF-1.4 fake pdf content"),
+        filename: "logo.png",
+        content_type: "image/png"
+      )
+
+      expect(branding).not_to be_valid
+      expect(branding.logo.blob.content_type).to eq("application/pdf")
+    end
   end
 
   describe ".platform_default" do
@@ -77,6 +89,13 @@ RSpec.describe Branding, type: :model do
 
       expect(branding.css_variables).to include("--brand-600:#4F46E5;")
       expect(branding.css_variables).to include("--on-brand:")
+    end
+
+    it "falls back to the default color instead of raising when brand_600 is not a well-formed hex" do
+      branding = build(:branding, brand_600: "not-a-hex")
+
+      expect { branding.css_variables }.not_to raise_error
+      expect(branding.css_variables).to include("--brand-600:#{Branding::DEFAULT_BRAND_600};")
     end
   end
 

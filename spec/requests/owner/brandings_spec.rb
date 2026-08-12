@@ -47,6 +47,15 @@ RSpec.describe "Owner branding", type: :request do
       expect(tenant.reload.branding.brand_600).to eq("#4F46E5")
     end
 
+    it "rejects a malformed color without crashing the page chrome and does not persist it" do
+      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+
+      patch owner_branding_path, params: { tenant: { name: tenant.name }, branding: { brand_600: "not-a-hex" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(tenant.reload.branding.brand_600).to eq("#4F46E5")
+    end
+
     it "saves a valid logo upload and enqueues icon variant precomputation in the background" do
       create(:branding, tenant: tenant, brand_600: "#4F46E5")
       logo = Rack::Test::UploadedFile.new(Rails.root.join("spec/fixtures/files/logo.png"), "image/png")
