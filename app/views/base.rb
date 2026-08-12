@@ -6,6 +6,8 @@ class Views::Base < Components::Base
   # By default, it inherits from `Components::Base`, but you
   # can change that to `Phlex::HTML` if you want to keep views and
   # components independent.
+  include Phlex::Rails::Helpers::FormWith
+  include Phlex::Rails::Helpers::Flash
 
   # More caching options at https://www.phlex.fun/components/caching
   def cache_store = Rails.cache

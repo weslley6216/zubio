@@ -72,6 +72,8 @@ RSpec.configure do |config|
   # config.filter_gems_from_backtrace("gem name")
 
   config.include FactoryBot::Syntax::Methods
+
+  config.before(:each, type: :request) { Rails.cache.clear }
 end
 
 Shoulda::Matchers.configure do |config|

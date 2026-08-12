@@ -20,4 +20,8 @@ class ApplicationController < ActionController::Base
   def cache_key_prefix
     ActsAsTenant.current_tenant.cache_key_prefix
   end
+
+  def current_branding
+    ActsAsTenant.current_tenant.branding_or_default
+  end
 end
