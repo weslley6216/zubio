@@ -8,6 +8,11 @@ Rails.application.routes.draw do
   get "manifest.webmanifest" => "pwa#manifest", as: :pwa_manifest
   get "service-worker.js" => "pwa#service_worker", as: :pwa_service_worker
 
+  namespace :owner do
+    resource :session, only: %i[new create destroy]
+    resource :dashboard, only: :show, controller: "dashboard"
+  end
+
   # Defines the root path route ("/")
   # root "posts#index"
 end
