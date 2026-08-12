@@ -4,6 +4,7 @@ class Branding < ApplicationRecord
   has_one_attached :logo
 
   DEFAULT_BRAND_600 = "#4F46E5"
+  ICON_SIZES = [ [ 192, "any" ], [ 512, "any" ], [ 512, "maskable" ] ].freeze
 
   validates :brand_600, presence: true, format: { with: ColorScale::HEX }
   validate :brand_600_meets_contrast_minimum
@@ -20,6 +21,18 @@ class Branding < ApplicationRecord
     ramp = color_scale.tokens.map { |step, value| "--brand-#{step}:#{value};" }.join
 
     "#{ramp}--on-brand:#{color_scale.foreground};"
+  end
+
+  def icon_variants
+    return [] unless logo.attached?
+
+    ICON_SIZES.map do |size, purpose|
+      {
+        variant: logo.variant(resize_to_fill: [ size, size ], format: :png),
+        sizes: "#{size}x#{size}",
+        purpose: purpose
+      }
+    end
   end
 
   private

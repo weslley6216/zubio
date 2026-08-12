@@ -87,4 +87,24 @@ RSpec.describe Branding, type: :model do
       expect(result).to include(branding)
     end
   end
+
+  describe "#icon_variants" do
+    it "is empty when no logo is attached" do
+      branding = create(:branding)
+
+      expect(branding.icon_variants).to eq([])
+    end
+
+    it "returns a 192 and 512 'any' variant plus a 512 'maskable' variant when a logo is attached" do
+      branding = create(:branding, :with_logo)
+
+      sizes_and_purposes = branding.icon_variants.map { |icon| [ icon[:sizes], icon[:purpose] ] }
+
+      expect(sizes_and_purposes).to contain_exactly(
+        [ "192x192", "any" ],
+        [ "512x512", "any" ],
+        [ "512x512", "maskable" ]
+      )
+    end
+  end
 end
