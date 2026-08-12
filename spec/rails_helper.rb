@@ -74,6 +74,7 @@ RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
 
   config.before(:each, type: :request) { Rails.cache.clear }
+  config.include ActiveJob::TestHelper, type: :request
 end
 
 Shoulda::Matchers.configure do |config|
