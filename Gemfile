@@ -75,6 +75,9 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+
+  # Runs Procfile.dev (web + css watcher) [https://github.com/ddollar/foreman]
+  gem "foreman", require: false
 end
 
 group :test do
