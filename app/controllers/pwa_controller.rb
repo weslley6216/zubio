@@ -1,5 +1,8 @@
 class PwaController < ApplicationController
-  skip_forgery_protection
+  # Only service_worker trips Rails' cross-origin JS guard (blocks a .js
+  # response from being embedded via <script src> on another origin) —
+  # manifest is JSON and never triggers that check.
+  skip_forgery_protection only: :service_worker
 
   BACKGROUND_COLOR = "#ffffff"
   DEFAULT_ICONS = [
