@@ -15,6 +15,8 @@ class Views::Layouts::Application < Views::Base
         title { @title }
         csrf_meta_tags
         csp_meta_tag
+        meta(name: "theme-color", content: @branding.brand_600)
+        link(rel: "manifest", href: pwa_manifest_path)
         stylesheet_link_tag(:app, "data-turbo-track": "reload")
         javascript_importmap_tags
         style { raw safe(css_variables) }

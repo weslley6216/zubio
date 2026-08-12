@@ -99,4 +99,53 @@ RSpec.describe Tenant, type: :model do
       expect(tenant.reload.cache_key_prefix).not_to eq(prefix_before)
     end
   end
+
+  describe "#branding_or_default" do
+    it "returns the tenant's branding when present" do
+      tenant = create(:tenant)
+      branding = create(:branding, tenant: tenant)
+
+      expect(tenant.branding_or_default).to eq(branding)
+    end
+
+    it "falls back to the platform default when the tenant has no branding" do
+      tenant = create(:tenant)
+
+      expect(tenant.branding_or_default.brand_600).to eq(Branding::DEFAULT_BRAND_600)
+    end
+  end
+
+  describe "#manifest_identity" do
+    it "derives the id from the subdomain" do
+      tenant = create(:tenant, subdomain: "joes-barbershop")
+
+      expect(tenant.manifest_identity[:id]).to eq("/?tenant=joes-barbershop")
+    end
+
+    it "uses the tenant name" do
+      tenant = create(:tenant, name: "Barbearia do Zé")
+
+      expect(tenant.manifest_identity[:name]).to eq("Barbearia do Zé")
+    end
+
+    it "truncates the short_name to 12 characters without an ellipsis" do
+      tenant = create(:tenant, name: "Barbearia do Zé Cortes")
+
+      expect(tenant.manifest_identity[:short_name]).to eq("Barbearia do")
+    end
+
+    it "sets standalone display and portrait orientation for installability" do
+      tenant = create(:tenant)
+
+      expect(tenant.manifest_identity[:display]).to eq("standalone")
+      expect(tenant.manifest_identity[:orientation]).to eq("portrait")
+    end
+
+    it "differs between tenants" do
+      tenant_a = create(:tenant, subdomain: "salon-a")
+      tenant_b = create(:tenant, subdomain: "salon-b")
+
+      expect(tenant_a.manifest_identity[:id]).not_to eq(tenant_b.manifest_identity[:id])
+    end
+  end
 end

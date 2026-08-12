@@ -4,13 +4,14 @@ RSpec.describe "Application layout branding", type: :request do
   before do
     stub_const("LayoutProbeController", Class.new(ApplicationController) do
       def show
-        branding = ActsAsTenant.current_tenant.branding || Branding.platform_default
+        branding = ActsAsTenant.current_tenant.branding_or_default
         render Views::Layouts::Application.new(title: "Zubio", branding: branding)
       end
     end)
 
     Rails.application.routes.draw do
       get "/layout_probe", to: "layout_probe#show"
+      get "manifest.webmanifest" => "pwa#manifest", as: :pwa_manifest
     end
   end
 
@@ -65,5 +66,25 @@ RSpec.describe "Application layout branding", type: :request do
 
     expect(response.body).not_to include("display:none")
     expect(response.body).to include("--brand-600:#{Branding::DEFAULT_BRAND_600};")
+  end
+
+  it "includes a theme-color meta tag matching the tenant's brand" do
+    tenant = create(:tenant, subdomain: "joes-barbershop")
+    create(:branding, tenant: tenant, brand_600: "#4F46E5")
+
+    host! "joes-barbershop.zubio.com.br"
+    get "/layout_probe"
+
+    expect(response.body).to include('<meta name="theme-color" content="#4F46E5">')
+  end
+
+  it "links to the tenant's manifest" do
+    tenant = create(:tenant, subdomain: "joes-barbershop")
+    create(:branding, tenant: tenant)
+
+    host! "joes-barbershop.zubio.com.br"
+    get "/layout_probe"
+
+    expect(response.body).to include('<link rel="manifest" href="/manifest.webmanifest">')
   end
 end
