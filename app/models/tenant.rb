@@ -21,6 +21,19 @@ class Tenant < ApplicationRecord
     branding || Branding.platform_default
   end
 
+  def update_branding!(tenant_attrs:, branding_attrs:, remove_logo:)
+    target_branding = branding || build_branding
+    logo_replaced = branding_attrs[:logo].present?
+
+    transaction do
+      update!(tenant_attrs)
+      target_branding.update!(branding_attrs)
+    end
+
+    target_branding.logo.purge_later if remove_logo && !logo_replaced
+    Branding::PrecomputeIconVariantsJob.perform_later(id) if logo_replaced
+  end
+
   def manifest_identity
     {
       id: "/?tenant=#{subdomain}",

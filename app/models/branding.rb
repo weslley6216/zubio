@@ -5,16 +5,22 @@ class Branding < ApplicationRecord
 
   DEFAULT_BRAND_600 = "#4F46E5"
   ICON_SIZES = [ [ 192, "any" ], [ 512, "any" ], [ 512, "maskable" ] ].freeze
+  LOGO_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
+  LOGO_MAX_BYTES = 5.megabytes
 
   validates :brand_600, presence: true, format: { with: ColorScale::HEX }
   validate :brand_600_meets_contrast_minimum
+  validate :logo_meets_upload_constraints
 
   def self.platform_default
     new(brand_600: DEFAULT_BRAND_600)
   end
 
+  # Falls back to the default color so re-rendering a rejected in-memory
+  # brand_600 (failed form submission) never crashes the layout's CSS
+  # custom properties, which always render regardless of validation state.
   def color_scale
-    @color_scale ||= ColorScale.new(brand_600)
+    @color_scale ||= ColorScale.new(valid_hex_brand_600? ? brand_600 : DEFAULT_BRAND_600)
   end
 
   def css_variables
@@ -37,10 +43,21 @@ class Branding < ApplicationRecord
 
   private
 
+  def valid_hex_brand_600?
+    brand_600.present? && brand_600.match?(ColorScale::HEX)
+  end
+
   def brand_600_meets_contrast_minimum
-    return unless brand_600.present? && brand_600.match?(ColorScale::HEX)
+    return unless valid_hex_brand_600?
     return if ColorScale.new(brand_600).contrast_against_white >= ColorScale::MIN_CONTRAST
 
-    errors.add(:brand_600, :insufficient_contrast)
+    errors.add(:brand_600, "não tem contraste suficiente contra branco (mínimo 4.5:1)")
+  end
+
+  def logo_meets_upload_constraints
+    return unless logo.attached?
+
+    errors.add(:logo, "tipo de arquivo não suportado (use PNG, JPEG ou WEBP)") unless logo.blob.content_type.in?(LOGO_CONTENT_TYPES)
+    errors.add(:logo, "excede o tamanho máximo de 5MB") if logo.blob.byte_size > LOGO_MAX_BYTES
   end
 end
