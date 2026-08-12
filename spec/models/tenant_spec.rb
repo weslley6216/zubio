@@ -115,6 +115,71 @@ RSpec.describe Tenant, type: :model do
     end
   end
 
+  describe "#update_branding!" do
+    it "updates the tenant name and the branding attributes atomically" do
+      tenant = create(:tenant, name: "Old Name")
+      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+
+      tenant.update_branding!(tenant_attrs: { name: "New Name" }, branding_attrs: { brand_600: "#2F6FED" }, remove_logo: false)
+
+      expect(tenant.reload.name).to eq("New Name")
+      expect(tenant.branding.reload.brand_600).to eq("#2F6FED")
+    end
+
+    it "rolls back the tenant name change when the branding attributes are invalid" do
+      tenant = create(:tenant, name: "Old Name")
+      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+
+      expect {
+        tenant.update_branding!(tenant_attrs: { name: "New Name" }, branding_attrs: { brand_600: "not-a-hex" }, remove_logo: false)
+      }.to raise_error(ActiveRecord::RecordInvalid)
+
+      expect(tenant.reload.name).to eq("Old Name")
+    end
+
+    it "enqueues icon variant precomputation when a new logo is included" do
+      tenant = create(:tenant)
+      create(:branding, tenant: tenant)
+      logo = fixture_file_upload("spec/fixtures/files/logo.png", "image/png")
+
+      expect {
+        tenant.update_branding!(tenant_attrs: { name: tenant.name }, branding_attrs: { brand_600: "#4F46E5", logo: logo }, remove_logo: false)
+      }.to have_enqueued_job(Branding::PrecomputeIconVariantsJob).with(tenant.id)
+    end
+
+    it "does not enqueue icon variant precomputation when no logo is included" do
+      tenant = create(:tenant)
+      create(:branding, tenant: tenant)
+
+      expect {
+        tenant.update_branding!(tenant_attrs: { name: tenant.name }, branding_attrs: { brand_600: "#4F46E5" }, remove_logo: false)
+      }.not_to have_enqueued_job(Branding::PrecomputeIconVariantsJob)
+    end
+
+    it "purges the current logo when remove_logo is true and no replacement is given" do
+      tenant = create(:tenant)
+      create(:branding, :with_logo, tenant: tenant)
+
+      perform_enqueued_jobs do
+        tenant.update_branding!(tenant_attrs: { name: tenant.name }, branding_attrs: { brand_600: "#4F46E5" }, remove_logo: true)
+      end
+
+      expect(tenant.branding.reload.logo).not_to be_attached
+    end
+
+    it "does not purge the logo when a replacement is uploaded even if remove_logo is true" do
+      tenant = create(:tenant)
+      create(:branding, :with_logo, tenant: tenant)
+      logo = fixture_file_upload("spec/fixtures/files/logo.png", "image/png")
+
+      perform_enqueued_jobs do
+        tenant.update_branding!(tenant_attrs: { name: tenant.name }, branding_attrs: { brand_600: "#4F46E5", logo: logo }, remove_logo: true)
+      end
+
+      expect(tenant.branding.reload.logo).to be_attached
+    end
+  end
+
   describe "#manifest_identity" do
     it "derives the id from the subdomain" do
       tenant = create(:tenant, subdomain: "joes-barbershop")
