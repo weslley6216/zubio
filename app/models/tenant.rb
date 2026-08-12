@@ -16,4 +16,21 @@ class Tenant < ApplicationRecord
   def cache_key_prefix
     "t/#{id}/#{branding&.updated_at&.to_i}"
   end
+
+  def branding_or_default
+    branding || Branding.platform_default
+  end
+
+  def manifest_identity
+    {
+      id: "/?tenant=#{subdomain}",
+      name: name,
+      short_name: name.truncate(12, omission: ""),
+      start_url: "/",
+      scope: "/",
+      display: "standalone",
+      orientation: "portrait",
+      lang: "pt-BR"
+    }
+  end
 end
