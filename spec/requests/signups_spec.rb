@@ -57,7 +57,10 @@ RSpec.describe "Signup", type: :request do
       post signup_path, params: signup_params(subdomain: "estudio-aurora")
 
       expect(response).to redirect_to(new_signup_path)
-      expect(flash[:alert]).to eq("Muitas tentativas. Tente novamente mais tarde.")
+
+      follow_redirect!
+
+      expect(response.body).to include("Muitas tentativas. Tente novamente mais tarde.")
     end
 
     it "does not affect the existing tenant's owner or data when a new establishment signs up" do
