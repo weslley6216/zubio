@@ -19,6 +19,7 @@ default: &default
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   host: <%= ENV.fetch("POSTGRES_HOST", "localhost") %>
+  port: <%= ENV.fetch("POSTGRES_PORT", 5432) %>
   username: <%= ENV.fetch("POSTGRES_USER", "postgres") %>
   password: <%= ENV.fetch("POSTGRES_PASSWORD", "postgres") %>
 
@@ -59,21 +60,23 @@ test:
 # Read https://guides.rubyonrails.org/configuring.html#configuring-a-database
 # for a full overview on how database connection configuration can be specified.
 #
+# solid_cache/solid_queue/solid_cable share the primary database (same host+database,
+# distinct connection pools) instead of separate physical databases: keeps this app
+# deployable against a single-database free-tier Postgres (e.g. Supabase).
 production:
   primary: &primary_production
     <<: *default
-    database: zubio_production
-    username: zubio
+    database: <%= ENV.fetch("POSTGRES_DATABASE", "zubio_production") %>
+    username: <%= ENV.fetch("POSTGRES_USER", "zubio") %>
     password: <%= ENV["ZUBIO_DATABASE_PASSWORD"] %>
+    sslmode: <%= ENV.fetch("POSTGRES_SSLMODE", "prefer") %>
+    prepared_statements: <%= ENV.fetch("POSTGRES_PREPARED_STATEMENTS", "true") == "true" %>
   cache:
     <<: *primary_production
-    database: zubio_production_cache
     migrations_paths: db/cache_migrate
   queue:
     <<: *primary_production
-    database: zubio_production_queue
     migrations_paths: db/queue_migrate
   cable:
     <<: *primary_production
-    database: zubio_production_cable
     migrations_paths: db/cable_migrate
