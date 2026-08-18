@@ -180,6 +180,41 @@ RSpec.describe Tenant, type: :model do
     end
   end
 
+  describe ".provision!" do
+    it "creates a tenant and an owner user" do
+      tenant = Tenant.provision!(
+        tenant_attributes: { name: "Studio Aurora", subdomain: "estudio-aurora" },
+        owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123", password_confirmation: "s3cr3t123" }
+      )
+
+      expect(tenant).to be_persisted
+      expect(tenant.users.sole).to be_owner
+    end
+
+    it "rolls back the tenant when the owner attributes are invalid" do
+      expect {
+        Tenant.provision!(
+          tenant_attributes: { name: "Studio Aurora", subdomain: "estudio-aurora" },
+          owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "", password_confirmation: "" }
+        )
+      }.to raise_error(ActiveRecord::RecordInvalid)
+        .and change(Tenant, :count).by(0)
+        .and change(User, :count).by(0)
+    end
+
+    it "raises for a duplicate subdomain without creating a user" do
+      create(:tenant, subdomain: "estudio-aurora")
+
+      expect {
+        Tenant.provision!(
+          tenant_attributes: { name: "Studio Aurora 2", subdomain: "estudio-aurora" },
+          owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123", password_confirmation: "s3cr3t123" }
+        )
+      }.to raise_error(ActiveRecord::RecordInvalid)
+        .and change(User, :count).by(0)
+    end
+  end
+
   describe "#manifest_identity" do
     it "derives the id from the subdomain" do
       tenant = create(:tenant, subdomain: "joes-barbershop")

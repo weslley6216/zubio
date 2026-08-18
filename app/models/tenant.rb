@@ -2,6 +2,7 @@ class Tenant < ApplicationRecord
   RESERVED = %w[www api admin app assets cdn mail status help blog].freeze
 
   has_one :branding, dependent: :destroy
+  has_many :users
 
   enum :status, { active: "active", suspended: "suspended" }
 
@@ -32,6 +33,14 @@ class Tenant < ApplicationRecord
 
     target_branding.logo.purge_later if remove_logo && !logo_replaced
     Branding::PrecomputeIconVariantsJob.perform_later(id) if logo_replaced
+  end
+
+  def self.provision!(tenant_attributes:, owner_attributes:)
+    transaction do
+      tenant = create!(tenant_attributes)
+      ActsAsTenant.with_tenant(tenant) { tenant.users.create!(owner_attributes.merge(role: :owner)) }
+      tenant
+    end
   end
 
   def manifest_identity
