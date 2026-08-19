@@ -48,6 +48,9 @@ gem "thruster", require: false
 gem "image_processing", "~> 2.0"
 gem "ruby-vips", "~> 2.2"
 
+# Transactional email over HTTP API [https://github.com/resend/resend-ruby]
+gem "resend", "~> 1.7"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
