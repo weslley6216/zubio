@@ -96,4 +96,7 @@ group :test do
   # Drives headless Chrome over CDP directly, no Selenium/chromedriver
   # in the middle [https://github.com/rubycdp/cuprite]
   gem "cuprite"
+
+  # Stubs HTTP requests at the socket layer — used for the Cloudflare client
+  gem "webmock"
 end
