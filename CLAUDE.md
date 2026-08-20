@@ -11,7 +11,7 @@ SaaS de agendamentos online, multi-tenant e whitelabel, para salões, barbearias
 - **Jobs / Cache / Cable**: Solid Queue + Solid Cache + Solid Cable — padrão Rails 8, **sem Redis**
 - **Tenancy**: row-level (`tenant_id` em toda tabela de negócio), banco único, `acts_as_tenant`
 - **Testes**: RSpec + FactoryBot, SimpleCov 100% desde o primeiro commit
-- **Deploy**: Kamal (gerado pelo `rails new`, ainda não configurado)
+- **Deploy**: Northflank (app, git push → build automático) + Supabase (Postgres, session pooler) — ver [[Deploy]] no vault. Kamal foi descartado para este ambiente ([[ADR-011 Deploy em Northflank com Postgres no Supabase]]); os arquivos `config/deploy.yml`/`.kamal/` seguem no repo apenas como referência de uma rota alternativa (VPS próprio), não estão em uso.
 
 Decisões completas e o porquê de cada uma: ADRs em `01-Arquitetura/ADR/` do vault Obsidian (ver Documentação completa).
 
