@@ -40,4 +40,33 @@ RSpec.describe "Tenant resolution by subdomain", type: :request do
 
     expect(response).to have_http_status(:not_found)
   end
+
+  it "populates the current tenant when the host is a verified custom domain" do
+    create(:tenant, :with_verified_custom_domain, subdomain: "joes-barbershop", custom_domain: "barbeariadoze.com.br")
+
+    host! "barbeariadoze.com.br"
+    get "/tenant_resolution_probe"
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to eq("joes-barbershop")
+  end
+
+  it "returns 404 when the custom domain is registered but not yet verified" do
+    create(:tenant, :with_pending_custom_domain, subdomain: "joes-barbershop", custom_domain: "barbeariadoze.com.br")
+
+    host! "barbeariadoze.com.br"
+    get "/tenant_resolution_probe"
+
+    expect(response).to have_http_status(:not_found)
+  end
+
+  it "never resolves another tenant's data through its custom domain" do
+    create(:tenant, :with_verified_custom_domain, subdomain: "joes-barbershop", custom_domain: "barbeariadoze.com.br")
+    other_tenant = create(:tenant, :with_verified_custom_domain, subdomain: "other-salon", custom_domain: "outrosalao.com.br")
+
+    host! "barbeariadoze.com.br"
+    get "/tenant_resolution_probe"
+
+    expect(response.body).not_to eq(other_tenant.subdomain)
+  end
 end

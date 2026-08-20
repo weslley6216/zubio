@@ -11,10 +11,19 @@ class ApplicationController < ActionController::Base
   private
 
   def resolve_tenant
-    tenant = Tenant.active.find_by(subdomain: request.subdomains.first)
+    tenant = if platform_host?(request.host)
+      Tenant.active.find_by(subdomain: request.subdomains.first)
+    else
+      Tenant.active.where.not(custom_domain_verified_at: nil).find_by(custom_domain: request.host)
+    end
+
     return head :not_found if tenant.nil?
 
     set_current_tenant(tenant)
+  end
+
+  def platform_host?(host)
+    host == Tenant::PLATFORM_HOST || host.end_with?(".#{Tenant::PLATFORM_HOST}")
   end
 
   def cache_key_prefix
