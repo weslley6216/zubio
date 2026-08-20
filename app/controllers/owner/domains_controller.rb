@@ -15,7 +15,7 @@ class Owner::DomainsController < Owner::BaseController
     end
 
     redirect_to edit_owner_domain_path, notice: "Domínio atualizado."
-  rescue ActiveRecord::RecordInvalid
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
     render Views::Owner::Domains::Edit.new(tenant: @tenant), status: :unprocessable_entity
   end
 

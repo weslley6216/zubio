@@ -45,6 +45,9 @@ class Tenant < ApplicationRecord
   end
 
   def register_custom_domain!(domain)
+    return if domain == custom_domain
+
+    previous_cloudflare_id = custom_domain_cloudflare_id
     self.custom_domain = domain
     raise ActiveRecord::RecordInvalid, self unless valid?
 
@@ -56,6 +59,8 @@ class Tenant < ApplicationRecord
       custom_domain_verification_txt_value: hostname.verification_txt_value,
       custom_domain_verified_at: nil
     )
+
+    CloudflareCustomHostname.new.delete(previous_cloudflare_id) if previous_cloudflare_id.present?
 
     Tenant::CheckCustomDomainVerificationJob.perform_later(id)
   end
@@ -103,7 +108,10 @@ class Tenant < ApplicationRecord
 
   def custom_domain_is_not_platform_host
     return if custom_domain.blank?
-    return unless custom_domain == PLATFORM_HOST || custom_domain.end_with?(".#{PLATFORM_HOST}")
+
+    normalized_domain = custom_domain.downcase
+    normalized_platform_host = PLATFORM_HOST.downcase
+    return unless normalized_domain == normalized_platform_host || normalized_domain.end_with?(".#{normalized_platform_host}")
 
     errors.add(:custom_domain, "não pode ser um subdomínio de #{PLATFORM_HOST}")
   end

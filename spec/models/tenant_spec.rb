@@ -240,6 +240,12 @@ RSpec.describe Tenant, type: :model do
 
       expect(tenant).not_to be_valid
     end
+
+    it "is invalid when the custom domain is a subdomain of the platform host in a different case" do
+      tenant = build(:tenant, custom_domain: "SUB.#{Tenant::PLATFORM_HOST.upcase}")
+
+      expect(tenant).not_to be_valid
+    end
   end
 
   describe "#register_custom_domain!" do
@@ -269,7 +275,7 @@ RSpec.describe Tenant, type: :model do
       )
     end
 
-    it "resets verification when the domain changes to a new one" do
+    it "resets verification and deletes the previous Cloudflare hostname when the domain changes to a new one" do
       tenant = create(:tenant, :with_verified_custom_domain)
       stub_request(:post, "https://api.cloudflare.com/client/v4/zones/#{ENV['CLOUDFLARE_ZONE_ID']}/custom_hostnames")
         .to_return(
@@ -283,10 +289,22 @@ RSpec.describe Tenant, type: :model do
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
+      delete_stub = stub_request(:delete, "https://api.cloudflare.com/client/v4/zones/#{ENV['CLOUDFLARE_ZONE_ID']}/custom_hostnames/cf-hostname-id")
+        .to_return(status: 200, body: { result: { id: "cf-hostname-id" } }.to_json, headers: { "Content-Type" => "application/json" })
 
       tenant.register_custom_domain!("novadominio.com.br")
 
       expect(tenant.reload.custom_domain_verified_at).to be_nil
+      expect(delete_stub).to have_been_requested
+    end
+
+    it "does nothing when the submitted domain is already the tenant's current domain" do
+      tenant = create(:tenant, :with_verified_custom_domain)
+
+      tenant.register_custom_domain!(tenant.custom_domain)
+
+      expect(tenant.reload.custom_domain_verified_at).to be_present
+      expect(WebMock).not_to have_requested(:post, /api\.cloudflare\.com/)
     end
 
     it "raises without calling the Cloudflare API when the domain is invalid" do
@@ -295,6 +313,27 @@ RSpec.describe Tenant, type: :model do
       expect { tenant.register_custom_domain!("not a domain") }.to raise_error(ActiveRecord::RecordInvalid)
 
       expect(WebMock).not_to have_requested(:post, /api\.cloudflare\.com/)
+    end
+
+    it "raises RecordNotUnique when the database index catches a domain claimed by another tenant after in-memory validation passed" do
+      tenant = create(:tenant)
+      other_tenant = create(:tenant)
+      other_tenant.update_column(:custom_domain, "barbeariadoze.com.br")
+      allow(tenant).to receive(:valid?).and_return(true)
+      stub_request(:post, "https://api.cloudflare.com/client/v4/zones/#{ENV['CLOUDFLARE_ZONE_ID']}/custom_hostnames")
+        .to_return(
+          status: 200,
+          body: {
+            result: {
+              id: "cf-hostname-id",
+              status: "pending",
+              ownership_verification: { name: "_cf-custom-hostname.barbeariadoze.com.br", value: "cf-verification-token" }
+            }
+          }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      expect { tenant.register_custom_domain!("barbeariadoze.com.br") }.to raise_error(ActiveRecord::RecordNotUnique)
     end
   end
 
