@@ -54,6 +54,7 @@ Checklist completo (13 princípios, o que analisar em cada revisão): [[Checklis
 - **Sem comentários em `.rb`** salvo para justificar o não óbvio (constraint escondida, workaround específico) — nunca para explicar o quê.
 - **Sem variáveis de bloco de uma letra**: usar o nome do domínio (`|appointment|`, `|professional|`).
 - **Idiomas**: código, commits e símbolos Ruby em inglês; comunicação humana (docs, ADRs) em pt-BR.
+- **Documentação é atemporal**: docs do vault descrevem estado e decisão, nunca a sessão em que a coisa aconteceu. Nada de "hoje", "atualmente", "nesta sessão", "confirmado ao vivo em <data>" — afirmar o fato, não narrar o experimento. Data só onde ela é a informação (frontmatter de ADR, `merged:` em `decisions/`). Exceção: `decisions/` e cards em `done` são histórico e ficam no passado. Ver [[Convenções]] § Escrita.
 
 ## Convenções de specs (RSpec)
 
