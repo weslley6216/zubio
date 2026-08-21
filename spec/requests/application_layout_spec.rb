@@ -78,6 +78,17 @@ RSpec.describe "Application layout branding", type: :request do
     expect(response.body).to include('<meta name="theme-color" content="#4F46E5">')
   end
 
+  it "renders a single HTML document, with no Rails layout wrapping the Phlex view" do
+    tenant = create(:tenant, subdomain: "joes-barbershop")
+    create(:branding, tenant: tenant)
+
+    host! "joes-barbershop.zubio.com.br"
+    get "/layout_probe"
+
+    expect(response.body.scan("<html").size).to eq(1)
+    expect(response.body).to start_with("<!doctype html>")
+  end
+
   it "links to the tenant's manifest" do
     tenant = create(:tenant, subdomain: "joes-barbershop")
     create(:branding, tenant: tenant)

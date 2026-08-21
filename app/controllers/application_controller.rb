@@ -5,6 +5,10 @@ class ApplicationController < ActionController::Base
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
 
+  # Views are Phlex classes that render the whole document themselves; a Rails
+  # layout would wrap them in a second <html>.
+  layout false
+
   set_current_tenant_through_filter
   before_action :resolve_tenant
 
