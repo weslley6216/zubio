@@ -9,7 +9,7 @@ SaaS de agendamentos online, multi-tenant e whitelabel, para salões, barbearias
 - **Jobs / Cache / Cable**: Solid Queue + Solid Cache + Solid Cable — padrão Rails 8, sem Redis
 - **Tenancy**: row-level (`tenant_id` em toda tabela de negócio), banco único, `acts_as_tenant`
 - **Testes**: RSpec + FactoryBot, SimpleCov 100% desde o primeiro commit
-- **Deploy**: Kamal
+- **Deploy**: Render (git push) + Postgres no Supabase
 
 ## Como rodar
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_20_005615) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -66,9 +66,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_005615) do
   create_table "tenants", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.citext "custom_domain"
-    t.string "custom_domain_cloudflare_id"
-    t.string "custom_domain_verification_txt_name"
-    t.string "custom_domain_verification_txt_value"
     t.datetime "custom_domain_verified_at"
     t.string "name", null: false
     t.string "status", default: "active", null: false
