@@ -16,6 +16,5 @@ Rails.application.routes.draw do
     resource :branding, only: %i[edit update]
   end
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  root "pages#home"
 end
