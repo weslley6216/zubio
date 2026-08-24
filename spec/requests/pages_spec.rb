@@ -62,4 +62,25 @@ RSpec.describe "Landing page", type: :request do
       expect(response).to redirect_to("http://zubio.com.br/")
     end
   end
+
+  describe "GET / from an outdated browser" do
+    let(:outdated_safari) do
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.3 Safari/605.1.15"
+    end
+
+    before { host! "zubio.com.br" }
+
+    it "serves the landing page anyway" do
+      get root_path, headers: { "User-Agent" => outdated_safari }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Sua agenda online, com a sua marca")
+    end
+
+    it "still blocks the same browser on the signup form" do
+      get new_signup_path, headers: { "User-Agent" => outdated_safari }
+
+      expect(response).to have_http_status(:not_acceptable)
+    end
+  end
 end

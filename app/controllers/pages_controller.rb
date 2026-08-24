@@ -13,6 +13,8 @@ class PagesController < ApplicationController
 
   private
 
+  def browser_restricted? = false
+
   def redirect_www_to_apex
     redirect_to root_url(host: Tenant::PLATFORM_HOST), status: :moved_permanently, allow_other_host: true
   end
