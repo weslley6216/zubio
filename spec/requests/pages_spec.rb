@@ -22,9 +22,9 @@ RSpec.describe "Landing page", type: :request do
 
   describe "GET / on a tenant host" do
     it "redirects to the establishment entrance instead of rendering the landing page" do
-      create(:tenant, subdomain: "estudio-aurora")
+      create(:tenant, subdomain: "aurora-studio")
 
-      host! "estudio-aurora.zubio.com.br"
+      host! "aurora-studio.zubio.com.br"
       get root_path
 
       expect(response).to redirect_to(new_owner_session_path)
@@ -32,19 +32,19 @@ RSpec.describe "Landing page", type: :request do
     end
 
     it "returns 404 when the subdomain does not exist" do
-      host! "estabelecimento-que-nao-existe.zubio.com.br"
+      host! "does-not-exist.zubio.com.br"
       get root_path
 
       expect(response).to have_http_status(:not_found)
     end
 
     it "renders the establishment's own brand at its entrance and never another tenant's" do
-      aurora = create(:tenant, subdomain: "estudio-aurora")
-      ze = create(:tenant, subdomain: "barbearia-do-ze")
-      create(:branding, tenant: aurora, brand_600: "#4F46E5")
-      create(:branding, tenant: ze, brand_600: "#DC2626")
+      aurora_studio = create(:tenant, subdomain: "aurora-studio")
+      joes_barbershop = create(:tenant, subdomain: "joes-barbershop")
+      create(:branding, tenant: aurora_studio, brand_600: "#4F46E5")
+      create(:branding, tenant: joes_barbershop, brand_600: "#DC2626")
 
-      host! "estudio-aurora.zubio.com.br"
+      host! "aurora-studio.zubio.com.br"
       get root_path
       follow_redirect!
 
