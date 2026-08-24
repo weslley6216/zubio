@@ -52,4 +52,14 @@ RSpec.describe "Landing page", type: :request do
       expect(response.body).not_to include("--brand-600:#DC2626;")
     end
   end
+
+  describe "GET / on the www host" do
+    it "redirects permanently to the apex, which serves the landing page" do
+      host! "www.zubio.com.br"
+      get root_path
+
+      expect(response).to have_http_status(:moved_permanently)
+      expect(response).to redirect_to("http://zubio.com.br/")
+    end
+  end
 end

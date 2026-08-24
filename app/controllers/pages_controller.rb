@@ -1,5 +1,8 @@
 class PagesController < ApplicationController
+  WWW_SUBDOMAIN = "www"
+
   skip_before_action :resolve_tenant
+  before_action :redirect_www_to_apex, if: :www_host?
   before_action :resolve_tenant, unless: :platform_root_host?
 
   def home
@@ -9,6 +12,12 @@ class PagesController < ApplicationController
   end
 
   private
+
+  def redirect_www_to_apex
+    redirect_to root_url(host: Tenant::PLATFORM_HOST), status: :moved_permanently, allow_other_host: true
+  end
+
+  def www_host? = platform_host?(request.host) && request.subdomains == [ WWW_SUBDOMAIN ]
 
   def platform_root_host? = platform_host?(request.host) && request.subdomains.empty?
 end
