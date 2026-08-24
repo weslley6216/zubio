@@ -16,7 +16,7 @@ class PagesController < ApplicationController
   def browser_restricted? = false
 
   def redirect_www_to_apex
-    redirect_to root_url(host: Tenant::PLATFORM_HOST), status: :moved_permanently, allow_other_host: true
+    redirect_to root_url(host: Tenant::PLATFORM_HOST, params: request.query_parameters), status: :moved_permanently, allow_other_host: true
   end
 
   def www_host? = platform_host?(request.host) && request.subdomains == [ WWW_SUBDOMAIN ]
