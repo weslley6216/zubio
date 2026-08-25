@@ -296,7 +296,7 @@ GEM
     regexp_parser (2.12.0)
     reline (0.6.3)
       io-console (~> 0.5)
-    resend (1.9.0)
+    resend (1.10.0)
       base64
       httparty (>= 0.22.0)
     rexml (3.4.4)
@@ -442,7 +442,7 @@ DEPENDENCIES
   propshaft
   puma (>= 5.0)
   rails (~> 8.1.3, >= 8.1.3.1)
-  resend (~> 1.7)
+  resend (~> 1.10)
   rspec-rails
   rubocop-rails-omakase
   ruby-vips (~> 2.2)
@@ -573,7 +573,7 @@ CHECKSUMS
   refract (1.1.0) sha256=ee3b9627e39f7692831101e2fedd73e0d09a592ff5d5c05f171d14211fc7a9c7
   regexp_parser (2.12.0) sha256=35a916a1d63190ab5c9009457136ae5f3c0c7512d60291d0d1378ba18ce08ebb
   reline (0.6.3) sha256=1198b04973565b36ec0f11542ab3f5cfeeec34823f4e54cebde90968092b1835
-  resend (1.9.0) sha256=eac24b4e3d6a8998e6c2d134800dabf6d51251fe2bad84ca3de9e3034d0ace8d
+  resend (1.10.0) sha256=bf1546f3935aec11268372618bb53b0c24163151e8a13a86af0d2aefc9af5b75
   rexml (3.4.4) sha256=19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142
   rspec-core (3.13.6) sha256=a8823c6411667b60a8bca135364351dda34cd55e44ff94c4be4633b37d828b2d
   rspec-expectations (3.13.5) sha256=33a4d3a1d95060aea4c94e9f237030a8f9eae5615e9bd85718fe3a09e4b58836
