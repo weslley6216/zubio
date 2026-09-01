@@ -35,6 +35,14 @@ RSpec.describe "Landing page", type: :request do
       expect(response.body).to include("Agenda aberta 24 horas")
     end
 
+    it "shows the product itself as credibility proof" do
+      get root_path
+
+      expect(response.body).to include("O dia inteiro em uma tela")
+      expect(response.body).to include("Seu cliente vê a sua marca, não a nossa")
+      expect(response.body).to include("Contraste garantido")
+    end
+
     it "renders even when no tenant exists at all" do
       get root_path
 

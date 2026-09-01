@@ -1,0 +1,92 @@
+class Views::Pages::Home::DashboardPreview < Views::Base
+  NAV = [ "Visão geral", "Agenda", "Serviços", "Profissionais", "Clientes", "Minha marca" ].freeze
+  STATS = [
+    [ "Faturamento do dia", "R$ 1.840", "+12%" ],
+    [ "Ocupação", "78%", "9 de 12 slots" ],
+    [ "Novos clientes", "3", "nesta semana" ]
+  ].freeze
+  APPOINTMENTS = [
+    [ "09:00", "45 min", "Júlia Menezes", "Corte feminino · Marina", "Confirmado" ],
+    [ "09:45", "120 min", "Ana Beatriz Souza", "Coloração completa · Marina", "Aguardando" ],
+    [ "14:30", "30 min", "Renata Lopes", "Retorno · Camila", "Concluído" ]
+  ].freeze
+
+  def view_template
+    section(class: "border-b border-line") do
+      div(class: "mx-auto w-full max-w-6xl px-6 py-20") do
+        render_intro
+        div(class: "overflow-hidden rounded-2xl border border-line bg-surface shadow-lg") do
+          render_toolbar
+          div(class: "grid gap-6 p-6 lg:grid-cols-[12rem_1fr]") do
+            render_nav
+            div(class: "grid gap-5") do
+              render_stats
+              render_agenda
+            end
+          end
+        end
+      end
+    end
+  end
+
+  private
+
+  def render_intro
+    div(class: "mb-9 grid max-w-2xl gap-3") do
+      h2(class: "text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl") { "O dia inteiro em uma tela" }
+      p(class: "text-lg text-ink-muted") do
+        "Quem chega, quanto entrou, o que ainda pode ser encaixado. É a primeira tela ao abrir e normalmente a única que você precisa."
+      end
+    end
+  end
+
+  def render_toolbar
+    div(class: "flex items-center gap-3 border-b border-line bg-surface-2 px-6 py-4") do
+      span(class: "text-sm font-bold text-ink") { "Terça, 4 de agosto" }
+      span(class: "text-sm text-ink-muted") { "12 agendamentos · 2 encaixes disponíveis" }
+      span(class: "ml-auto rounded-lg bg-brand-accent px-4 py-2 text-sm font-bold text-on-brand-accent") { "Novo agendamento" }
+    end
+  end
+
+  def render_nav
+    nav(class: "hidden content-start gap-1 lg:grid") do
+      NAV.each_with_index do |label, index|
+        frame = index.zero? ? "bg-brand-100 font-bold text-brand-800" : "text-ink-muted"
+        span(class: "rounded-lg px-3 py-2 text-sm #{frame}") { label }
+      end
+    end
+  end
+
+  def render_stats
+    div(class: "grid gap-4 sm:grid-cols-3") do
+      STATS.each do |label, value, note|
+        div(class: "grid gap-1 rounded-xl border border-line bg-surface-2 p-4") do
+          span(class: "text-xs font-bold uppercase tracking-wide text-ink-subtle") { label }
+          span(class: "text-2xl font-extrabold tabular-nums text-ink") { value }
+          span(class: "text-xs text-ink-muted") { note }
+        end
+      end
+    end
+  end
+
+  def render_agenda
+    div(class: "grid gap-2") do
+      h3(class: "text-sm font-bold text-ink") { "Agenda de hoje" }
+      APPOINTMENTS.each { |time, duration, client, detail, status| render_appointment(time, duration, client, detail, status) }
+    end
+  end
+
+  def render_appointment(time, duration, client, detail, status)
+    div(class: "flex items-center gap-4 rounded-xl border border-line bg-surface px-4 py-3") do
+      div(class: "grid w-20 flex-none gap-0.5") do
+        span(class: "text-sm font-bold tabular-nums text-ink") { time }
+        span(class: "text-xs text-ink-subtle") { duration }
+      end
+      div(class: "grid min-w-0 gap-0.5") do
+        span(class: "truncate text-sm font-bold text-ink") { client }
+        span(class: "truncate text-xs text-ink-muted") { detail }
+      end
+      span(class: "ml-auto flex-none rounded-full bg-surface-3 px-3 py-1 text-xs font-bold text-ink-muted") { status }
+    end
+  end
+end

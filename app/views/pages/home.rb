@@ -19,6 +19,8 @@ class Views::Pages::Home < Views::Base
         end
         render Views::Pages::Home::HowItWorks.new
         render Views::Pages::Home::Features.new
+        render Views::Pages::Home::DashboardPreview.new
+        render Views::Pages::Home::Whitelabel.new(showcase_brands: @showcase_brands)
       end
     end
   end
