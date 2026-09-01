@@ -11,9 +11,11 @@ class Views::Pages::Home < Views::Base
 
   def view_template
     render Views::Layouts::Application.new(title: "Zubio · Agendamento online com a sua marca", branding: @branding) do
-      div(class: "mx-auto mt-16 w-full max-w-3xl px-4") do
-        render_hero
-        render_features
+      div(class: "min-h-dvh bg-canvas font-sans text-ink", data: { landing_root: true }) do
+        div(class: "mx-auto mt-16 w-full max-w-3xl px-4") do
+          render_hero
+          render_features
+        end
       end
     end
   end

@@ -25,7 +25,8 @@ RSpec.configure do |config|
       process_timeout: 60,
       browser_options: {
         "no-sandbox" => nil,
-        "disable-gpu" => nil
+        "disable-gpu" => nil,
+        "host-resolver-rules" => "MAP zubio.com.br 127.0.0.1, MAP *.zubio.com.br 127.0.0.1"
       }
     }
   end
