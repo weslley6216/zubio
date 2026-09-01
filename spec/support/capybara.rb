@@ -20,6 +20,9 @@ RSpec.configure do |config|
   # process_timeout is a ceiling, not a wait: a fast browser boot never pays it.
   # 15s was tight enough for Chrome to miss it on a loaded CI runner while four
   # test processes competed for CPU, failing the suite with no defect behind it.
+  # host-resolver-rules keeps Chrome from resolving zubio.com.br on the public
+  # internet: without it every js spec that visits a platform or tenant host
+  # hangs on Ferrum::PendingConnectionsError instead of reaching Capybara.
   config.before(:each, type: :system, js: true) do
     driven_by :cuprite, screen_size: [ 1200, 800 ], options: {
       process_timeout: 60,
