@@ -1,8 +1,4 @@
 class Views::Pages::Home::Hero < Views::Base
-  def initialize(showcase_brands:)
-    @showcase_brands = showcase_brands
-  end
-
   def view_template(&block)
     section(class: "border-b border-line") do
       div(class: "mx-auto grid w-full max-w-6xl gap-14 px-6 pb-20 pt-12 lg:grid-cols-2 lg:items-center lg:pt-20") do

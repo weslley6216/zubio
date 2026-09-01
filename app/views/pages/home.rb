@@ -6,11 +6,11 @@ class Views::Pages::Home < Views::Base
 
   def view_template
     render Views::Layouts::Application.new(title: "Zubio · Agendamento online com a sua marca", branding: @branding) do
-      style { raw safe(Landing::ShowcaseBrand.css_rules) }
+      style { raw safe(showcase_css) }
       div(class: "min-h-dvh bg-canvas font-sans text-ink", data: { landing_root: true }) do
         render Views::Pages::Home::SiteHeader.new
         div(data: { controller: "showcase-brand" }) do
-          render Views::Pages::Home::Hero.new(showcase_brands: @showcase_brands) do
+          render Views::Pages::Home::Hero.new do
             div(class: "grid justify-items-center gap-5") do
               render Views::Pages::Home::BookingPreview.new(showcase_brands: @showcase_brands)
               render Views::Pages::Home::ShowcasePicker.new(showcase_brands: @showcase_brands)
@@ -27,4 +27,10 @@ class Views::Pages::Home < Views::Base
       end
     end
   end
+
+  private
+
+  # safe() is sound here because every color in the rules comes from the frozen
+  # showcase catalog through Branding::ColorScale — never from user input.
+  def showcase_css = Landing::ShowcaseBrand.css_rules
 end
