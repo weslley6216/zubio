@@ -8,8 +8,23 @@ RSpec.describe "Landing page", type: :request do
       get root_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Sua agenda online, com a sua marca")
+      expect(response.body).to include("Sua marca, seu link,")
       expect(response.body).to include(%(href="#{new_signup_path}"))
+    end
+
+    it "renders the value proposition and the primary signup call to action" do
+      get root_path
+
+      expect(response.body).to include("Sua marca, seu link,")
+      expect(response.body).to include("seu app")
+      expect(response.body).to include(%(id="hero-cta"))
+    end
+
+    it "renders showcase palettes under the demo namespace, never the tenant namespace" do
+      get root_path
+
+      expect(response.body).to include("--demo-600:#96590B;")
+      expect(response.body).not_to include("--brand-600:#96590B;")
     end
 
     it "renders even when no tenant exists at all" do
@@ -43,7 +58,7 @@ RSpec.describe "Landing page", type: :request do
 
       expect(request.path).to eq(new_owner_session_path)
       expect(response.body).to include("Entrar")
-      expect(response.body).not_to include("Sua agenda online, com a sua marca")
+      expect(response.body).not_to include("Sua marca, seu link,")
     end
 
     it "returns 404 when the subdomain does not exist" do
@@ -100,7 +115,7 @@ RSpec.describe "Landing page", type: :request do
       get root_path, headers: { "User-Agent" => outdated_safari }
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Sua agenda online, com a sua marca")
+      expect(response.body).to include("Sua marca, seu link,")
     end
 
     it "still blocks the same browser on the signup form" do
