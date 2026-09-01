@@ -27,6 +27,14 @@ RSpec.describe "Landing page", type: :request do
       expect(response.body).not_to include("--brand-600:#96590B;")
     end
 
+    it "explains how the product works and what it does" do
+      get root_path
+
+      expect(response.body).to include("Do cadastro ao primeiro agendamento")
+      expect(response.body).to include("O que a agenda passa a fazer sozinha")
+      expect(response.body).to include("Agenda aberta 24 horas")
+    end
+
     it "renders even when no tenant exists at all" do
       get root_path
 

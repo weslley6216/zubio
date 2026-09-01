@@ -17,6 +17,8 @@ class Views::Pages::Home < Views::Base
             end
           end
         end
+        render Views::Pages::Home::HowItWorks.new
+        render Views::Pages::Home::Features.new
       end
     end
   end
