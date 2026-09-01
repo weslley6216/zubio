@@ -21,6 +21,9 @@ class Views::Pages::Home < Views::Base
         render Views::Pages::Home::Features.new
         render Views::Pages::Home::DashboardPreview.new
         render Views::Pages::Home::Whitelabel.new(showcase_brands: @showcase_brands)
+        render Views::Pages::Home::Faq.new
+        render Views::Pages::Home::FinalCta.new
+        render Views::Pages::Home::SiteFooter.new
       end
     end
   end

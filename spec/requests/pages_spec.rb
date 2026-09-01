@@ -43,6 +43,15 @@ RSpec.describe "Landing page", type: :request do
       expect(response.body).to include("Contraste garantido")
     end
 
+    it "answers the buying objections and states the platform guarantees" do
+      get root_path
+
+      expect(response.body).to include("Dúvidas antes de começar")
+      expect(response.body).to include("Preciso instalar alguma coisa?")
+      expect(response.body).to include("Sem comissão por agendamento")
+      expect(response.body).to include("Coloque sua agenda no ar hoje")
+    end
+
     it "renders even when no tenant exists at all" do
       get root_path
 
