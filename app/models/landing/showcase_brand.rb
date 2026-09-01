@@ -1,5 +1,5 @@
 class Landing::ShowcaseBrand
-  Service = Struct.new(:name, :duration, :price)
+  ShowcaseService = Struct.new(:name, :duration, :price)
 
   CATALOG = [
     {
@@ -34,9 +34,9 @@ class Landing::ShowcaseBrand
     @all ||= CATALOG.map { |attributes| new(**attributes) }
   end
 
-  def self.css_rules
-    all.map { |showcase_brand| showcase_brand.css_rule }.join +
-      all.map { |showcase_brand| showcase_brand.variant_rule }.join
+  def self.css_rules(showcase_brands)
+    showcase_brands.map { |showcase_brand| showcase_brand.css_rule }.join +
+      showcase_brands.map { |showcase_brand| showcase_brand.variant_rule }.join
   end
 
   def initialize(key:, name:, initial:, segment:, meta:, host:, brand_600:, services:)
@@ -47,7 +47,7 @@ class Landing::ShowcaseBrand
     @meta = meta
     @host = host
     @brand_600 = brand_600
-    @services = services.map { |attributes| Service.new(*attributes) }
+    @services = services.map { |attributes| ShowcaseService.new(*attributes) }
   end
 
   def css_rule

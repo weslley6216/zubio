@@ -26,7 +26,7 @@ class Views::Pages::Home::BookingPreview < Views::Base
   end
 
   def render_establishment_bar
-    div(class: "grid gap-3 bg-demo px-5 pb-8 pt-6 text-on-demo") do
+    div(class: "grid gap-3 bg-demo px-5 pb-8 pt-6 text-on-demo", data: { demo_bar: true }) do
       div(class: "flex items-center gap-3") do
         div(class: "grid h-11 w-11 flex-none place-items-center rounded-xl bg-white/20 text-lg font-extrabold") do
           variants { |showcase_brand| plain showcase_brand.initial }

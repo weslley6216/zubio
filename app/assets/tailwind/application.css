@@ -21,15 +21,17 @@
   --ink: #0e1a24;
   --ink-muted: #68798a;
   --ink-subtle: #94a6b4;
-  --ok: #0f8a5f;
-  --ok-bg: #e4f6ed;
-  --alert: #c8392f;
-  --alert-bg: #fce9e7;
 
   --brand-accent: var(--brand-600);
   --on-brand-accent: #ffffff;
-  --demo: var(--demo-600);
   --on-demo: #ffffff;
+}
+
+/* A custom property resolves var() against the element it is declared on and
+   descendants inherit the resolved value, so the --demo alias has to live with
+   the ramp on the showcase stage — on :root it would resolve to nothing. */
+[data-demo-brand] {
+  --demo: var(--demo-600);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -43,15 +45,14 @@
     --ink: #eaf1f5;
     --ink-muted: #9baebc;
     --ink-subtle: #75899a;
-    --ok: #4cc79a;
-    --ok-bg: #0f3529;
-    --alert: #f08579;
-    --alert-bg: #3b1d19;
 
     --brand-accent: var(--brand-400);
     --on-brand-accent: #08121a;
-    --demo: var(--demo-400);
     --on-demo: #08121a;
+  }
+
+  [data-demo-brand] {
+    --demo: var(--demo-400);
   }
 }
 
@@ -74,13 +75,7 @@
   --color-brand-accent: var(--brand-accent);
   --color-on-brand-accent: var(--on-brand-accent);
 
-  --color-demo-50: var(--demo-50);
   --color-demo-100: var(--demo-100);
-  --color-demo-200: var(--demo-200);
-  --color-demo-300: var(--demo-300);
-  --color-demo-400: var(--demo-400);
-  --color-demo-500: var(--demo-500);
-  --color-demo-600: var(--demo-600);
   --color-demo-700: var(--demo-700);
   --color-demo: var(--demo);
   --color-on-demo: var(--on-demo);
@@ -94,8 +89,4 @@
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
   --color-ink-subtle: var(--ink-subtle);
-  --color-ok: var(--ok);
-  --color-ok-bg: var(--ok-bg);
-  --color-alert: var(--alert);
-  --color-alert-bg: var(--alert-bg);
 }

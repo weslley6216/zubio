@@ -5,8 +5,7 @@ class Views::Pages::Home < Views::Base
   end
 
   def view_template
-    render Views::Layouts::Application.new(title: "Zubio · Agendamento online com a sua marca", branding: @branding) do
-      style { raw safe(showcase_css) }
+    render Views::Layouts::Application.new(title: "Zubio · Agendamento online com a sua marca", branding: @branding, page_css: showcase_css) do
       div(class: "min-h-dvh bg-canvas font-sans text-ink", data: { landing_root: true }) do
         render Views::Pages::Home::SiteHeader.new
         div(data: { controller: "showcase-brand" }) do
@@ -30,7 +29,7 @@ class Views::Pages::Home < Views::Base
 
   private
 
-  # safe() is sound here because every color in the rules comes from the frozen
-  # showcase catalog through Branding::ColorScale — never from user input.
-  def showcase_css = Landing::ShowcaseBrand.css_rules
+  # safe() in the layout is sound for this string because every color in it comes
+  # from the frozen showcase catalog through Branding::ColorScale, never from user input.
+  def showcase_css = Landing::ShowcaseBrand.css_rules(@showcase_brands)
 end

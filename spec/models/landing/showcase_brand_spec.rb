@@ -31,18 +31,18 @@ RSpec.describe Landing::ShowcaseBrand do
 
   describe ".css_rules" do
     it "scopes every ramp under the demo namespace" do
-      rules = described_class.css_rules
+      rules = described_class.css_rules(described_class.all)
 
       expect(rules).to include(%([data-demo-brand="barbearia"]{))
       expect(rules).to include("--demo-600:#96590B;")
     end
 
     it "never emits the tenant brand namespace" do
-      expect(described_class.css_rules).not_to include("--brand-")
+      expect(described_class.css_rules(described_class.all)).not_to include("--brand-")
     end
 
     it "reveals only the variant matching the selected brand" do
-      rules = described_class.css_rules
+      rules = described_class.css_rules(described_class.all)
 
       expect(rules).to include(%([data-demo-brand="clinica"] [data-demo-for="clinica"]{display:inline}))
     end

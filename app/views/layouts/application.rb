@@ -1,9 +1,10 @@
 class Views::Layouts::Application < Views::Base
   include Phlex::Rails::Layout
 
-  def initialize(title:, branding:)
+  def initialize(title:, branding:, page_css: nil)
     @title = title
     @branding = branding
+    @page_css = page_css
   end
 
   def view_template(&block)
@@ -32,6 +33,7 @@ class Views::Layouts::Application < Views::Base
     stylesheet_link_tag(:app, "data-turbo-track": "reload")
     javascript_importmap_tags
     style { raw safe(css_variables) }
+    style { raw safe(@page_css) } if @page_css
   end
 
   # safe() is sound here because css_variables only concatenates values that

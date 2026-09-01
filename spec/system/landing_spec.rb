@@ -14,6 +14,25 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
     )
   end
 
+  def contrast_ratio(selector)
+    foreground = color_scale(computed(selector, "color"))
+    background = color_scale(computed(selector, "backgroundColor"))
+
+    foreground.contrast_against(background)
+  end
+
+  # getComputedStyle reports an unpainted background as "rgba(0, 0, 0, 0)", which
+  # would read as pure black and score a perfect ratio against white text.
+  def opaque?(selector)
+    computed(selector, "backgroundColor").start_with?("rgb(")
+  end
+
+  def color_scale(rgb)
+    channels = rgb.scan(/\d+/).first(3).map { |channel| channel.to_i.to_s(16).rjust(2, "0") }
+
+    Branding::ColorScale.new("##{channels.join}")
+  end
+
   it "loads the platform typeface" do
     visit "http://zubio.com.br/"
 
@@ -37,13 +56,30 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
     expect(computed("[data-landing-root]", "backgroundColor")).to eq("rgb(11, 17, 23)")
   end
 
-  it "keeps the signup call to action inside the first screen on a phone viewport" do
-    page.driver.resize(390, 844)
+  it "paints the previewed establishment in its own brand color, not a broken token" do
+    visit "http://zubio.com.br/"
+
+    expect(computed("[data-demo-bar]", "backgroundColor")).to eq("rgb(90, 63, 224)")
+  end
+
+  it "keeps the previewed establishment readable in both color schemes" do
+    %w[light dark].each do |scheme|
+      emulate_color_scheme(scheme)
+
+      visit "http://zubio.com.br/"
+
+      expect(opaque?("[data-demo-bar]")).to be true
+      expect(contrast_ratio("[data-demo-bar]")).to be >= Branding::ColorScale::MIN_CONTRAST
+    end
+  end
+
+  it "keeps the whole signup call to action inside the first screen on a small phone" do
+    page.driver.resize(375, 667)
 
     visit "http://zubio.com.br/"
 
-    distance_from_top = page.evaluate_script("document.getElementById('hero-cta').getBoundingClientRect().top")
-    expect(distance_from_top).to be < 844
+    bottom_edge = page.evaluate_script("document.getElementById('hero-cta').getBoundingClientRect().bottom")
+    expect(bottom_edge).to be <= 667
   end
 
   it "swaps the previewed establishment when another identity is picked" do
