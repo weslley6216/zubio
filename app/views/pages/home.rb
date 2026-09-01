@@ -19,7 +19,7 @@ class Views::Pages::Home < Views::Base
         end
         render Views::Pages::Home::HowItWorks.new
         render Views::Pages::Home::Features.new
-        render Views::Pages::Home::DashboardPreview.new
+        render Views::Pages::Home::DashboardPreview.new(showcase_brands: @showcase_brands)
         render Views::Pages::Home::Whitelabel.new(showcase_brands: @showcase_brands)
         render Views::Pages::Home::Faq.new
         render Views::Pages::Home::FinalCta.new

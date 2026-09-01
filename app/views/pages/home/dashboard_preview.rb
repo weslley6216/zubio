@@ -11,11 +11,16 @@ class Views::Pages::Home::DashboardPreview < Views::Base
     [ "14:30", "30 min", "Renata Lopes", "Retorno · Camila", "Concluído" ]
   ].freeze
 
+  def initialize(showcase_brands:)
+    @showcase_brands = showcase_brands
+  end
+
   def view_template
     section(class: "border-b border-line") do
       div(class: "mx-auto w-full max-w-6xl px-6 py-20") do
         render_intro
         div(class: "overflow-hidden rounded-2xl border border-line bg-surface shadow-lg") do
+          render_address_bar
           render_toolbar
           div(class: "grid gap-6 p-6 lg:grid-cols-[12rem_1fr]") do
             render_nav
@@ -36,6 +41,17 @@ class Views::Pages::Home::DashboardPreview < Views::Base
       h2(class: "text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl") { "O dia inteiro em uma tela" }
       p(class: "text-lg text-ink-muted") do
         "Quem chega, quanto entrou, o que ainda pode ser encaixado. É a primeira tela ao abrir e normalmente a única que você precisa."
+      end
+    end
+  end
+
+  def render_address_bar
+    div(class: "flex items-center gap-2 border-b border-line bg-surface-3 px-4 py-2.5") do
+      span(class: "h-2.5 w-2.5 rounded-full bg-line-strong")
+      span(class: "h-2.5 w-2.5 rounded-full bg-line-strong")
+      span(class: "h-2.5 w-2.5 rounded-full bg-line-strong")
+      span(class: "ml-2 truncate rounded-md bg-surface px-3 py-1 text-xs text-ink-muted") do
+        "#{@showcase_brands.first.host}/painel"
       end
     end
   end

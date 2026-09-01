@@ -41,6 +41,7 @@ RSpec.describe "Landing page", type: :request do
       expect(response.body).to include("O dia inteiro em uma tela")
       expect(response.body).to include("Seu cliente vê a sua marca, não a nossa")
       expect(response.body).to include("Contraste garantido")
+      expect(response.body).to include("studioaurora.zubio.com.br/painel")
     end
 
     it "answers the buying objections and states the platform guarantees" do
