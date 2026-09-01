@@ -9,7 +9,14 @@ class Views::Pages::Home < Views::Base
       style { raw safe(Landing::ShowcaseBrand.css_rules) }
       div(class: "min-h-dvh bg-canvas font-sans text-ink", data: { landing_root: true }) do
         render Views::Pages::Home::SiteHeader.new
-        render Views::Pages::Home::Hero.new(showcase_brands: @showcase_brands)
+        div(data: { controller: "showcase-brand" }) do
+          render Views::Pages::Home::Hero.new(showcase_brands: @showcase_brands) do
+            div(class: "grid justify-items-center gap-5") do
+              render Views::Pages::Home::BookingPreview.new(showcase_brands: @showcase_brands)
+              render Views::Pages::Home::ShowcasePicker.new(showcase_brands: @showcase_brands)
+            end
+          end
+        end
       end
     end
   end

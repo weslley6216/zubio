@@ -36,4 +36,26 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
 
     expect(computed("[data-landing-root]", "backgroundColor")).to eq("rgb(11, 17, 23)")
   end
+
+  it "keeps the signup call to action inside the first screen on a phone viewport" do
+    page.driver.resize(390, 844)
+
+    visit "http://zubio.com.br/"
+
+    distance_from_top = page.evaluate_script("document.getElementById('hero-cta').getBoundingClientRect().top")
+    expect(distance_from_top).to be < 844
+  end
+
+  it "swaps the previewed establishment when another identity is picked" do
+    visit "http://zubio.com.br/"
+
+    expect(page).to have_css('[data-demo-brand="salao"]')
+    expect(page).to have_content("Studio Aurora")
+
+    click_on "Barbearia"
+
+    expect(page).to have_css('[data-demo-brand="barbearia"]')
+    expect(page).to have_content("Barbearia Norte")
+    expect(page).to have_css('button[aria-pressed="true"]', text: "Barbearia")
+  end
 end
