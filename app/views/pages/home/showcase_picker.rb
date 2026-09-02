@@ -1,12 +1,14 @@
 class Views::Pages::Home::ShowcasePicker < Views::Base
+  LABEL = "Experimente uma identidade"
+
   def initialize(showcase_brands:)
     @showcase_brands = showcase_brands
   end
 
   def view_template
     div(class: "grid justify-items-center gap-2") do
-      span(class: "text-[0.65rem] font-extrabold uppercase tracking-[0.14em] text-ink-subtle") { "Experimente uma identidade" }
-      div(class: "flex flex-wrap justify-center gap-2") do
+      span(class: "text-[0.65rem] font-extrabold uppercase tracking-[0.14em] text-ink-subtle") { LABEL }
+      div(class: "flex flex-wrap justify-center gap-2", role: "group", aria_label: LABEL) do
         @showcase_brands.each_with_index { |showcase_brand, index| render_option(showcase_brand, index.zero?) }
       end
     end

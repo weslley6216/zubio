@@ -31,7 +31,7 @@ class Landing::ShowcaseBrand
   attr_reader :key, :name, :initial, :segment, :meta, :host, :brand_600, :services
 
   def self.all
-    @all ||= CATALOG.map { |attributes| new(**attributes) }
+    @all ||= CATALOG.map { |attributes| new(**attributes) }.freeze
   end
 
   def self.css_rules(showcase_brands)
@@ -47,7 +47,7 @@ class Landing::ShowcaseBrand
     @meta = meta
     @host = host
     @brand_600 = brand_600
-    @services = services.map { |attributes| ShowcaseService.new(*attributes) }
+    @services = services.map { |attributes| ShowcaseService.new(*attributes) }.freeze
   end
 
   def css_rule

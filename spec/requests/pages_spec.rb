@@ -23,6 +23,7 @@ RSpec.describe "Landing page", type: :request do
     it "renders showcase palettes under the demo namespace, never the tenant namespace" do
       get root_path
 
+      expect(response.body).to include(%(role="group"))
       expect(response.body).to include("--demo-600:#96590B;")
       expect(response.body).not_to include("--brand-600:#96590B;")
     end

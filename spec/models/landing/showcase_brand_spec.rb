@@ -14,6 +14,11 @@ RSpec.describe Landing::ShowcaseBrand do
       end
     end
 
+    it "hands out a catalog no caller can mutate" do
+      expect { described_class.all << described_class.all.first }.to raise_error(FrozenError)
+      expect(described_class.all.size).to eq(4)
+    end
+
     it "gives every brand a host under the platform domain" do
       expect(described_class.all.map(&:host)).to all(end_with(".zubio.com.br"))
     end
