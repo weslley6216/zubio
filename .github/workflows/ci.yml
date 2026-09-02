@@ -101,6 +101,9 @@ jobs:
       - name: Verify migrations apply cleanly
         run: bin/rails db:create db:migrate
 
+      - name: Build the Tailwind stylesheet the system specs read
+        run: bin/rails tailwindcss:build
+
       - name: Set up remaining parallel test databases
         run: bin/rails parallel:create parallel:load_schema
 

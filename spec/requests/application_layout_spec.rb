@@ -17,6 +17,17 @@ RSpec.describe "Application layout branding", type: :request do
 
   after { Rails.application.reload_routes! }
 
+  it "applies a stored theme choice before the stylesheet, so the page never flashes the other one" do
+    tenant = create(:tenant, subdomain: "joes-barbershop")
+    create(:branding, tenant: tenant, brand_600: "#4F46E5")
+
+    host! "joes-barbershop.zubio.com.br"
+    get "/layout_probe"
+
+    expect(response.body).to include(%(localStorage.getItem("theme")))
+    expect(response.body.index("localStorage.getItem")).to be < response.body.index(%(rel="stylesheet"))
+  end
+
   it "renders the tenant's brand color as a CSS custom property" do
     tenant = create(:tenant, subdomain: "joes-barbershop")
     create(:branding, tenant: tenant, brand_600: "#4F46E5")

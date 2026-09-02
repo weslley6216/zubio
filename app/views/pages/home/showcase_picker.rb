@@ -1,14 +1,14 @@
 class Views::Pages::Home::ShowcasePicker < Views::Base
-  LABEL = "Experimente uma identidade"
+  LABEL = "Veja com a cara de outro negócio"
 
   def initialize(showcase_brands:)
     @showcase_brands = showcase_brands
   end
 
   def view_template
-    div(class: "grid justify-items-center gap-2") do
+    div(class: "grid w-full justify-items-center gap-2") do
       span(class: "text-[0.65rem] font-extrabold uppercase tracking-[0.14em] text-ink-subtle") { LABEL }
-      div(class: "flex flex-wrap justify-center gap-2", role: "group", aria_label: LABEL) do
+      div(class: "grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-center", role: "group", aria_label: LABEL) do
         @showcase_brands.each_with_index { |showcase_brand, index| render_option(showcase_brand, index.zero?) }
       end
     end
@@ -20,7 +20,7 @@ class Views::Pages::Home::ShowcasePicker < Views::Base
     button(
       type: "button",
       aria_pressed: selected.to_s,
-      class: "inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-xs font-bold text-ink-muted aria-pressed:border-brand-accent aria-pressed:bg-brand-accent aria-pressed:text-on-brand-accent",
+      class: "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-xs font-bold text-ink-muted aria-pressed:border-brand-accent aria-pressed:bg-brand-accent aria-pressed:text-on-brand-accent",
       data: {
         showcase_brand_target: "option",
         showcase_brand_key_param: showcase_brand.key,
