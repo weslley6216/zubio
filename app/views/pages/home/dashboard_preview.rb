@@ -1,9 +1,9 @@
 class Views::Pages::Home::DashboardPreview < Views::Base
   NAV = [ "Visão geral", "Agenda", "Serviços", "Profissionais", "Clientes", "Minha marca" ].freeze
   STATS = [
-    [ "Faturamento do dia", "R$ 1.840", "+12%" ],
-    [ "Ocupação", "78%", "9 de 12 slots" ],
-    [ "Novos clientes", "3", "nesta semana" ]
+    [ "Faturamento do dia", "R$ 1.840", "+12% sobre a terça passada" ],
+    [ "Ocupação", "78%", "9 de 12 horários" ],
+    [ "Clientes novos", "3", "nesta semana" ]
   ].freeze
   APPOINTMENTS = [
     [ "09:00", "45 min", "Júlia Menezes", "Corte feminino · Marina", "Confirmado" ],
@@ -22,7 +22,7 @@ class Views::Pages::Home::DashboardPreview < Views::Base
         div(class: "overflow-hidden rounded-2xl border border-line bg-surface shadow-lg") do
           render_address_bar
           render_toolbar
-          div(class: "grid gap-6 p-6 lg:grid-cols-[12rem_1fr]") do
+          div(class: "grid gap-6 p-4 sm:p-6 lg:grid-cols-[12rem_1fr]") do
             render_nav
             div(class: "grid gap-5") do
               render_stats
@@ -40,7 +40,7 @@ class Views::Pages::Home::DashboardPreview < Views::Base
     div(class: "mb-9 grid max-w-2xl gap-3") do
       h2(class: "text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl") { "O dia inteiro em uma tela" }
       p(class: "text-lg text-ink-muted") do
-        "Quem chega, quanto entrou, o que ainda pode ser encaixado. É a primeira tela ao abrir e normalmente a única que você precisa."
+        "Quem chega, quanto entrou, o que ainda dá pra encaixar. É a primeira tela quando você abre — e quase sempre a única que precisa."
       end
     end
   end
@@ -57,10 +57,12 @@ class Views::Pages::Home::DashboardPreview < Views::Base
   end
 
   def render_toolbar
-    div(class: "flex items-center gap-3 border-b border-line bg-surface-2 px-6 py-4") do
-      span(class: "text-sm font-bold text-ink") { "Terça, 4 de agosto" }
-      span(class: "text-sm text-ink-muted") { "12 agendamentos · 2 encaixes disponíveis" }
-      span(class: "ml-auto rounded-lg bg-brand-accent px-4 py-2 text-sm font-bold text-on-brand-accent") { "Novo agendamento" }
+    div(class: "grid gap-3 border-b border-line bg-surface-2 px-4 py-4 sm:flex sm:items-center sm:px-6") do
+      div(class: "grid gap-1 sm:flex sm:items-center sm:gap-3") do
+        span(class: "text-sm font-bold text-ink") { "Terça, 4 de agosto" }
+        span(class: "text-sm text-ink-muted") { "12 agendamentos · 2 encaixes livres" }
+      end
+      span(class: "rounded-lg bg-brand-accent px-4 py-3 text-center text-sm font-bold text-on-brand-accent sm:ml-auto sm:py-2") { "Novo agendamento" }
     end
   end
 
@@ -93,16 +95,21 @@ class Views::Pages::Home::DashboardPreview < Views::Base
   end
 
   def render_appointment(time, duration, client, detail, status)
-    div(class: "flex items-center gap-4 rounded-xl border border-line bg-surface px-4 py-3") do
-      div(class: "grid w-20 flex-none gap-0.5") do
+    div(class: "grid gap-2 rounded-xl border border-line bg-surface px-4 py-3 sm:flex sm:items-center sm:gap-4") do
+      div(class: "flex items-center gap-3 sm:w-20 sm:flex-none sm:grid sm:gap-0.5") do
         span(class: "text-sm font-bold tabular-nums text-ink") { time }
         span(class: "text-xs text-ink-subtle") { duration }
+        render_status(status, "ml-auto sm:hidden")
       end
       div(class: "grid min-w-0 gap-0.5") do
         span(class: "truncate text-sm font-bold text-ink") { client }
-        span(class: "truncate text-xs text-ink-muted") { detail }
+        span(class: "truncate text-xs text-ink-muted", data: { agenda_detail: true }) { detail }
       end
-      span(class: "ml-auto flex-none rounded-full bg-surface-3 px-3 py-1 text-xs font-bold text-ink-muted") { status }
+      render_status(status, "ml-auto hidden flex-none sm:inline")
     end
+  end
+
+  def render_status(status, frame)
+    span(class: "rounded-full bg-surface-3 px-3 py-1 text-xs font-bold text-ink-muted #{frame}") { status }
   end
 end

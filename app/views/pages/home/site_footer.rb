@@ -1,5 +1,5 @@
 class Views::Pages::Home::SiteFooter < Views::Base
-  LINKS = [ [ "Recursos", "#recursos" ], [ "Whitelabel", "#whitelabel" ], [ "Perguntas", "#faq" ] ].freeze
+  LINKS = [ [ "Como funciona", "#como" ], [ "O que muda", "#recursos" ], [ "Sua marca", "#whitelabel" ], [ "Perguntas", "#faq" ] ].freeze
 
   def view_template
     footer(class: "border-t border-line bg-surface") do
@@ -9,7 +9,7 @@ class Views::Pages::Home::SiteFooter < Views::Base
           span { "Zubio · agendamento online para o seu negócio" }
         end
         nav(class: "ml-auto flex gap-5 text-sm font-semibold text-ink-muted") do
-          LINKS.each { |label, anchor| a(href: anchor) { label } }
+          LINKS.each { |label, anchor| a(href: anchor, class: "hover:text-ink") { label } }
         end
       end
     end

@@ -1,8 +1,8 @@
 class Views::Pages::Home::HowItWorks < Views::Base
   STEPS = [
-    [ "1", "Cadastre seu negócio", "Nome, endereço e sua cor. Na mesma hora você recebe o endereço próprio seusalao.zubio.com.br." ],
-    [ "2", "Monte serviços e horários", "Preço, duração e quem atende cada serviço. O Zubio calcula os encaixes possíveis e nunca oferece um horário ocupado." ],
-    [ "3", "Compartilhe o link", "Na bio do Instagram, no WhatsApp, no cartão. O cliente marca sozinho e você só recebe a confirmação." ]
+    [ "1", "Você cadastra o negócio", "Nome, endereço e a cor da sua marca. Na mesma hora seu link já está no ar: seusalao.zubio.com.br." ],
+    [ "2", "Você diz o que faz e quando atende", "Serviço, preço, duração e quem atende cada um. O Zubio monta os encaixes e nunca oferece um horário que já está ocupado." ],
+    [ "3", "Você manda o link", "Na bio do Instagram, no WhatsApp, no cartão. O cliente escolhe sozinho e você só recebe o aviso." ]
   ].freeze
 
   def view_template
@@ -20,7 +20,7 @@ class Views::Pages::Home::HowItWorks < Views::Base
     div(class: "mb-11 grid max-w-2xl gap-3") do
       span(class: "text-[0.65rem] font-extrabold uppercase tracking-[0.14em] text-brand-accent") { "Como funciona" }
       h2(class: "text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl") { "Do cadastro ao primeiro agendamento" }
-      p(class: "text-lg text-ink-muted") { "Sem instalação, sem migração de dados, sem treinamento. Três passos e sua agenda está no ar." }
+      p(class: "text-lg text-ink-muted") { "Não tem instalação, não tem curso, não tem passar o caderno a limpo. São três passos." }
     end
   end
 

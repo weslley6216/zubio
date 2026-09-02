@@ -34,8 +34,11 @@
   --demo: var(--demo-600);
 }
 
+/* The dark palette is declared twice on purpose: once for the system
+   preference and once for an explicit choice stored on the root. CSS has no
+   way to fold a selector inside a media query into one outside it. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --canvas: #0b1117;
     --surface: #141e27;
     --surface-2: #18242e;
@@ -51,9 +54,44 @@
     --on-demo: #08121a;
   }
 
-  [data-demo-brand] {
+  :root:not([data-theme="light"]) [data-demo-brand] {
     --demo: var(--demo-400);
   }
+}
+
+:root[data-theme="dark"] {
+  --canvas: #0b1117;
+  --surface: #141e27;
+  --surface-2: #18242e;
+  --surface-3: #1f2c37;
+  --line: #25333f;
+  --line-strong: #354653;
+  --ink: #eaf1f5;
+  --ink-muted: #9baebc;
+  --ink-subtle: #75899a;
+
+  --brand-accent: var(--brand-400);
+  --on-brand-accent: #08121a;
+  --on-demo: #08121a;
+}
+
+:root[data-theme="dark"] [data-demo-brand] {
+  --demo: var(--demo-400);
+}
+
+/* One rule instead of a focus utility on every control: the ring then exists
+   on anything focusable, including whatever gets added later. */
+:focus-visible {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 2px;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 [data-demo-brand] [data-demo-for] {

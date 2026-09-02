@@ -8,15 +8,15 @@ RSpec.describe "Landing page", type: :request do
       get root_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Sua marca, seu link,")
+      expect(response.body).to include("O cliente marca")
       expect(response.body).to include(%(href="#{new_signup_path}"))
     end
 
     it "renders the value proposition and the primary signup call to action" do
       get root_path
 
-      expect(response.body).to include("Sua marca, seu link,")
-      expect(response.body).to include("seu app")
+      expect(response.body).to include("O cliente marca")
+      expect(response.body).to include("Você só atende.")
       expect(response.body).to include(%(id="hero-cta"))
     end
 
@@ -32,8 +32,8 @@ RSpec.describe "Landing page", type: :request do
       get root_path
 
       expect(response.body).to include("Do cadastro ao primeiro agendamento")
-      expect(response.body).to include("O que a agenda passa a fazer sozinha")
-      expect(response.body).to include("Agenda aberta 24 horas")
+      expect(response.body).to include("O que muda no seu dia")
+      expect(response.body).to include("Sua agenda fica aberta 24 horas")
     end
 
     it "shows the product itself as credibility proof" do
@@ -41,7 +41,7 @@ RSpec.describe "Landing page", type: :request do
 
       expect(response.body).to include("O dia inteiro em uma tela")
       expect(response.body).to include("Seu cliente vê a sua marca, não a nossa")
-      expect(response.body).to include("Contraste garantido")
+      expect(response.body).to include("Sempre legível")
       expect(response.body).to include("studioaurora.zubio.com.br/painel")
     end
 
@@ -52,6 +52,30 @@ RSpec.describe "Landing page", type: :request do
       expect(response.body).to include("Preciso instalar alguma coisa?")
       expect(response.body).to include("Sem comissão por agendamento")
       expect(response.body).to include("Coloque sua agenda no ar hoje")
+    end
+
+    it "keeps the section links reachable on a phone, where the inline nav is hidden" do
+      get root_path
+
+      expect(response.body).to include("Abrir menu")
+      Views::Pages::Home::SiteHeader::LINKS.each do |label, anchor|
+        expect(response.body).to include(%(href="#{anchor}"))
+        expect(response.body).to include(label)
+      end
+    end
+
+    it "offers the theme switch on both the inline header and the phone menu" do
+      get root_path
+
+      expect(response.body.scan(%(data-action="theme#toggle")).size).to eq(2)
+      expect(response.body).to include(Views::Pages::Home::SiteHeader::TOGGLE_LABEL)
+    end
+
+    it "marks the reminder channel as unreleased instead of promising it" do
+      get root_path
+
+      expect(response.body).to include("Envio por WhatsApp em breve")
+      expect(response.body).not_to include("Confirmação por WhatsApp")
     end
 
     it "renders even when no tenant exists at all" do
@@ -85,7 +109,7 @@ RSpec.describe "Landing page", type: :request do
 
       expect(request.path).to eq(new_owner_session_path)
       expect(response.body).to include("Entrar")
-      expect(response.body).not_to include("Sua marca, seu link,")
+      expect(response.body).not_to include("O cliente marca")
     end
 
     it "returns 404 when the subdomain does not exist" do
@@ -142,7 +166,7 @@ RSpec.describe "Landing page", type: :request do
       get root_path, headers: { "User-Agent" => outdated_safari }
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Sua marca, seu link,")
+      expect(response.body).to include("O cliente marca")
     end
 
     it "still blocks the same browser on the signup form" do

@@ -1,6 +1,13 @@
 class Views::Layouts::Application < Views::Base
   include Phlex::Rails::Layout
 
+  THEME_BOOTSTRAP = <<~JS.freeze
+    try {
+      var theme = localStorage.getItem("theme");
+      if (theme === "dark" || theme === "light") document.documentElement.dataset.theme = theme;
+    } catch (error) {}
+  JS
+
   def initialize(title:, branding:, page_css: nil, root_class: nil)
     @title = title
     @branding = branding
@@ -21,6 +28,7 @@ class Views::Layouts::Application < Views::Base
   def render_head
     meta(charset: "utf-8")
     meta(name: "viewport", content: "width=device-width, initial-scale=1")
+    render_theme_bootstrap
     title { @title }
     csrf_meta_tags
     csp_meta_tag
@@ -35,6 +43,13 @@ class Views::Layouts::Application < Views::Base
     javascript_importmap_tags
     style { raw safe(css_variables) }
     style { raw safe(@page_css) } if @page_css
+  end
+
+  # Inline and ahead of the stylesheet so the stored choice is on the root
+  # before the first paint; a deferred script would flash the other theme.
+  # safe() is sound because the script is a frozen literal, never user input.
+  def render_theme_bootstrap
+    script { raw safe(THEME_BOOTSTRAP) }
   end
 
   # safe() is sound here because css_variables only concatenates values that

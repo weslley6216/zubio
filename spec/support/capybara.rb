@@ -24,7 +24,14 @@ RSpec.configure do |config|
   # host-resolver-rules keeps Chrome from resolving zubio.com.br on the public
   # internet: without it every js spec that visits a platform or tenant host
   # hangs on Ferrum::PendingConnectionsError instead of reaching Capybara.
+  # The built stylesheet is gitignored and no rspec task compiles it, so a stale
+  # checkout serves a page with no CSS at all. Every assertion over a computed
+  # style then reads rgba(0, 0, 0, 0) instead of failing for a reason you can act on.
   config.before(:each, type: :system, js: true) do
+    unless Rails.root.join("app/assets/builds/tailwind.css").exist?
+      raise "app/assets/builds/tailwind.css is missing — run bin/rails tailwindcss:build"
+    end
+
     driven_by :cuprite, screen_size: [ 1200, 800 ], options: {
       process_timeout: 60,
       browser_options: {

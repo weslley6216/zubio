@@ -11,8 +11,8 @@ class Views::Pages::Home < Views::Base
         div(data: { controller: "showcase-brand" }) do
           render Views::Pages::Home::Hero.new do
             div(class: "grid justify-items-center gap-5") do
-              render Views::Pages::Home::BookingPreview.new(showcase_brands: @showcase_brands)
               render Views::Pages::Home::ShowcasePicker.new(showcase_brands: @showcase_brands)
+              render Views::Pages::Home::BookingPreview.new(showcase_brands: @showcase_brands)
             end
           end
         end
