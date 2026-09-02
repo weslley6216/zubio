@@ -5,8 +5,8 @@ class Views::Pages::Home < Views::Base
   end
 
   def view_template
-    render Views::Layouts::Application.new(title: "Zubio · Agendamento online com a sua marca", branding: @branding, page_css: showcase_css) do
-      div(class: "min-h-dvh bg-canvas font-sans text-ink", data: { landing_root: true }) do
+    render layout do
+      div(class: "min-h-dvh font-sans", data: { landing_root: true }) do
         render Views::Pages::Home::SiteHeader.new
         div(data: { controller: "showcase-brand" }) do
           render Views::Pages::Home::Hero.new do
@@ -28,6 +28,15 @@ class Views::Pages::Home < Views::Base
   end
 
   private
+
+  def layout
+    Views::Layouts::Application.new(
+      title: "Zubio · Agendamento online com a sua marca",
+      branding: @branding,
+      page_css: showcase_css,
+      root_class: "bg-canvas text-ink [color-scheme:light_dark]"
+    )
+  end
 
   # safe() in the layout is sound for this string because every color in it comes
   # from the frozen showcase catalog through Branding::ColorScale, never from user input.

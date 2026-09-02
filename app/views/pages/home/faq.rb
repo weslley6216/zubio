@@ -1,8 +1,8 @@
 class Views::Pages::Home::Faq < Views::Base
   QUESTIONS = [
     [ "Preciso instalar alguma coisa?", "Não. O Zubio roda no navegador, no computador e no celular. Seu cliente pode adicionar o link à tela inicial e usar como aplicativo, sem passar por loja." ],
-    [ "Já uso caderno e WhatsApp. Vou perder meu histórico?", "Você continua atendendo como sempre. O Zubio começa a valer do próximo agendamento em diante, e agendamentos feitos por telefone podem ser lançados à mão no painel." ],
-    [ "E se dois clientes escolherem o mesmo horário?", "Só a primeira reserva é aceita. A segunda pessoa recebe um aviso na hora e a lista de horários livres é atualizada — nunca acontece de dois clientes chegarem para o mesmo slot." ],
+    [ "Já uso caderno e WhatsApp. Vou perder meu histórico?", "Você continua atendendo como sempre. O Zubio começa a valer do próximo agendamento em diante, e a ideia é que agendamentos feitos por telefone também possam ser lançados à mão no painel." ],
+    [ "E se dois clientes escolherem o mesmo horário?", "O horário fica travado na primeira reserva: a segunda pessoa recebe um aviso na hora e a lista de horários livres é atualizada. Evitar reserva dupla é um requisito central do produto." ],
     [ "Trabalho sozinho. Serve para mim?", "Serve. Com um profissional o painel fica mais simples: sua agenda, seus serviços, seu link. Se um dia a equipe crescer, é só adicionar pessoas." ],
     [ "Que endereço meu negócio recebe?", "Todo estabelecimento recebe um endereço no formato seunegocio.zubio.com.br assim que se cadastra, com sua marca aplicada." ]
   ].freeze

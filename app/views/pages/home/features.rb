@@ -1,9 +1,9 @@
 class Views::Pages::Home::Features < Views::Base
   FEATURES = [
     [ "Agenda aberta 24 horas", "O cliente marca de madrugada, no domingo, no meio do seu atendimento. Você não precisa responder para não perder a reserva." ],
-    [ "Confirmação e lembrete no WhatsApp", "Confirmação na hora da reserva e lembrete antes do horário — as duas mensagens que mais reduzem falta, enviadas sem você digitar." ],
+    [ "Confirmação e lembrete automáticos", "Confirmação na hora da reserva e lembrete antes do horário: as duas mensagens que mais reduzem falta. O envio por WhatsApp está em desenvolvimento." ],
     [ "Vários profissionais, uma agenda", "Cada pessoa da equipe tem seus serviços, seus horários e sua própria visão da agenda. O cliente escolhe com quem quer ser atendido." ],
-    [ "Faturamento e ocupação do dia", "Quanto entrou, quantos horários ficaram vazios, quantos clientes novos apareceram. Sem planilha paralela." ],
+    [ "Faturamento e ocupação do dia", "O painel é desenhado para responder quanto entrou, quantos horários ficaram vazios e quantos clientes novos apareceram — sem planilha paralela." ],
     [ "Funciona como app no celular", "Seu cliente adiciona o link na tela inicial e ele abre como aplicativo. Nada para baixar em loja, nada para aprovar." ],
     [ "Seus dados são só seus", "Cada estabelecimento é isolado no banco. Sua lista de clientes não circula e não é compartilhada com ninguém." ]
   ].freeze

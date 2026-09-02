@@ -45,7 +45,8 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
 
     visit "http://zubio.com.br/"
 
-    expect(computed("[data-landing-root]", "backgroundColor")).to eq("rgb(244, 246, 248)")
+    expect(computed("html", "backgroundColor")).to eq("rgb(244, 246, 248)")
+    expect(computed("html", "colorScheme")).to eq("light dark")
   end
 
   it "paints the dark surface tokens under a dark color scheme" do
@@ -53,7 +54,7 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
 
     visit "http://zubio.com.br/"
 
-    expect(computed("[data-landing-root]", "backgroundColor")).to eq("rgb(11, 17, 23)")
+    expect(computed("html", "backgroundColor")).to eq("rgb(11, 17, 23)")
   end
 
   it "paints the previewed establishment in its own brand color, not a broken token" do
