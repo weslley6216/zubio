@@ -18,7 +18,11 @@ class Branding::ColorScale
   end
 
   def contrast_against_white
-    contrast_ratio(luminance, self.class.luminance_of(WHITE))
+    contrast_against(self.class.new(WHITE))
+  end
+
+  def contrast_against(other)
+    contrast_ratio(luminance, other.luminance)
   end
 
   def self.luminance_of(hex)

@@ -8,7 +8,7 @@ class PagesController < ApplicationController
   def home
     return redirect_to new_owner_session_path if ActsAsTenant.current_tenant
 
-    render Views::Pages::Home.new(branding: Branding.platform_default)
+    render Views::Pages::Home.new(branding: Branding.platform_default, showcase_brands: Landing::ShowcaseBrand.all)
   end
 
   private

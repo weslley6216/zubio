@@ -8,8 +8,49 @@ RSpec.describe "Landing page", type: :request do
       get root_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Sua agenda online, com a sua marca")
+      expect(response.body).to include("Sua marca, seu link,")
       expect(response.body).to include(%(href="#{new_signup_path}"))
+    end
+
+    it "renders the value proposition and the primary signup call to action" do
+      get root_path
+
+      expect(response.body).to include("Sua marca, seu link,")
+      expect(response.body).to include("seu app")
+      expect(response.body).to include(%(id="hero-cta"))
+    end
+
+    it "renders showcase palettes under the demo namespace, never the tenant namespace" do
+      get root_path
+
+      expect(response.body).to include("--demo-600:#96590B;")
+      expect(response.body).not_to include("--brand-600:#96590B;")
+    end
+
+    it "explains how the product works and what it does" do
+      get root_path
+
+      expect(response.body).to include("Do cadastro ao primeiro agendamento")
+      expect(response.body).to include("O que a agenda passa a fazer sozinha")
+      expect(response.body).to include("Agenda aberta 24 horas")
+    end
+
+    it "shows the product itself as credibility proof" do
+      get root_path
+
+      expect(response.body).to include("O dia inteiro em uma tela")
+      expect(response.body).to include("Seu cliente vê a sua marca, não a nossa")
+      expect(response.body).to include("Contraste garantido")
+      expect(response.body).to include("studioaurora.zubio.com.br/painel")
+    end
+
+    it "answers the buying objections and states the platform guarantees" do
+      get root_path
+
+      expect(response.body).to include("Dúvidas antes de começar")
+      expect(response.body).to include("Preciso instalar alguma coisa?")
+      expect(response.body).to include("Sem comissão por agendamento")
+      expect(response.body).to include("Coloque sua agenda no ar hoje")
     end
 
     it "renders even when no tenant exists at all" do
@@ -43,7 +84,7 @@ RSpec.describe "Landing page", type: :request do
 
       expect(request.path).to eq(new_owner_session_path)
       expect(response.body).to include("Entrar")
-      expect(response.body).not_to include("Sua agenda online, com a sua marca")
+      expect(response.body).not_to include("Sua marca, seu link,")
     end
 
     it "returns 404 when the subdomain does not exist" do
@@ -100,7 +141,7 @@ RSpec.describe "Landing page", type: :request do
       get root_path, headers: { "User-Agent" => outdated_safari }
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Sua agenda online, com a sua marca")
+      expect(response.body).to include("Sua marca, seu link,")
     end
 
     it "still blocks the same browser on the signup form" do

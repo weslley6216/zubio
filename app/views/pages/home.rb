@@ -1,43 +1,44 @@
 class Views::Pages::Home < Views::Base
-  FEATURES = [
-    [ "Endereço só seu", "seu-estabelecimento.zubio.com.br no ar assim que você criar a conta." ],
-    [ "A sua marca, não a nossa", "Logo e cor definidos por você, aplicados na hora em todas as telas." ],
-    [ "Vira app no celular", "Seu cliente instala na tela inicial e volta com um toque." ]
-  ].freeze
-
-  def initialize(branding:)
+  def initialize(branding:, showcase_brands:)
     @branding = branding
+    @showcase_brands = showcase_brands
   end
 
   def view_template
-    render Views::Layouts::Application.new(title: "Zubio · Agendamento online com a sua marca", branding: @branding) do
-      div(class: "mx-auto mt-16 w-full max-w-3xl px-4") do
-        render_hero
-        render_features
+    render layout do
+      div(class: "min-h-dvh font-sans", data: { landing_root: true }) do
+        render Views::Pages::Home::SiteHeader.new
+        div(data: { controller: "showcase-brand" }) do
+          render Views::Pages::Home::Hero.new do
+            div(class: "grid justify-items-center gap-5") do
+              render Views::Pages::Home::BookingPreview.new(showcase_brands: @showcase_brands)
+              render Views::Pages::Home::ShowcasePicker.new(showcase_brands: @showcase_brands)
+            end
+          end
+        end
+        render Views::Pages::Home::HowItWorks.new
+        render Views::Pages::Home::Features.new
+        render Views::Pages::Home::DashboardPreview.new(showcase_brands: @showcase_brands)
+        render Views::Pages::Home::Whitelabel.new(showcase_brands: @showcase_brands)
+        render Views::Pages::Home::Faq.new
+        render Views::Pages::Home::FinalCta.new
+        render Views::Pages::Home::SiteFooter.new
       end
     end
   end
 
   private
 
-  def render_hero
-    h1(class: "text-3xl font-semibold") { "Sua agenda online, com a sua marca" }
-    p(class: "mt-4 max-w-xl text-lg text-gray-700") do
-      "Seus clientes agendam pelo celular, no seu próprio endereço na internet, com o seu logo e a sua cor. Sem instalar app, sem comissão por agendamento."
-    end
-    a(href: new_signup_path, class: "mt-8 inline-block rounded-md bg-brand-600 px-6 py-3 font-medium text-on-brand") do
-      "Criar meu estabelecimento"
-    end
+  def layout
+    Views::Layouts::Application.new(
+      title: "Zubio · Agendamento online com a sua marca",
+      branding: @branding,
+      page_css: showcase_css,
+      root_class: "bg-canvas text-ink [color-scheme:light_dark]"
+    )
   end
 
-  def render_features
-    div(class: "mt-16 grid gap-8 sm:grid-cols-3") do
-      FEATURES.each do |title, description|
-        div do
-          h2(class: "font-medium") { title }
-          p(class: "mt-2 text-sm text-gray-700") { description }
-        end
-      end
-    end
-  end
+  # safe() in the layout is sound for this string because every color in it comes
+  # from the frozen showcase catalog through Branding::ColorScale, never from user input.
+  def showcase_css = Landing::ShowcaseBrand.css_rules(@showcase_brands)
 end
