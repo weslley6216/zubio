@@ -85,25 +85,27 @@ RSpec.describe "PWA manifest", type: :request do
       end
 
       it "resolves the manifest icons to the tenant's own logo blob" do
-        tenant = create(:tenant, subdomain: "own-logo")
-        branding = create(:branding, :with_logo, tenant: tenant)
+        earlier_tenant = create(:tenant, subdomain: "earlier-tenant")
+        own_tenant = create(:tenant, subdomain: "own-tenant")
+        create(:branding, :with_logo, tenant: earlier_tenant)
+        own_branding = create(:branding, :with_logo, tenant: own_tenant)
 
-        host! "own-logo.zubio.com.br"
+        host! "own-tenant.zubio.com.br"
         get "/manifest.webmanifest"
 
-        expect(manifest_icon_blob).to eq(branding.logo.blob)
+        expect(manifest_icon_blob).to eq(own_branding.logo.blob)
       end
 
       it "never resolves the manifest icons to another tenant's logo blob" do
         tenant_a = create(:tenant, subdomain: "tenant-a")
         tenant_b = create(:tenant, subdomain: "tenant-b")
         create(:branding, :with_logo, tenant: tenant_a)
-        branding_b = create(:branding, :with_logo, tenant: tenant_b)
+        other_branding = create(:branding, :with_logo, tenant: tenant_b)
 
         host! "tenant-a.zubio.com.br"
         get "/manifest.webmanifest"
 
-        expect(manifest_icon_blob).not_to eq(branding_b.logo.blob)
+        expect(manifest_icon_blob).not_to eq(other_branding.logo.blob)
       end
     end
   end
