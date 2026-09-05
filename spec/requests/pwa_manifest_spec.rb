@@ -75,5 +75,36 @@ RSpec.describe "PWA manifest", type: :request do
 
       expect(response).to have_http_status(:not_found)
     end
+
+    describe "tenant isolation" do
+      def manifest_icon_blob
+        icon_source = JSON.parse(response.body)["icons"].first["src"]
+        signed_blob_id = icon_source[%r{/representations/proxy/([^/]+)/}, 1]
+
+        ActiveStorage::Blob.find_signed!(signed_blob_id)
+      end
+
+      it "resolves the manifest icons to the tenant's own logo blob" do
+        tenant = create(:tenant, subdomain: "own-logo")
+        branding = create(:branding, :with_logo, tenant: tenant)
+
+        host! "own-logo.zubio.com.br"
+        get "/manifest.webmanifest"
+
+        expect(manifest_icon_blob).to eq(branding.logo.blob)
+      end
+
+      it "never resolves the manifest icons to another tenant's logo blob" do
+        tenant_a = create(:tenant, subdomain: "tenant-a")
+        tenant_b = create(:tenant, subdomain: "tenant-b")
+        create(:branding, :with_logo, tenant: tenant_a)
+        branding_b = create(:branding, :with_logo, tenant: tenant_b)
+
+        host! "tenant-a.zubio.com.br"
+        get "/manifest.webmanifest"
+
+        expect(manifest_icon_blob).not_to eq(branding_b.logo.blob)
+      end
+    end
   end
 end
