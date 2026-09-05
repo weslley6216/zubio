@@ -46,6 +46,10 @@ gem "thruster", require: false
 gem "image_processing", "~> 2.0"
 gem "ruby-vips", "~> 2.2"
 
+# S3 client required by Active Storage's S3 service, used against Supabase
+# Storage's S3-compatible endpoint [https://guides.rubyonrails.org/active_storage_overview.html]
+gem "aws-sdk-s3", "~> 1.48", require: false
+
 # Transactional email over HTTP API [https://github.com/resend/resend-ruby]
 gem "resend", "~> 1.7"
 
@@ -95,6 +99,7 @@ group :test do
   # in the middle [https://github.com/rubycdp/cuprite]
   gem "cuprite"
 
-  # Stubs HTTP requests at the socket layer — used for the Cloudflare client
+  # Stubs HTTP requests at the socket layer — keeps the suite off the network,
+  # including the S3 client pulled in by Active Storage
   gem "webmock"
 end
