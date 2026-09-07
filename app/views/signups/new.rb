@@ -9,8 +9,7 @@ class Views::Signups::New < Views::Base
 
   def view_template
     render Views::Layouts::Application.new(title: "Criar conta · Zubio", branding: @branding) do
-      div(class: "mx-auto mt-16 w-full max-w-sm") do
-        h1(class: "mb-6 text-center text-2xl font-semibold") { "Criar sua conta" }
+      render Components::Panel.new(title: "Criar sua conta") do
         render Components::Alert.new(text: flash[:alert]) if flash[:alert]
         form_with(url: signup_path, method: :post, class: "space-y-4") do |form|
           render_establishment_name_field(form)

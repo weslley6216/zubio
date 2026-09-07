@@ -17,6 +17,13 @@ RSpec.describe "Signup", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Criar sua conta")
     end
+
+    it "wraps the form in the shared panel, on a surface of its own" do
+      get new_signup_path
+
+      expect(response.body).to include(%(class="mx-auto mt-16 w-full max-w-sm rounded-xl border border-line bg-surface p-6"))
+      expect(response.body).to include("Criar sua conta")
+    end
   end
 
   describe "POST /signup" do
