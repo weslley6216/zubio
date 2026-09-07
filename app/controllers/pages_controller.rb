@@ -20,6 +20,4 @@ class PagesController < ApplicationController
   end
 
   def www_host? = platform_host?(request.host) && request.subdomains == [ WWW_SUBDOMAIN ]
-
-  def platform_root_host? = platform_host?(request.host) && request.subdomains.empty?
 end

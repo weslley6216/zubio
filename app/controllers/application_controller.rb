@@ -32,6 +32,8 @@ class ApplicationController < ActionController::Base
     host == Tenant::PLATFORM_HOST || host.end_with?(".#{Tenant::PLATFORM_HOST}")
   end
 
+  def platform_root_host? = platform_host?(request.host) && request.subdomains.empty?
+
   def cache_key_prefix
     ActsAsTenant.current_tenant.cache_key_prefix
   end
