@@ -9,7 +9,7 @@ class Views::Owner::Sessions::New < Views::Base
     render Views::Layouts::Application.new(title: "Entrar · Zubio", branding: @branding) do
       div(class: "mx-auto mt-16 w-full max-w-sm") do
         h1(class: "mb-6 text-center text-2xl font-semibold") { "Entrar" }
-        render_alert
+        render Components::Alert.new(text: flash[:alert]) if flash[:alert]
         form_with(url: owner_session_path, method: :post, class: "space-y-4") do |form|
           div do
             form.label :email, "E-mail", class: "block text-sm font-medium"
@@ -26,10 +26,4 @@ class Views::Owner::Sessions::New < Views::Base
   end
 
   private
-
-  def render_alert
-    return unless (alert = flash[:alert])
-
-    p(class: "mb-4 rounded-md bg-red-50 px-4 py-2 text-sm text-red-700") { alert }
-  end
 end
