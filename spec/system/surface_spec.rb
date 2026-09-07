@@ -5,12 +5,16 @@ RSpec.describe "Application surface", type: :system, js: true do
     fill_in "E-mail", with: "nobody@example.com"
     fill_in "Senha", with: "wrong-password"
     click_button "Entrar"
+
+    expect(page).to have_css("[data-alert]")
   end
+
   it "keeps the stored dark choice when the visitor moves from the landing to the signup screen" do
     emulate_color_scheme("light")
 
     visit "http://zubio.com.br/"
     click_button Components::Platform::Header::TOGGLE_LABEL
+    expect(page).to have_css("html[data-theme='dark']")
 
     visit "http://zubio.com.br#{new_signup_path}"
 
@@ -45,7 +49,7 @@ RSpec.describe "Application surface", type: :system, js: true do
     visit "http://zubio.com.br#{new_signup_path}"
     click_button Components::Platform::Header::TOGGLE_LABEL
 
-    expect(page.evaluate_script("document.documentElement.dataset.theme")).to eq("dark")
+    expect(page).to have_css("html[data-theme='dark']")
   end
 
   it "renders the login alert as a band that separates from the panel in the light theme" do
