@@ -8,8 +8,7 @@ class Views::Owner::Brandings::Edit < Views::Base
 
   def view_template
     render Views::Layouts::Application.new(title: "Marca · Zubio", branding: @branding) do
-      div(class: "mx-auto mt-16 w-full max-w-sm") do
-        h1(class: "mb-6 text-center text-2xl font-semibold") { "Marca do estabelecimento" }
+      render Components::Panel.new(title: "Marca do estabelecimento") do
         form_with(url: owner_branding_path, method: :patch, multipart: true, class: "space-y-4") do |form|
           render_name_field(form)
           render_color_field(form)
