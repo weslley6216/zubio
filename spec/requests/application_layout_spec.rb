@@ -109,4 +109,14 @@ RSpec.describe "Application layout branding", type: :request do
 
     expect(response.body).to include('<link rel="manifest" href="/manifest.webmanifest">')
   end
+
+  it "paints every page on the application surface, without each view opting in" do
+    tenant = create(:tenant, subdomain: "joes-barbershop")
+    create(:branding, tenant: tenant)
+
+    host! "joes-barbershop.zubio.com.br"
+    get "/layout_probe"
+
+    expect(response.body).to include(%(<html lang="pt-BR" class="bg-canvas text-ink [color-scheme:light_dark]">))
+  end
 end
