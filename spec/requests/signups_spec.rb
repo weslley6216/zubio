@@ -17,6 +17,29 @@ RSpec.describe "Signup", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Criar sua conta")
     end
+
+    it "wraps the form in a panel landmark named by its own heading" do
+      get new_signup_path
+
+      expect(response.body).to include(%(<section aria-labelledby="#{Components::Panel::HEADING_ID}"))
+      expect(response.body).to include(%(<h1 id="#{Components::Panel::HEADING_ID}"))
+      expect(response.body).to include("Criar sua conta")
+    end
+
+    it "sends the acquisition funnel back to the platform host when reached on a tenant subdomain" do
+      host! "joes-barbershop.zubio.com.br"
+
+      get new_signup_path
+
+      expect(response).to redirect_to(new_signup_url(host: Tenant::PLATFORM_HOST))
+    end
+
+    it "renders the platform header without the landing section nav" do
+      get new_signup_path
+
+      expect(response.body).to include(%(aria-label="Trocar o tema"))
+      expect(response.body).not_to include("#como")
+    end
   end
 
   describe "POST /signup" do

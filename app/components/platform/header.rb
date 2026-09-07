@@ -1,19 +1,18 @@
-class Views::Pages::Home::SiteHeader < Views::Base
-  LINKS = [
-    [ "Como funciona", "#como" ],
-    [ "O que muda", "#recursos" ],
-    [ "Sua marca", "#whitelabel" ],
-    [ "Perguntas", "#faq" ]
-  ].freeze
+class Components::Platform::Header < Components::Base
   TOGGLE_LABEL = "Trocar o tema"
+
+  def initialize(links: [], cta: nil)
+    @links = links
+    @cta = cta
+  end
 
   def view_template
     header(class: "sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur", data: { controller: "theme" }) do
       div(class: "mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-6 sm:gap-8") do
         render_wordmark
-        render_nav
+        render_nav if @links.any?
         render_actions
-        render_mobile_menu
+        render_mobile_menu if mobile_menu?
       end
     end
   end
@@ -29,7 +28,7 @@ class Views::Pages::Home::SiteHeader < Views::Base
 
   def render_nav
     nav(class: "ml-auto hidden items-center gap-7 text-sm font-semibold sm:flex") do
-      LINKS.each do |label, anchor|
+      @links.each do |label, anchor|
         a(href: anchor, class: "text-ink-muted hover:text-ink") { label }
       end
     end
@@ -38,15 +37,24 @@ class Views::Pages::Home::SiteHeader < Views::Base
   def render_actions
     div(class: "ml-auto flex items-center gap-3 sm:ml-0") do
       render_theme_button
-      a(href: new_owner_session_path, class: "hidden min-h-11 items-center rounded-lg px-2 text-sm font-bold text-ink hover:bg-surface-2 sm:inline-flex") { "Entrar" }
-      a(href: new_signup_path, class: "inline-flex min-h-11 items-center rounded-lg bg-brand-accent px-4 text-sm font-bold text-on-brand-accent shadow-sm hover:opacity-90") { "Criar conta grátis" }
+      render_cta if @cta
     end
   end
 
+  def render_cta
+    text, href = @cta
+
+    a(href: href, class: "inline-flex min-h-11 items-center rounded-lg bg-brand-accent px-4 text-sm font-bold text-on-brand-accent shadow-sm hover:opacity-90") { text }
+  end
+
+  def mobile_menu? = @links.any?
+
+  # With a phone menu the toggle lives inside it, so the inline button stays a
+  # tablet-and-up control; without one it is the only toggle and must always show.
   def render_theme_button
     button(
       type: "button",
-      class: "hidden h-11 w-11 cursor-pointer place-items-center rounded-lg border border-line bg-surface hover:bg-surface-2 sm:grid",
+      class: "#{mobile_menu? ? "hidden sm:grid" : "grid"} h-11 w-11 cursor-pointer place-items-center rounded-lg border border-line bg-surface hover:bg-surface-2",
       title: TOGGLE_LABEL,
       aria_label: TOGGLE_LABEL,
       data: { action: "theme#toggle" }
@@ -60,8 +68,7 @@ class Views::Pages::Home::SiteHeader < Views::Base
         render_menu_bars
       end
       div(class: "absolute right-0 top-full z-30 mt-2 grid w-56 gap-1 rounded-xl border border-line bg-surface p-2 shadow-lg") do
-        LINKS.each { |label, anchor| a(href: anchor, class: "rounded-lg px-3 py-3 text-sm font-semibold text-ink hover:bg-surface-2") { label } }
-        a(href: new_owner_session_path, class: "rounded-lg px-3 py-3 text-sm font-bold text-ink hover:bg-surface-2") { "Entrar" }
+        @links.each { |label, anchor| a(href: anchor, class: "rounded-lg px-3 py-3 text-sm font-semibold text-ink hover:bg-surface-2") { label } }
         render_theme_row
       end
     end
