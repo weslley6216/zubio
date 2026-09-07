@@ -1,5 +1,5 @@
 class Views::Owner::Sessions::New < Views::Base
-  FIELD_CLASS = "mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
+  include Components::Form::Styles
 
   def initialize(branding:)
     @branding = branding
@@ -12,14 +12,14 @@ class Views::Owner::Sessions::New < Views::Base
         render Components::Alert.new(text: flash[:alert]) if flash[:alert]
         form_with(url: owner_session_path, method: :post, class: "space-y-4") do |form|
           div do
-            form.label :email, "E-mail", class: "block text-sm font-medium"
-            form.email_field :email, required: true, class: FIELD_CLASS
+            form.label :email, "E-mail", class: LABEL
+            form.email_field :email, required: true, class: CONTROL
           end
           div do
-            form.label :password, "Senha", class: "block text-sm font-medium"
-            form.password_field :password, required: true, class: FIELD_CLASS
+            form.label :password, "Senha", class: LABEL
+            form.password_field :password, required: true, class: CONTROL
           end
-          form.submit "Entrar", class: "w-full rounded-md bg-brand-600 px-4 py-2 font-medium text-on-brand"
+          form.submit "Entrar", class: SUBMIT
         end
       end
     end

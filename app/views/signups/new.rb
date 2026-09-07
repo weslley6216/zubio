@@ -1,5 +1,5 @@
 class Views::Signups::New < Views::Base
-  FIELD_CLASS = "mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
+  include Components::Form::Styles
 
   def initialize(tenant:, user:, branding:)
     @tenant = tenant
@@ -19,7 +19,7 @@ class Views::Signups::New < Views::Base
           render_email_field(form)
           render_password_field(form)
           render_password_confirmation_field(form)
-          form.submit "Criar conta", class: "w-full rounded-md bg-brand-600 px-4 py-2 font-medium text-on-brand"
+          form.submit "Criar conta", class: SUBMIT
         end
       end
     end
@@ -29,48 +29,48 @@ class Views::Signups::New < Views::Base
 
   def render_establishment_name_field(form)
     div do
-      form.label :tenant_name, "Nome do estabelecimento", class: "block text-sm font-medium"
-      form.text_field :tenant_name, name: "tenant[name]", value: @tenant.name, required: true, class: FIELD_CLASS
+      form.label :tenant_name, "Nome do estabelecimento", class: LABEL
+      form.text_field :tenant_name, name: "tenant[name]", value: @tenant.name, required: true, class: CONTROL
       render Components::Form::Errors.new(messages: @tenant.errors[:name])
     end
   end
 
   def render_subdomain_field(form)
     div do
-      form.label :tenant_subdomain, "Subdomínio", class: "block text-sm font-medium"
-      form.text_field :tenant_subdomain, name: "tenant[subdomain]", value: @tenant.subdomain, required: true, class: FIELD_CLASS
+      form.label :tenant_subdomain, "Subdomínio", class: LABEL
+      form.text_field :tenant_subdomain, name: "tenant[subdomain]", value: @tenant.subdomain, required: true, class: CONTROL
       render Components::Form::Errors.new(messages: @tenant.errors[:subdomain])
     end
   end
 
   def render_owner_name_field(form)
     div do
-      form.label :user_name, "Seu nome", class: "block text-sm font-medium"
-      form.text_field :user_name, name: "user[name]", value: @user.name, required: true, class: FIELD_CLASS
+      form.label :user_name, "Seu nome", class: LABEL
+      form.text_field :user_name, name: "user[name]", value: @user.name, required: true, class: CONTROL
       render Components::Form::Errors.new(messages: @user.errors[:name])
     end
   end
 
   def render_email_field(form)
     div do
-      form.label :user_email, "E-mail", class: "block text-sm font-medium"
-      form.email_field :user_email, name: "user[email]", value: @user.email, required: true, class: FIELD_CLASS
+      form.label :user_email, "E-mail", class: LABEL
+      form.email_field :user_email, name: "user[email]", value: @user.email, required: true, class: CONTROL
       render Components::Form::Errors.new(messages: @user.errors[:email])
     end
   end
 
   def render_password_field(form)
     div do
-      form.label :user_password, "Senha", class: "block text-sm font-medium"
-      form.password_field :user_password, name: "user[password]", required: true, class: FIELD_CLASS
+      form.label :user_password, "Senha", class: LABEL
+      form.password_field :user_password, name: "user[password]", required: true, class: CONTROL
       render Components::Form::Errors.new(messages: @user.errors[:password])
     end
   end
 
   def render_password_confirmation_field(form)
     div do
-      form.label :user_password_confirmation, "Confirme a senha", class: "block text-sm font-medium"
-      form.password_field :user_password_confirmation, name: "user[password_confirmation]", required: true, class: FIELD_CLASS
+      form.label :user_password_confirmation, "Confirme a senha", class: LABEL
+      form.password_field :user_password_confirmation, name: "user[password_confirmation]", required: true, class: CONTROL
       render Components::Form::Errors.new(messages: @user.errors[:password_confirmation])
     end
   end
