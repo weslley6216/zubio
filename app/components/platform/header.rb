@@ -42,9 +42,9 @@ class Components::Platform::Header < Components::Base
   end
 
   def render_cta
-    label, href = @cta
+    text, href = @cta
 
-    a(href: href, class: "inline-flex min-h-11 items-center rounded-lg bg-brand-accent px-4 text-sm font-bold text-on-brand-accent shadow-sm hover:opacity-90") { label }
+    a(href: href, class: "inline-flex min-h-11 items-center rounded-lg bg-brand-accent px-4 text-sm font-bold text-on-brand-accent shadow-sm hover:opacity-90") { text }
   end
 
   # With a phone menu the toggle lives inside it, so the inline button stays a
