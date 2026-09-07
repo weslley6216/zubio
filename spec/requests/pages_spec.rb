@@ -58,7 +58,7 @@ RSpec.describe "Landing page", type: :request do
       get root_path
 
       expect(response.body).to include("Abrir menu")
-      Views::Pages::Home::SiteHeader::LINKS.each do |label, anchor|
+      Views::Pages::Home::LINKS.each do |label, anchor|
         expect(response.body).to include(%(href="#{anchor}"))
         expect(response.body).to include(label)
       end
@@ -68,7 +68,7 @@ RSpec.describe "Landing page", type: :request do
       get root_path
 
       expect(response.body.scan(%(data-action="theme#toggle")).size).to eq(2)
-      expect(response.body).to include(Views::Pages::Home::SiteHeader::TOGGLE_LABEL)
+      expect(response.body).to include(Components::Platform::Header::TOGGLE_LABEL)
     end
 
     it "marks the reminder channel as unreleased instead of promising it" do
@@ -96,6 +96,13 @@ RSpec.describe "Landing page", type: :request do
       expect(response.body).to include("--brand-600:#{Branding::DEFAULT_BRAND_600};")
       expect(response.body).not_to include("--brand-600:#1D4ED8;")
       expect(response.body).not_to include("--brand-600:#DC2626;")
+    end
+
+    it "offers no path to the sign in screen" do
+      get root_path
+
+      expect(response.body).to include(new_signup_path)
+      expect(response.body).not_to include(new_owner_session_path)
     end
   end
 
