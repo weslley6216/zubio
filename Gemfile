@@ -51,7 +51,7 @@ gem "ruby-vips", "~> 2.2"
 gem "aws-sdk-s3", "~> 1.48", require: false
 
 # Transactional email over HTTP API [https://github.com/resend/resend-ruby]
-gem "resend", "~> 1.7"
+gem "resend", "~> 1.14"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
