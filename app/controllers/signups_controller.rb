@@ -1,5 +1,6 @@
 class SignupsController < ApplicationController
   skip_before_action :resolve_tenant, only: %i[new create]
+  before_action :redirect_to_platform_host, unless: :platform_root_host?
 
   rate_limit to: 5, within: 1.hour, only: :create,
     with: -> { redirect_to new_signup_path, alert: "Muitas tentativas. Tente novamente mais tarde." }
@@ -21,6 +22,10 @@ class SignupsController < ApplicationController
   end
 
   private
+
+  def redirect_to_platform_host
+    redirect_to new_signup_url(host: Tenant::PLATFORM_HOST), allow_other_host: true
+  end
 
   def tenant_params = params.require(:tenant).permit(:name, :subdomain)
   def owner_params = params.require(:user).permit(:name, :email, :password, :password_confirmation)

@@ -23,6 +23,7 @@
   --ink-subtle: #94a6b4;
   --danger: #b42318;
   --danger-surface: #fef3f2;
+  --danger-line: #f4bfb8;
 
   --brand-accent: var(--brand-600);
   --on-brand-accent: #ffffff;
@@ -52,6 +53,7 @@
     --ink-subtle: #75899a;
     --danger: #fda29b;
     --danger-surface: #1c1417;
+    --danger-line: #4a2a2a;
 
     --brand-accent: var(--brand-400);
     --on-brand-accent: #08121a;
@@ -75,6 +77,7 @@
   --ink-subtle: #75899a;
   --danger: #fda29b;
   --danger-surface: #1c1417;
+  --danger-line: #4a2a2a;
 
   --brand-accent: var(--brand-400);
   --on-brand-accent: #08121a;
@@ -135,4 +138,5 @@
   --color-ink-subtle: var(--ink-subtle);
   --color-danger: var(--danger);
   --color-danger-surface: var(--danger-surface);
+  --color-danger-line: var(--danger-line);
 }

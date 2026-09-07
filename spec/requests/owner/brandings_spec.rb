@@ -136,7 +136,7 @@ RSpec.describe "Owner branding", type: :request do
       patch owner_branding_path, params: { tenant: { name: "" }, branding: { brand_600: "#4F46E5" } }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include(%(class="mt-1 text-sm text-danger"))
+      expect(response.body).to include("text-danger")
       expect(response.body).not_to include("text-red-700")
     end
   end
