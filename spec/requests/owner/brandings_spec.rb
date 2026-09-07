@@ -129,5 +129,15 @@ RSpec.describe "Owner branding", type: :request do
       expect(other_tenant.reload.name).to eq("Other Salon")
       expect(other_tenant.branding.reload.brand_600).to eq("#000000")
     end
+
+    it "renders field errors through the shared component, in the danger token" do
+      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+
+      patch owner_branding_path, params: { tenant: { name: "" }, branding: { brand_600: "#4F46E5" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(%(class="mt-1 text-sm text-danger"))
+      expect(response.body).not_to include("text-red-700")
+    end
   end
 end

@@ -27,7 +27,7 @@ class Views::Owner::Brandings::Edit < Views::Base
     div do
       form.label :name, "Nome do estabelecimento", class: "block text-sm font-medium"
       form.text_field :name, name: "tenant[name]", value: @tenant.name, required: true, class: FIELD_CLASS
-      render_errors(@tenant.errors[:name])
+      render Components::Form::Errors.new(messages: @tenant.errors[:name])
     end
   end
 
@@ -40,7 +40,7 @@ class Views::Owner::Brandings::Edit < Views::Base
         form.text_field :brand_600, name: "branding[brand_600]", value: @branding.brand_600, required: true,
           class: FIELD_CLASS, data: { "color-swatch-target": "text", action: "input->color-swatch#syncFromText" }
       end
-      render_errors(@branding.errors[:brand_600])
+      render Components::Form::Errors.new(messages: @branding.errors[:brand_600])
     end
   end
 
@@ -49,7 +49,7 @@ class Views::Owner::Brandings::Edit < Views::Base
       label(class: "block text-sm font-medium") { "Logotipo" }
       img(src: rails_storage_proxy_path(@branding.logo), class: "mt-2 h-16 w-16 rounded object-contain") if current_logo_attached?
       input(type: "file", name: "branding[logo]", accept: "image/png,image/jpeg,image/webp", class: "mt-1 block w-full text-sm")
-      render_errors(@branding.errors[:logo])
+      render Components::Form::Errors.new(messages: @branding.errors[:logo])
     end
   end
 
@@ -65,11 +65,5 @@ class Views::Owner::Brandings::Edit < Views::Base
       input(type: "checkbox", name: "branding[remove_logo]", id: "branding_remove_logo", value: "1", class: "rounded border-gray-300")
       label(for: "branding_remove_logo", class: "text-sm") { "Remover logotipo atual" }
     end
-  end
-
-  def render_errors(messages)
-    return if messages.empty?
-
-    p(class: "mt-1 text-sm text-red-700") { messages.join(", ") }
   end
 end
