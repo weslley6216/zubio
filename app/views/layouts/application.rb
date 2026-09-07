@@ -8,11 +8,13 @@ class Views::Layouts::Application < Views::Base
     } catch (error) {}
   JS
 
+  SURFACE_CLASS = "bg-canvas text-ink [color-scheme:light_dark]".freeze
+
   def initialize(title:, branding:, page_css: nil, root_class: nil)
     @title = title
     @branding = branding
     @page_css = page_css
-    @root_class = root_class
+    @root_class = [ SURFACE_CLASS, root_class ].compact.join(" ")
   end
 
   def view_template(&block)

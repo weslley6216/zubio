@@ -33,8 +33,7 @@ class Views::Pages::Home < Views::Base
     Views::Layouts::Application.new(
       title: "Zubio · Agendamento online com a sua marca",
       branding: @branding,
-      page_css: showcase_css,
-      root_class: "bg-canvas text-ink [color-scheme:light_dark]"
+      page_css: showcase_css
     )
   end
 
