@@ -23,6 +23,4 @@ class Views::Owner::Sessions::New < Views::Base
       end
     end
   end
-
-  private
 end

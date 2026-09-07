@@ -20,6 +20,7 @@ RSpec.describe "Owner session", type: :request do
       get new_owner_session_path
 
       expect(response.body).to include("E-mail ou senha inválidos.")
+      expect(response.body).to include(%(class="mb-4 rounded-md bg-danger-surface px-4 py-2 text-sm text-danger"))
     end
 
     it "renders no platform chrome on the tenant's own host" do
