@@ -9,6 +9,7 @@ class Views::Signups::New < Views::Base
 
   def view_template
     render Views::Layouts::Application.new(title: "Criar conta · Zubio", branding: @branding) do
+      render Components::Platform::Header.new
       render Components::Panel.new(title: "Criar sua conta") do
         render Components::Alert.new(text: flash[:alert]) if flash[:alert]
         form_with(url: signup_path, method: :post, class: "space-y-4") do |form|
@@ -21,6 +22,7 @@ class Views::Signups::New < Views::Base
           form.submit "Criar conta", class: SUBMIT
         end
       end
+      render Components::Platform::Footer.new
     end
   end
 

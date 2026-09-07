@@ -24,6 +24,13 @@ RSpec.describe "Signup", type: :request do
       expect(response.body).to include(%(class="mx-auto mt-16 w-full max-w-sm rounded-xl border border-line bg-surface p-6"))
       expect(response.body).to include("Criar sua conta")
     end
+
+    it "renders the platform header without the landing section nav" do
+      get new_signup_path
+
+      expect(response.body).to include(%(aria-label="Trocar o tema"))
+      expect(response.body).not_to include("#como")
+    end
   end
 
   describe "POST /signup" do

@@ -1,4 +1,11 @@
 class Views::Pages::Home < Views::Base
+  LINKS = [
+    [ "Como funciona", "#como" ],
+    [ "O que muda", "#recursos" ],
+    [ "Sua marca", "#whitelabel" ],
+    [ "Perguntas", "#faq" ]
+  ].freeze
+
   def initialize(branding:, showcase_brands:)
     @branding = branding
     @showcase_brands = showcase_brands
@@ -7,7 +14,7 @@ class Views::Pages::Home < Views::Base
   def view_template
     render layout do
       div(class: "min-h-dvh font-sans", data: { landing_root: true }) do
-        render Views::Pages::Home::SiteHeader.new
+        render Components::Platform::Header.new(links: LINKS, cta: [ "Criar conta grátis", new_signup_path ])
         div(data: { controller: "showcase-brand" }) do
           render Views::Pages::Home::Hero.new do
             div(class: "grid justify-items-center gap-5") do
@@ -22,7 +29,7 @@ class Views::Pages::Home < Views::Base
         render Views::Pages::Home::Whitelabel.new(showcase_brands: @showcase_brands)
         render Views::Pages::Home::Faq.new
         render Views::Pages::Home::FinalCta.new
-        render Views::Pages::Home::SiteFooter.new
+        render Components::Platform::Footer.new(links: LINKS)
       end
     end
   end
