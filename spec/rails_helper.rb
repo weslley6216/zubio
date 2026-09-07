@@ -25,6 +25,7 @@ require 'rspec/rails'
 #
 # Rails.root.glob('spec/support/**/*.rb').sort_by(&:to_s).each { |f| require f }
 require_relative "support/capybara"
+require_relative "support/computed_style"
 require "webmock/rspec"
 
 WebMock.disable_net_connect!(allow_localhost: true)

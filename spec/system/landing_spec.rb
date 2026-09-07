@@ -1,32 +1,6 @@
 require "rails_helper"
 
 RSpec.describe "Landing page appearance", type: :system, js: true do
-  def emulate_color_scheme(value)
-    page.driver.browser.page.command(
-      "Emulation.setEmulatedMedia",
-      features: [ { name: "prefers-color-scheme", value: value } ]
-    )
-  end
-
-  def computed(selector, property)
-    page.evaluate_script(
-      "getComputedStyle(document.querySelector(#{selector.to_json})).#{property}"
-    )
-  end
-
-  def contrast_ratio(selector)
-    foreground = color_scale(computed(selector, "color"))
-    background = color_scale(computed(selector, "backgroundColor"))
-
-    foreground.contrast_against(background)
-  end
-
-  # getComputedStyle reports an unpainted background as "rgba(0, 0, 0, 0)", which
-  # would read as pure black and score a perfect ratio against white text.
-  def opaque?(selector)
-    computed(selector, "backgroundColor").start_with?("rgb(")
-  end
-
   def faq_summary_heights_script
     <<~JS
       Array.from(document.querySelectorAll("#faq summary")).map(
@@ -49,12 +23,6 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
         (element) => element.scrollWidth > element.clientWidth
       )
     JS
-  end
-
-  def color_scale(rgb)
-    channels = rgb.scan(/\d+/).first(3).map { |channel| channel.to_i.to_s(16).rjust(2, "0") }
-
-    Branding::ColorScale.new("##{channels.join}")
   end
 
   it "loads the platform typeface" do
