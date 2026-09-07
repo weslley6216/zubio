@@ -10,16 +10,15 @@ class Views::Layouts::Application < Views::Base
 
   SURFACE_CLASS = "bg-canvas text-ink [color-scheme:light_dark]".freeze
 
-  def initialize(title:, branding:, page_css: nil, root_class: nil)
+  def initialize(title:, branding:, page_css: nil)
     @title = title
     @branding = branding
     @page_css = page_css
-    @root_class = [ SURFACE_CLASS, root_class ].compact.join(" ")
   end
 
   def view_template(&block)
     doctype
-    html(lang: "pt-BR", class: @root_class) do
+    html(lang: "pt-BR", class: SURFACE_CLASS) do
       head { render_head }
       body(class: "min-h-dvh font-sans", &block)
     end

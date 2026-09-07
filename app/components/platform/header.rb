@@ -10,9 +10,9 @@ class Components::Platform::Header < Components::Base
     header(class: "sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur", data: { controller: "theme" }) do
       div(class: "mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-6 sm:gap-8") do
         render_wordmark
-        render_nav
+        render_nav if @links.any?
         render_actions
-        render_mobile_menu if @links.any?
+        render_mobile_menu if mobile_menu?
       end
     end
   end
@@ -47,12 +47,14 @@ class Components::Platform::Header < Components::Base
     a(href: href, class: "inline-flex min-h-11 items-center rounded-lg bg-brand-accent px-4 text-sm font-bold text-on-brand-accent shadow-sm hover:opacity-90") { text }
   end
 
+  def mobile_menu? = @links.any?
+
   # With a phone menu the toggle lives inside it, so the inline button stays a
   # tablet-and-up control; without one it is the only toggle and must always show.
   def render_theme_button
     button(
       type: "button",
-      class: "#{@links.any? ? "hidden sm:grid" : "grid"} h-11 w-11 cursor-pointer place-items-center rounded-lg border border-line bg-surface hover:bg-surface-2",
+      class: "#{mobile_menu? ? "hidden sm:grid" : "grid"} h-11 w-11 cursor-pointer place-items-center rounded-lg border border-line bg-surface hover:bg-surface-2",
       title: TOGGLE_LABEL,
       aria_label: TOGGLE_LABEL,
       data: { action: "theme#toggle" }
