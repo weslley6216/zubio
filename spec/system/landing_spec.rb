@@ -108,7 +108,7 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
 
     expect(computed("html", "backgroundColor")).to eq("rgb(11, 17, 23)")
 
-    click_button Components::Platform::Header::TOGGLE_LABEL
+    click_button Components::ThemeToggle::LABEL
 
     expect(computed("html", "backgroundColor")).to eq("rgb(244, 246, 248)")
   end
@@ -116,7 +116,7 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
   it "keeps the chosen theme on the next visit, against the system preference" do
     emulate_color_scheme("dark")
     visit "http://zubio.com.br/"
-    click_button Components::Platform::Header::TOGGLE_LABEL
+    click_button Components::ThemeToggle::LABEL
 
     visit "http://zubio.com.br/"
 
