@@ -26,6 +26,16 @@ RSpec.describe "Owner branding", type: :request do
 
       expect(response.body).to include("Remover logotipo atual")
     end
+
+    it "renders the authenticated header with the brand accent, a way back to the panel and a way out of the session" do
+      create(:branding, tenant: tenant, brand_600: "#2F6FED")
+
+      get edit_owner_branding_path
+
+      expect(response.body).to include(%(href="#{owner_dashboard_path}"))
+      expect(response.body).to include(Components::Owner::Header::SIGN_OUT_LABEL)
+      expect(response.body).to include("bg-brand-accent")
+    end
   end
 
   describe "PATCH /owner/branding" do
