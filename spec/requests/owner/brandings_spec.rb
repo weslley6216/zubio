@@ -56,13 +56,13 @@ RSpec.describe "Owner branding", type: :request do
       expect(tenant.reload.branding.brand_600).to eq("#4F46E5")
     end
 
-    it "saves a valid logo upload and enqueues icon variant precomputation in the background" do
+    it "saves a valid logo upload and enqueues variant precomputation in the background" do
       create(:branding, tenant: tenant, brand_600: "#4F46E5")
       logo = Rack::Test::UploadedFile.new(Rails.root.join("spec/fixtures/files/logo.png"), "image/png")
 
       expect {
         patch owner_branding_path, params: { tenant: { name: tenant.name }, branding: { brand_600: "#4F46E5", logo: logo } }
-      }.to have_enqueued_job(Branding::PrecomputeIconVariantsJob).with(tenant.id)
+      }.to have_enqueued_job(Branding::PrecomputeVariantsJob).with(tenant.id)
 
       expect(response).to redirect_to(edit_owner_branding_path)
       expect(tenant.reload.branding.logo).to be_attached
