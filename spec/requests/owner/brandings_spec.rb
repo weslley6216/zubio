@@ -25,6 +25,8 @@ RSpec.describe "Owner branding", type: :request do
       get edit_owner_branding_path
 
       expect(response.body).to include("Remover logotipo atual")
+      expect(response.body).to include("/rails/active_storage/representations/proxy/")
+      expect(response.body).not_to include("/rails/active_storage/blobs/proxy/")
     end
 
     it "renders the authenticated header with the brand accent, a way back to the panel and a way out of the session" do
@@ -33,7 +35,8 @@ RSpec.describe "Owner branding", type: :request do
       get edit_owner_branding_path
 
       expect(response.body).to include(%(href="#{owner_dashboard_path}"))
-      expect(response.body).to include(Components::Owner::Header::SIGN_OUT_LABEL)
+      expect(response.body).to include(%(action="#{owner_session_path}"))
+      expect(response.body).to include(%(value="delete"))
       expect(response.body).to include("bg-brand-accent")
     end
   end

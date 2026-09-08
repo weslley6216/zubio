@@ -69,6 +69,9 @@ class Tenant < ApplicationRecord
     branding || Branding.platform_default
   end
 
+  # Deliberately looser than Branding#header_logo, which also demands a persisted
+  # blob: this only decides whether to invite the owner to configure the brand,
+  # and a screen that renders that invitation never carries a rejected upload.
   def branded? = branding&.logo&.attached? || false
 
   def update_branding!(tenant_attrs:, branding_attrs:, remove_logo:)
