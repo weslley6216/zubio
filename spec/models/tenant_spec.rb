@@ -167,23 +167,23 @@ RSpec.describe Tenant, type: :model do
       expect(tenant.reload.name).to eq("Old Name")
     end
 
-    it "enqueues icon variant precomputation when a new logo is included" do
+    it "enqueues variant precomputation when a new logo is included" do
       tenant = create(:tenant)
       create(:branding, tenant: tenant)
       logo = fixture_file_upload("spec/fixtures/files/logo.png", "image/png")
 
       expect {
         tenant.update_branding!(tenant_attrs: { name: tenant.name }, branding_attrs: { brand_600: "#4F46E5", logo: logo }, remove_logo: false)
-      }.to have_enqueued_job(Branding::PrecomputeIconVariantsJob).with(tenant.id)
+      }.to have_enqueued_job(Branding::PrecomputeVariantsJob).with(tenant.id)
     end
 
-    it "does not enqueue icon variant precomputation when no logo is included" do
+    it "does not enqueue variant precomputation when no logo is included" do
       tenant = create(:tenant)
       create(:branding, tenant: tenant)
 
       expect {
         tenant.update_branding!(tenant_attrs: { name: tenant.name }, branding_attrs: { brand_600: "#4F46E5" }, remove_logo: false)
-      }.not_to have_enqueued_job(Branding::PrecomputeIconVariantsJob)
+      }.not_to have_enqueued_job(Branding::PrecomputeVariantsJob)
     end
 
     it "purges the current logo when remove_logo is true and no replacement is given" do

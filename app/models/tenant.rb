@@ -81,7 +81,7 @@ class Tenant < ApplicationRecord
     end
 
     target_branding.logo.purge_later if remove_logo && !logo_replaced
-    Branding::PrecomputeIconVariantsJob.perform_later(id) if logo_replaced
+    Branding::PrecomputeVariantsJob.perform_later(id) if logo_replaced
   end
 
   def self.provision_owner!(tenant_attributes:, owner_attributes:)
