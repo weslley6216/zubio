@@ -130,6 +130,15 @@ RSpec.describe "Signup", type: :request do
       expect(response.location).to start_with(owner_handoff_url(subdomain: "estudio-aurora"))
     end
 
+    it "creates the owner's professional through the public signup form" do
+      post signup_path, params: signup_params(subdomain: "estudio-aurora")
+
+      tenant = Tenant.find_by(subdomain: "estudio-aurora")
+      professional = ActsAsTenant.with_tenant(tenant) { Professional.sole }
+
+      expect(professional).to have_attributes(display_name: "Ana Lima", user_id: tenant.users.sole.id)
+    end
+
     it "lands the new owner on their own dashboard without a second login" do
       post signup_path, params: signup_params(subdomain: "estudio-aurora")
 
@@ -152,7 +161,7 @@ RSpec.describe "Signup", type: :request do
 
       expect {
         post signup_path, params: signup_params(subdomain: "estudio-aurora")
-      }.to change(Tenant, :count).by(0).and change(User, :count).by(0)
+      }.to change(Tenant, :count).by(0).and change(User, :count).by(0).and change(Professional, :count).by(0)
 
       expect(response.body).to include("has already been taken")
     end

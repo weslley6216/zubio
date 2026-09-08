@@ -211,37 +211,69 @@ RSpec.describe Tenant, type: :model do
   end
 
   describe ".provision_owner!" do
-    it "returns the owner it created for the new tenant" do
-      owner = Tenant.provision_owner!(
-        tenant_attributes: { name: "Studio Aurora", subdomain: "estudio-aurora" },
-        owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123", password_confirmation: "s3cr3t123" }
+    def provision(subdomain: "estudio-aurora", tenant_name: "Studio Aurora", owner_name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123")
+      Tenant.provision_owner!(
+        tenant_attributes: { name: tenant_name, subdomain: subdomain },
+        owner_attributes: { name: owner_name, email: email, password: password, password_confirmation: password }
       )
+    end
+
+    it "returns the owner it created for the new tenant" do
+      owner = provision
 
       expect(owner).to be_owner
       expect(owner.tenant.subdomain).to eq("estudio-aurora")
     end
 
     it "rolls back the tenant when the owner attributes are invalid" do
-      expect {
-        Tenant.provision_owner!(
-          tenant_attributes: { name: "Studio Aurora", subdomain: "estudio-aurora" },
-          owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "", password_confirmation: "" }
-        )
-      }.to raise_error(ActiveRecord::RecordInvalid)
+      expect { provision(password: "") }
+        .to raise_error(ActiveRecord::RecordInvalid)
         .and change(Tenant, :count).by(0)
         .and change(User, :count).by(0)
+        .and change(Professional, :count).by(0)
     end
 
-    it "raises for a duplicate subdomain without creating a user" do
+    it "raises for a duplicate subdomain without creating a user or a professional" do
       create(:tenant, subdomain: "estudio-aurora")
 
-      expect {
-        Tenant.provision_owner!(
-          tenant_attributes: { name: "Studio Aurora 2", subdomain: "estudio-aurora" },
-          owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123", password_confirmation: "s3cr3t123" }
-        )
-      }.to raise_error(ActiveRecord::RecordInvalid)
+      expect { provision(tenant_name: "Studio Aurora 2") }
+        .to raise_error(ActiveRecord::RecordInvalid)
+        .and change(Tenant, :count).by(0)
         .and change(User, :count).by(0)
+        .and change(Professional, :count).by(0)
+    end
+
+    it "creates a professional for the new tenant's owner" do
+      owner = provision
+
+      professionals = ActsAsTenant.with_tenant(owner.tenant) { Professional.all }
+
+      expect(professionals.count).to eq(1)
+    end
+
+    it "names the owner's professional after them and links it to their login" do
+      owner = provision
+
+      professional = ActsAsTenant.with_tenant(owner.tenant) { Professional.sole }
+
+      expect(professional).to have_attributes(display_name: "Ana Lima", user_id: owner.id)
+    end
+
+    it "creates the owner's professional active" do
+      owner = provision
+
+      professional = ActsAsTenant.with_tenant(owner.tenant) { Professional.sole }
+
+      expect(professional).to be_active
+    end
+
+    it "keeps each establishment's professional inside its own tenant" do
+      aurora = provision.tenant
+      provision(subdomain: "barbearia-do-ze", tenant_name: "Barbearia do Zé", owner_name: "José Silva", email: "ze@example.com")
+
+      professionals = ActsAsTenant.with_tenant(aurora) { Professional.all }
+
+      expect(professionals.map(&:display_name)).to eq([ "Ana Lima" ])
     end
   end
 
