@@ -8,17 +8,26 @@ RSpec.describe "Owner handoff", type: :request do
 
   describe "GET /owner/handoff" do
     it "opens the owner session and lands on the dashboard" do
-      get owner_handoff_path(token: owner.generate_token_for(:owner_handoff))
+      get owner_handoff_path(token: owner.handoff_token)
 
       expect(response).to redirect_to(owner_dashboard_path)
     end
 
     it "reaches the dashboard without asking for the password again" do
-      get owner_handoff_path(token: owner.generate_token_for(:owner_handoff))
+      get owner_handoff_path(token: owner.handoff_token)
 
       follow_redirect!
 
       expect(response.body).to include("Painel")
+    end
+
+    it "refuses the same token a second time" do
+      token = owner.handoff_token
+      get owner_handoff_path(token: token)
+
+      get owner_handoff_path(token: token)
+
+      expect(response).to redirect_to(new_owner_session_path)
     end
 
     it "sends a malformed token back to the login form" do
@@ -28,7 +37,7 @@ RSpec.describe "Owner handoff", type: :request do
     end
 
     it "sends an expired token back to the login form" do
-      token = travel_to(1.hour.ago) { owner.generate_token_for(:owner_handoff) }
+      token = travel_to(1.hour.ago) { owner.handoff_token }
 
       get owner_handoff_path(token: token)
 
@@ -46,7 +55,7 @@ RSpec.describe "Owner handoff", type: :request do
     it "refuses a token minted for a user who is not an owner" do
       professional = create(:user, tenant: tenant, role: "professional")
 
-      get owner_handoff_path(token: professional.generate_token_for(:owner_handoff))
+      get owner_handoff_path(token: professional.handoff_token)
 
       expect(response).to redirect_to(new_owner_session_path)
     end
@@ -54,7 +63,7 @@ RSpec.describe "Owner handoff", type: :request do
     it "refuses a token minted for the owner of another tenant" do
       other_owner = create(:user, tenant: create(:tenant, subdomain: "salon-b"), role: "owner")
 
-      get owner_handoff_path(token: other_owner.generate_token_for(:owner_handoff))
+      get owner_handoff_path(token: other_owner.handoff_token)
 
       expect(response).to redirect_to(new_owner_session_path)
     end
@@ -62,7 +71,7 @@ RSpec.describe "Owner handoff", type: :request do
     it "accepts a token minted for the owner of the tenant in the host" do
       create(:user, tenant: create(:tenant, subdomain: "salon-b"), role: "owner")
 
-      get owner_handoff_path(token: owner.generate_token_for(:owner_handoff))
+      get owner_handoff_path(token: owner.handoff_token)
 
       expect(response).to redirect_to(owner_dashboard_path)
     end

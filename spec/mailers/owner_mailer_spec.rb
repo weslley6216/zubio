@@ -43,13 +43,11 @@ RSpec.describe OwnerMailer, type: :mailer do
       expect(mail.body.to_s).to include("barbeariadoze.com.br/owner/session/new")
     end
 
-    it "never names the address of another tenant" do
-      create(:tenant, subdomain: "salon-b", name: "Barbearia do Ze")
+    it "refuses to render an owner who belongs to another tenant" do
+      other_owner = create(:user, tenant: create(:tenant, subdomain: "salon-b"), role: "owner")
 
-      mail = described_class.welcome(tenant.id, owner.id)
-
-      expect(mail.body.to_s).not_to include("salon-b.zubio.com.br")
-      expect(mail.body.to_s).to include("estudio-aurora.zubio.com.br")
+      expect { described_class.welcome(tenant.id, other_owner.id).message }
+        .to raise_error(ActiveRecord::RecordNotFound)
     end
   end
 end

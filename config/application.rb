@@ -19,6 +19,10 @@ require "action_cable/engine"
 Bundler.require(*Rails.groups)
 
 module Zubio
+  # Declared out here because config/environments and config.action_dispatch
+  # need it at boot, before autoloading can reach a model.
+  PLATFORM_HOST = ENV.fetch("APP_HOST", "zubio.com.br")
+
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
@@ -43,7 +47,10 @@ module Zubio
     # needs 2 (com.br), "lvh.me" in development needs 1. Hardcoding 2 makes
     # request.subdomains come back empty on any host with fewer labels, and
     # tenant resolution then looks for a tenant whose subdomain is NULL.
-    # The default mirrors Tenant::PLATFORM_HOST, which is not loadable this early.
-    config.action_dispatch.tld_length = ENV.fetch("APP_HOST", "zubio.com.br").count(".")
+    config.action_dispatch.tld_length = PLATFORM_HOST.count(".")
+
+    # The handoff token rides in the query string of the redirect, and
+    # filter_parameters does not reach the logged Location header.
+    config.filter_redirect += [ "owner/handoff" ]
   end
 end
