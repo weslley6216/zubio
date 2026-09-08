@@ -87,10 +87,17 @@ class Tenant < ApplicationRecord
     Branding::PrecomputeVariantsJob.perform_later(id) if logo_replaced
   end
 
+  # The owner is the last expression on purpose: SignupsController hands the new
+  # owner to their own subdomain using the returned record's handoff token, and a
+  # line appended below it would silently return the Professional instead.
   def self.provision_owner!(tenant_attributes:, owner_attributes:)
     transaction do
       tenant = create!(tenant_attributes)
-      ActsAsTenant.with_tenant(tenant) { tenant.users.create!(owner_attributes.merge(role: :owner)) }
+      ActsAsTenant.with_tenant(tenant) do
+        owner = tenant.users.create!(owner_attributes.merge(role: :owner))
+        tenant.professionals.create!(display_name: owner.name, user: owner)
+        owner
+      end
     end
   end
 
