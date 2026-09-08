@@ -12,6 +12,7 @@ Rails.application.routes.draw do
 
   namespace :owner do
     resource :session, only: %i[new create destroy]
+    resource :handoff, only: :show
     resource :dashboard, only: :show, controller: "dashboard"
     resource :branding, only: %i[edit update]
   end

@@ -12,7 +12,7 @@ class Views::Signups::New < Views::Base
       render Components::Platform::Header.new
       render Components::Panel.new(title: "Criar sua conta") do
         render Components::Alert.new(text: flash[:alert]) if flash[:alert]
-        form_with(url: signup_path, method: :post, class: "space-y-4") do |form|
+        form_with(url: signup_path, method: :post, class: "space-y-4", data: { turbo: false }) do |form|
           render_establishment_name_field(form)
           render_subdomain_field(form)
           render_owner_name_field(form)

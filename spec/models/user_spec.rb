@@ -54,6 +54,30 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe "owner handoff token" do
+    it "resolves back to the user who minted it" do
+      user = create(:user)
+
+      expect(User.find_by_token_for(:owner_handoff, user.generate_token_for(:owner_handoff))).to eq(user)
+    end
+
+    it "stops resolving once the password changes" do
+      user = create(:user, password: "s3cr3t123")
+      token = user.generate_token_for(:owner_handoff)
+
+      user.update!(password: "an0th3rpass", password_confirmation: "an0th3rpass")
+
+      expect(User.find_by_token_for(:owner_handoff, token)).to be_nil
+    end
+
+    it "stops resolving once it expires" do
+      user = create(:user)
+      token = travel_to(1.hour.ago) { user.generate_token_for(:owner_handoff) }
+
+      expect(User.find_by_token_for(:owner_handoff, token)).to be_nil
+    end
+  end
+
   describe "tenant isolation" do
     it "does not include users from another tenant" do
       tenant_a = create(:tenant)
