@@ -1,4 +1,6 @@
 class Owner::SessionsController < ApplicationController
+  include Owner::SessionStart
+
   rate_limit to: 10, within: 3.minutes, only: :create,
     with: -> { redirect_to new_owner_session_path, alert: "Muitas tentativas. Tente de novo em alguns minutos." }
 
@@ -10,9 +12,7 @@ class Owner::SessionsController < ApplicationController
     user = User.authenticate_by(email: params[:email], password: params[:password])
 
     if user&.owner?
-      reset_session
-      session[:user_id] = user.id
-      redirect_to owner_dashboard_path
+      start_owner_session(user)
     else
       redirect_to new_owner_session_path, alert: "E-mail ou senha inválidos."
     end
