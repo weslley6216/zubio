@@ -48,6 +48,77 @@ RSpec.describe "Signup", type: :request do
     end
   end
 
+  describe "GET /signup/subdomain" do
+    it "reports a free subdomain as available under the platform host" do
+      get subdomain_signup_path(candidate: "estudio-aurora")
+
+      expect(response.body).to include("estudio-aurora.zubio.com.br")
+      expect(response.body).to include("está disponível")
+    end
+
+    it "reports a subdomain already taken by another establishment" do
+      create(:tenant, subdomain: "estudio-aurora")
+
+      get subdomain_signup_path(candidate: "estudio-aurora")
+
+      expect(response.body).to include("já está em uso")
+    end
+
+    it "reports a subdomain reserved by the platform" do
+      get subdomain_signup_path(candidate: "admin")
+
+      expect(response.body).to include("reservado")
+    end
+
+    it "reports a subdomain with characters the format does not allow" do
+      get subdomain_signup_path(candidate: "estudio aurora")
+
+      expect(response.body).to include("letras minúsculas")
+    end
+
+    it "reports a subdomain shorter than the minimum" do
+      get subdomain_signup_path(candidate: "ab")
+
+      expect(response.body).to include("3 caracteres")
+    end
+
+    it "reports a subdomain longer than the maximum" do
+      get subdomain_signup_path(candidate: "a" * 64)
+
+      expect(response.body).to include("63 caracteres")
+    end
+
+    it "prompts for a subdomain when the field is empty" do
+      get subdomain_signup_path(candidate: "")
+
+      expect(response.body).to include("Escolha um subdomínio")
+    end
+
+    it "stops answering the check once the rate limit is exceeded" do
+      30.times { get subdomain_signup_path(candidate: "estudio-aurora") }
+
+      get subdomain_signup_path(candidate: "estudio-aurora")
+
+      expect(response).to have_http_status(:too_many_requests)
+    end
+
+    it "leaves the signup quota untouched however much the visitor types" do
+      30.times { get subdomain_signup_path(candidate: "estudio-aurora") }
+
+      expect {
+        post signup_path, params: signup_params(subdomain: "estudio-aurora")
+      }.to change(Tenant, :count).by(1)
+    end
+
+    it "sends the check back to the platform host when reached on a tenant subdomain" do
+      host! "joes-barbershop.zubio.com.br"
+
+      get subdomain_signup_path(candidate: "estudio-aurora")
+
+      expect(response).to redirect_to(new_signup_url(host: Tenant::PLATFORM_HOST))
+    end
+  end
+
   describe "POST /signup" do
     it "creates the tenant and its owner, then hands the owner over to the new subdomain" do
       post signup_path, params: signup_params(subdomain: "estudio-aurora")
@@ -69,9 +140,11 @@ RSpec.describe "Signup", type: :request do
     end
 
     it "emails the new owner the address of their establishment" do
-      expect {
+      perform_enqueued_jobs do
         post signup_path, params: signup_params(subdomain: "estudio-aurora")
-      }.to have_enqueued_mail(OwnerMailer, :welcome)
+      end
+
+      expect(ActionMailer::Base.deliveries.last.body.to_s).to include("estudio-aurora.zubio.com.br")
     end
 
     it "rejects signup when the subdomain is already in use" do

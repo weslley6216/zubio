@@ -1,10 +1,13 @@
 class Tenant < ApplicationRecord
   RESERVED = %w[www api admin app assets cdn mail status help blog].freeze
-  PLATFORM_HOST = ENV.fetch("APP_HOST", "zubio.com.br")
+  PLATFORM_HOST = Zubio::PLATFORM_HOST
+  SUBDOMAIN_LENGTH = (3..63).freeze
+  SUBDOMAIN_STATUS_PRIORITY = %i[blank too_short too_long invalid exclusion taken].freeze
   DOMAIN_FORMAT = /\A(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}\z/i
 
   has_one :branding, dependent: :destroy
-  has_many :users
+  has_many :users, dependent: :restrict_with_error
+  has_many :professionals, dependent: :restrict_with_error
 
   enum :status, { active: "active", suspended: "suspended" }
 
@@ -12,7 +15,7 @@ class Tenant < ApplicationRecord
     presence: true,
     uniqueness: { case_sensitive: false },
     format: { with: /\A[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\z/ },
-    length: { in: 3..63 },
+    length: { in: SUBDOMAIN_LENGTH },
     exclusion: { in: RESERVED }
   validates :name, presence: true
   validates :custom_domain,
@@ -24,8 +27,42 @@ class Tenant < ApplicationRecord
     "t/#{id}/#{branding&.updated_at&.to_i}"
   end
 
+  # Runs only the subdomain validators, not the whole record: this answers a
+  # keystroke, and a validation added to another attribute later must not turn
+  # into an extra query here. It also ignores :if/:unless, which live on the
+  # callback rather than on the validator.
+  #
+  # A failure this method cannot name comes back as :unknown, never :available —
+  # the one wrong answer an availability check must not give is a false yes.
+  def self.subdomain_status(subdomain)
+    failures = subdomain_failures(subdomain)
+    return :available if failures.empty?
+
+    SUBDOMAIN_STATUS_PRIORITY.find { |status| failures.include?(status) } || :unknown
+  end
+
+  # Uniqueness is the only validator here that hits the database, so a candidate
+  # the cheap rules already rejected never pays for the round-trip.
+  def self.subdomain_failures(subdomain)
+    candidate = new(subdomain: subdomain)
+    lookups, local = validators_on(:subdomain).partition { |validator| validator.is_a?(ActiveRecord::Validations::UniquenessValidator) }
+
+    local.each { |validator| validator.validate(candidate) }
+    lookups.each { |validator| validator.validate(candidate) } if candidate.errors[:subdomain].empty?
+
+    candidate.errors.details[:subdomain].pluck(:error)
+  end
+
+  private_class_method :subdomain_failures
+
+  # One character past the maximum, so an oversized candidate still reports
+  # :too_long instead of being silently truncated into a valid one.
+  def self.clamp_subdomain(subdomain) = subdomain.to_s.first(SUBDOMAIN_LENGTH.max + 1)
+
+  def self.host_for(subdomain) = "#{subdomain}.#{PLATFORM_HOST}"
+
   def canonical_host
-    custom_domain_verified_at? ? custom_domain : "#{subdomain}.#{PLATFORM_HOST}"
+    custom_domain_verified_at? ? custom_domain : self.class.host_for(subdomain)
   end
 
   def branding_or_default
@@ -45,7 +82,7 @@ class Tenant < ApplicationRecord
     Branding::PrecomputeIconVariantsJob.perform_later(id) if logo_replaced
   end
 
-  def self.provision!(tenant_attributes:, owner_attributes:)
+  def self.provision_owner!(tenant_attributes:, owner_attributes:)
     transaction do
       tenant = create!(tenant_attributes)
       ActsAsTenant.with_tenant(tenant) { tenant.users.create!(owner_attributes.merge(role: :owner)) }

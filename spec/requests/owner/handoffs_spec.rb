@@ -21,6 +21,27 @@ RSpec.describe "Owner handoff", type: :request do
       expect(response.body).to include("Painel")
     end
 
+    it "refuses a token that arrives as a subresource instead of a navigation" do
+      get owner_handoff_path(token: owner.handoff_token), headers: { "Sec-Fetch-Dest" => "image" }
+
+      expect(response).to redirect_to(new_owner_session_path)
+    end
+
+    it "accepts a token that arrives as a top-level navigation" do
+      get owner_handoff_path(token: owner.handoff_token), headers: { "Sec-Fetch-Dest" => "document" }
+
+      expect(response).to redirect_to(owner_dashboard_path)
+    end
+
+    it "leaves the token usable after a subresource attempt is refused" do
+      token = owner.handoff_token
+      get owner_handoff_path(token: token), headers: { "Sec-Fetch-Dest" => "image" }
+
+      get owner_handoff_path(token: token)
+
+      expect(response).to redirect_to(owner_dashboard_path)
+    end
+
     it "refuses the same token a second time" do
       token = owner.handoff_token
       get owner_handoff_path(token: token)

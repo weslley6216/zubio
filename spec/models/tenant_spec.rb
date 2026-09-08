@@ -180,9 +180,9 @@ RSpec.describe Tenant, type: :model do
     end
   end
 
-  describe ".provision!" do
+  describe ".provision_owner!" do
     it "returns the owner it created for the new tenant" do
-      owner = Tenant.provision!(
+      owner = Tenant.provision_owner!(
         tenant_attributes: { name: "Studio Aurora", subdomain: "estudio-aurora" },
         owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123", password_confirmation: "s3cr3t123" }
       )
@@ -193,7 +193,7 @@ RSpec.describe Tenant, type: :model do
 
     it "rolls back the tenant when the owner attributes are invalid" do
       expect {
-        Tenant.provision!(
+        Tenant.provision_owner!(
           tenant_attributes: { name: "Studio Aurora", subdomain: "estudio-aurora" },
           owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "", password_confirmation: "" }
         )
@@ -206,12 +206,66 @@ RSpec.describe Tenant, type: :model do
       create(:tenant, subdomain: "estudio-aurora")
 
       expect {
-        Tenant.provision!(
+        Tenant.provision_owner!(
           tenant_attributes: { name: "Studio Aurora 2", subdomain: "estudio-aurora" },
           owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123", password_confirmation: "s3cr3t123" }
         )
       }.to raise_error(ActiveRecord::RecordInvalid)
         .and change(User, :count).by(0)
+    end
+  end
+
+  describe "#destroy" do
+    it "refuses to destroy a tenant that still has users" do
+      tenant = create(:tenant)
+      create(:user, tenant: tenant)
+
+      expect { tenant.destroy }.to change(Tenant, :count).by(0)
+    end
+
+    it "refuses to destroy a tenant that still has professionals" do
+      tenant = create(:tenant)
+      create(:professional, :without_user, tenant: tenant)
+
+      expect { tenant.destroy }.to change(Tenant, :count).by(0)
+    end
+
+    it "destroys a tenant with nothing left attached to it" do
+      tenant = create(:tenant)
+
+      expect { tenant.destroy }.to change(Tenant, :count).by(-1)
+    end
+  end
+
+  describe ".subdomain_status" do
+    it "is available for a well-formed subdomain nobody holds" do
+      expect(Tenant.subdomain_status("estudio-aurora")).to eq(:available)
+    end
+
+    it "is taken once an establishment holds it" do
+      create(:tenant, subdomain: "estudio-aurora")
+
+      expect(Tenant.subdomain_status("estudio-aurora")).to eq(:taken)
+    end
+
+    it "is excluded for a subdomain the platform reserves" do
+      expect(Tenant.subdomain_status("admin")).to eq(:exclusion)
+    end
+
+    it "is invalid for characters the format does not allow" do
+      expect(Tenant.subdomain_status("estudio aurora")).to eq(:invalid)
+    end
+
+    it "is too short below the minimum length" do
+      expect(Tenant.subdomain_status("ab")).to eq(:too_short)
+    end
+
+    it "is too long above the maximum length" do
+      expect(Tenant.subdomain_status("a" * 64)).to eq(:too_long)
+    end
+
+    it "is blank for an empty subdomain" do
+      expect(Tenant.subdomain_status("")).to eq(:blank)
     end
   end
 
