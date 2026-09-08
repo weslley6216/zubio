@@ -7,7 +7,8 @@ class Views::Owner::Brandings::Edit < Views::Base
   end
 
   def view_template
-    render Views::Layouts::Application.new(title: "Marca · Zubio", branding: @branding) do
+    render Views::Layouts::Application.new(title: "Marca · #{@tenant.name}", branding: @branding) do
+      render Components::Owner::Header.new(tenant: @tenant, branding: @branding)
       render Components::Panel.new(title: "Marca do estabelecimento") do
         form_with(url: owner_branding_path, method: :patch, multipart: true, class: "space-y-4") do |form|
           render_name_field(form)
