@@ -68,7 +68,7 @@ RSpec.describe "Landing page", type: :request do
       get root_path
 
       expect(response.body.scan(%(data-action="theme#toggle")).size).to eq(2)
-      expect(response.body).to include(Components::Platform::Header::TOGGLE_LABEL)
+      expect(response.body).to include(Components::ThemeToggle::LABEL)
     end
 
     it "marks the reminder channel as unreleased instead of promising it" do

@@ -5,6 +5,7 @@ class Branding < ApplicationRecord
 
   DEFAULT_BRAND_600 = "#4F46E5"
   ICON_SIZES = [ [ 192, "any" ], [ 512, "any" ], [ 512, "maskable" ] ].freeze
+  HEADER_LOGO_LIMIT = [ 96, 96 ].freeze
   LOGO_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
   LOGO_MAX_BYTES = 5.megabytes
 
@@ -39,6 +40,14 @@ class Branding < ApplicationRecord
         purpose: purpose
       }
     end
+  end
+
+  # The header renders on the branding form too, where a rejected upload leaves
+  # an attachment over a blob that was never persisted — proxying it would raise.
+  def header_logo
+    return unless logo.attached? && logo.blob.persisted?
+
+    logo.variant(resize_to_limit: HEADER_LOGO_LIMIT, format: :png)
   end
 
   private

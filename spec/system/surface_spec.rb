@@ -13,7 +13,7 @@ RSpec.describe "Application surface", type: :system, js: true do
     emulate_color_scheme("light")
 
     visit "http://zubio.com.br/"
-    click_button Components::Platform::Header::TOGGLE_LABEL
+    click_button Components::ThemeToggle::LABEL
     expect(page).to have_css("html[data-theme='dark']")
 
     visit "http://zubio.com.br#{new_signup_path}"
@@ -47,7 +47,7 @@ RSpec.describe "Application surface", type: :system, js: true do
     emulate_color_scheme("light")
 
     visit "http://zubio.com.br#{new_signup_path}"
-    click_button Components::Platform::Header::TOGGLE_LABEL
+    click_button Components::ThemeToggle::LABEL
 
     expect(page).to have_css("html[data-theme='dark']")
   end

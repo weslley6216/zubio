@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe Branding::PrecomputeIconVariantsJob, type: :job do
+RSpec.describe Branding::PrecomputeVariantsJob, type: :job do
   it "processes each icon variant for the given tenant's branding" do
     tenant = create(:tenant)
     branding = create(:branding, :with_logo, tenant: tenant)
@@ -18,5 +18,14 @@ RSpec.describe Branding::PrecomputeIconVariantsJob, type: :job do
     ActsAsTenant.with_tenant(tenant_a) { described_class.perform_now(tenant_b.id) }
 
     expect(branding_b.icon_variants.map { |entry| entry[:variant].image }).to all(be_present)
+  end
+
+  it "processes the header logo variant for the given tenant's branding" do
+    tenant = create(:tenant)
+    branding = create(:branding, :with_logo, tenant: tenant)
+
+    described_class.perform_now(tenant.id)
+
+    expect(branding.header_logo.image).to be_present
   end
 end

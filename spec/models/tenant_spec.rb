@@ -115,6 +115,36 @@ RSpec.describe Tenant, type: :model do
     end
   end
 
+  describe "#branded?" do
+    it "is true when the tenant's branding has a logo attached" do
+      tenant = create(:tenant)
+      create(:branding, :with_logo, tenant: tenant)
+
+      expect(tenant.reload).to be_branded
+    end
+
+    it "is false when the tenant's branding has no logo" do
+      tenant = create(:tenant)
+      create(:branding, tenant: tenant)
+
+      expect(tenant.reload).not_to be_branded
+    end
+
+    it "is false when the tenant has no branding at all" do
+      tenant = create(:tenant)
+
+      expect(tenant).not_to be_branded
+    end
+
+    it "does not count another tenant's branded logo" do
+      tenant = create(:tenant)
+      other_tenant = create(:tenant)
+      create(:branding, :with_logo, tenant: other_tenant)
+
+      expect(tenant.reload).not_to be_branded
+    end
+  end
+
   describe "#update_branding!" do
     it "updates the tenant name and the branding attributes atomically" do
       tenant = create(:tenant, name: "Old Name")
@@ -137,23 +167,23 @@ RSpec.describe Tenant, type: :model do
       expect(tenant.reload.name).to eq("Old Name")
     end
 
-    it "enqueues icon variant precomputation when a new logo is included" do
+    it "enqueues variant precomputation when a new logo is included" do
       tenant = create(:tenant)
       create(:branding, tenant: tenant)
       logo = fixture_file_upload("spec/fixtures/files/logo.png", "image/png")
 
       expect {
         tenant.update_branding!(tenant_attrs: { name: tenant.name }, branding_attrs: { brand_600: "#4F46E5", logo: logo }, remove_logo: false)
-      }.to have_enqueued_job(Branding::PrecomputeIconVariantsJob).with(tenant.id)
+      }.to have_enqueued_job(Branding::PrecomputeVariantsJob).with(tenant.id)
     end
 
-    it "does not enqueue icon variant precomputation when no logo is included" do
+    it "does not enqueue variant precomputation when no logo is included" do
       tenant = create(:tenant)
       create(:branding, tenant: tenant)
 
       expect {
         tenant.update_branding!(tenant_attrs: { name: tenant.name }, branding_attrs: { brand_600: "#4F46E5" }, remove_logo: false)
-      }.not_to have_enqueued_job(Branding::PrecomputeIconVariantsJob)
+      }.not_to have_enqueued_job(Branding::PrecomputeVariantsJob)
     end
 
     it "purges the current logo when remove_logo is true and no replacement is given" do

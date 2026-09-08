@@ -148,4 +148,24 @@ RSpec.describe Branding, type: :model do
       )
     end
   end
+
+  describe "#header_logo" do
+    it "is nil when no logo is attached" do
+      branding = create(:branding)
+
+      expect(branding.header_logo).to be_nil
+    end
+
+    it "returns a variant limited to the header size when a logo is attached" do
+      branding = create(:branding, :with_logo)
+
+      expect(branding.header_logo.variation.transformations[:resize_to_limit]).to eq(Branding::HEADER_LOGO_LIMIT)
+    end
+
+    it "is nil when a rejected upload left an attachment whose blob was never persisted" do
+      branding = build(:branding, :with_logo)
+
+      expect(branding.header_logo).to be_nil
+    end
+  end
 end
