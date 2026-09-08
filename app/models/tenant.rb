@@ -24,6 +24,10 @@ class Tenant < ApplicationRecord
     "t/#{id}/#{branding&.updated_at&.to_i}"
   end
 
+  def canonical_host
+    custom_domain_verified_at? ? custom_domain : "#{subdomain}.#{PLATFORM_HOST}"
+  end
+
   def branding_or_default
     branding || Branding.platform_default
   end
@@ -45,7 +49,6 @@ class Tenant < ApplicationRecord
     transaction do
       tenant = create!(tenant_attributes)
       ActsAsTenant.with_tenant(tenant) { tenant.users.create!(owner_attributes.merge(role: :owner)) }
-      tenant
     end
   end
 

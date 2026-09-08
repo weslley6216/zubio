@@ -181,14 +181,14 @@ RSpec.describe Tenant, type: :model do
   end
 
   describe ".provision!" do
-    it "creates a tenant and an owner user" do
-      tenant = Tenant.provision!(
+    it "returns the owner it created for the new tenant" do
+      owner = Tenant.provision!(
         tenant_attributes: { name: "Studio Aurora", subdomain: "estudio-aurora" },
         owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123", password_confirmation: "s3cr3t123" }
       )
 
-      expect(tenant).to be_persisted
-      expect(tenant.users.sole).to be_owner
+      expect(owner).to be_owner
+      expect(owner.tenant.subdomain).to eq("estudio-aurora")
     end
 
     it "rolls back the tenant when the owner attributes are invalid" do
@@ -212,6 +212,26 @@ RSpec.describe Tenant, type: :model do
         )
       }.to raise_error(ActiveRecord::RecordInvalid)
         .and change(User, :count).by(0)
+    end
+  end
+
+  describe "#canonical_host" do
+    it "is the subdomain under the platform host" do
+      tenant = build(:tenant, subdomain: "estudio-aurora")
+
+      expect(tenant.canonical_host).to eq("estudio-aurora.zubio.com.br")
+    end
+
+    it "is the custom domain once it is verified" do
+      tenant = build(:tenant, :with_verified_custom_domain, subdomain: "estudio-aurora")
+
+      expect(tenant.canonical_host).to eq("barbeariadoze.com.br")
+    end
+
+    it "stays on the subdomain while the custom domain is unverified" do
+      tenant = build(:tenant, :with_pending_custom_domain, subdomain: "estudio-aurora")
+
+      expect(tenant.canonical_host).to eq("estudio-aurora.zubio.com.br")
     end
   end
 

@@ -1,0 +1,13 @@
+pt-BR:
+  owner:
+    mailer:
+      welcome:
+        subject: "%{establishment} está no ar no Zubio"
+        body: |
+          Olá, %{name}!
+
+          A conta de %{establishment} está pronta. O endereço do seu estabelecimento é:
+
+          %{url}
+
+          Guarde esse link: é por ele que você e sua equipe entram no painel.

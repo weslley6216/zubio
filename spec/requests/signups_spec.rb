@@ -34,6 +34,12 @@ RSpec.describe "Signup", type: :request do
       expect(response).to redirect_to(new_signup_url(host: Tenant::PLATFORM_HOST))
     end
 
+    it "submits outside Turbo so the browser itself follows the cross-origin redirect" do
+      get new_signup_path
+
+      expect(response.body).to include(%(data-turbo="false"))
+    end
+
     it "renders the platform header without the landing section nav" do
       get new_signup_path
 
@@ -43,14 +49,29 @@ RSpec.describe "Signup", type: :request do
   end
 
   describe "POST /signup" do
-    it "creates the tenant and its owner, then redirects to login on the new subdomain" do
+    it "creates the tenant and its owner, then hands the owner over to the new subdomain" do
       post signup_path, params: signup_params(subdomain: "estudio-aurora")
 
       tenant = Tenant.find_by(subdomain: "estudio-aurora")
 
       expect(tenant).to be_active
       expect(tenant.users.sole).to be_owner
-      expect(response).to redirect_to(new_owner_session_url(subdomain: "estudio-aurora"))
+      expect(response.location).to start_with(owner_handoff_url(subdomain: "estudio-aurora"))
+    end
+
+    it "lands the new owner on their own dashboard without a second login" do
+      post signup_path, params: signup_params(subdomain: "estudio-aurora")
+
+      follow_redirect!
+      follow_redirect!
+
+      expect(response.body).to include("Painel")
+    end
+
+    it "emails the new owner the address of their establishment" do
+      expect {
+        post signup_path, params: signup_params(subdomain: "estudio-aurora")
+      }.to have_enqueued_mail(OwnerMailer, :welcome)
     end
 
     it "rejects signup when the subdomain is already in use" do

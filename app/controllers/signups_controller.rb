@@ -13,8 +13,13 @@ class SignupsController < ApplicationController
   end
 
   def create
-    @tenant = Tenant.provision!(tenant_attributes: tenant_params, owner_attributes: owner_params)
-    redirect_to new_owner_session_url(subdomain: @tenant.subdomain), allow_other_host: true
+    owner = Tenant.provision!(tenant_attributes: tenant_params, owner_attributes: owner_params)
+    OwnerMailer.welcome(owner.tenant_id, owner.id).deliver_later
+
+    redirect_to owner_handoff_url(
+      subdomain: owner.tenant.subdomain,
+      token: owner.generate_token_for(:owner_handoff)
+    ), allow_other_host: true
   rescue ActiveRecord::RecordInvalid => invalid
     @tenant = invalid.record.is_a?(Tenant) ? invalid.record : Tenant.new(tenant_params)
     @user = invalid.record.is_a?(User) ? invalid.record : User.new(owner_params)
