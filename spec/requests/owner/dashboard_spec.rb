@@ -55,6 +55,7 @@ RSpec.describe "Owner dashboard", type: :request do
 
       get owner_dashboard_path
 
+      expect(response.body).to include(Views::Owner::Dashboard::Show::SETUP_BADGE)
       expect(response.body).to include(Views::Owner::Dashboard::Show::SETUP_TITLE)
       expect(response.body).not_to include(Views::Owner::Dashboard::Show::MANAGE_TITLE)
     end
@@ -96,12 +97,15 @@ RSpec.describe "Owner dashboard", type: :request do
       get owner_dashboard_path
 
       expect(response).to redirect_to(new_owner_session_path)
+
+      follow_redirect!
+
       expect(response.body).not_to include("Estúdio Aurora")
     end
 
     it "shows the identity of the tenant in the host and nothing of another tenant" do
       other_tenant = create(:tenant, subdomain: "salon-b", name: "Barbearia do Zé")
-      create(:branding, tenant: other_tenant, brand_600: "#DC2626")
+      create(:branding, :with_logo, tenant: other_tenant, brand_600: "#DC2626")
       create(:branding, tenant: tenant, brand_600: "#2F6FED")
       sign_in
 
@@ -110,6 +114,7 @@ RSpec.describe "Owner dashboard", type: :request do
       expect(response.body).to include("Estúdio Aurora")
       expect(response.body).not_to include("Barbearia do Zé")
       expect(response.body).not_to include("--brand-600:#DC2626;")
+      expect(response.body).not_to include("/rails/active_storage/representations/proxy/")
     end
   end
 end

@@ -47,7 +47,7 @@ class Views::Owner::Brandings::Edit < Views::Base
   def render_logo_field
     div do
       label(class: LABEL) { "Logotipo" }
-      img(src: rails_storage_proxy_path(@branding.logo), class: "mt-2 h-16 w-16 rounded object-contain") if current_logo_attached?
+      img(src: rails_storage_proxy_path(@branding.header_logo), class: "mt-2 h-16 w-16 rounded object-contain") if current_logo_attached?
       input(type: "file", name: "branding[logo]", accept: "image/png,image/jpeg,image/webp", class: "mt-1 block w-full text-sm")
       render Components::Form::Errors.new(messages: @branding.errors[:logo])
     end
