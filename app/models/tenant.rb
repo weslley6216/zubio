@@ -88,8 +88,8 @@ class Tenant < ApplicationRecord
   end
 
   # The owner is the last expression on purpose: SignupsController hands the new
-  # owner to their own subdomain using the returned record's handoff token, and a
-  # line appended below it would silently return the Professional instead.
+  # owner to their own subdomain using the returned record's handoff token, so a
+  # line appended below it would change what this method returns.
   def self.provision_owner!(tenant_attributes:, owner_attributes:)
     transaction do
       tenant = create!(tenant_attributes)
