@@ -7,7 +7,8 @@ class Views::Owner::Brandings::Edit < Views::Base
   end
 
   def view_template
-    render Views::Layouts::Application.new(title: "Marca · Zubio", branding: @branding) do
+    render Views::Layouts::Application.new(title: "Marca · #{@tenant.name}", branding: @branding) do
+      render Components::Owner::Header.new(tenant: @tenant, branding: @branding)
       render Components::Panel.new(title: "Marca do estabelecimento") do
         form_with(url: owner_branding_path, method: :patch, multipart: true, class: "space-y-4") do |form|
           render_name_field(form)
@@ -46,7 +47,7 @@ class Views::Owner::Brandings::Edit < Views::Base
   def render_logo_field
     div do
       label(class: LABEL) { "Logotipo" }
-      img(src: rails_storage_proxy_path(@branding.logo), class: "mt-2 h-16 w-16 rounded object-contain") if current_logo_attached?
+      img(src: rails_storage_proxy_path(@branding.header_logo), class: "mt-2 h-16 w-16 rounded object-contain") if current_logo_attached?
       input(type: "file", name: "branding[logo]", accept: "image/png,image/jpeg,image/webp", class: "mt-1 block w-full text-sm")
       render Components::Form::Errors.new(messages: @branding.errors[:logo])
     end

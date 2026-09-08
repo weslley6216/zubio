@@ -25,6 +25,19 @@ RSpec.describe "Owner branding", type: :request do
       get edit_owner_branding_path
 
       expect(response.body).to include("Remover logotipo atual")
+      expect(response.body).to include("/rails/active_storage/representations/proxy/")
+      expect(response.body).not_to include("/rails/active_storage/blobs/proxy/")
+    end
+
+    it "renders the authenticated header with the brand accent, a way back to the panel and a way out of the session" do
+      create(:branding, tenant: tenant, brand_600: "#2F6FED")
+
+      get edit_owner_branding_path
+
+      expect(response.body).to include(%(href="#{owner_dashboard_path}"))
+      expect(response.body).to include(%(action="#{owner_session_path}"))
+      expect(response.body).to include(%(value="delete"))
+      expect(response.body).to include("bg-brand-accent")
     end
   end
 
@@ -56,13 +69,13 @@ RSpec.describe "Owner branding", type: :request do
       expect(tenant.reload.branding.brand_600).to eq("#4F46E5")
     end
 
-    it "saves a valid logo upload and enqueues icon variant precomputation in the background" do
+    it "saves a valid logo upload and enqueues variant precomputation in the background" do
       create(:branding, tenant: tenant, brand_600: "#4F46E5")
       logo = Rack::Test::UploadedFile.new(Rails.root.join("spec/fixtures/files/logo.png"), "image/png")
 
       expect {
         patch owner_branding_path, params: { tenant: { name: tenant.name }, branding: { brand_600: "#4F46E5", logo: logo } }
-      }.to have_enqueued_job(Branding::PrecomputeIconVariantsJob).with(tenant.id)
+      }.to have_enqueued_job(Branding::PrecomputeVariantsJob).with(tenant.id)
 
       expect(response).to redirect_to(edit_owner_branding_path)
       expect(tenant.reload.branding.logo).to be_attached

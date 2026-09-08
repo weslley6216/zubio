@@ -10,6 +10,7 @@ RSpec.describe "Owner login", type: :system do
     fill_in "Senha", with: "s3cr3t123"
     click_on "Entrar"
 
-    expect(page).to have_content("Painel")
+    expect(page).to have_content(tenant.name)
+    expect(page).to have_button(Components::Owner::Header::SIGN_OUT_LABEL)
   end
 end

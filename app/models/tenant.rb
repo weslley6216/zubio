@@ -69,6 +69,11 @@ class Tenant < ApplicationRecord
     branding || Branding.platform_default
   end
 
+  # Deliberately looser than Branding#header_logo, which also demands a persisted
+  # blob: this only decides whether to invite the owner to configure the brand,
+  # and a screen that renders that invitation never carries a rejected upload.
+  def branded? = branding&.logo&.attached? || false
+
   def update_branding!(tenant_attrs:, branding_attrs:, remove_logo:)
     target_branding = branding || build_branding
     logo_replaced = branding_attrs[:logo].present?
@@ -79,7 +84,7 @@ class Tenant < ApplicationRecord
     end
 
     target_branding.logo.purge_later if remove_logo && !logo_replaced
-    Branding::PrecomputeIconVariantsJob.perform_later(id) if logo_replaced
+    Branding::PrecomputeVariantsJob.perform_later(id) if logo_replaced
   end
 
   def self.provision_owner!(tenant_attributes:, owner_attributes:)
