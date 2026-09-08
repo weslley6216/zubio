@@ -47,7 +47,7 @@ RSpec.describe Professional, type: :model do
 
       ActsAsTenant.with_tenant(tenant) { professional.valid? }
 
-      expect(professional.errors[:user_id]).to be_present
+      expect(professional.errors.details[:user_id]).to include(hash_including(error: :taken))
     end
 
     it "is valid when each professional has a different user" do

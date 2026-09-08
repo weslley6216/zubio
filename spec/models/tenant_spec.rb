@@ -230,6 +230,7 @@ RSpec.describe Tenant, type: :model do
         .to raise_error(ActiveRecord::RecordInvalid)
         .and change(Tenant, :count).by(0)
         .and change(User, :count).by(0)
+        .and change(Professional, :count).by(0)
     end
 
     it "raises for a duplicate subdomain without creating a user or a professional" do
