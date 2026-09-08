@@ -39,8 +39,11 @@ module Zubio
     # Don't generate system test files.
     config.generators.system_tests = nil
 
-    # "zubio.com.br" has a 2-part TLD (com.br); without this, "zubio" leaks
-    # into request.subdomains and request.subdomain comes out wrong.
-    config.action_dispatch.tld_length = 2
+    # Every label of the platform host except the leftmost is TLD: "zubio.com.br"
+    # needs 2 (com.br), "lvh.me" in development needs 1. Hardcoding 2 makes
+    # request.subdomains come back empty on any host with fewer labels, and
+    # tenant resolution then looks for a tenant whose subdomain is NULL.
+    # The default mirrors Tenant::PLATFORM_HOST, which is not loadable this early.
+    config.action_dispatch.tld_length = ENV.fetch("APP_HOST", "zubio.com.br").count(".")
   end
 end
