@@ -12,7 +12,9 @@ class Views::Signups::New < Views::Base
       render Components::Platform::Header.new
       render Components::Panel.new(title: "Criar sua conta") do
         render Components::Alert.new(text: flash[:alert]) if flash[:alert]
-        form_with(url: signup_path, method: :post, class: "space-y-4", data: { turbo: false }) do |form|
+        form_with(url: signup_path, method: :post, class: "space-y-4",
+          data: { turbo: false, controller: "subdomain", subdomain_url_value: subdomain_signup_path,
+                  subdomain_max_length_value: Tenant::SUBDOMAIN_LENGTH.max }) do |form|
           render_establishment_name_field(form)
           render_subdomain_field(form)
           render_owner_name_field(form)
@@ -31,7 +33,8 @@ class Views::Signups::New < Views::Base
   def render_establishment_name_field(form)
     div do
       form.label :tenant_name, "Nome do estabelecimento", class: LABEL
-      form.text_field :tenant_name, name: "tenant[name]", value: @tenant.name, required: true, class: CONTROL
+      form.text_field :tenant_name, name: "tenant[name]", value: @tenant.name, required: true, class: CONTROL,
+        data: { subdomain_target: "name", action: "input->subdomain#suggest" }
       render Components::Form::Errors.new(messages: @tenant.errors[:name])
     end
   end
@@ -39,7 +42,9 @@ class Views::Signups::New < Views::Base
   def render_subdomain_field(form)
     div do
       form.label :tenant_subdomain, "Subdomínio", class: LABEL
-      form.text_field :tenant_subdomain, name: "tenant[subdomain]", value: @tenant.subdomain, required: true, class: CONTROL
+      form.text_field :tenant_subdomain, name: "tenant[subdomain]", value: @tenant.subdomain, required: true, class: CONTROL,
+        data: { subdomain_target: "field", action: "input->subdomain#edit" }
+      div(role: "status", aria_live: "polite", data: { subdomain_target: "status" })
       render Components::Form::Errors.new(messages: @tenant.errors[:subdomain])
     end
   end
