@@ -45,9 +45,9 @@ RSpec.describe Professional, type: :model do
       create(:professional, :without_user, tenant: tenant, user: user)
       professional = build(:professional, :without_user, tenant: tenant, user: user)
 
-      is_valid = ActsAsTenant.with_tenant(tenant) { professional.valid? }
+      ActsAsTenant.with_tenant(tenant) { professional.valid? }
 
-      expect(is_valid).to be false
+      expect(professional.errors.details[:user_id]).to include(hash_including(error: :taken))
     end
 
     it "is valid when each professional has a different user" do
