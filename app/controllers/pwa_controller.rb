@@ -4,7 +4,7 @@ class PwaController < ApplicationController
   # manifest is JSON and never triggers that check.
   skip_forgery_protection only: :service_worker
 
-  BACKGROUND_COLOR = "#ffffff"
+  BACKGROUND_COLOR = "#ffffff".freeze
   DEFAULT_ICONS = [
     { src: "/icon.png", sizes: "512x512", type: "image/png", purpose: "any" },
     { src: "/icon.png", sizes: "512x512", type: "image/png", purpose: "maskable" }
