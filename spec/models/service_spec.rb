@@ -100,6 +100,52 @@ RSpec.describe Service, type: :model do
     end
   end
 
+  describe ".active" do
+    it "excludes services that are not active" do
+      tenant = create(:tenant)
+      inactive = create(:service, tenant: tenant, active: false)
+
+      result = ActsAsTenant.with_tenant(tenant) { Service.active }
+
+      expect(result).not_to include(inactive)
+    end
+
+    it "includes services that are active" do
+      tenant = create(:tenant)
+      service = create(:service, tenant: tenant)
+
+      result = ActsAsTenant.with_tenant(tenant) { Service.active }
+
+      expect(result).to include(service)
+    end
+  end
+
+  describe ".ordered" do
+    it "returns the services by name" do
+      tenant = create(:tenant)
+      create(:service, tenant: tenant, name: "Corte")
+      create(:service, tenant: tenant, name: "Barba")
+
+      result = ActsAsTenant.with_tenant(tenant) { Service.ordered }
+
+      expect(result.map(&:name)).to eq([ "Barba", "Corte" ])
+    end
+  end
+
+  describe "#price" do
+    it "converts cents into reais as a decimal" do
+      service = build(:service, price_cents: 9_000)
+
+      expect(service.price).to eq(BigDecimal("90"))
+    end
+
+    it "keeps money out of floating point" do
+      service = build(:service, price_cents: 9_999)
+
+      expect(service.price).to be_a(BigDecimal)
+    end
+  end
+
   describe "tenant isolation" do
     it "does not include services from another tenant" do
       tenant_a = create(:tenant)
