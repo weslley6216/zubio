@@ -36,7 +36,8 @@ docker compose run --rm app bundle install            # após alterar o Gemfile
 
 ## Regras críticas
 
-- **Sem camada de service no harness inicial**: lógica de negócio mora em Model (validação, scope, cálculo sobre o próprio estado) ou Controller (fino: params, chamada de método de model, redirect). Os dois gatilhos para revisitar essa decisão — (1) um método de model precisa orquestrar 2+ models fora das próprias associações, (2) a mesma lógica se repete em 2+ controllers — estão em [[ADR-006 MVC sem camada de service]]. Quando um deles aparecer de verdade, a escolha do padrão é feita com informação real, não adiantada aqui.
+- **Sem camada de orquestração**: a arquitetura é **domain model rico com value objects sob o model dono** — invariante no model que a possui, escrita multi-tabela como método de classe transacional na raiz do agregado (`Tenant.provision_owner!`), cálculo sem persistência em PORO namespaced (`Branding::ColorScale`). Os três gatilhos para revisitar — (1) um método de model precisa orquestrar 2+ models fora das próprias associações, (2) a mesma lógica se repete em 2+ controllers, (3) aprendizado deliberado, que dispara **uma vez** em `TSK-CLI02-03` — estão em [[ADR-006 MVC sem camada de service]].
+- **Query object e form object não são camada nova** e não acionam gatilho: são PORO e `ActiveModel::Model`, sem gem e sem orquestração.
 - **Colisão de nome a vigiar**: o domínio tem um substantivo de negócio "serviço" (o que o estabelecimento oferece — corte, sessão) sem relação com "service object". `app/models/service.rb` é válido; `app/services/` não deve existir.
 - **Toda tabela de negócio tem `tenant_id`, todo model correspondente declara `acts_as_tenant`.** Nenhuma query em model com `tenant_id` pode rodar sem o escopo do tenant atual. Todo background job recebe `tenant_id` explícito e reabre o escopo dentro do `perform` — nunca herda do momento de enfileiramento. Toda chave de cache é prefixada por tenant.
 - **Resolução de tenant é sempre pelo host da requisição**, nunca por parâmetro vindo do usuário.
@@ -51,7 +52,7 @@ Checklist completo (13 princípios, o que analisar em cada revisão): [[Checklis
 
 ## Convenções de código
 
-- **Sem comentários em `.rb`** salvo para justificar o não óbvio (constraint escondida, workaround específico) — nunca para explicar o quê.
+- **Sem comentários em `.rb`.** Sem exceção por "é o não óbvio": se um trecho precisa de justificativa, ela vai para o vault (`decisions/` da task, ou o ADR que fixou a regra), não para o arquivo. Código explica o quê pelo nome; o porquê é documentação, e documentação tem lugar próprio neste projeto. Vale para specs também.
 - **Sem variáveis de bloco de uma letra**: usar o nome do domínio (`|appointment|`, `|professional|`).
 - **Idiomas**: código, commits e símbolos Ruby em inglês; comunicação humana (docs, ADRs) em pt-BR.
 - **Documentação é atemporal**: docs do vault descrevem estado e decisão, nunca a sessão em que a coisa aconteceu. Nada de "hoje", "atualmente", "nesta sessão", "confirmado ao vivo em <data>" — afirmar o fato, não narrar o experimento. Data só onde ela é a informação (frontmatter de ADR, `merged:` em `decisions/`). Exceção: `decisions/` e cards em `done` são histórico e ficam no passado. Ver [[Convenções]] § Escrita.

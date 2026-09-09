@@ -9,7 +9,16 @@ description: Use when creating, altering, or reviewing a Rails controller in Zub
 
 Referência de como o Zubio organiza a camada de **orquestração HTTP**. Sem service layer ([[ADR-006 MVC sem camada de service]]), o controller é **fino por natureza**: params → chamada de método de model → redirect/render. Nenhuma outra responsabilidade.
 
-Ainda não existe nenhum controller real além do que o `rails new` gerou (harness inicial). Este documento fixa o que já está decidido em ADR; o primeiro `BaseController` real e a primeira action real viram os exemplares canônicos.
+## Exemplares canônicos
+
+| Papel | Classe | O que copiar dela |
+|-------|--------|-------------------|
+| Resolução de tenant comum aos 4 | `ApplicationController` | `set_current_tenant_through_filter` + `before_action :resolve_tenant` resolvendo por `request.host`, nunca por param |
+| `BaseController` de persona | `Owner::BaseController` | `before_action :require_owner_session!` + `current_owner` memoizado sobre `session[:user_id]`, escopado pelo tenant do host |
+| Action fina | `Owner::DashboardController#show` | uma chamada, um `render` de view Phlex com os dados por argumento |
+| Entrada de sessão | `Owner::SessionsController` + `Owner::SessionStart` | herda de `ApplicationController`, não do `BaseController` da persona — a tela de login não pode exigir a sessão que ela cria; o `reset_session` mora no concern para não ser esquecido por um segundo caminho de login |
+
+`Admin::BaseController`, `Professional::BaseController` e `Client::BaseController` são stubs vazios por decisão de [[ADR-007 Controllers namespaced por persona]] — a pasta existe antes da persona ter tela. Não são código morto e não devem ser removidos.
 
 ## Quando usar
 

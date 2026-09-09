@@ -68,6 +68,12 @@ RSpec.describe Tenant, type: :model do
     end
   end
 
+  describe "associations" do
+    it { is_expected.to have_one(:branding).dependent(:destroy) }
+    it { is_expected.to have_many(:users).dependent(:restrict_with_error) }
+    it { is_expected.to have_many(:professionals).dependent(:restrict_with_error) }
+  end
+
   describe "#cache_key_prefix" do
     it "includes the tenant id and the branding's updated_at timestamp" do
       tenant = create(:tenant)

@@ -1,8 +1,8 @@
 class Branding::ColorScale
   HEX = /\A#[0-9a-fA-F]{6}\z/
   MIN_CONTRAST = 4.5
-  WHITE = "#ffffff"
-  DARK_NEUTRAL = "#111827"
+  WHITE = "#ffffff".freeze
+  DARK_NEUTRAL = "#111827".freeze
 
   attr_reader :hex
 
