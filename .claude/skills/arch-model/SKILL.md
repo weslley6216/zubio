@@ -9,7 +9,15 @@ description: Use when creating, altering, or reviewing an ActiveRecord model in 
 
 Referência de como o Zubio modela a camada de **persistência**. Zubio não tem camada de service ([[ADR-006 MVC sem camada de service]]) — o model é dono de mais responsabilidade do que num projeto com services: persistência **e** invariante de negócio que dependa só do próprio estado.
 
-Ainda não existe nenhum model real no código (harness inicial, ver [[ADR-009 Checklist de qualidade e skills locais]]). Este documento fixa as convenções já decididas em ADR; a primeira classe real desta camada vira o exemplar canônico — atualize este arquivo quando ela existir.
+## Exemplares canônicos
+
+| Papel | Classe | O que copiar dela |
+|-------|--------|-------------------|
+| Model raiz sem `tenant_id` | `Tenant` | enum de `status`, validação de formato + unicidade + exclusão em `subdomain`, `dependent:` explícito em toda associação, método de escrita transacional (`update_branding!`, `provision_owner!`) |
+| Model escopado | `User`, `Professional`, `Branding` | `acts_as_tenant(:tenant)` na primeira linha útil, `validates_uniqueness_to_tenant` no lugar de `uniqueness:` quando o escopo é o tenant |
+| Value object | `Branding::ColorScale` | PORO sob o namespace do model dono, sem `ApplicationRecord`, sem estado persistido |
+
+`Tenant` é o arquivo a abrir quando a dúvida é "como se escreve um model aqui".
 
 ## Quando usar
 
@@ -38,7 +46,8 @@ Sem camada de service, tudo que não é "params → chamada → redirect" é can
 | Limite de negócio | Constante do model (`MAX_*`/`MIN_*`) + `validates` correspondente — o model é dono do invariante |
 | Associações | `belongs_to`/`has_many`/`has_one` sempre com `dependent:` explícito |
 | Scopes | Lambda chainable, componível; nunca lógica de apresentação |
-| Validação cross-field | `validate :metodo` privado; `errors.add(:campo, :chave_i18n)` — símbolo, nunca string literal |
+| Validação cross-field | `validate :metodo` privado; `errors.add(:campo, "mensagem em pt-BR")`. String literal é o padrão do projeto enquanto o app for monolíngue — I18n é decisão adiada com gatilho registrado em [[TSK-DE01-14 Centralizar copy de interface em locale pt-BR]], não lacuna |
+| Value object | PORO namespaced sob o model dono (`Branding::ColorScale`), nunca em `app/services/`. Cabe quando o cálculo não depende de persistência e é reusado por 2+ pontos — ver [[ADR-006 MVC sem camada de service]] |
 | Spec | FactoryBot (`build`/`create`); todo model com `tenant_id` tem caso de isolamento entre tenants — regras gerais em `arch-spec` |
 
 ## Arquivos desta skill
