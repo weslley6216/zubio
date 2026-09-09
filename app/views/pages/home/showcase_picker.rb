@@ -1,5 +1,5 @@
 class Views::Pages::Home::ShowcasePicker < Views::Base
-  LABEL = "Veja com a cara de outro negócio"
+  LABEL = "Veja com a cara de outro negócio".freeze
 
   def initialize(showcase_brands:)
     @showcase_brands = showcase_brands

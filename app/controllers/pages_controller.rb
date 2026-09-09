@@ -1,5 +1,5 @@
 class PagesController < ApplicationController
-  WWW_SUBDOMAIN = "www"
+  WWW_SUBDOMAIN = "www".freeze
 
   skip_before_action :resolve_tenant
   before_action :redirect_www_to_apex, if: :www_host?

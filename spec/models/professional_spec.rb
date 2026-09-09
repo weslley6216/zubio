@@ -15,6 +15,10 @@ RSpec.describe Professional, type: :model do
     end
   end
 
+  describe "associations" do
+    it { is_expected.to belong_to(:user).optional }
+  end
+
   describe "user association" do
     it "does not allow a user from another tenant" do
       tenant_a = create(:tenant)

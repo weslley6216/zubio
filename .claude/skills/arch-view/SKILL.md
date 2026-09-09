@@ -9,7 +9,25 @@ description: Use when creating, altering, or reviewing a Phlex view/component in
 
 Referência de como o Zubio renderiza. Views são **sempre Phlex** (`.rb`), nunca ERB — decisão de stack, não deste ADR específico (ver [[index]]).
 
-Ainda não existe nenhuma view real além do layout gerado pelo `rails new` (harness inicial). O split entre `app/components/` (peças reutilizáveis) e `app/views/` (páginas/respostas) não está fixado ainda — decida na primeira tela real e registre aqui. Este documento cobre só o que já é regra hoje.
+## O split, fixado
+
+`config/initializers/phlex.rb` registra dois autoload dirs, e a fronteira entre eles é a regra:
+
+| Namespace | Diretório | O que mora ali | Base |
+|-----------|-----------|----------------|------|
+| `Components::` | `app/components/` | peça reutilizável, sem rota, sem layout — `Components::Panel`, `Components::Alert`, `Components::Form::Errors` | `Components::Base < Phlex::HTML` |
+| `Views::` | `app/views/` | página ou resposta que um controller renderiza, e que monta o próprio documento | `Views::Base < Components::Base` |
+
+`Views::Base` herda de `Components::Base`, então toda view tem os helpers de component mais `FormWith` e `Flash`. Uma peça que passa a ser usada por 2+ views sobe de `Views::` para `Components::`.
+
+## Exemplares canônicos
+
+| Papel | Classe |
+|-------|--------|
+| Layout que injeta o whitelabel | `Views::Layouts::Application` — `css_variables` sob `raw safe(...)`, valor já filtrado por `Branding::ColorScale` |
+| Página composta por seções | `Views::Pages::Home` — orquestra `Views::Pages::Home::*`, cada seção um arquivo |
+| Component com estado de tom | `Components::Signup::SubdomainStatus` — tom e mensagem no mesmo `STATES`, `fetch` com fallback |
+| View de formulário | `Views::Owner::Brandings::Edit` — `form_with` + `Components::Form::Errors` por campo, classes de `Components::Form::Styles` |
 
 ## Quando usar
 
