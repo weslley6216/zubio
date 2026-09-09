@@ -12,12 +12,14 @@ RSpec.describe "Owner base controller authentication", type: :request do
   end
 
   it "renders the dashboard for an authenticated owner" do
-    owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
+    owner = create(:user, tenant: tenant, name: "Ana Lima", email: "owner@example.com", password: "s3cr3t123")
     post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
 
     get owner_dashboard_path
 
     expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Olá, Ana")
+    expect(response.body).to include("Este é o painel de #{tenant.name}.")
   end
 
   it "does not restore a session created for another tenant's owner" do
