@@ -51,7 +51,7 @@ Checklist completo (13 princípios, o que analisar em cada revisão): [[Checklis
 
 ## Convenções de código
 
-- **Sem comentários em `.rb`** salvo para justificar o não óbvio (constraint escondida, workaround específico) — nunca para explicar o quê.
+- **Sem comentários em `.rb`.** Sem exceção por "é o não óbvio": se um trecho precisa de justificativa, ela vai para o vault (`decisions/` da task, ou o ADR que fixou a regra), não para o arquivo. Código explica o quê pelo nome; o porquê é documentação, e documentação tem lugar próprio neste projeto. Vale para specs também.
 - **Sem variáveis de bloco de uma letra**: usar o nome do domínio (`|appointment|`, `|professional|`).
 - **Idiomas**: código, commits e símbolos Ruby em inglês; comunicação humana (docs, ADRs) em pt-BR.
 - **Documentação é atemporal**: docs do vault descrevem estado e decisão, nunca a sessão em que a coisa aconteceu. Nada de "hoje", "atualmente", "nesta sessão", "confirmado ao vivo em <data>" — afirmar o fato, não narrar o experimento. Data só onde ela é a informação (frontmatter de ADR, `merged:` em `decisions/`). Exceção: `decisions/` e cards em `done` são histórico e ficam no passado. Ver [[Convenções]] § Escrita.
