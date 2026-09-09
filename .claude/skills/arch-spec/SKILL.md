@@ -26,7 +26,8 @@ Convenções de spec compartilhadas por todas as camadas do Zubio. Testes são R
 | **Teste só-negativo exige par positivo** | exceção explícita: isolamento entre tenants (`not_to include` de dado de outro tenant sempre tem par — "inclui o do próprio tenant") |
 | **Isolamento entre tenants é obrigatório, não opcional** | todo spec de model ou controller que toca um recurso com `tenant_id` precisa de um exemplo que prove que dado de outro tenant não vaza |
 | **Sem var de bloco de 1 letra** | `|professional|` não `|p|` |
-| **Construção** | FactoryBot (`build`/`create`) — `factories em `spec/factories/<plural>.rb` |
+| **Construção** | FactoryBot (`build`/`create`) — factories em `spec/factories/<plural>.rb` |
+| **shoulda-matchers** | reservado para o que é declaração e não comportamento: `have_many(...).dependent(...)`, `belong_to(...).optional`. Validação e regra de negócio continuam em exemplo explícito com FactoryBot, que falha dizendo o que quebrou |
 
 ## Tipo e diretório por camada
 
@@ -34,15 +35,24 @@ Convenções de spec compartilhadas por todas as camadas do Zubio. Testes são R
 |--------|-----------|---------|----------|
 | Model | `spec/models/` | `:model` | **arch-model** |
 | Controller | `spec/requests/` | `:request` | **arch-controller** |
-| View/Component | `spec/components/` (a criar quando a primeira view existir) | `:component` | **arch-view** |
-| System (e2e) | `spec/system/` (a criar quando a primeira página real existir) | `:system` | esta seção |
+| View/Component | `spec/components/` | `:component` | **arch-view** |
+| System (e2e) | `spec/system/` | `:system` | esta seção |
 
 ## System specs (e2e)
 
 Driver default é `rack_test` (config em `spec/support/capybara.rb`); a tag `js: true` troca para Cuprite (Chrome headless real via CDP) — só quando o teste precisa que CSS/JS realmente rode no browser (ex: token de whitelabel resolvido via `@theme inline`, comportamento de Stimulus/Turbo). Sem `:js`, fica em `rack_test` — mais barato, sem browser real.
 
 - **Um spec de sistema por página/fluxo real, só o happy path.** Casos de borda (validação, isolamento entre tenants, variação de estado) continuam em model/request spec — mais barato e já prova a lógica; repetir a matriz de edge cases em Cuprite só paga custo de browser sem cobrir nada novo.
-- Ainda não existe página real no harness (só `/up` e os probe controllers dos specs em `spec/requests/`) — o primeiro `spec/system/*_spec.rb` de domínio nasce junto com a primeira tela real, e é o momento de fixar o *shape* aqui.
+O *shape*, com os exemplares:
+
+| Arquivo | Papel |
+|---------|-------|
+| `spec/system/signup_spec.rb` | um fluxo real, só o happy path — o modelo a copiar para uma tela nova |
+| `spec/system/landing_spec.rb` | aparência de uma página: token pintado, contraste, alvo de toque, overflow |
+| `spec/system/surface_spec.rb` | invariante que atravessa telas (tema persistido entre landing e app) — não pertence a nenhuma página só |
+| `spec/system/health_check_spec.rb` | prova que os dois drivers sobem; não replicar por página |
+
+Component spec renderiza direto (`described_class.new(...).call`) e assere sobre a string — ver `spec/components/theme_toggle_spec.rb`.
 
 ## Arquivos desta skill
 
