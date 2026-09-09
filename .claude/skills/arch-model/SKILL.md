@@ -27,7 +27,9 @@ Referência de como o Zubio modela a camada de **persistência**. Zubio não tem
 
 ## Model ou controller (a decisão que erra fácil)
 
-Sem camada de service, tudo que não é "params → chamada → redirect" é candidato a model. Ver item 13 do [[Checklist de Revisão]] para a régua completa e os dois gatilhos que reabririam a discussão de uma camada nova.
+Sem camada de orquestração, tudo que não é "params → chamada → redirect" é candidato a model. Ver item 13 do [[Checklist de Revisão]] para a régua completa e os três gatilhos que reabririam a discussão de uma camada nova.
+
+**Query object** (PORO que encapsula consulta complexa) e **form object** (`ActiveModel::Model` para entrada que não pertence a um record só) não acionam gatilho e não são camada nova — ver [[ADR-006 MVC sem camada de service]] § O que a arquitetura atual é.
 
 | Se… | Vai para |
 |-----|----------|
