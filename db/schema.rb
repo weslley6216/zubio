@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_08_020000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_08_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -63,6 +63,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_08_020000) do
     t.index ["user_id"], name: "index_professionals_on_user_id", unique: true
   end
 
+  create_table "services", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.integer "duration_minutes", null: false
+    t.citext "name", null: false
+    t.integer "price_cents", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "name"], name: "index_services_on_tenant_id_and_name", unique: true
+    t.index ["tenant_id"], name: "index_services_on_tenant_id"
+  end
+
   create_table "tenants", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.citext "custom_domain"
@@ -93,5 +106,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_08_020000) do
   add_foreign_key "brandings", "tenants"
   add_foreign_key "professionals", "tenants"
   add_foreign_key "professionals", "users"
+  add_foreign_key "services", "tenants"
   add_foreign_key "users", "tenants"
 end
