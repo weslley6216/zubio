@@ -12,10 +12,7 @@ class SignupsController < ApplicationController
     with: -> { redirect_to new_signup_path, alert: "Muitas tentativas. Tente novamente mais tarde." }
 
   def new
-    @tenant = Tenant.new
-    @user = User.new
-
-    render Views::Signups::New.new(tenant: @tenant, user: @user, branding: Branding.platform_default)
+    render Views::Signups::New.new(tenant: Tenant.new, user: User.new, branding: Branding.platform_default)
   end
 
   def subdomain
@@ -33,9 +30,10 @@ class SignupsController < ApplicationController
 
     redirect_to owner_handoff_url(host: owner.tenant.canonical_host, token: owner.handoff_token), allow_other_host: true
   rescue ActiveRecord::RecordInvalid => invalid
-    @tenant = invalid.record.is_a?(Tenant) ? invalid.record : Tenant.new(tenant_params)
-    @user = invalid.record.is_a?(User) ? invalid.record : User.new(owner_params)
-    render Views::Signups::New.new(tenant: @tenant, user: @user, branding: Branding.platform_default), status: :unprocessable_entity
+    tenant = invalid.record.is_a?(Tenant) ? invalid.record : Tenant.new(tenant_params)
+    user = invalid.record.is_a?(User) ? invalid.record : User.new(owner_params)
+
+    render Views::Signups::New.new(tenant: tenant, user: user, branding: Branding.platform_default), status: :unprocessable_entity
   end
 
   private
