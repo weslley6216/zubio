@@ -61,16 +61,22 @@ RSpec.describe Service, type: :model do
       expect(service.errors[:duration_minutes]).to be_present
     end
 
-    it "is invalid when the duration is above the maximum" do
-      service = build(:service, duration_minutes: 600)
+    it "is invalid one step above the longest duration" do
+      service = build(:service, duration_minutes: 485)
 
       service.valid?
 
       expect(service.errors[:duration_minutes]).to be_present
     end
 
-    it "is valid at a multiple of five inside the range" do
-      service = build(:service, duration_minutes: 45)
+    it "is valid at the shortest duration the business allows" do
+      service = build(:service, duration_minutes: 5)
+
+      expect(service).to be_valid
+    end
+
+    it "is valid at the longest duration the business allows" do
+      service = build(:service, duration_minutes: 480)
 
       expect(service).to be_valid
     end
