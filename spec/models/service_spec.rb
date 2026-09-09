@@ -116,13 +116,14 @@ RSpec.describe Service, type: :model do
       expect(result).not_to include(inactive)
     end
 
-    it "includes services that are active" do
+    it "returns only the active services of the tenant" do
       tenant = create(:tenant)
       service = create(:service, tenant: tenant)
+      create(:service, tenant: tenant, active: false)
 
       result = ActsAsTenant.with_tenant(tenant) { Service.active }
 
-      expect(result).to include(service)
+      expect(result).to contain_exactly(service)
     end
   end
 
@@ -135,6 +136,17 @@ RSpec.describe Service, type: :model do
       result = ActsAsTenant.with_tenant(tenant) { Service.ordered }
 
       expect(result.map(&:name)).to eq([ "Barba", "Corte" ])
+    end
+
+    it "puts an accented name in its alphabetical place, not after Z" do
+      tenant = create(:tenant)
+      create(:service, tenant: tenant, name: "Zebra")
+      create(:service, tenant: tenant, name: "Água")
+      create(:service, tenant: tenant, name: "Barba")
+
+      result = ActsAsTenant.with_tenant(tenant) { Service.ordered }
+
+      expect(result.map(&:name)).to eq([ "Água", "Barba", "Zebra" ])
     end
   end
 

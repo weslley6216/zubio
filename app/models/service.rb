@@ -9,10 +9,10 @@ class Service < ApplicationRecord
   validates :name, presence: true
   validates_uniqueness_to_tenant :name
   validates :duration_minutes, inclusion: { in: DURATION_CHOICES }
-  validates :price_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :price_cents, numericality: { greater_than_or_equal_to: 0 }
 
   scope :active, -> { where(active: true) }
-  scope :ordered, -> { order(:name) }
+  scope :ordered, -> { order(Arel.sql(%(name COLLATE "und-x-icu"))) }
 
   def price = price_cents.to_d / 100
 end
