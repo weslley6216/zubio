@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :tenant do
-    sequence(:subdomain) { |n| "establishment-#{n}" }
+    sequence(:subdomain) { |index| "establishment-#{index}" }
     name { "Test Establishment" }
     status { "active" }
 
