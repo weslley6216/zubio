@@ -15,8 +15,6 @@ export default class extends Controller {
     this.pending?.abort()
   }
 
-  // Assigning .value from here fires no input event, so editing the field by
-  // hand is the only thing that claims it away from the establishment name.
   suggest() {
     if (this.claimed) return
 
@@ -24,7 +22,6 @@ export default class extends Controller {
     this.check()
   }
 
-  // Emptying the field hands it back: the name starts driving it again.
   edit() {
     this.claimed = this.fieldTarget.value.length > 0
     this.check()
@@ -35,8 +32,6 @@ export default class extends Controller {
     this.timer = setTimeout(() => this.#report(), DEBOUNCE_MS)
   }
 
-  // A rate-limited 429 has no body and an error page is not a status message,
-  // so anything but a 2xx leaves the last good message on screen.
   async #report() {
     const url = `${this.urlValue}?candidate=${encodeURIComponent(this.fieldTarget.value)}`
 
@@ -48,9 +43,7 @@ export default class extends Controller {
       if (!response.ok) return
 
       this.statusTarget.innerHTML = await response.text()
-    } catch {
-      // aborted or offline: the visible message stays as it was
-    }
+    } catch {}
   }
 
   #slugify(value) {

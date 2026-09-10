@@ -53,8 +53,6 @@ class Views::Owner::Brandings::Edit < Views::Base
     end
   end
 
-  # A rejected upload leaves an in-memory, unsaved attachment on @branding
-  # (logo.attached? is true, but the blob has no id) — signed_id would raise.
   def current_logo_attached?
     @branding.logo.attached? && @branding.logo.blob.persisted?
   end

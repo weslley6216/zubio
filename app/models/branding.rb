@@ -17,9 +17,6 @@ class Branding < ApplicationRecord
     ActsAsTenant.without_tenant { new(brand_600: DEFAULT_BRAND_600) }
   end
 
-  # Falls back to the default color so re-rendering a rejected in-memory
-  # brand_600 (failed form submission) never crashes the layout's CSS
-  # custom properties, which always render regardless of validation state.
   def color_scale
     @color_scale ||= ColorScale.new(valid_hex_brand_600? ? brand_600 : DEFAULT_BRAND_600)
   end
@@ -42,8 +39,6 @@ class Branding < ApplicationRecord
     end
   end
 
-  # The header renders on the branding form too, where a rejected upload leaves
-  # an attachment over a blob that was never persisted — proxying it would raise.
   def header_logo
     return unless logo.attached? && logo.blob.persisted?
 
