@@ -10,6 +10,7 @@ class Views::Layouts::Application < Views::Base
   JS
 
   SURFACE_CLASS = "bg-canvas text-ink [color-scheme:light_dark]".freeze
+  FLASH_TONES = { "notice" => :success, "alert" => :danger }.freeze
 
   def initialize(title:, branding:, page_stylesheet: nil)
     @title = title
@@ -21,7 +22,10 @@ class Views::Layouts::Application < Views::Base
     doctype
     html(lang: "pt-BR", class: SURFACE_CLASS) do
       head { render_head }
-      body(class: "min-h-dvh font-sans", &block)
+      body(class: "min-h-dvh font-sans") do
+        render_flash
+        yield if block
+      end
     end
   end
 
@@ -49,5 +53,14 @@ class Views::Layouts::Application < Views::Base
 
   def render_theme_bootstrap
     script(nonce: content_security_policy_nonce) { raw safe(THEME_BOOTSTRAP) }
+  end
+
+  def render_flash
+    messages = FLASH_TONES.filter_map { |key, tone| [ flash[key], tone ] if flash[key].present? }
+    return if messages.empty?
+
+    div(class: "mx-auto grid w-full max-w-6xl gap-2 px-6 pt-4") do
+      messages.each { |text, tone| render Components::Alert.new(text: text, tone: tone) }
+    end
   end
 end

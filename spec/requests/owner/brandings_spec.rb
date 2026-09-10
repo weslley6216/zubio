@@ -161,5 +161,27 @@ RSpec.describe "Owner branding", type: :request do
       expect(response.body).to include("text-danger")
       expect(response.body).not_to include("text-red-700")
     end
+
+    it "confirms on the destination screen when the change lands, and states the refusal in the danger tone when it does not" do
+      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+
+      patch owner_branding_path, params: { tenant: { name: tenant.name }, branding: { brand_600: "#2F6FED" } }
+      follow_redirect!
+
+      expect(response.body).to include("Marca atualizada.")
+      expect(response.body).to include("bg-success-surface")
+      expect(response.body).not_to include("bg-danger-surface")
+    end
+
+    it "states the refusal in the danger tone on the same screen" do
+      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+
+      patch owner_branding_path, params: { tenant: { name: "" }, branding: { brand_600: "#4F46E5" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(Owner::BrandingsController::REFUSED)
+      expect(response.body).to include("bg-danger-surface")
+      expect(response.body).not_to include("bg-success-surface")
+    end
   end
 end

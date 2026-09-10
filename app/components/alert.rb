@@ -1,10 +1,15 @@
 class Components::Alert < Components::Base
-  def initialize(text:)
+  TONES = {
+    success: "border-success-line bg-success-surface text-success",
+    danger: "border-danger-line bg-danger-surface text-danger"
+  }.freeze
+
+  def initialize(text:, tone:)
     @text = text
+    @tone = tone
   end
 
   def view_template
-    p(class: "mb-4 rounded-md border border-danger-line bg-danger-surface px-4 py-2 text-sm text-danger",
-      data: { alert: true }) { @text }
+    p(class: "rounded-md border px-4 py-2 text-sm #{TONES.fetch(@tone)}", data: { alert: true }) { @text }
   end
 end
