@@ -5,15 +5,16 @@ class Views::Owner::Dashboard::Show < Views::Base
   MANAGE_TITLE = "Marca do estabelecimento".freeze
   MANAGE_BODY = "Ajuste o logotipo e a cor sempre que quiser.".freeze
 
-  def initialize(tenant:, branding:, owner:)
+  def initialize(tenant:, branding:, owner:, current_section:)
     @tenant = tenant
     @branding = branding
     @owner = owner
+    @current_section = current_section
   end
 
   def view_template
     render Views::Layouts::Application.new(title: "Painel · #{@tenant.name}", branding: @branding) do
-      render Components::Owner::Header.new(tenant: @tenant, branding: @branding)
+      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
       div(class: "mx-auto grid w-full max-w-6xl gap-6 px-6 py-10") do
         render_greeting
         render_brand_card
