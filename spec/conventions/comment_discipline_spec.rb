@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Comment discipline" do
   MAGIC_COMMENT = "# frozen_string_literal: true".freeze
-  RUBY_COMMENT = /\A[ \t]*\#(?!\{)|\A=(?:begin|end)\b/
+  RUBY_COMMENT = /\A[ \t]*\#(?=\s|\z)|\A=(?:begin|end)\b/
   JAVASCRIPT_COMMENT = %r{\A[ \t]*//}
 
   def comment_pattern(path)
@@ -43,6 +43,16 @@ RSpec.describe "Comment discipline" do
     probe = '  #{new_owner_session_url(host: tenant.canonical_host)}'
 
     expect(commented_lines(probe, "probe.rb")).to be_empty
+  end
+
+  it "keeps a hex color literal at the start of a line out of the count" do
+    probe = "    #4F46E5 #7C3AED #1E60C4"
+
+    expect(commented_lines(probe, "probe.rb")).to be_empty
+  end
+
+  it "still flags a bare hash on a line of its own" do
+    expect(commented_lines("  #", "probe.rb").size).to eq(1)
   end
 
   it "keeps a JavaScript private method out of the count" do
