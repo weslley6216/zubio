@@ -26,23 +26,23 @@ RSpec.describe "Owner session", type: :request do
     end
 
     it "renders no platform chrome on the tenant's own host" do
-      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+      branding = create(:branding, tenant: tenant, brand_600: "#4F46E5")
 
       get new_owner_session_path
 
-      expect(response.body).to include("--brand-600:#4F46E5;")
+      expect(response.body).to include(%(href="/branding.css?v=#{branding.stylesheet_digest}"))
       expect(response.body).not_to include(%(aria-label="Trocar o tema"))
     end
 
     it "renders the brand of the tenant in the host and nothing of another tenant" do
       other_tenant = create(:tenant, subdomain: "salon-b", name: "Barbearia do Zé")
-      create(:branding, tenant: tenant, brand_600: "#4F46E5")
-      create(:branding, tenant: other_tenant, brand_600: "#DC2626")
+      branding = create(:branding, tenant: tenant, brand_600: "#4F46E5")
+      other_branding = create(:branding, tenant: other_tenant, brand_600: "#DC2626")
 
       get new_owner_session_path
 
-      expect(response.body).to include("--brand-600:#4F46E5;")
-      expect(response.body).not_to include("--brand-600:#DC2626;")
+      expect(response.body).to include(branding.stylesheet_digest)
+      expect(response.body).not_to include(other_branding.stylesheet_digest)
       expect(response.body).not_to include("Barbearia do Zé")
     end
   end
