@@ -141,6 +141,31 @@ RSpec.describe Branding, type: :model do
     end
   end
 
+  describe "#stylesheet" do
+    it "wraps the brand scale in a root rule a browser can apply on its own" do
+      branding = build(:branding, brand_600: "#4F46E5")
+
+      expect(branding.stylesheet).to start_with(":root{")
+      expect(branding.stylesheet).to include("--brand-600:#4F46E5;")
+      expect(branding.stylesheet).to end_with("}")
+    end
+  end
+
+  describe "#stylesheet_digest" do
+    it "repeats for the same brand and changes for a different one" do
+      indigo = build(:branding, brand_600: "#4F46E5")
+      twin = build(:branding, brand_600: "#4F46E5")
+      crimson = build(:branding, brand_600: "#B42318")
+
+      expect(indigo.stylesheet_digest).to eq(twin.stylesheet_digest)
+      expect(indigo.stylesheet_digest).not_to eq(crimson.stylesheet_digest)
+    end
+
+    it "is short enough to travel in a URL" do
+      expect(build(:branding).stylesheet_digest.length).to eq(Branding::DIGEST_LENGTH)
+    end
+  end
+
   describe "tenant association" do
     it "is accessible from its tenant" do
       tenant = create(:tenant)

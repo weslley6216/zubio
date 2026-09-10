@@ -10,18 +10,22 @@ class Views::Layouts::Application < Views::Base
   JS
 
   SURFACE_CLASS = "bg-canvas text-ink [color-scheme:light_dark]".freeze
+  FLASH_TONES = { "notice" => :success, "alert" => :danger }.freeze
 
-  def initialize(title:, branding:, page_css: nil)
+  def initialize(title:, branding:, page_stylesheet: nil)
     @title = title
     @branding = branding
-    @page_css = page_css
+    @page_stylesheet = page_stylesheet
   end
 
   def view_template(&block)
     doctype
     html(lang: "pt-BR", class: SURFACE_CLASS) do
       head { render_head }
-      body(class: "min-h-dvh font-sans", &block)
+      body(class: "min-h-dvh font-sans") do
+        render_flash
+        yield if block
+      end
     end
   end
 
@@ -42,16 +46,21 @@ class Views::Layouts::Application < Views::Base
     link(rel: "apple-touch-icon", href: "/icon.png")
     link(rel: "manifest", href: pwa_manifest_path)
     stylesheet_link_tag(:app, "data-turbo-track": "reload")
+    link(rel: "stylesheet", href: branding_stylesheet_path(v: @branding.stylesheet_digest), data: { turbo_track: "dynamic" })
+    link(rel: "stylesheet", href: @page_stylesheet, data: { turbo_track: "dynamic" }) if @page_stylesheet
     javascript_importmap_tags
-    style(nonce: content_security_policy_nonce) { raw safe(css_variables) }
-    style(nonce: content_security_policy_nonce) { raw safe(@page_css) } if @page_css
   end
 
   def render_theme_bootstrap
     script(nonce: content_security_policy_nonce) { raw safe(THEME_BOOTSTRAP) }
   end
 
-  def css_variables
-    ":root{#{@branding.css_variables}}"
+  def render_flash
+    messages = FLASH_TONES.filter_map { |key, tone| [ flash[key], tone ] if flash[key].present? }
+    return if messages.empty?
+
+    div(role: "status", class: "mx-auto grid w-full max-w-6xl gap-2 px-6 pt-4") do
+      messages.each { |text, tone| render Components::Alert.new(text: text, tone: tone) }
+    end
   end
 end

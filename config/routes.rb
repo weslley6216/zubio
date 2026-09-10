@@ -8,6 +8,9 @@ Rails.application.routes.draw do
   get "manifest.webmanifest" => "pwa#manifest", as: :pwa_manifest
   get "service-worker.js" => "pwa#service_worker", as: :pwa_service_worker
 
+  get "branding.css" => "stylesheets#branding", as: :branding_stylesheet
+  get "showcase.css" => "stylesheets#showcase", as: :showcase_stylesheet
+
   resource :signup, only: %i[new create] do
     get :subdomain
   end

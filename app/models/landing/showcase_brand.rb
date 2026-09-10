@@ -34,10 +34,14 @@ class Landing::ShowcaseBrand
     @all ||= CATALOG.map { |attributes| new(**attributes) }.freeze
   end
 
-  def self.css_rules(showcase_brands)
-    showcase_brands.map { |showcase_brand| showcase_brand.css_rule }.join +
-      showcase_brands.map { |showcase_brand| showcase_brand.swatch_rule }.join +
-      showcase_brands.map { |showcase_brand| showcase_brand.variant_rule }.join
+  def self.stylesheet
+    @stylesheet ||= all.map(&:css_rule).join +
+      all.map(&:swatch_rule).join +
+      all.map(&:variant_rule).join
+  end
+
+  def self.stylesheet_digest
+    @stylesheet_digest ||= Digest::SHA256.hexdigest(stylesheet).first(Branding::DIGEST_LENGTH)
   end
 
   def initialize(key:, name:, initial:, segment:, meta:, host:, brand_600:, services:)

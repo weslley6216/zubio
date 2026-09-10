@@ -8,7 +8,6 @@ class Views::Owner::Sessions::New < Views::Base
   def view_template
     render Views::Layouts::Application.new(title: "Entrar · Zubio", branding: @branding) do
       render Components::Panel.new(title: "Entrar") do
-        render Components::Alert.new(text: flash[:alert]) if flash[:alert]
         form_with(url: owner_session_path, method: :post, class: "space-y-4") do |form|
           div do
             form.label :email, "E-mail", class: LABEL
