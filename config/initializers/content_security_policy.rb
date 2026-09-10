@@ -7,7 +7,7 @@ Rails.application.configure do
     policy.style_src :self
     policy.style_src_attr :none
     policy.frame_ancestors :none
-    policy.form_action :self, "*.#{Zubio::PLATFORM_HOST}"
+    policy.form_action :self, "*.#{Zubio::PLATFORM_HOST}:*"
   end
 
   config.content_security_policy_nonce_generator = ->(_request) { SecureRandom.base64(16) }
