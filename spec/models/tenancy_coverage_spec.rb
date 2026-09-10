@@ -26,4 +26,22 @@ RSpec.describe "Tenancy coverage", type: :model do
 
     expect(missing).to be_empty, "Tables without tenant_id: #{missing.join(', ')}"
   end
+
+  describe "a scoped query with no current tenant" do
+    it "raises instead of falling back to every tenant's rows" do
+      tenant = create(:tenant)
+      create(:user, tenant: tenant, email: "owner@example.com")
+
+      expect { User.count }.to raise_error(ActsAsTenant::Errors::NoTenantSet)
+    end
+
+    it "returns the tenant's own rows once the scope is open" do
+      tenant = create(:tenant)
+      create(:user, tenant: tenant, email: "owner@example.com")
+
+      emails = ActsAsTenant.with_tenant(tenant) { User.pluck(:email) }
+
+      expect(emails).to eq([ "owner@example.com" ])
+    end
+  end
 end
