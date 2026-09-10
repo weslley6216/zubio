@@ -28,6 +28,28 @@ RSpec.describe Branding::ColorScale do
     end
   end
 
+  describe "#contrast_against_foreground" do
+    it "measures against the dark neutral when that is the foreground it picks" do
+      color_scale = described_class.new("#ff00bb")
+
+      expect(color_scale.foreground).to eq(described_class::DARK_NEUTRAL)
+      expect(color_scale.contrast_against_foreground).to be > color_scale.contrast_against_white
+    end
+
+    it "measures against white when that is the foreground it picks" do
+      color_scale = described_class.new("#4F46E5")
+
+      expect(color_scale.foreground).to eq(described_class::WHITE)
+      expect(color_scale.contrast_against_foreground).to eq(color_scale.contrast_against_white)
+    end
+
+    it "stays below the minimum for a mid-luminance color, which no foreground rescues" do
+      color_scale = described_class.new("#808080")
+
+      expect(color_scale.contrast_against_foreground).to be < described_class::MIN_CONTRAST
+    end
+  end
+
   describe "#foreground" do
     it "is white on a black background" do
       expect(described_class.new("#000000").foreground).to eq(described_class::WHITE)
