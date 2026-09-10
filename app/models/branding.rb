@@ -10,7 +10,7 @@ class Branding < ApplicationRecord
   LOGO_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
   LOGO_MAX_BYTES = 5.megabytes
   SUGGESTED_COLORS = %w[
-    #4F46E5 #7C3AED #1E60C4 #0E7490 #14B8A6 #0B7658
+    #4F46E5 #7E22CE #1E60C4 #0E7490 #14B8A6 #0B7658
     #EAB308 #B45309 #FF5A5F #BE123C #FF00BB #334155
   ].freeze
 
