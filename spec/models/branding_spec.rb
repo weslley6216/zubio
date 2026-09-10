@@ -91,6 +91,26 @@ RSpec.describe Branding, type: :model do
     end
   end
 
+  describe ".suggested_colors" do
+    it "offers only colors the brand color validation accepts" do
+      rejected = Branding::SUGGESTED_COLORS.reject { |hex| build(:branding, brand_600: hex).valid? }
+
+      expect(rejected).to be_empty
+    end
+
+    it "reaches beyond what a fixed white foreground would allow" do
+      only_on_dark = Branding::SUGGESTED_COLORS.select do |hex|
+        Branding::ColorScale.new(hex).foreground == Branding::ColorScale::DARK_NEUTRAL
+      end
+
+      expect(only_on_dark).not_to be_empty
+    end
+
+    it "never repeats a color" do
+      expect(Branding::SUGGESTED_COLORS.uniq).to eq(Branding::SUGGESTED_COLORS)
+    end
+  end
+
   describe "#css_variables" do
     it "includes the brand scale and the on-brand token" do
       branding = build(:branding, brand_600: "#4F46E5")
