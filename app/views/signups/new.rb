@@ -11,7 +11,6 @@ class Views::Signups::New < Views::Base
     render Views::Layouts::Application.new(title: "Criar conta · Zubio", branding: @branding) do
       render Components::Platform::Header.new
       render Components::Panel.new(title: "Criar sua conta") do
-        render Components::Alert.new(text: flash[:alert]) if flash[:alert]
         form_with(url: signup_path, method: :post, class: "space-y-4",
           data: { turbo: false, controller: "subdomain", subdomain_url_value: subdomain_signup_path,
                   subdomain_max_length_value: Tenant::SUBDOMAIN_LENGTH.max }) do |form|
