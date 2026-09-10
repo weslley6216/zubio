@@ -162,4 +162,14 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
     expect(page).to have_content("Barbearia Norte")
     expect(page).to have_css('button[aria-pressed="true"]', text: "Barbearia")
   end
+
+  it "keeps the showcase colors when the visitor comes back from the signup screen through the header" do
+    visit "http://zubio.com.br#{Rails.application.routes.url_helpers.new_signup_path}"
+    expect(page).to have_content("Criar sua conta")
+
+    within("header") { click_on "Zubio" }
+
+    expect(page).to have_css("[data-demo-bar]")
+    expect(computed("[data-demo-bar]", "backgroundColor")).to eq("rgb(90, 63, 224)")
+  end
 end

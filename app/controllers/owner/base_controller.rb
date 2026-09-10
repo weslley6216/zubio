@@ -1,4 +1,6 @@
 class Owner::BaseController < ApplicationController
+  class_attribute :panel_section, instance_writer: false
+
   before_action :require_owner_session!
 
   private

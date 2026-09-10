@@ -25,7 +25,7 @@ RSpec.describe "Content Security Policy", type: :request do
       expect(response.headers["Content-Security-Policy"]).to include("style-src-attr 'none'")
     end
 
-    it "gives the layout's inline script and inline styles the nonce it announced" do
+    it "gives the layout's inline script the nonce it announced, and keeps inline style out of the head entirely" do
       create(:branding, tenant: tenant)
       sign_in
 
@@ -33,7 +33,8 @@ RSpec.describe "Content Security Policy", type: :request do
 
       nonce = nonce_from(response)
       expect(nonce).to be_present
-      expect(response.body.scan(%(nonce="#{nonce}")).size).to be >= 2
+      expect(response.body).to include(%(<script nonce="#{nonce}">))
+      expect(response.body).not_to include("<style")
     end
   end
 

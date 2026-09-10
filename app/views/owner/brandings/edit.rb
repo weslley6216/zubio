@@ -1,14 +1,15 @@
 class Views::Owner::Brandings::Edit < Views::Base
   include Components::Form::Styles
 
-  def initialize(tenant:, branding:)
+  def initialize(tenant:, branding:, current_section:)
     @tenant = tenant
     @branding = branding
+    @current_section = current_section
   end
 
   def view_template
     render Views::Layouts::Application.new(title: "Marca · #{@tenant.name}", branding: @branding) do
-      render Components::Owner::Header.new(tenant: @tenant, branding: @branding)
+      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
       render Components::Panel.new(title: "Marca do estabelecimento") do
         form_with(url: owner_branding_path, method: :patch, multipart: true, class: "space-y-4") do |form|
           render_name_field(form)
