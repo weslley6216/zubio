@@ -91,7 +91,7 @@ RSpec.describe Branding, type: :model do
     end
   end
 
-  describe ".suggested_colors" do
+  describe "SUGGESTED_COLORS" do
     it "offers only colors the brand color validation accepts" do
       rejected = Branding::SUGGESTED_COLORS.reject { |hex| build(:branding, brand_600: hex).valid? }
 
