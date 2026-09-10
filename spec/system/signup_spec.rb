@@ -19,4 +19,18 @@ RSpec.describe "Signup subdomain field", type: :system, js: true do
 
     expect(page).to have_field("Subdomínio", with: "aurora")
   end
+
+  it "creates the establishment and lands the owner on their own dashboard" do
+    visit new_signup_url(host: Tenant::PLATFORM_HOST)
+    fill_in "Nome do estabelecimento", with: "Estúdio Aurora"
+    fill_in "Seu nome", with: "Ana Lima"
+    fill_in "E-mail", with: "ana@example.com"
+    fill_in "Senha", with: "s3cr3t123"
+    fill_in "Confirme a senha", with: "s3cr3t123"
+
+    click_on "Criar conta"
+
+    expect(page).to have_current_path(owner_dashboard_path, url: false)
+    expect(page).to have_button(Components::Owner::Header::SIGN_OUT_LABEL)
+  end
 end

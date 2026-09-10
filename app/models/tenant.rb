@@ -28,13 +28,6 @@ class Tenant < ApplicationRecord
     "t/#{id}/#{branding&.updated_at&.to_i}"
   end
 
-  # Runs only the subdomain validators, not the whole record: this answers a
-  # keystroke, and a validation added to another attribute later must not turn
-  # into an extra query here. It also ignores :if/:unless, which live on the
-  # callback rather than on the validator.
-  #
-  # A failure this method cannot name comes back as :unknown, never :available —
-  # the one wrong answer an availability check must not give is a false yes.
   def self.subdomain_status(subdomain)
     failures = subdomain_failures(subdomain)
     return :available if failures.empty?
@@ -42,8 +35,6 @@ class Tenant < ApplicationRecord
     SUBDOMAIN_STATUS_PRIORITY.find { |status| failures.include?(status) } || :unknown
   end
 
-  # Uniqueness is the only validator here that hits the database, so a candidate
-  # the cheap rules already rejected never pays for the round-trip.
   def self.subdomain_failures(subdomain)
     candidate = new(subdomain: subdomain)
     lookups, local = validators_on(:subdomain).partition { |validator| validator.is_a?(ActiveRecord::Validations::UniquenessValidator) }
@@ -56,8 +47,6 @@ class Tenant < ApplicationRecord
 
   private_class_method :subdomain_failures
 
-  # One character past the maximum, so an oversized candidate still reports
-  # :too_long instead of being silently truncated into a valid one.
   def self.clamp_subdomain(subdomain) = subdomain.to_s.first(SUBDOMAIN_LENGTH.max + 1)
 
   def self.host_for(subdomain) = "#{subdomain}.#{PLATFORM_HOST}"
@@ -70,9 +59,6 @@ class Tenant < ApplicationRecord
     branding || Branding.platform_default
   end
 
-  # Deliberately looser than Branding#header_logo, which also demands a persisted
-  # blob: this only decides whether to invite the owner to configure the brand,
-  # and a screen that renders that invitation never carries a rejected upload.
   def branded? = branding&.logo&.attached? || false
 
   def update_branding!(tenant_attrs:, branding_attrs:, remove_logo:)
@@ -88,9 +74,6 @@ class Tenant < ApplicationRecord
     Branding::PrecomputeVariantsJob.perform_later(id) if logo_replaced
   end
 
-  # The owner is the last expression on purpose: SignupsController hands the new
-  # owner to their own subdomain using the returned record's handoff token, so a
-  # line appended below it would change what this method returns.
   def self.provision_owner!(tenant_attributes:, owner_attributes:)
     transaction do
       tenant = create!(tenant_attributes)

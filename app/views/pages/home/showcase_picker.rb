@@ -27,7 +27,7 @@ class Views::Pages::Home::ShowcasePicker < Views::Base
         action: "showcase-brand#pick"
       }
     ) do
-      span(class: "h-2.5 w-2.5 rounded-full", style: "background:#{showcase_brand.brand_600}")
+      span(class: "h-2.5 w-2.5 rounded-full", data: { demo_swatch: showcase_brand.key })
       plain showcase_brand.segment.capitalize
     end
   end

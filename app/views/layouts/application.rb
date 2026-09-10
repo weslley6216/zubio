@@ -1,5 +1,6 @@
 class Views::Layouts::Application < Views::Base
   include Phlex::Rails::Layout
+  include Phlex::Rails::Helpers::ContentSecurityPolicyNonce
 
   THEME_BOOTSTRAP = <<~JS.freeze
     try {
@@ -42,19 +43,14 @@ class Views::Layouts::Application < Views::Base
     link(rel: "manifest", href: pwa_manifest_path)
     stylesheet_link_tag(:app, "data-turbo-track": "reload")
     javascript_importmap_tags
-    style { raw safe(css_variables) }
-    style { raw safe(@page_css) } if @page_css
+    style(nonce: content_security_policy_nonce) { raw safe(css_variables) }
+    style(nonce: content_security_policy_nonce) { raw safe(@page_css) } if @page_css
   end
 
-  # Inline and ahead of the stylesheet so the stored choice is on the root
-  # before the first paint; a deferred script would flash the other theme.
-  # safe() is sound because the script is a frozen literal, never user input.
   def render_theme_bootstrap
-    script { raw safe(THEME_BOOTSTRAP) }
+    script(nonce: content_security_policy_nonce) { raw safe(THEME_BOOTSTRAP) }
   end
 
-  # safe() is sound here because css_variables only concatenates values that
-  # already passed Branding::ColorScale's allowlist — never raw user input.
   def css_variables
     ":root{#{@branding.css_variables}}"
   end

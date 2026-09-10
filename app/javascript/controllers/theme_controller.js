@@ -18,13 +18,9 @@ export default class extends Controller {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
   }
 
-  // Private browsing and blocked site data make localStorage throw on write;
-  // the theme still applies for this page view.
   #remember(theme) {
     try {
       localStorage.setItem(STORAGE_KEY, theme)
-    } catch {
-      // no-op
-    }
+    } catch {}
   }
 }

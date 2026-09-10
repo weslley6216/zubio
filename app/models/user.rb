@@ -5,8 +5,6 @@ class User < ApplicationRecord
   HANDOFF_PURPOSE = :owner_handoff
   HANDOFF_WINDOW = 2.minutes
 
-  # handoff_generation makes the token single-use: consuming it bumps the
-  # counter and every copy still in a log or in browser history stops resolving.
   generates_token_for HANDOFF_PURPOSE, expires_in: HANDOFF_WINDOW do
     [ password_salt&.last(10), handoff_generation ]
   end

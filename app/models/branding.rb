@@ -4,22 +4,24 @@ class Branding < ApplicationRecord
   has_one_attached :logo
 
   DEFAULT_BRAND_600 = "#4F46E5"
+  DARK_ACCENT_STEP = 400
   ICON_SIZES = [ [ 192, "any" ], [ 512, "any" ], [ 512, "maskable" ] ].freeze
   HEADER_LOGO_LIMIT = [ 96, 96 ].freeze
   LOGO_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
   LOGO_MAX_BYTES = 5.megabytes
+  SUGGESTED_COLORS = %w[
+    #4F46E5 #7E22CE #1E60C4 #0E7490 #14B8A6 #0B7658
+    #EAB308 #B45309 #FF5A5F #BE123C #FF00BB #334155
+  ].freeze
 
   validates :brand_600, presence: true, format: { with: ColorScale::HEX }
   validate :brand_600_meets_contrast_minimum
   validate :logo_meets_upload_constraints
 
   def self.platform_default
-    new(brand_600: DEFAULT_BRAND_600)
+    ActsAsTenant.without_tenant { new(brand_600: DEFAULT_BRAND_600) }
   end
 
-  # Falls back to the default color so re-rendering a rejected in-memory
-  # brand_600 (failed form submission) never crashes the layout's CSS
-  # custom properties, which always render regardless of validation state.
   def color_scale
     @color_scale ||= ColorScale.new(valid_hex_brand_600? ? brand_600 : DEFAULT_BRAND_600)
   end
@@ -27,7 +29,11 @@ class Branding < ApplicationRecord
   def css_variables
     ramp = color_scale.tokens.map { |step, value| "--brand-#{step}:#{value};" }.join
 
-    "#{ramp}--on-brand:#{color_scale.foreground};"
+    "#{ramp}--on-brand:#{color_scale.foreground};--on-brand-400:#{dark_accent_scale.foreground};"
+  end
+
+  def dark_accent_scale
+    @dark_accent_scale ||= ColorScale.new(color_scale.tokens[DARK_ACCENT_STEP])
   end
 
   def icon_variants
@@ -42,8 +48,6 @@ class Branding < ApplicationRecord
     end
   end
 
-  # The header renders on the branding form too, where a rejected upload leaves
-  # an attachment over a blob that was never persisted — proxying it would raise.
   def header_logo
     return unless logo.attached? && logo.blob.persisted?
 
@@ -58,9 +62,9 @@ class Branding < ApplicationRecord
 
   def brand_600_meets_contrast_minimum
     return unless valid_hex_brand_600?
-    return if ColorScale.new(brand_600).contrast_against_white >= ColorScale::MIN_CONTRAST
+    return if ColorScale.new(brand_600).contrast_against_foreground >= ColorScale::MIN_CONTRAST
 
-    errors.add(:brand_600, "não tem contraste suficiente contra branco (mínimo 4.5:1)")
+    errors.add(:brand_600, "não tem contraste suficiente com o texto que vai sobre ela (mínimo 4.5:1)")
   end
 
   def logo_meets_upload_constraints

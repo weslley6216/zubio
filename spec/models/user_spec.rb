@@ -58,32 +58,40 @@ RSpec.describe User, type: :model do
     it "resolves back to the user who minted it" do
       user = create(:user)
 
-      expect(User.find_by_handoff_token(user.handoff_token)).to eq(user)
+      ActsAsTenant.with_tenant(user.tenant) do
+        expect(User.find_by_handoff_token(user.handoff_token)).to eq(user)
+      end
     end
 
     it "stops resolving once the password changes" do
       user = create(:user, password: "s3cr3t123")
       token = user.handoff_token
 
-      user.update!(password: "an0th3rpass", password_confirmation: "an0th3rpass")
+      ActsAsTenant.with_tenant(user.tenant) do
+        user.update!(password: "an0th3rpass", password_confirmation: "an0th3rpass")
 
-      expect(User.find_by_handoff_token(token)).to be_nil
+        expect(User.find_by_handoff_token(token)).to be_nil
+      end
     end
 
     it "stops resolving once it is consumed" do
       user = create(:user)
       token = user.handoff_token
 
-      user.consume_handoff_token!
+      ActsAsTenant.with_tenant(user.tenant) do
+        user.consume_handoff_token!
 
-      expect(User.find_by_handoff_token(token)).to be_nil
+        expect(User.find_by_handoff_token(token)).to be_nil
+      end
     end
 
     it "stops resolving once it expires" do
       user = create(:user)
       token = travel_to(1.hour.ago) { user.handoff_token }
 
-      expect(User.find_by_handoff_token(token)).to be_nil
+      ActsAsTenant.with_tenant(user.tenant) do
+        expect(User.find_by_handoff_token(token)).to be_nil
+      end
     end
   end
 

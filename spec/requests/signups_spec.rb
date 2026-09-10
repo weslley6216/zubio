@@ -126,7 +126,7 @@ RSpec.describe "Signup", type: :request do
       tenant = Tenant.find_by(subdomain: "estudio-aurora")
 
       expect(tenant).to be_active
-      expect(tenant.users.sole).to be_owner
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.users.sole).to be_owner }
       expect(response.location).to start_with(owner_handoff_url(subdomain: "estudio-aurora"))
     end
 
@@ -134,9 +134,9 @@ RSpec.describe "Signup", type: :request do
       post signup_path, params: signup_params(subdomain: "estudio-aurora")
 
       tenant = Tenant.find_by(subdomain: "estudio-aurora")
-      professional = ActsAsTenant.with_tenant(tenant) { Professional.sole }
+      professional, owner = ActsAsTenant.with_tenant(tenant) { [ Professional.sole, User.sole ] }
 
-      expect(professional).to have_attributes(display_name: "Ana Lima", user_id: tenant.users.sole.id)
+      expect(professional).to have_attributes(display_name: "Ana Lima", user_id: owner.id)
     end
 
     it "lands the new owner on their own dashboard without a second login" do
@@ -159,9 +159,11 @@ RSpec.describe "Signup", type: :request do
     it "rejects signup when the subdomain is already in use" do
       create(:tenant, subdomain: "estudio-aurora")
 
-      expect {
-        post signup_path, params: signup_params(subdomain: "estudio-aurora")
-      }.to change(Tenant, :count).by(0).and change(User, :count).by(0).and change(Professional, :count).by(0)
+      ActsAsTenant.without_tenant do
+        expect {
+          post signup_path, params: signup_params(subdomain: "estudio-aurora")
+        }.to change(Tenant, :count).by(0).and change(User, :count).by(0).and change(Professional, :count).by(0)
+      end
 
       expect(response.body).to include("has already been taken")
     end

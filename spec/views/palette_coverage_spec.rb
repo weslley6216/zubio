@@ -1,9 +1,6 @@
 require "rails_helper"
 
 RSpec.describe "Theme token discipline" do
-  # Only Tailwind's named palette is guarded here. `white` and `black` are
-  # deliberately out of scope: the landing paints them over a fixed brand
-  # surface and covers those pairs with its own contrast examples.
   def named_palette_pattern
     names = %w[
       slate gray zinc neutral stone red orange amber yellow lime green

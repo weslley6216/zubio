@@ -18,8 +18,6 @@ class Views::Pages::Home::Faq < Views::Base
 
   private
 
-  # The padding lives on the summary, not on the details, so the whole row is
-  # the click target instead of the single line of text.
   def render_question(question, answer)
     details(class: "overflow-hidden rounded-xl border border-line bg-surface") do
       summary(class: "cursor-pointer px-5 py-4 text-base font-bold text-ink hover:bg-surface-2") { question }

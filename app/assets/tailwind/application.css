@@ -27,7 +27,7 @@
   --success: #067647;
 
   --brand-accent: var(--brand-600);
-  --on-brand-accent: #ffffff;
+  --on-brand-accent: var(--on-brand, #ffffff);
   --on-demo: #ffffff;
 }
 
@@ -58,7 +58,7 @@
     --success: #75e0a7;
 
     --brand-accent: var(--brand-400);
-    --on-brand-accent: #08121a;
+    --on-brand-accent: var(--on-brand-400, #08121a);
     --on-demo: #08121a;
   }
 
@@ -83,7 +83,7 @@
   --success: #75e0a7;
 
   --brand-accent: var(--brand-400);
-  --on-brand-accent: #08121a;
+  --on-brand-accent: var(--on-brand-400, #08121a);
   --on-demo: #08121a;
 }
 

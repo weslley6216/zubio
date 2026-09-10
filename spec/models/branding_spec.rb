@@ -26,10 +26,18 @@ RSpec.describe Branding, type: :model do
       expect(branding).not_to be_valid
     end
 
-    it "is invalid when brand_600 does not reach 4.5:1 contrast against white" do
-      branding = build(:branding, brand_600: "#EEEEEE")
+    it "is invalid when brand_600 reaches 4.5:1 against neither a light nor a dark foreground" do
+      branding = build(:branding, brand_600: "#7A7A7A")
 
       expect(branding).not_to be_valid
+      expect(branding.errors[:brand_600]).to be_present
+    end
+
+    it "accepts a vivid brand_600 that fails against white but carries a dark foreground" do
+      branding = build(:branding, brand_600: "#ff00bb")
+
+      expect(Branding::ColorScale.new("#ff00bb").contrast_against_white).to be < Branding::ColorScale::MIN_CONTRAST
+      expect(branding).to be_valid
     end
 
     it "is invalid when logo content type is not png, jpeg or webp" do
@@ -83,12 +91,46 @@ RSpec.describe Branding, type: :model do
     end
   end
 
+  describe "SUGGESTED_COLORS" do
+    it "offers only colors the brand color validation accepts" do
+      rejected = Branding::SUGGESTED_COLORS.reject { |hex| build(:branding, brand_600: hex).valid? }
+
+      expect(rejected).to be_empty
+    end
+
+    it "reaches beyond what a fixed white foreground would allow" do
+      only_on_dark = Branding::SUGGESTED_COLORS.select do |hex|
+        Branding::ColorScale.new(hex).foreground == Branding::ColorScale::DARK_NEUTRAL
+      end
+
+      expect(only_on_dark).not_to be_empty
+    end
+
+    it "never repeats a color" do
+      expect(Branding::SUGGESTED_COLORS.uniq).to eq(Branding::SUGGESTED_COLORS)
+    end
+  end
+
   describe "#css_variables" do
     it "includes the brand scale and the on-brand token" do
       branding = build(:branding, brand_600: "#4F46E5")
 
       expect(branding.css_variables).to include("--brand-600:#4F46E5;")
       expect(branding.css_variables).to include("--on-brand:")
+    end
+
+    it "carries a foreground for the dark accent step, not only for step 600" do
+      branding = build(:branding, brand_600: "#4F46E5")
+      dark_accent = Branding::ColorScale.new(branding.color_scale.tokens[Branding::DARK_ACCENT_STEP])
+
+      expect(branding.css_variables).to include("--on-brand-400:#{dark_accent.foreground};")
+    end
+
+    it "picks opposite foregrounds for the two accent steps of a mid-luminance brand" do
+      branding = build(:branding, brand_600: "#0B7658")
+
+      expect(branding.css_variables).to include("--on-brand:#{Branding::ColorScale::WHITE};")
+      expect(branding.css_variables).to include("--on-brand-400:#{Branding::ColorScale::DARK_NEUTRAL};")
     end
 
     it "falls back to the default color instead of raising when brand_600 is not a well-formed hex" do

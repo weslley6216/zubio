@@ -46,6 +46,13 @@ RSpec.describe Landing::ShowcaseBrand do
       expect(described_class.css_rules(described_class.all)).not_to include("--brand-")
     end
 
+    it "paints each swatch from the stylesheet instead of a style attribute" do
+      rules = described_class.css_rules(described_class.all)
+
+      expect(rules).to include(%([data-demo-swatch="salao"]{background:#5A3FE0}))
+      expect(rules).to include(%([data-demo-swatch="clinica"]{background:#1E60C4}))
+    end
+
     it "reveals only the variant matching the selected brand" do
       rules = described_class.css_rules(described_class.all)
 

@@ -79,30 +79,39 @@ RSpec.describe Tenant, type: :model do
       tenant = create(:tenant)
       branding = create(:branding, tenant: tenant)
 
-      expect(tenant.cache_key_prefix).to eq("t/#{tenant.id}/#{branding.updated_at.to_i}")
+      ActsAsTenant.with_tenant(tenant) do
+        expect(tenant.cache_key_prefix).to eq("t/#{tenant.id}/#{branding.updated_at.to_i}")
+      end
     end
 
     it "omits the timestamp when the tenant has no branding" do
       tenant = create(:tenant)
 
-      expect(tenant.cache_key_prefix).to eq("t/#{tenant.id}/")
+      ActsAsTenant.with_tenant(tenant) do
+        expect(tenant.cache_key_prefix).to eq("t/#{tenant.id}/")
+      end
     end
 
     it "differs between tenants" do
       tenant_a = create(:tenant)
       tenant_b = create(:tenant)
 
-      expect(tenant_a.cache_key_prefix).not_to eq(tenant_b.cache_key_prefix)
+      prefix_a = ActsAsTenant.with_tenant(tenant_a) { tenant_a.cache_key_prefix }
+      prefix_b = ActsAsTenant.with_tenant(tenant_b) { tenant_b.cache_key_prefix }
+
+      expect(prefix_a).not_to eq(prefix_b)
     end
 
     it "changes when the tenant's branding is updated" do
       tenant = create(:tenant)
       branding = create(:branding, tenant: tenant)
-      prefix_before = tenant.cache_key_prefix
+      ActsAsTenant.with_tenant(tenant) do
+        prefix_before = tenant.cache_key_prefix
 
-      branding.update_column(:updated_at, branding.updated_at + 1.hour)
+        branding.update_column(:updated_at, branding.updated_at + 1.hour)
 
-      expect(tenant.reload.cache_key_prefix).not_to eq(prefix_before)
+        expect(tenant.reload.cache_key_prefix).not_to eq(prefix_before)
+      end
     end
   end
 
@@ -117,7 +126,9 @@ RSpec.describe Tenant, type: :model do
     it "falls back to the platform default when the tenant has no branding" do
       tenant = create(:tenant)
 
-      expect(tenant.branding_or_default.brand_600).to eq(Branding::DEFAULT_BRAND_600)
+      ActsAsTenant.with_tenant(tenant) do
+        expect(tenant.branding_or_default.brand_600).to eq(Branding::DEFAULT_BRAND_600)
+      end
     end
   end
 
@@ -126,20 +137,26 @@ RSpec.describe Tenant, type: :model do
       tenant = create(:tenant)
       create(:branding, :with_logo, tenant: tenant)
 
-      expect(tenant.reload).to be_branded
+      ActsAsTenant.with_tenant(tenant) do
+        expect(tenant.reload).to be_branded
+      end
     end
 
     it "is false when the tenant's branding has no logo" do
       tenant = create(:tenant)
       create(:branding, tenant: tenant)
 
-      expect(tenant.reload).not_to be_branded
+      ActsAsTenant.with_tenant(tenant) do
+        expect(tenant.reload).not_to be_branded
+      end
     end
 
     it "is false when the tenant has no branding at all" do
       tenant = create(:tenant)
 
-      expect(tenant).not_to be_branded
+      ActsAsTenant.with_tenant(tenant) do
+        expect(tenant).not_to be_branded
+      end
     end
 
     it "does not count another tenant's branded logo" do
@@ -147,7 +164,9 @@ RSpec.describe Tenant, type: :model do
       other_tenant = create(:tenant)
       create(:branding, :with_logo, tenant: other_tenant)
 
-      expect(tenant.reload).not_to be_branded
+      ActsAsTenant.with_tenant(tenant) do
+        expect(tenant.reload).not_to be_branded
+      end
     end
   end
 
@@ -156,10 +175,12 @@ RSpec.describe Tenant, type: :model do
       tenant = create(:tenant, name: "Old Name")
       create(:branding, tenant: tenant, brand_600: "#4F46E5")
 
-      tenant.update_branding!(tenant_attrs: { name: "New Name" }, branding_attrs: { brand_600: "#2F6FED" }, remove_logo: false)
+      ActsAsTenant.with_tenant(tenant) do
+        tenant.update_branding!(tenant_attrs: { name: "New Name" }, branding_attrs: { brand_600: "#2F6FED" }, remove_logo: false)
 
-      expect(tenant.reload.name).to eq("New Name")
-      expect(tenant.branding.reload.brand_600).to eq("#2F6FED")
+        expect(tenant.reload.name).to eq("New Name")
+        expect(tenant.branding.reload.brand_600).to eq("#2F6FED")
+      end
     end
 
     it "rolls back the tenant name change when the branding attributes are invalid" do
@@ -208,11 +229,13 @@ RSpec.describe Tenant, type: :model do
       create(:branding, :with_logo, tenant: tenant)
       logo = fixture_file_upload("spec/fixtures/files/logo.png", "image/png")
 
-      perform_enqueued_jobs do
-        tenant.update_branding!(tenant_attrs: { name: tenant.name }, branding_attrs: { brand_600: "#4F46E5", logo: logo }, remove_logo: true)
-      end
+      ActsAsTenant.with_tenant(tenant) do
+        perform_enqueued_jobs do
+          tenant.update_branding!(tenant_attrs: { name: tenant.name }, branding_attrs: { brand_600: "#4F46E5", logo: logo }, remove_logo: true)
+        end
 
-      expect(tenant.branding.reload.logo).to be_attached
+        expect(tenant.branding.reload.logo).to be_attached
+      end
     end
   end
 
@@ -232,21 +255,25 @@ RSpec.describe Tenant, type: :model do
     end
 
     it "rolls back the tenant when the owner attributes are invalid" do
-      expect { provision(password: "") }
-        .to raise_error(ActiveRecord::RecordInvalid)
-        .and change(Tenant, :count).by(0)
-        .and change(User, :count).by(0)
-        .and change(Professional, :count).by(0)
+      ActsAsTenant.without_tenant do
+        expect { provision(password: "") }
+          .to raise_error(ActiveRecord::RecordInvalid)
+          .and change(Tenant, :count).by(0)
+          .and change(User, :count).by(0)
+          .and change(Professional, :count).by(0)
+      end
     end
 
     it "raises for a duplicate subdomain without creating a user or a professional" do
       create(:tenant, subdomain: "estudio-aurora")
 
-      expect { provision(tenant_name: "Studio Aurora 2") }
-        .to raise_error(ActiveRecord::RecordInvalid)
-        .and change(Tenant, :count).by(0)
-        .and change(User, :count).by(0)
-        .and change(Professional, :count).by(0)
+      ActsAsTenant.without_tenant do
+        expect { provision(tenant_name: "Studio Aurora 2") }
+          .to raise_error(ActiveRecord::RecordInvalid)
+          .and change(Tenant, :count).by(0)
+          .and change(User, :count).by(0)
+          .and change(Professional, :count).by(0)
+      end
     end
 
     it "creates a professional for the new tenant's owner" do
@@ -288,27 +315,35 @@ RSpec.describe Tenant, type: :model do
       tenant = create(:tenant)
       create(:user, tenant: tenant)
 
-      expect { tenant.destroy }.to change(Tenant, :count).by(0)
+      ActsAsTenant.with_tenant(tenant) do
+        expect { tenant.destroy }.to change(Tenant, :count).by(0)
+      end
     end
 
     it "refuses to destroy a tenant that still has professionals" do
       tenant = create(:tenant)
       create(:professional, :without_user, tenant: tenant)
 
-      expect { tenant.destroy }.to change(Tenant, :count).by(0)
+      ActsAsTenant.with_tenant(tenant) do
+        expect { tenant.destroy }.to change(Tenant, :count).by(0)
+      end
     end
 
     it "refuses to destroy a tenant that still has services" do
       tenant = create(:tenant)
       create(:service, tenant: tenant)
 
-      expect { tenant.destroy }.to change(Tenant, :count).by(0)
+      ActsAsTenant.with_tenant(tenant) do
+        expect { tenant.destroy }.to change(Tenant, :count).by(0)
+      end
     end
 
     it "destroys a tenant with nothing left attached to it" do
       tenant = create(:tenant)
 
-      expect { tenant.destroy }.to change(Tenant, :count).by(-1)
+      ActsAsTenant.with_tenant(tenant) do
+        expect { tenant.destroy }.to change(Tenant, :count).by(-1)
+      end
     end
   end
 

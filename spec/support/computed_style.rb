@@ -19,8 +19,6 @@ module ComputedStyle
     foreground.contrast_against(background)
   end
 
-  # getComputedStyle reports an unpainted background as "rgba(0, 0, 0, 0)", which
-  # would read as pure black and score a perfect ratio against white text.
   def opaque?(selector)
     computed(selector, "backgroundColor").start_with?("rgb(")
   end
