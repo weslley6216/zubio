@@ -34,35 +34,35 @@ RSpec.describe Landing::ShowcaseBrand do
     end
   end
 
-  describe ".css_rules" do
+  describe ".stylesheet" do
     it "scopes every ramp under the demo namespace" do
-      rules = described_class.css_rules(described_class.all)
+      rules = described_class.stylesheet
 
       expect(rules).to include(%([data-demo-brand="barbearia"]{))
       expect(rules).to include("--demo-600:#96590B;")
     end
 
     it "never emits the tenant brand namespace" do
-      expect(described_class.css_rules(described_class.all)).not_to include("--brand-")
+      expect(described_class.stylesheet).not_to include("--brand-")
     end
 
     it "paints each swatch from the stylesheet instead of a style attribute" do
-      rules = described_class.css_rules(described_class.all)
+      rules = described_class.stylesheet
 
       expect(rules).to include(%([data-demo-swatch="salao"]{background:#5A3FE0}))
       expect(rules).to include(%([data-demo-swatch="clinica"]{background:#1E60C4}))
     end
 
     it "reveals only the variant matching the selected brand" do
-      rules = described_class.css_rules(described_class.all)
+      rules = described_class.stylesheet
 
       expect(rules).to include(%([data-demo-brand="clinica"] [data-demo-for="clinica"]{display:inline}))
     end
-  end
 
-  describe ".stylesheet" do
-    it "carries every showcase ramp in the single sheet the landing links to" do
-      expect(described_class.stylesheet).to eq(described_class.css_rules(described_class.all))
+    it "carries a ramp for every brand in the catalog" do
+      rules = described_class.stylesheet
+
+      expect(described_class.all.map(&:key)).to all(satisfy { |key| rules.include?(%([data-demo-brand="#{key}"]{)) })
     end
   end
 
