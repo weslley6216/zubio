@@ -59,7 +59,7 @@ class Views::Layouts::Application < Views::Base
     messages = FLASH_TONES.filter_map { |key, tone| [ flash[key], tone ] if flash[key].present? }
     return if messages.empty?
 
-    div(class: "mx-auto grid w-full max-w-6xl gap-2 px-6 pt-4") do
+    div(role: "status", class: "mx-auto grid w-full max-w-6xl gap-2 px-6 pt-4") do
       messages.each { |text, tone| render Components::Alert.new(text: text, tone: tone) }
     end
   end

@@ -170,6 +170,7 @@ RSpec.describe "Owner branding", type: :request do
 
       expect(response.body).to include("Marca atualizada.")
       expect(response.body).to include("bg-success-surface")
+      expect(response.body).to include(%(<div role="status"))
       expect(response.body).not_to include("bg-danger-surface")
     end
 
