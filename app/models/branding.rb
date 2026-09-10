@@ -14,7 +14,7 @@ class Branding < ApplicationRecord
   validate :logo_meets_upload_constraints
 
   def self.platform_default
-    new(brand_600: DEFAULT_BRAND_600)
+    ActsAsTenant.without_tenant { new(brand_600: DEFAULT_BRAND_600) }
   end
 
   # Falls back to the default color so re-rendering a rejected in-memory
