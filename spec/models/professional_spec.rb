@@ -16,7 +16,13 @@ RSpec.describe Professional, type: :model do
   end
 
   describe "associations" do
-    it { is_expected.to belong_to(:user).optional }
+    it "belongs to an optional user" do
+      tenant = create(:tenant)
+
+      ActsAsTenant.with_tenant(tenant) do
+        expect(described_class.new).to belong_to(:user).optional
+      end
+    end
   end
 
   describe "user association" do

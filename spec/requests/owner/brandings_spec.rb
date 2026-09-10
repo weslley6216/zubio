@@ -48,7 +48,7 @@ RSpec.describe "Owner branding", type: :request do
       patch owner_branding_path, params: { tenant: { name: tenant.name }, branding: { brand_600: "#2F6FED" } }
 
       expect(response).to redirect_to(edit_owner_branding_path)
-      expect(tenant.reload.branding.brand_600).to eq("#2F6FED")
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq("#2F6FED") }
     end
 
     it "rejects a color without sufficient contrast and does not persist it" do
@@ -57,7 +57,7 @@ RSpec.describe "Owner branding", type: :request do
       patch owner_branding_path, params: { tenant: { name: tenant.name }, branding: { brand_600: "#F5F5F5" } }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(tenant.reload.branding.brand_600).to eq("#4F46E5")
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq("#4F46E5") }
     end
 
     it "rejects a malformed color without crashing the page chrome and does not persist it" do
@@ -66,7 +66,7 @@ RSpec.describe "Owner branding", type: :request do
       patch owner_branding_path, params: { tenant: { name: tenant.name }, branding: { brand_600: "not-a-hex" } }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(tenant.reload.branding.brand_600).to eq("#4F46E5")
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq("#4F46E5") }
     end
 
     it "saves a valid logo upload and enqueues variant precomputation in the background" do
@@ -78,7 +78,7 @@ RSpec.describe "Owner branding", type: :request do
       }.to have_enqueued_job(Branding::PrecomputeVariantsJob).with(tenant.id)
 
       expect(response).to redirect_to(edit_owner_branding_path)
-      expect(tenant.reload.branding.logo).to be_attached
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.logo).to be_attached }
     end
 
     it "rejects an unsupported logo file type without attaching it" do
@@ -93,7 +93,7 @@ RSpec.describe "Owner branding", type: :request do
       }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(tenant.reload.branding.logo).not_to be_attached
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.logo).not_to be_attached }
     ensure
       pdf_file.close!
     end
@@ -110,7 +110,7 @@ RSpec.describe "Owner branding", type: :request do
       }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(tenant.reload.branding.logo).not_to be_attached
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.logo).not_to be_attached }
     ensure
       oversized.close!
     end
@@ -120,7 +120,7 @@ RSpec.describe "Owner branding", type: :request do
 
       patch owner_branding_path, params: { tenant: { name: "Studio Aurora" }, branding: { brand_600: "#4F46E5" } }
 
-      expect(tenant.reload.name).to eq("Studio Aurora")
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.name).to eq("Studio Aurora") }
     end
 
     it "removes the current logo when remove_logo is checked and no new file is sent" do
@@ -130,7 +130,7 @@ RSpec.describe "Owner branding", type: :request do
         patch owner_branding_path, params: { tenant: { name: tenant.name }, branding: { brand_600: "#4F46E5", remove_logo: "1" } }
       end
 
-      expect(tenant.reload.branding.logo).not_to be_attached
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.logo).not_to be_attached }
     end
 
     it "does not update another tenant's branding" do
@@ -140,7 +140,7 @@ RSpec.describe "Owner branding", type: :request do
       patch owner_branding_path, params: { tenant: { name: "Hijacked" }, branding: { brand_600: "#2F6FED" } }
 
       expect(other_tenant.reload.name).to eq("Other Salon")
-      expect(other_tenant.branding.reload.brand_600).to eq("#000000")
+      ActsAsTenant.with_tenant(other_tenant) { expect(other_tenant.branding.reload.brand_600).to eq("#000000") }
     end
 
     it "renders field errors through the shared component, in the danger token" do
