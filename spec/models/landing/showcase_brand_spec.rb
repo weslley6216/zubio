@@ -59,4 +59,17 @@ RSpec.describe Landing::ShowcaseBrand do
       expect(rules).to include(%([data-demo-brand="clinica"] [data-demo-for="clinica"]{display:inline}))
     end
   end
+
+  describe ".stylesheet" do
+    it "carries every showcase ramp in the single sheet the landing links to" do
+      expect(described_class.stylesheet).to eq(described_class.css_rules(described_class.all))
+    end
+  end
+
+  describe ".stylesheet_digest" do
+    it "never collides with the digest of an establishment's own sheet" do
+      expect(described_class.stylesheet_digest.length).to eq(Branding::DIGEST_LENGTH)
+      expect(described_class.stylesheet_digest).not_to eq(Branding.platform_default.stylesheet_digest)
+    end
+  end
 end

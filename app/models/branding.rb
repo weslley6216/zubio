@@ -9,6 +9,7 @@ class Branding < ApplicationRecord
   HEADER_LOGO_LIMIT = [ 96, 96 ].freeze
   LOGO_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
   LOGO_MAX_BYTES = 5.megabytes
+  DIGEST_LENGTH = 16
   SUGGESTED_COLORS = %w[
     #4F46E5 #7E22CE #1E60C4 #0E7490 #14B8A6 #0B7658
     #EAB308 #B45309 #FF5A5F #BE123C #FF00BB #334155
@@ -30,6 +31,14 @@ class Branding < ApplicationRecord
     ramp = color_scale.tokens.map { |step, value| "--brand-#{step}:#{value};" }.join
 
     "#{ramp}--on-brand:#{color_scale.foreground};--on-brand-400:#{dark_accent_scale.foreground};"
+  end
+
+  def stylesheet
+    ":root{#{css_variables}}"
+  end
+
+  def stylesheet_digest
+    Digest::SHA256.hexdigest(stylesheet).first(DIGEST_LENGTH)
   end
 
   def dark_accent_scale
