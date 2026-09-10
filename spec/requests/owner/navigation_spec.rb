@@ -9,16 +9,24 @@ RSpec.describe "Owner panel navigation", type: :request do
     post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
   end
 
-  it "offers every destination from the panel" do
+  def band_item(href)
+    %(<a href="#{href}" class="#{Components::Owner::Header::ITEM_CLASS} #{Components::Owner::Header::RESTING_CLASS}">)
+  end
+
+  def menu_item(href)
+    %(<a href="#{href}" class="rounded-lg px-3 py-3)
+  end
+
+  it "offers every destination from the panel, in the band and in the menu" do
     create(:branding, tenant: tenant)
     sign_in
 
     get owner_dashboard_path
 
-    expect(response.body).to include(%(href="#{owner_dashboard_path}"))
-    expect(response.body).to include(%(href="#{edit_owner_branding_path}"))
-    expect(response.body).to include("Painel")
-    expect(response.body).to include("Marca")
+    expect(response.body).to include(band_item(edit_owner_branding_path))
+    expect(response.body).to include(%(<a href="#{owner_dashboard_path}" aria-current="page"))
+    expect(response.body).to include(menu_item(owner_dashboard_path))
+    expect(response.body).to include(menu_item(edit_owner_branding_path))
   end
 
   it "offers the same destinations from the brand screen, which is what persistent means" do
@@ -27,10 +35,10 @@ RSpec.describe "Owner panel navigation", type: :request do
 
     get edit_owner_branding_path
 
-    expect(response.body).to include(%(href="#{owner_dashboard_path}"))
-    expect(response.body).to include(%(href="#{edit_owner_branding_path}"))
-    expect(response.body).to include("Painel")
-    expect(response.body).to include("Marca")
+    expect(response.body).to include(band_item(owner_dashboard_path))
+    expect(response.body).to include(%(<a href="#{edit_owner_branding_path}" aria-current="page"))
+    expect(response.body).to include(menu_item(owner_dashboard_path))
+    expect(response.body).to include(menu_item(edit_owner_branding_path))
   end
 
   it "marks the panel as current on the panel, and marks nothing else" do
