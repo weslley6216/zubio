@@ -3,8 +3,6 @@ class Components::Signup::SubdomainStatus < Components::Base
   NEUTRAL = "text-ink-muted".freeze
   PROBLEM = "text-danger".freeze
 
-  # Tone and message live in the same entry so a status can never render an
-  # instruction in the colour of an error, or the reverse.
   STATES = {
     available: [ AVAILABLE, ->(host) { "#{host} está disponível." } ],
     blank: [ NEUTRAL, ->(_host) { "Escolha um subdomínio para o seu estabelecimento." } ],
@@ -15,7 +13,6 @@ class Components::Signup::SubdomainStatus < Components::Base
     too_long: [ PROBLEM, ->(_host) { "O subdomínio pode ter no máximo #{Tenant::SUBDOMAIN_LENGTH.max} caracteres." } ]
   }.freeze
 
-  # Reached when the model reports a failure this component does not name.
   UNKNOWN = [ PROBLEM, ->(_host) { "Este subdomínio não pode ser usado." } ].freeze
 
   def initialize(status:, host:)

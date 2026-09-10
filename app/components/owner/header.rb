@@ -27,8 +27,6 @@ class Components::Owner::Header < Components::Base
     end
   end
 
-  # alt is empty on purpose: the establishment name sits right beside the mark,
-  # so announcing the logo again would only repeat it.
   def render_emblem
     logo = @branding.header_logo
 

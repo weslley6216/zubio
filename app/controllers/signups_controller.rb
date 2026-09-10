@@ -2,9 +2,6 @@ class SignupsController < ApplicationController
   skip_before_action :resolve_tenant, only: %i[new create subdomain]
   before_action :redirect_to_platform_host, unless: :platform_root_host?
 
-  # Both limits need an explicit name: Rails keys the counter on
-  # controller_path + name, so unnamed limits in one controller share a counter
-  # and the subdomain checks would spend the signup quota.
   rate_limit to: 30, within: 1.minute, only: :subdomain, name: "subdomain-check",
     with: -> { head :too_many_requests }
 

@@ -47,15 +47,10 @@ class Views::Layouts::Application < Views::Base
     style(nonce: content_security_policy_nonce) { raw safe(@page_css) } if @page_css
   end
 
-  # Inline and ahead of the stylesheet so the stored choice is on the root
-  # before the first paint; a deferred script would flash the other theme.
-  # safe() is sound because the script is a frozen literal, never user input.
   def render_theme_bootstrap
     script(nonce: content_security_policy_nonce) { raw safe(THEME_BOOTSTRAP) }
   end
 
-  # safe() is sound here because css_variables only concatenates values that
-  # already passed Branding::ColorScale's allowlist — never raw user input.
   def css_variables
     ":root{#{@branding.css_variables}}"
   end
