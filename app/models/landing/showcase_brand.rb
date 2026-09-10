@@ -36,6 +36,7 @@ class Landing::ShowcaseBrand
 
   def self.css_rules(showcase_brands)
     showcase_brands.map { |showcase_brand| showcase_brand.css_rule }.join +
+      showcase_brands.map { |showcase_brand| showcase_brand.swatch_rule }.join +
       showcase_brands.map { |showcase_brand| showcase_brand.variant_rule }.join
   end
 
@@ -54,6 +55,10 @@ class Landing::ShowcaseBrand
     ramp = Branding::ColorScale.new(brand_600).tokens.map { |step, value| "--demo-#{step}:#{value};" }.join
 
     %([data-demo-brand="#{key}"]{#{ramp}})
+  end
+
+  def swatch_rule
+    %([data-demo-swatch="#{key}"]{background:#{brand_600}})
   end
 
   def variant_rule

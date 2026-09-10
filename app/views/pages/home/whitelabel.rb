@@ -35,7 +35,7 @@ class Views::Pages::Home::Whitelabel < Views::Base
       @showcase_brands.each do |showcase_brand|
         div(class: "flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3") do
           span(class: "grid h-9 w-9 flex-none place-items-center rounded-lg text-sm font-extrabold text-white",
-               style: "background:#{showcase_brand.brand_600}") { showcase_brand.initial }
+               data: { demo_swatch: showcase_brand.key }) { showcase_brand.initial }
           div(class: "grid min-w-0 gap-0.5") do
             span(class: "truncate text-sm font-bold text-ink") { showcase_brand.name }
             span(class: "text-xs text-ink-muted") { showcase_brand.segment }
