@@ -40,6 +40,14 @@ class Landing::ShowcaseBrand
       showcase_brands.map { |showcase_brand| showcase_brand.variant_rule }.join
   end
 
+  def self.stylesheet
+    @stylesheet ||= css_rules(all)
+  end
+
+  def self.stylesheet_digest
+    @stylesheet_digest ||= Digest::SHA256.hexdigest(stylesheet).first(Branding::DIGEST_LENGTH)
+  end
+
   def initialize(key:, name:, initial:, segment:, meta:, host:, brand_600:, services:)
     @key = key
     @name = name
