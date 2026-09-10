@@ -1,5 +1,8 @@
 FactoryBot.define do
   factory :branding do
+    initialize_with { ActsAsTenant.with_tenant(tenant) { new(tenant: tenant) } }
+    to_create { |branding| ActsAsTenant.with_tenant(branding.tenant) { branding.save! } }
+
     tenant
     brand_600 { "#4F46E5" }
 
