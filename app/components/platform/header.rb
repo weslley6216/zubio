@@ -48,32 +48,6 @@ class Components::Platform::Header < Components::Base
   def mobile_menu? = @links.any?
 
   def render_mobile_menu
-    details(class: "relative sm:hidden") do
-      summary(class: "grid h-11 w-11 cursor-pointer list-none place-items-center rounded-lg border border-line bg-surface hover:bg-surface-2 [&::-webkit-details-marker]:hidden") do
-        span(class: "sr-only") { "Abrir menu" }
-        render_menu_bars
-      end
-      div(class: "absolute right-0 top-full z-30 mt-2 grid w-56 gap-1 rounded-xl border border-line bg-surface p-2 shadow-lg") do
-        @links.each { |label, anchor| a(href: anchor, class: "rounded-lg px-3 py-3 text-sm font-semibold text-ink hover:bg-surface-2") { label } }
-        render_theme_row
-      end
-    end
-  end
-
-  def render_theme_row
-    button(
-      type: "button",
-      class: "flex cursor-pointer items-center gap-3 rounded-lg border-t border-line px-3 py-3 text-left text-sm font-semibold text-ink hover:bg-surface-2",
-      data: { action: "theme#toggle" }
-    ) do
-      render Components::ContrastMark.new
-      plain Components::ThemeToggle::LABEL
-    end
-  end
-
-  def render_menu_bars
-    div(class: "grid gap-1") do
-      3.times { span(class: "block h-0.5 w-4 rounded-full bg-ink") }
-    end
+    render Components::Menu.new(items: @links)
   end
 end
