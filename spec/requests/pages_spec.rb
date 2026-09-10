@@ -20,12 +20,13 @@ RSpec.describe "Landing page", type: :request do
       expect(response.body).to include(%(id="hero-cta"))
     end
 
-    it "renders showcase palettes under the demo namespace, never the tenant namespace" do
+    it "points at the showcase palettes as a sheet, never inline and never in the tenant namespace" do
       get root_path
 
       expect(response.body).to include(%(role="group"))
-      expect(response.body).to include("--demo-600:#96590B;")
-      expect(response.body).not_to include("--brand-600:#96590B;")
+      expect(response.body).to include(%(href="/showcase.css?v=#{Landing::ShowcaseBrand.stylesheet_digest}"))
+      expect(response.body).not_to include("--demo-600:")
+      expect(response.body).not_to include("--brand-600:")
     end
 
     it "explains how the product works and what it does" do
@@ -85,17 +86,17 @@ RSpec.describe "Landing page", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
-    it "never renders any tenant's brand at the platform root" do
+    it "never points at any tenant's brand sheet at the platform root" do
       aurora_studio = create(:tenant, subdomain: "aurora-studio")
       joes_barbershop = create(:tenant, subdomain: "joes-barbershop")
-      create(:branding, tenant: aurora_studio, brand_600: "#1D4ED8")
-      create(:branding, tenant: joes_barbershop, brand_600: "#DC2626")
+      aurora_branding = create(:branding, tenant: aurora_studio, brand_600: "#1D4ED8")
+      joes_branding = create(:branding, tenant: joes_barbershop, brand_600: "#DC2626")
 
       get root_path
 
-      expect(response.body).to include("--brand-600:#{Branding::DEFAULT_BRAND_600};")
-      expect(response.body).not_to include("--brand-600:#1D4ED8;")
-      expect(response.body).not_to include("--brand-600:#DC2626;")
+      expect(response.body).to include(Branding.platform_default.stylesheet_digest)
+      expect(response.body).not_to include(aurora_branding.stylesheet_digest)
+      expect(response.body).not_to include(joes_branding.stylesheet_digest)
     end
 
     it "offers no path to the sign in screen" do
@@ -126,19 +127,19 @@ RSpec.describe "Landing page", type: :request do
       expect(response).to have_http_status(:not_found)
     end
 
-    it "renders the establishment's own brand at its entrance and never another tenant's" do
+    it "points at the establishment's own brand sheet at its entrance and never another tenant's" do
       aurora_studio = create(:tenant, subdomain: "aurora-studio")
       joes_barbershop = create(:tenant, subdomain: "joes-barbershop")
-      create(:branding, tenant: aurora_studio, brand_600: "#1D4ED8")
-      create(:branding, tenant: joes_barbershop, brand_600: "#DC2626")
+      aurora_branding = create(:branding, tenant: aurora_studio, brand_600: "#1D4ED8")
+      joes_branding = create(:branding, tenant: joes_barbershop, brand_600: "#DC2626")
 
       host! "aurora-studio.zubio.com.br"
       get root_path
       follow_redirect!
 
-      expect(response.body).to include("--brand-600:#1D4ED8;")
-      expect(response.body).not_to include("--brand-600:#DC2626;")
-      expect(response.body).not_to include("--brand-600:#{Branding::DEFAULT_BRAND_600};")
+      expect(response.body).to include(aurora_branding.stylesheet_digest)
+      expect(response.body).not_to include(joes_branding.stylesheet_digest)
+      expect(response.body).not_to include(Branding.platform_default.stylesheet_digest)
     end
   end
 

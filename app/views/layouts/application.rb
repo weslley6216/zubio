@@ -11,10 +11,10 @@ class Views::Layouts::Application < Views::Base
 
   SURFACE_CLASS = "bg-canvas text-ink [color-scheme:light_dark]".freeze
 
-  def initialize(title:, branding:, page_css: nil)
+  def initialize(title:, branding:, page_stylesheet: nil)
     @title = title
     @branding = branding
-    @page_css = page_css
+    @page_stylesheet = page_stylesheet
   end
 
   def view_template(&block)
@@ -42,16 +42,12 @@ class Views::Layouts::Application < Views::Base
     link(rel: "apple-touch-icon", href: "/icon.png")
     link(rel: "manifest", href: pwa_manifest_path)
     stylesheet_link_tag(:app, "data-turbo-track": "reload")
+    link(rel: "stylesheet", href: branding_stylesheet_path(v: @branding.stylesheet_digest), data: { turbo_track: "dynamic" })
+    link(rel: "stylesheet", href: @page_stylesheet, data: { turbo_track: "dynamic" }) if @page_stylesheet
     javascript_importmap_tags
-    style(nonce: content_security_policy_nonce) { raw safe(css_variables) }
-    style(nonce: content_security_policy_nonce) { raw safe(@page_css) } if @page_css
   end
 
   def render_theme_bootstrap
     script(nonce: content_security_policy_nonce) { raw safe(THEME_BOOTSTRAP) }
-  end
-
-  def css_variables
-    ":root{#{@branding.css_variables}}"
   end
 end

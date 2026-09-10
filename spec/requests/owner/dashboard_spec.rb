@@ -39,13 +39,13 @@ RSpec.describe "Owner dashboard", type: :request do
       expect(response.body).to include(">E</span>")
     end
 
-    it "applies the tenant's brand color through the accent token" do
-      create(:branding, tenant: tenant, brand_600: "#2F6FED")
+    it "applies the tenant's brand through the accent token and its own sheet" do
+      branding = create(:branding, tenant: tenant, brand_600: "#2F6FED")
       sign_in
 
       get owner_dashboard_path
 
-      expect(response.body).to include("--brand-600:#2F6FED;")
+      expect(response.body).to include(%(href="/branding.css?v=#{branding.stylesheet_digest}"))
       expect(response.body).to include("bg-brand-accent")
     end
 
@@ -76,7 +76,7 @@ RSpec.describe "Owner dashboard", type: :request do
       get owner_dashboard_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("--brand-600:#{Branding::DEFAULT_BRAND_600};")
+      expect(response.body).to include(%(href="/branding.css?v=#{Branding.platform_default.stylesheet_digest}"))
     end
 
     it "offers a path to the brand screen and a way out of the session" do
@@ -105,15 +105,16 @@ RSpec.describe "Owner dashboard", type: :request do
 
     it "shows the identity of the tenant in the host and nothing of another tenant" do
       other_tenant = create(:tenant, subdomain: "salon-b", name: "Barbearia do Zé")
-      create(:branding, :with_logo, tenant: other_tenant, brand_600: "#DC2626")
-      create(:branding, tenant: tenant, brand_600: "#2F6FED")
+      other_branding = create(:branding, :with_logo, tenant: other_tenant, brand_600: "#DC2626")
+      branding = create(:branding, tenant: tenant, brand_600: "#2F6FED")
       sign_in
 
       get owner_dashboard_path
 
       expect(response.body).to include("Estúdio Aurora")
       expect(response.body).not_to include("Barbearia do Zé")
-      expect(response.body).not_to include("--brand-600:#DC2626;")
+      expect(response.body).to include(branding.stylesheet_digest)
+      expect(response.body).not_to include(other_branding.stylesheet_digest)
       expect(response.body).not_to include("/rails/active_storage/representations/proxy/")
     end
   end

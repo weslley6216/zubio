@@ -40,9 +40,7 @@ class Views::Pages::Home < Views::Base
     Views::Layouts::Application.new(
       title: "Zubio · Agendamento online com a sua marca",
       branding: @branding,
-      page_css: showcase_css
+      page_stylesheet: showcase_stylesheet_path(v: Landing::ShowcaseBrand.stylesheet_digest)
     )
   end
-
-  def showcase_css = Landing::ShowcaseBrand.css_rules(@showcase_brands)
 end
