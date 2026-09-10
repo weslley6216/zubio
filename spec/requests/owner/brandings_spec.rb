@@ -54,7 +54,7 @@ RSpec.describe "Owner branding", type: :request do
     it "rejects a color without sufficient contrast and does not persist it" do
       create(:branding, tenant: tenant, brand_600: "#4F46E5")
 
-      patch owner_branding_path, params: { tenant: { name: tenant.name }, branding: { brand_600: "#F5F5F5" } }
+      patch owner_branding_path, params: { tenant: { name: tenant.name }, branding: { brand_600: "#7A7A7A" } }
 
       expect(response).to have_http_status(:unprocessable_entity)
       ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq("#4F46E5") }
