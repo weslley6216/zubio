@@ -1,8 +1,10 @@
 class Owner::BrandingsController < Owner::BaseController
   REFUSED = "Não foi possível salvar a marca. Confira os campos destacados.".freeze
 
+  self.panel_section = :branding
+
   def edit
-    render Views::Owner::Brandings::Edit.new(tenant: ActsAsTenant.current_tenant, branding: current_branding)
+    render Views::Owner::Brandings::Edit.new(tenant: ActsAsTenant.current_tenant, branding: current_branding, current_section: panel_section)
   end
 
   def update
@@ -12,7 +14,7 @@ class Owner::BrandingsController < Owner::BaseController
     redirect_to edit_owner_branding_path, notice: "Marca atualizada."
   rescue ActiveRecord::RecordInvalid
     flash.now[:alert] = REFUSED
-    render Views::Owner::Brandings::Edit.new(tenant: tenant, branding: tenant.branding), status: :unprocessable_entity
+    render Views::Owner::Brandings::Edit.new(tenant: tenant, branding: tenant.branding, current_section: panel_section), status: :unprocessable_entity
   end
 
   private

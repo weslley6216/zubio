@@ -1,24 +1,36 @@
 class Components::Owner::Header < Components::Base
   include Phlex::Rails::Helpers::ButtonTo
 
-  BRAND_LABEL = "Marca".freeze
   SIGN_OUT_LABEL = "Sair".freeze
+  ITEM_CLASS = "inline-flex min-h-11 items-center rounded-lg px-4 text-sm font-bold".freeze
+  CURRENT_CLASS = "bg-brand-accent text-on-brand-accent".freeze
+  RESTING_CLASS = "text-ink-muted hover:bg-surface-2 hover:text-ink".freeze
 
-  def initialize(tenant:, branding:)
+  def initialize(tenant:, branding:, current_section:)
     @tenant = tenant
     @branding = branding
+    @current_section = current_section
   end
 
   def view_template
     header(class: "sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur", data: { controller: "theme" }) do
       div(class: "mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-6") do
         render_identity
+        render_nav
         render_actions
+        render_menu
       end
     end
   end
 
   private
+
+  def sections
+    [
+      [ :dashboard, "Painel", owner_dashboard_path ],
+      [ :branding, "Marca", edit_owner_branding_path ]
+    ]
+  end
 
   def render_identity
     a(href: owner_dashboard_path, class: "flex min-h-11 min-w-0 items-center gap-2 font-extrabold tracking-tight text-ink") do
@@ -39,12 +51,22 @@ class Components::Owner::Header < Components::Base
 
   def emblem_initial = @tenant.name.first.upcase
 
+  def render_nav
+    nav(class: "ml-auto hidden items-center gap-1 sm:flex") do
+      sections.each { |key, label, href| render_section(key, label, href) }
+    end
+  end
+
+  def render_section(key, label, href)
+    current = key == @current_section
+
+    a(href: href, aria_current: current ? "page" : nil, class: "#{ITEM_CLASS} #{current ? CURRENT_CLASS : RESTING_CLASS}") { label }
+  end
+
   def render_actions
-    div(class: "ml-auto flex flex-none items-center gap-3") do
-      a(href: edit_owner_branding_path,
-        class: "inline-flex min-h-11 items-center rounded-lg bg-brand-accent px-4 text-sm font-bold text-on-brand-accent shadow-sm hover:opacity-90") { BRAND_LABEL }
-      render Components::ThemeToggle.new(hidden_on_phone: false)
-      render_sign_out
+    div(class: "ml-auto flex flex-none items-center gap-3 sm:ml-0") do
+      render Components::ThemeToggle.new(hidden_on_phone: true)
+      div(class: "hidden sm:block") { render_sign_out }
     end
   end
 
@@ -52,4 +74,10 @@ class Components::Owner::Header < Components::Base
     button_to(SIGN_OUT_LABEL, owner_session_path, method: :delete,
       class: "inline-flex min-h-11 cursor-pointer items-center rounded-lg border border-line bg-surface px-4 text-sm font-semibold text-ink hover:bg-surface-2")
   end
+
+  def render_menu
+    render Components::Menu.new(items: menu_items) { render_sign_out }
+  end
+
+  def menu_items = sections.map { |_key, label, href| [ label, href ] }
 end
