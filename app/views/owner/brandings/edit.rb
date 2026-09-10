@@ -31,16 +31,25 @@ class Views::Owner::Brandings::Edit < Views::Base
     end
   end
 
+  SUGGESTIONS_ID = "brand-color-suggestions".freeze
+
   def render_color_field(form)
     div(data: { controller: "color-swatch" }) do
       form.label :brand_600, "Cor da marca", class: LABEL
       div(class: "mt-1 flex items-center gap-2") do
-        form.color_field :swatch, name: "brand_600_swatch", value: @branding.brand_600,
+        form.color_field :swatch, name: "brand_600_swatch", value: @branding.brand_600, list: SUGGESTIONS_ID,
           data: { "color-swatch-target": "swatch", action: "input->color-swatch#syncFromSwatch" }
         form.text_field :brand_600, name: "branding[brand_600]", value: @branding.brand_600, required: true,
           class: CONTROL, data: { "color-swatch-target": "text", action: "input->color-swatch#syncFromText" }
       end
       render Components::Form::Errors.new(messages: @branding.errors[:brand_600])
+      render_color_suggestions
+    end
+  end
+
+  def render_color_suggestions
+    datalist(id: SUGGESTIONS_ID) do
+      Branding::SUGGESTED_COLORS.each { |suggestion| option(value: suggestion) }
     end
   end
 
@@ -53,8 +62,6 @@ class Views::Owner::Brandings::Edit < Views::Base
     end
   end
 
-  # A rejected upload leaves an in-memory, unsaved attachment on @branding
-  # (logo.attached? is true, but the blob has no id) — signed_id would raise.
   def current_logo_attached?
     @branding.logo.attached? && @branding.logo.blob.persisted?
   end

@@ -44,7 +44,5 @@ class Views::Pages::Home < Views::Base
     )
   end
 
-  # safe() in the layout is sound for this string because every color in it comes
-  # from the frozen showcase catalog through Branding::ColorScale, never from user input.
   def showcase_css = Landing::ShowcaseBrand.css_rules(@showcase_brands)
 end

@@ -21,6 +21,10 @@ class Branding::ColorScale
     contrast_against(self.class.new(WHITE))
   end
 
+  def contrast_against_foreground
+    contrast_against(self.class.new(foreground))
+  end
+
   def contrast_against(other)
     contrast_ratio(luminance, other.luminance)
   end

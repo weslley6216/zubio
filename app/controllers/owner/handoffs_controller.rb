@@ -19,16 +19,6 @@ class Owner::HandoffsController < ApplicationController
 
   private
 
-  # A GET that opens a session is reachable from an <img> or a prefetch, which
-  # is how login CSRF rides a victim's browser. Fetch Metadata makes the browser
-  # say what the request is for, and the browser will not let a page forge it.
-  # The legitimate caller is always a top-level navigation from the signup
-  # redirect, which is same-site. An absent header means the caller is not a
-  # browser, and a non-browser caller has no victim's session to ride.
-  #
-  # This is why the signup form carries data-turbo="false": under Turbo the
-  # redirect would be followed by fetch, arriving here as "empty", and every
-  # signup would end on the login form instead of the dashboard.
   def navigation?
     request.headers["Sec-Fetch-Dest"].in?([ nil, "document" ]) &&
       request.headers["Sec-Fetch-Site"].in?(SAFE_SITES)

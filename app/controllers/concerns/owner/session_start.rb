@@ -1,6 +1,3 @@
-# Every path that signs an owner in goes through here: reset_session before
-# writing user_id is the session-fixation guard, and having one entry point is
-# what keeps a future login path from silently omitting it.
 module Owner::SessionStart
   extend ActiveSupport::Concern
 

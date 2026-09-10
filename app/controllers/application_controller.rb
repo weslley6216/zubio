@@ -1,12 +1,8 @@
 class ApplicationController < ActionController::Base
-  # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern, if: :browser_restricted?
 
-  # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
 
-  # Views are Phlex classes that render the whole document themselves; a Rails
-  # layout would wrap them in a second <html>.
   layout false
 
   set_current_tenant_through_filter

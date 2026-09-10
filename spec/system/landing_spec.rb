@@ -56,6 +56,13 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
     expect(computed("[data-demo-bar]", "backgroundColor")).to eq("rgb(90, 63, 224)")
   end
 
+  it "paints each identity swatch from the stylesheet, with no style attribute on the element" do
+    visit "http://zubio.com.br/"
+
+    expect(computed('[data-demo-swatch="salao"]', "backgroundColor")).to eq("rgb(90, 63, 224)")
+    expect(page).to have_no_css("[data-demo-swatch][style]", visible: :all)
+  end
+
   it "keeps the previewed establishment readable in both color schemes" do
     %w[light dark].each do |scheme|
       emulate_color_scheme(scheme)
