@@ -9,10 +9,11 @@ class Views::Owner::Brandings::Edit < Views::Base
   SECONDARY_LABEL = "Cor secundária".freeze
   SECONDARY_LINKED_LABEL = "Igual à marca".freeze
   LOGO_LABEL = "Logotipo".freeze
-  LOGO_HINT = "PNG ou JPG, fundo transparente ajuda.".freeze
+  LOGO_HINT = "PNG, JPG ou WEBP — fundo transparente ajuda.".freeze
   LOGO_CHANGE_LABEL = "Trocar".freeze
   REMOVE_LOGO_LABEL = "Remover logotipo atual".freeze
   SUBMIT_LABEL = "Salvar minha marca".freeze
+  LOGO_CONTENT_TYPES = Branding::LOGO_CONTENT_TYPES.join(",").freeze
 
   PAGE_CLASS = "mx-auto w-full max-w-md px-3 py-4".freeze
   CARD_CLASS = "rounded-2xl border border-line bg-surface p-4".freeze
@@ -76,8 +77,7 @@ class Views::Owner::Brandings::Edit < Views::Base
       render Components::Form::ColorSwatches.new(
         label: BRAND_LABEL,
         attribute: :brand_600,
-        selected: @branding.brand_600,
-        resolved: @branding.brand_600
+        selected: @branding.brand_600
       )
       render Components::Form::Errors.new(messages: @branding.errors[:brand_600])
     end
@@ -89,7 +89,7 @@ class Views::Owner::Brandings::Edit < Views::Base
         label: SECONDARY_LABEL,
         attribute: :brand_secondary_600,
         selected: @branding.brand_secondary_600,
-        resolved: @branding.brand_secondary_600.presence || @branding.brand_600,
+        fallback: @branding.brand_600,
         linked_label: SECONDARY_LINKED_LABEL
       )
       render Components::Form::Errors.new(messages: @branding.errors[:brand_secondary_600])
@@ -98,11 +98,11 @@ class Views::Owner::Brandings::Edit < Views::Base
 
   def render_logo_field
     div do
-      div(class: LOGO_CARD_CLASS) do
+      div(class: LOGO_CARD_CLASS, data: { controller: "logo-field" }) do
         render_logo_preview
         div(class: "min-w-0 flex-1") do
           span(class: LOGO_NAME_CLASS) { LOGO_LABEL }
-          span(class: LOGO_HINT_CLASS) { LOGO_HINT }
+          span(class: LOGO_HINT_CLASS, data: { "logo-field-target": "hint" }) { LOGO_HINT }
         end
         render_logo_picker
       end
@@ -122,7 +122,8 @@ class Views::Owner::Brandings::Edit < Views::Base
   def render_logo_picker
     label(class: LOGO_CHANGE_CLASS) do
       plain LOGO_CHANGE_LABEL
-      input(type: "file", name: "branding[logo]", accept: "image/png,image/jpeg,image/webp", class: "sr-only")
+      input(type: "file", name: "branding[logo]", accept: LOGO_CONTENT_TYPES, class: "sr-only",
+        data: { action: "logo-field#showChosen" })
     end
   end
 
