@@ -6,6 +6,8 @@ require 'rspec/rails'
 
 require_relative "support/capybara"
 require_relative "support/computed_style"
+require_relative "support/owner_session"
+require_relative "support/cache_isolation"
 require "webmock/rspec"
 
 WebMock.disable_net_connect!(allow_localhost: true)
