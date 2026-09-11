@@ -11,6 +11,7 @@ class Branding < ApplicationRecord
   LOGO_MAX_BYTES = 5.megabytes
   DIGEST_LENGTH = 16
   CONTRAST_MESSAGE = "não tem contraste suficiente com o texto que vai sobre ela (mínimo 4.5:1)".freeze
+  CUSTOM_COLOR_CHOICE = "custom".freeze
 
   validates :brand_600, presence: true, format: { with: ColorScale::HEX }
   validates :brand_secondary_600, format: { with: ColorScale::HEX }, allow_blank: true
@@ -20,6 +21,10 @@ class Branding < ApplicationRecord
 
   def self.platform_default
     ActsAsTenant.without_tenant { new(brand_600: DEFAULT_BRAND_600) }
+  end
+
+  def self.resolve_color(choice, custom)
+    (choice == CUSTOM_COLOR_CHOICE ? custom : choice).presence
   end
 
   def color_scale
