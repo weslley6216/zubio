@@ -61,6 +61,8 @@ class Tenant < ApplicationRecord
 
   def branded? = branding&.logo&.attached? || false
 
+  def initial = name.first.upcase
+
   def update_branding!(tenant_attrs:, branding_attrs:, remove_logo:)
     target_branding = branding || build_branding
     logo_replaced = branding_attrs[:logo].present?

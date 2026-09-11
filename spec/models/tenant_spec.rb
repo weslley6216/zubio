@@ -132,6 +132,14 @@ RSpec.describe Tenant, type: :model do
     end
   end
 
+  describe "#initial" do
+    it "is the first letter of the name in upper case" do
+      tenant = build(:tenant, name: "estúdio aurora")
+
+      expect(tenant.initial).to eq("E")
+    end
+  end
+
   describe "#branded?" do
     it "is true when the tenant's branding has a logo attached" do
       tenant = create(:tenant)

@@ -45,11 +45,9 @@ class Components::Owner::Header < Components::Base
     if logo
       img(src: rails_storage_proxy_path(logo), alt: "", class: "h-8 w-8 flex-none rounded-lg object-contain")
     else
-      span(class: "grid h-8 w-8 flex-none place-items-center rounded-lg bg-brand-accent text-on-brand-accent") { emblem_initial }
+      span(class: "grid h-8 w-8 flex-none place-items-center rounded-lg bg-brand-accent text-on-brand-accent") { @tenant.initial }
     end
   end
-
-  def emblem_initial = @tenant.name.first.upcase
 
   def items = sections.map { |key, label, href| [ label, href, key == @current_section ] }
 
