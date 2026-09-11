@@ -1,4 +1,6 @@
 class Branding < ApplicationRecord
+  include StylesheetProducer
+
   acts_as_tenant :tenant
 
   has_one_attached :logo
@@ -9,7 +11,6 @@ class Branding < ApplicationRecord
   HEADER_LOGO_LIMIT = [ 96, 96 ].freeze
   LOGO_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
   LOGO_MAX_BYTES = 5.megabytes
-  DIGEST_LENGTH = 16
   CONTRAST_MESSAGE = "não tem contraste suficiente com o texto que vai sobre ela (mínimo 4.5:1)".freeze
   CUSTOM_COLOR_CHOICE = "custom".freeze
 
@@ -37,10 +38,6 @@ class Branding < ApplicationRecord
 
   def stylesheet
     ":root{#{css_variables}}"
-  end
-
-  def stylesheet_digest
-    Digest::SHA256.hexdigest(stylesheet).first(DIGEST_LENGTH)
   end
 
   def icon_variants

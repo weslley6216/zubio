@@ -68,7 +68,7 @@ RSpec.describe Landing::ShowcaseBrand do
 
   describe ".stylesheet_digest" do
     it "never collides with the digest of an establishment's own sheet" do
-      expect(described_class.stylesheet_digest.length).to eq(Branding::DIGEST_LENGTH)
+      expect(described_class.stylesheet_digest.length).to eq(StylesheetProducer::DIGEST_LENGTH)
       expect(described_class.stylesheet_digest).not_to eq(Branding.platform_default.stylesheet_digest)
     end
   end
