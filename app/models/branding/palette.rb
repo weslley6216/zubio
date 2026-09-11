@@ -5,7 +5,7 @@ class Branding::Palette
   ].freeze
 
   def self.swatches
-    @swatches ||= FAMILIES.flat_map { |hex| [ hex, Branding::ColorScale.new(hex).deepened_hex ] }.freeze
+    @swatches ||= FAMILIES.flat_map { |hex| [ hex, Branding::ColorScale.new(hex).deepened_hex.upcase ] }.freeze
   end
 
   def self.stylesheet
