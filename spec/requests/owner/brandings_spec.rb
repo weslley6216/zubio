@@ -77,6 +77,7 @@ RSpec.describe "Owner branding", type: :request do
 
       expect(response.body).to include(%(name="branding[brand_secondary_600]"))
       expect(response.body).to include(Views::Owner::Brandings::Edit::SECONDARY_BLANK_LABEL)
+      expect(response.body).to include(%(value="" checked))
     end
   end
 
@@ -272,6 +273,18 @@ RSpec.describe "Owner branding", type: :request do
 
       expect(response).to redirect_to(edit_owner_branding_path)
       ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_secondary_600).to be_nil }
+    end
+
+    it "leaves both colors untouched when the request carries no color at all" do
+      create(:branding, :with_secondary, tenant: tenant, brand_600: "#4F46E5")
+
+      patch owner_branding_path, params: { tenant: { name: tenant.name }, branding: { remove_logo: "0" } }
+
+      expect(response).to redirect_to(edit_owner_branding_path)
+      ActsAsTenant.with_tenant(tenant) do
+        expect(tenant.reload.branding.brand_600).to eq("#4F46E5")
+        expect(tenant.branding.brand_secondary_600).to eq("#1E60C4")
+      end
     end
 
     it "refuses a secondary code without contrast and keeps the stored one" do
