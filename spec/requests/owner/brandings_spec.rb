@@ -65,19 +65,20 @@ RSpec.describe "Owner branding", type: :request do
 
       get edit_owner_branding_path
 
-      expect(response.body).to include("<details open>")
       expect(response.body).to include(%(name="branding[brand_600_custom]"))
+      expect(response.body).to include(%(value="#{Branding::CUSTOM_COLOR_CHOICE}" checked))
       expect(response.body).to include("#2F6FED")
     end
 
-    it "offers a second color group that starts on the brand when none is stored" do
+    it "offers a second color group that starts linked to the brand when none is stored" do
       create(:branding, tenant: tenant, brand_600: "#2F6FED")
 
       get edit_owner_branding_path
 
       expect(response.body).to include(%(name="branding[brand_secondary_600]"))
-      expect(response.body).to include(Views::Owner::Brandings::Edit::SECONDARY_BLANK_LABEL)
+      expect(response.body).to include(Views::Owner::Brandings::Edit::SECONDARY_LINKED_LABEL)
       expect(response.body).to include(%(value="" checked))
+      expect(response.body).to include(%(hidden data-color-swatch-target="panel"))
     end
   end
 
