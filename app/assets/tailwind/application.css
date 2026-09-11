@@ -30,6 +30,8 @@
 
   --brand-accent: var(--brand-600);
   --on-brand-accent: var(--on-brand, #ffffff);
+  --secondary-accent: var(--secondary-600);
+  --on-secondary-accent: var(--on-secondary, #ffffff);
   --on-demo: #ffffff;
 }
 
@@ -63,6 +65,8 @@
 
     --brand-accent: var(--brand-400);
     --on-brand-accent: var(--on-brand-400, #08121a);
+    --secondary-accent: var(--secondary-400);
+    --on-secondary-accent: var(--on-secondary-400, #08121a);
     --on-demo: #08121a;
   }
 
@@ -90,6 +94,8 @@
 
   --brand-accent: var(--brand-400);
   --on-brand-accent: var(--on-brand-400, #08121a);
+  --secondary-accent: var(--secondary-400);
+  --on-secondary-accent: var(--on-secondary-400, #08121a);
   --on-demo: #08121a;
 }
 
@@ -130,6 +136,20 @@
   --color-on-brand: var(--on-brand);
   --color-brand-accent: var(--brand-accent);
   --color-on-brand-accent: var(--on-brand-accent);
+
+  --color-secondary-50: var(--secondary-50);
+  --color-secondary-100: var(--secondary-100);
+  --color-secondary-200: var(--secondary-200);
+  --color-secondary-300: var(--secondary-300);
+  --color-secondary-400: var(--secondary-400);
+  --color-secondary-500: var(--secondary-500);
+  --color-secondary-600: var(--secondary-600);
+  --color-secondary-700: var(--secondary-700);
+  --color-secondary-800: var(--secondary-800);
+  --color-secondary-900: var(--secondary-900);
+  --color-on-secondary: var(--on-secondary);
+  --color-secondary-accent: var(--secondary-accent);
+  --color-on-secondary-accent: var(--on-secondary-accent);
 
   --color-demo-100: var(--demo-100);
   --color-demo-700: var(--demo-700);

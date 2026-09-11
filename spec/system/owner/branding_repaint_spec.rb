@@ -26,8 +26,8 @@ RSpec.describe "Owner branding repaint", type: :system, js: true do
     save_brand_color(tenant, "#B42318")
 
     expect(page).to have_content("Marca atualizada.")
-    expect(computed("a.bg-brand-accent", "backgroundColor")).to eq("rgb(180, 35, 24)")
-    expect(computed("a.bg-brand-accent", "backgroundColor")).not_to eq("rgb(79, 70, 229)")
+    expect(computed("span.bg-brand-accent", "backgroundColor")).to eq("rgb(180, 35, 24)")
+    expect(computed("span.bg-brand-accent", "backgroundColor")).not_to eq("rgb(79, 70, 229)")
   end
 
   it "keeps the confirmation legible on the success tone in both color schemes" do

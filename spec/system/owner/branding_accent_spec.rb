@@ -19,8 +19,8 @@ RSpec.describe "Owner branding accent", type: :system, js: true do
       emulate_color_scheme(scheme)
       sign_in(tenant, owner)
 
-      expect(opaque?("a.bg-brand-accent")).to be true
-      expect(contrast_ratio("a.bg-brand-accent")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(opaque?("span.bg-brand-accent")).to be true
+      expect(contrast_ratio("span.bg-brand-accent")).to be >= Branding::ColorScale::MIN_CONTRAST
     end
   end
 end

@@ -3,7 +3,7 @@ class Components::Owner::Header < Components::Base
 
   SIGN_OUT_LABEL = "Sair".freeze
   ITEM_CLASS = "inline-flex min-h-11 items-center rounded-lg px-4 text-sm font-bold".freeze
-  CURRENT_CLASS = "bg-brand-accent text-on-brand-accent".freeze
+  CURRENT_CLASS = "bg-secondary-accent text-on-secondary-accent".freeze
   RESTING_CLASS = "text-ink-muted hover:bg-surface-2 hover:text-ink".freeze
 
   def initialize(tenant:, branding:, current_section:)
