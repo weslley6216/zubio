@@ -7,13 +7,19 @@ class Views::Owner::Brandings::Edit < Views::Base
     @current_section = current_section
   end
 
+  BRAND_LABEL = "Cor da marca".freeze
+  SECONDARY_LABEL = "Cor secundária".freeze
+  SECONDARY_BLANK_LABEL = "Igual à cor da marca".freeze
+
   def view_template
-    render Views::Layouts::Application.new(title: "Marca · #{@tenant.name}", branding: @branding) do
+    render Views::Layouts::Application.new(title: "Marca · #{@tenant.name}", branding: @branding,
+      page_stylesheet: palette_stylesheet_path(v: Branding::Palette.stylesheet_digest)) do
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
       render Components::Panel.new(title: "Marca do estabelecimento") do
         form_with(url: owner_branding_path, method: :patch, multipart: true, class: "space-y-4") do |form|
           render_name_field(form)
-          render_color_field(form)
+          render_brand_color_field
+          render_secondary_color_field
           render_logo_field
           render_remove_logo_field if current_logo_attached?
           form.submit "Salvar", class: SUBMIT
@@ -32,16 +38,28 @@ class Views::Owner::Brandings::Edit < Views::Base
     end
   end
 
-  def render_color_field(form)
-    div(data: { controller: "color-swatch" }) do
-      form.label :brand_600, "Cor da marca", class: LABEL
-      div(class: "mt-1 flex items-center gap-2") do
-        form.color_field :swatch, name: "brand_600_swatch", value: @branding.brand_600,
-          data: { "color-swatch-target": "swatch", action: "input->color-swatch#syncFromSwatch" }
-        form.text_field :brand_600, name: "branding[brand_600]", value: @branding.brand_600, required: true,
-          class: CONTROL, data: { "color-swatch-target": "text", action: "input->color-swatch#syncFromText" }
-      end
+  def render_brand_color_field
+    div do
+      render Components::Form::ColorSwatches.new(
+        label: BRAND_LABEL,
+        name: "branding[brand_600]",
+        custom_name: "branding[brand_600_custom]",
+        selected: @branding.brand_600
+      )
       render Components::Form::Errors.new(messages: @branding.errors[:brand_600])
+    end
+  end
+
+  def render_secondary_color_field
+    div do
+      render Components::Form::ColorSwatches.new(
+        label: SECONDARY_LABEL,
+        name: "branding[brand_secondary_600]",
+        custom_name: "branding[brand_secondary_600_custom]",
+        selected: @branding.brand_secondary_600,
+        blank_label: SECONDARY_BLANK_LABEL
+      )
+      render Components::Form::Errors.new(messages: @branding.errors[:brand_secondary_600])
     end
   end
 

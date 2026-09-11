@@ -41,6 +41,43 @@ RSpec.describe "Owner branding", type: :request do
       expect(response.body).to include(Components::Owner::Header::CURRENT_CLASS)
       expect(Components::Owner::Header::CURRENT_CLASS).to include("bg-secondary-accent")
     end
+
+    it "shows the whole palette as a grid, with the current color marked, without opening any dialog" do
+      create(:branding, tenant: tenant, brand_600: Branding::Palette.swatches.first)
+
+      get edit_owner_branding_path
+
+      expect(response.body).not_to include("<datalist")
+      Branding::Palette.swatches.each { |hex| expect(response.body).to include(%(data-swatch="#{hex}")) }
+      expect(response.body).to include(%(value="#{Branding::Palette.swatches.first}" checked))
+    end
+
+    it "pulls in the sheet that paints the swatches, versioned by its own content" do
+      create(:branding, tenant: tenant, brand_600: "#2F6FED")
+
+      get edit_owner_branding_path
+
+      expect(response.body).to include(palette_stylesheet_path(v: Branding::Palette.stylesheet_digest))
+    end
+
+    it "opens the customization and carries the code when the stored color is not on the palette" do
+      create(:branding, tenant: tenant, brand_600: "#2F6FED")
+
+      get edit_owner_branding_path
+
+      expect(response.body).to include("<details open>")
+      expect(response.body).to include(%(name="branding[brand_600_custom]"))
+      expect(response.body).to include("#2F6FED")
+    end
+
+    it "offers a second color group that starts on the brand when none is stored" do
+      create(:branding, tenant: tenant, brand_600: "#2F6FED")
+
+      get edit_owner_branding_path
+
+      expect(response.body).to include(%(name="branding[brand_secondary_600]"))
+      expect(response.body).to include(Views::Owner::Brandings::Edit::SECONDARY_BLANK_LABEL)
+    end
   end
 
   describe "PATCH /owner/branding" do
