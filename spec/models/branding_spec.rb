@@ -116,6 +116,20 @@ RSpec.describe Branding, type: :model do
     end
   end
 
+  describe ".resolve_color" do
+    it "takes the chosen swatch when the choice is a color" do
+      expect(Branding.resolve_color("#2F6FED", "#000000")).to eq("#2F6FED")
+    end
+
+    it "takes the typed code when the choice is the custom sentinel" do
+      expect(Branding.resolve_color(Branding::CUSTOM_COLOR_CHOICE, "#2F6FED")).to eq("#2F6FED")
+    end
+
+    it "resolves an empty choice to nothing, so an optional color clears instead of storing a blank" do
+      expect(Branding.resolve_color("", nil)).to be_nil
+    end
+  end
+
   describe "#css_variables" do
     it "includes the brand scale and the on-brand token" do
       branding = build(:branding, brand_600: "#4F46E5")

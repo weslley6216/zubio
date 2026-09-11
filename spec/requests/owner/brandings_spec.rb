@@ -177,5 +177,80 @@ RSpec.describe "Owner branding", type: :request do
       expect(response.body).to include("bg-danger-surface")
       expect(response.body).not_to include("bg-success-surface")
     end
+
+    it "stores the chosen swatch without any typed code" do
+      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+
+      patch owner_branding_path, params: {
+        tenant: { name: tenant.name },
+        branding: { brand_600: Branding::Palette.swatches.last, brand_600_custom: "" }
+      }
+
+      expect(response).to redirect_to(edit_owner_branding_path)
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq(Branding::Palette.swatches.last) }
+    end
+
+    it "stores the typed code when the custom choice is the one selected" do
+      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+
+      patch owner_branding_path, params: {
+        tenant: { name: tenant.name },
+        branding: { brand_600: Branding::CUSTOM_COLOR_CHOICE, brand_600_custom: "#2F6FED" }
+      }
+
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq("#2F6FED") }
+    end
+
+    it "refuses a typed code without contrast with the message it has always used" do
+      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+
+      patch owner_branding_path, params: {
+        tenant: { name: tenant.name },
+        branding: { brand_600: Branding::CUSTOM_COLOR_CHOICE, brand_600_custom: "#7A7A7A" }
+      }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(Branding::CONTRAST_MESSAGE)
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq("#4F46E5") }
+    end
+
+    it "stores the secondary color the owner chose" do
+      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+
+      patch owner_branding_path, params: {
+        tenant: { name: tenant.name },
+        branding: { brand_600: "#4F46E5", brand_secondary_600: "#1E60C4" }
+      }
+
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_secondary_600).to eq("#1E60C4") }
+    end
+
+    it "keeps the establishment valid and clears the secondary color when the owner asks for none" do
+      create(:branding, :with_secondary, tenant: tenant, brand_600: "#4F46E5")
+
+      patch owner_branding_path, params: {
+        tenant: { name: tenant.name },
+        branding: { brand_600: "#4F46E5", brand_secondary_600: "" }
+      }
+
+      expect(response).to redirect_to(edit_owner_branding_path)
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_secondary_600).to be_nil }
+    end
+
+    it "refuses a secondary code without contrast and keeps the stored one" do
+      create(:branding, :with_secondary, tenant: tenant, brand_600: "#4F46E5")
+
+      patch owner_branding_path, params: {
+        tenant: { name: tenant.name },
+        branding: {
+          brand_600: "#4F46E5",
+          brand_secondary_600: Branding::CUSTOM_COLOR_CHOICE,
+          brand_secondary_600_custom: "#7A7A7A"
+        }
+      }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_secondary_600).to eq("#1E60C4") }
+    end
   end
 end
