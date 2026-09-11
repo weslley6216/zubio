@@ -1,4 +1,6 @@
 class Landing::ShowcaseBrand
+  extend StylesheetProducer
+
   ShowcaseService = Struct.new(:name, :duration, :price)
 
   CATALOG = [
@@ -38,10 +40,6 @@ class Landing::ShowcaseBrand
     @stylesheet ||= all.map(&:css_rule).join +
       all.map(&:swatch_rule).join +
       all.map(&:variant_rule).join
-  end
-
-  def self.stylesheet_digest
-    @stylesheet_digest ||= Digest::SHA256.hexdigest(stylesheet).first(Branding::DIGEST_LENGTH)
   end
 
   def initialize(key:, name:, initial:, segment:, meta:, host:, brand_600:, services:)

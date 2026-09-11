@@ -40,6 +40,31 @@ RSpec.describe Branding, type: :model do
       expect(branding).to be_valid
     end
 
+    it "is valid without a brand_secondary_600" do
+      branding = build(:branding, brand_secondary_600: nil)
+
+      expect(branding).to be_valid
+    end
+
+    it "is valid with a brand_secondary_600 that has sufficient contrast" do
+      branding = build(:branding, :with_secondary)
+
+      expect(branding).to be_valid
+    end
+
+    it "is invalid when brand_secondary_600 is not a 6-digit hex color" do
+      branding = build(:branding, brand_secondary_600: "#fff")
+
+      expect(branding).not_to be_valid
+    end
+
+    it "refuses a brand_secondary_600 without contrast with the same message as the brand color" do
+      branding = build(:branding, brand_secondary_600: "#7A7A7A")
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:brand_secondary_600]).to eq([ Branding::CONTRAST_MESSAGE ])
+    end
+
     it "is invalid when logo content type is not png, jpeg or webp" do
       branding = build(:branding)
       branding.logo.attach(
@@ -91,23 +116,17 @@ RSpec.describe Branding, type: :model do
     end
   end
 
-  describe "SUGGESTED_COLORS" do
-    it "offers only colors the brand color validation accepts" do
-      rejected = Branding::SUGGESTED_COLORS.reject { |hex| build(:branding, brand_600: hex).valid? }
-
-      expect(rejected).to be_empty
+  describe ".resolve_color" do
+    it "takes the chosen swatch when the choice is a color" do
+      expect(Branding.resolve_color("#2F6FED", "#000000")).to eq("#2F6FED")
     end
 
-    it "reaches beyond what a fixed white foreground would allow" do
-      only_on_dark = Branding::SUGGESTED_COLORS.select do |hex|
-        Branding::ColorScale.new(hex).foreground == Branding::ColorScale::DARK_NEUTRAL
-      end
-
-      expect(only_on_dark).not_to be_empty
+    it "takes the typed code when the choice is the custom sentinel" do
+      expect(Branding.resolve_color(Branding::CUSTOM_COLOR_CHOICE, "#2F6FED")).to eq("#2F6FED")
     end
 
-    it "never repeats a color" do
-      expect(Branding::SUGGESTED_COLORS.uniq).to eq(Branding::SUGGESTED_COLORS)
+    it "resolves an empty choice to nothing, so an optional color clears instead of storing a blank" do
+      expect(Branding.resolve_color("", nil)).to be_nil
     end
   end
 
@@ -139,6 +158,43 @@ RSpec.describe Branding, type: :model do
       expect { branding.css_variables }.not_to raise_error
       expect(branding.css_variables).to include("--brand-600:#{Branding::DEFAULT_BRAND_600};")
     end
+
+    it "falls back to the brand ramp for the secondary tokens when no secondary color is set" do
+      branding = build(:branding, brand_600: "#4F46E5", brand_secondary_600: nil)
+
+      expect(branding.css_variables).to include("--secondary-600:#4F46E5;")
+      expect(branding.css_variables).to include("--on-secondary:#{branding.color_scale.foreground};")
+    end
+
+    it "gives every secondary token the value of its brand counterpart when no secondary color is set, so nothing already painted changes" do
+      branding = build(:branding, brand_600: "#BE123C", brand_secondary_600: nil)
+
+      renamed = branding.css_variables.scan(/--(?:on-)?secondary[\w-]*:[^;]+;/).map { |token| token.sub("secondary", "brand") }
+
+      expect(renamed).not_to be_empty
+      expect(renamed).to eq(branding.css_variables.scan(/--(?:on-)?brand[\w-]*:[^;]+;/))
+    end
+
+    it "keeps the two ramps apart when a secondary color is set" do
+      branding = build(:branding, brand_600: "#BE123C", brand_secondary_600: "#1E60C4")
+
+      expect(branding.css_variables).to include("--brand-600:#BE123C;")
+      expect(branding.css_variables).to include("--secondary-600:#1E60C4;")
+    end
+
+    it "carries a foreground for the secondary dark accent step, as it already does for the brand" do
+      branding = build(:branding, brand_600: "#4F46E5", brand_secondary_600: "#0B7658")
+      dark_accent = Branding::ColorScale.new(Branding::ColorScale.new("#0B7658").tokens[Branding::DARK_ACCENT_STEP])
+
+      expect(branding.css_variables).to include("--on-secondary-400:#{dark_accent.foreground};")
+    end
+
+    it "falls back to the brand ramp when brand_secondary_600 is not a well-formed hex" do
+      branding = build(:branding, brand_600: "#4F46E5", brand_secondary_600: "not-a-hex")
+
+      expect { branding.css_variables }.not_to raise_error
+      expect(branding.css_variables).to include("--secondary-600:#4F46E5;")
+    end
   end
 
   describe "#stylesheet" do
@@ -162,7 +218,7 @@ RSpec.describe Branding, type: :model do
     end
 
     it "is short enough to travel in a URL" do
-      expect(build(:branding).stylesheet_digest.length).to eq(Branding::DIGEST_LENGTH)
+      expect(build(:branding).stylesheet_digest.length).to eq(StylesheetProducer::DIGEST_LENGTH)
     end
   end
 

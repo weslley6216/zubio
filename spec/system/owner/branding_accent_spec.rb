@@ -19,24 +19,24 @@ RSpec.describe "Owner branding accent", type: :system, js: true do
       emulate_color_scheme(scheme)
       sign_in(tenant, owner)
 
-      expect(opaque?("a.bg-brand-accent")).to be true
-      expect(contrast_ratio("a.bg-brand-accent")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(opaque?("span.bg-brand-accent")).to be true
+      expect(contrast_ratio("span.bg-brand-accent")).to be >= Branding::ColorScale::MIN_CONTRAST
     end
   end
 
-  it "offers the suggested colors to the color input on the branding form" do
-    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+  it "puts the action in the brand and the current section in the secondary on the same screen, both legible, in both color schemes" do
+    tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
     owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
-    create(:branding, tenant: tenant, brand_600: "#ff00bb")
+    create(:branding, tenant: tenant, brand_600: "#BE123C", brand_secondary_600: "#1E60C4")
 
-    sign_in(tenant, owner)
-    visit "http://#{tenant.subdomain}.zubio.com.br#{edit_owner_branding_path}"
+    %w[light dark].each do |scheme|
+      emulate_color_scheme(scheme)
+      sign_in(tenant, owner)
+      visit "http://#{tenant.subdomain}.zubio.com.br#{edit_owner_branding_path}"
 
-    listed = page.evaluate_script(
-      "Array.from(document.querySelectorAll('datalist#brand-color-suggestions option')).map(node => node.value)"
-    )
-
-    expect(listed).to eq(Branding::SUGGESTED_COLORS)
-    expect(page.evaluate_script("document.querySelector('input[type=color]').getAttribute('list')")).to eq("brand-color-suggestions")
+      expect(computed("input[type=submit]", "backgroundColor")).not_to eq(computed("a.bg-secondary-accent", "backgroundColor"))
+      expect(contrast_ratio("input[type=submit]")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(contrast_ratio("a.bg-secondary-accent")).to be >= Branding::ColorScale::MIN_CONTRAST
+    end
   end
 end

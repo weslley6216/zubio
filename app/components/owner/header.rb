@@ -3,7 +3,7 @@ class Components::Owner::Header < Components::Base
 
   SIGN_OUT_LABEL = "Sair".freeze
   ITEM_CLASS = "inline-flex min-h-11 items-center rounded-lg px-4 text-sm font-bold".freeze
-  CURRENT_CLASS = "bg-brand-accent text-on-brand-accent".freeze
+  CURRENT_CLASS = "bg-secondary-accent text-on-secondary-accent".freeze
   RESTING_CLASS = "text-ink-muted hover:bg-surface-2 hover:text-ink".freeze
 
   def initialize(tenant:, branding:, current_section:)
@@ -51,15 +51,15 @@ class Components::Owner::Header < Components::Base
 
   def emblem_initial = @tenant.name.first.upcase
 
+  def items = sections.map { |key, label, href| [ label, href, key == @current_section ] }
+
   def render_nav
     nav(class: "ml-auto hidden items-center gap-1 sm:flex") do
-      sections.each { |key, label, href| render_section(key, label, href) }
+      items.each { |label, href, current| render_section(label, href, current) }
     end
   end
 
-  def render_section(key, label, href)
-    current = key == @current_section
-
+  def render_section(label, href, current)
     a(href: href, aria_current: current ? "page" : nil, class: "#{ITEM_CLASS} #{current ? CURRENT_CLASS : RESTING_CLASS}") { label }
   end
 
@@ -76,8 +76,6 @@ class Components::Owner::Header < Components::Base
   end
 
   def render_menu
-    render Components::Menu.new(items: menu_items) { render_sign_out }
+    render Components::Menu.new(items: items) { render_sign_out }
   end
-
-  def menu_items = sections.map { |_key, label, href| [ label, href ] }
 end

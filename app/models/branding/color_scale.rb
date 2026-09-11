@@ -3,6 +3,7 @@ class Branding::ColorScale
   MIN_CONTRAST = 4.5
   WHITE = "#ffffff".freeze
   DARK_NEUTRAL = "#111827".freeze
+  DEEP_LIGHTNESS_FACTOR = 0.6
 
   attr_reader :hex
 
@@ -47,6 +48,12 @@ class Branding::ColorScale
     steps = LIGHTNESS_BY_STEP.transform_values { |lightness| hex_at_lightness(lightness) }
     steps[600] = hex
     steps.sort.to_h
+  end
+
+  def deepened_hex
+    hue, saturation, lightness = to_hsl
+
+    from_hsl(hue, saturation, lightness * DEEP_LIGHTNESS_FACTOR)
   end
 
   private
