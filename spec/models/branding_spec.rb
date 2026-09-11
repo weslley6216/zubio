@@ -144,6 +144,34 @@ RSpec.describe Branding, type: :model do
       expect { branding.css_variables }.not_to raise_error
       expect(branding.css_variables).to include("--brand-600:#{Branding::DEFAULT_BRAND_600};")
     end
+
+    it "falls back to the brand ramp for the secondary tokens when no secondary color is set" do
+      branding = build(:branding, brand_600: "#4F46E5", brand_secondary_600: nil)
+
+      expect(branding.css_variables).to include("--secondary-600:#4F46E5;")
+      expect(branding.css_variables).to include("--on-secondary:#{branding.color_scale.foreground};")
+    end
+
+    it "keeps the two ramps apart when a secondary color is set" do
+      branding = build(:branding, brand_600: "#BE123C", brand_secondary_600: "#1E60C4")
+
+      expect(branding.css_variables).to include("--brand-600:#BE123C;")
+      expect(branding.css_variables).to include("--secondary-600:#1E60C4;")
+    end
+
+    it "carries a foreground for the secondary dark accent step, as it already does for the brand" do
+      branding = build(:branding, brand_600: "#4F46E5", brand_secondary_600: "#0B7658")
+      dark_accent = Branding::ColorScale.new(Branding::ColorScale.new("#0B7658").tokens[Branding::DARK_ACCENT_STEP])
+
+      expect(branding.css_variables).to include("--on-secondary-400:#{dark_accent.foreground};")
+    end
+
+    it "falls back to the brand ramp when brand_secondary_600 is not a well-formed hex" do
+      branding = build(:branding, brand_600: "#4F46E5", brand_secondary_600: "not-a-hex")
+
+      expect { branding.css_variables }.not_to raise_error
+      expect(branding.css_variables).to include("--secondary-600:#4F46E5;")
+    end
   end
 
   describe "#stylesheet" do

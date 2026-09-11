@@ -27,9 +27,7 @@ class Branding < ApplicationRecord
   end
 
   def css_variables
-    ramp = color_scale.tokens.map { |step, value| "--brand-#{step}:#{value};" }.join
-
-    "#{ramp}--on-brand:#{color_scale.foreground};--on-brand-400:#{dark_accent_scale.foreground};"
+    ramp_variables("brand", color_scale) + ramp_variables("secondary", secondary_color_scale)
   end
 
   def stylesheet
@@ -38,10 +36,6 @@ class Branding < ApplicationRecord
 
   def stylesheet_digest
     Digest::SHA256.hexdigest(stylesheet).first(DIGEST_LENGTH)
-  end
-
-  def dark_accent_scale
-    @dark_accent_scale ||= ColorScale.new(color_scale.tokens[DARK_ACCENT_STEP])
   end
 
   def icon_variants
@@ -65,6 +59,17 @@ class Branding < ApplicationRecord
   private
 
   def hex?(value) = value.present? && value.match?(ColorScale::HEX)
+
+  def secondary_color_scale
+    @secondary_color_scale ||= hex?(brand_secondary_600) ? ColorScale.new(brand_secondary_600) : color_scale
+  end
+
+  def ramp_variables(prefix, scale)
+    ramp = scale.tokens.map { |step, value| "--#{prefix}-#{step}:#{value};" }.join
+    dark_accent = ColorScale.new(scale.tokens[DARK_ACCENT_STEP])
+
+    "#{ramp}--on-#{prefix}:#{scale.foreground};--on-#{prefix}-#{DARK_ACCENT_STEP}:#{dark_accent.foreground};"
+  end
 
   def brand_600_meets_contrast_minimum = validate_contrast(:brand_600)
 
