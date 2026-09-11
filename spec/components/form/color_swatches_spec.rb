@@ -29,6 +29,13 @@ RSpec.describe Components::Form::ColorSwatches, type: :component do
     expect(html).not_to include(%(value="#{other}" checked))
   end
 
+  it "marks the swatch even when the stored code is written in the other letter case" do
+    html = swatches_for(Branding::Palette.swatches.last.downcase)
+
+    expect(html).to include(%(value="#{Branding::Palette.swatches.last}" checked))
+    expect(html).to include("<details>")
+  end
+
   it "keeps the typed code behind a closed disclosure when the current color is a swatch" do
     html = swatches_for(Branding::Palette.swatches.first)
 

@@ -32,14 +32,14 @@ class Components::Form::ColorSwatches < Components::Base
 
   def render_blank_choice
     label(class: BLANK_CLASS) do
-      input(type: "radio", name: @name, value: "", checked: @selected.blank?, class: CHECKBOX)
+      input(type: "radio", name: @name, value: "", checked: selected.blank?, class: CHECKBOX)
       plain @blank_label
     end
   end
 
   def render_swatch(hex)
     label(class: "block") do
-      input(type: "radio", name: @name, value: hex, checked: @selected == hex, class: "peer sr-only", aria_label: hex)
+      input(type: "radio", name: @name, value: hex, checked: selected == hex, class: "peer sr-only", aria_label: hex)
       span(class: SWATCH_CLASS, data: { swatch: hex })
     end
   end
@@ -73,7 +73,9 @@ class Components::Form::ColorSwatches < Components::Base
       data: { "color-swatch-target": "text", action: "input->color-swatch#syncFromText" })
   end
 
-  def custom? = @selected.present? && !Branding::Palette.swatches.include?(@selected)
+  def selected = @selected.presence&.upcase
 
-  def custom_value = custom? ? @selected : Branding::DEFAULT_BRAND_600
+  def custom? = selected.present? && !Branding::Palette.swatches.include?(selected)
+
+  def custom_value = custom? ? selected : Branding::DEFAULT_BRAND_600
 end
