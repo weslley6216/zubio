@@ -14,7 +14,11 @@ RSpec.describe "Owner panel navigation", type: :request do
   end
 
   def menu_item(href)
-    %(<a href="#{href}" class="rounded-lg px-3 py-3)
+    %(<a href="#{href}" class="#{Components::Menu::ITEM_CLASS} #{Components::Menu::RESTING_CLASS}">)
+  end
+
+  def current_menu_item(href)
+    %(<a href="#{href}" aria-current="page" class="#{Components::Menu::ITEM_CLASS} #{Components::Menu::CURRENT_CLASS}">)
   end
 
   it "offers every destination from the panel, in the band and in the menu" do
@@ -25,7 +29,7 @@ RSpec.describe "Owner panel navigation", type: :request do
 
     expect(response.body).to include(band_item(edit_owner_branding_path))
     expect(response.body).to include(%(<a href="#{owner_dashboard_path}" aria-current="page"))
-    expect(response.body).to include(menu_item(owner_dashboard_path))
+    expect(response.body).to include(current_menu_item(owner_dashboard_path))
     expect(response.body).to include(menu_item(edit_owner_branding_path))
   end
 
@@ -38,7 +42,7 @@ RSpec.describe "Owner panel navigation", type: :request do
     expect(response.body).to include(band_item(owner_dashboard_path))
     expect(response.body).to include(%(<a href="#{edit_owner_branding_path}" aria-current="page"))
     expect(response.body).to include(menu_item(owner_dashboard_path))
-    expect(response.body).to include(menu_item(edit_owner_branding_path))
+    expect(response.body).to include(current_menu_item(edit_owner_branding_path))
   end
 
   it "marks the panel as current on the panel, and marks nothing else" do

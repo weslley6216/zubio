@@ -51,15 +51,15 @@ class Components::Owner::Header < Components::Base
 
   def emblem_initial = @tenant.name.first.upcase
 
+  def items = sections.map { |key, label, href| [ label, href, key == @current_section ] }
+
   def render_nav
     nav(class: "ml-auto hidden items-center gap-1 sm:flex") do
-      sections.each { |key, label, href| render_section(key, label, href) }
+      items.each { |label, href, current| render_section(label, href, current) }
     end
   end
 
-  def render_section(key, label, href)
-    current = key == @current_section
-
+  def render_section(label, href, current)
     a(href: href, aria_current: current ? "page" : nil, class: "#{ITEM_CLASS} #{current ? CURRENT_CLASS : RESTING_CLASS}") { label }
   end
 
@@ -76,8 +76,6 @@ class Components::Owner::Header < Components::Base
   end
 
   def render_menu
-    render Components::Menu.new(items: menu_items) { render_sign_out }
+    render Components::Menu.new(items: items) { render_sign_out }
   end
-
-  def menu_items = sections.map { |_key, label, href| [ label, href ] }
 end

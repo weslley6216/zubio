@@ -19,6 +19,28 @@ RSpec.describe Components::Menu, type: :component do
     expect(html).to include(Components::Menu::LABEL)
   end
 
+  it "marks the item the caller flagged as current and leaves the others resting" do
+    html = described_class.new(items: [ [ "Painel", "/owner/dashboard", true ], [ "Marca", "/owner/branding/edit", false ] ]).call
+
+    expect(html).to include(%(<a href="/owner/dashboard" aria-current="page"))
+    expect(html).to include(described_class::CURRENT_CLASS)
+    expect(html).not_to include(%(<a href="/owner/branding/edit" aria-current="page"))
+  end
+
+  it "paints the current item with the secondary color, so a second brand color shows on a phone too" do
+    html = described_class.new(items: [ [ "Painel", "/owner/dashboard", true ] ]).call
+
+    expect(described_class::CURRENT_CLASS).to include("bg-secondary-accent")
+    expect(html).to include("bg-secondary-accent")
+  end
+
+  it "leaves every item resting when the caller flags none of them" do
+    html = described_class.new(items: items).call
+
+    expect(html).not_to include(%(aria-current="page"))
+    expect(html).to include(described_class::RESTING_CLASS)
+  end
+
   it "puts an extra row above the theme row when the caller supplies one" do
     html = described_class.new(items: items).call { |menu| menu.plain("Sair") }
 
