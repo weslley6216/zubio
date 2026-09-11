@@ -12,7 +12,7 @@ RSpec.describe "Owner branding repaint", type: :system, js: true do
 
   def save_brand_color(tenant, hex)
     visit "http://#{tenant.subdomain}.zubio.com.br#{edit_owner_branding_path}"
-    fill_in "Cor da marca", with: hex
+    within_fieldset(Views::Owner::Brandings::Edit::BRAND_LABEL) { find(%([data-swatch="#{hex}"])).click }
     click_on "Salvar"
   end
 
@@ -23,11 +23,11 @@ RSpec.describe "Owner branding repaint", type: :system, js: true do
 
     emulate_color_scheme("light")
     sign_in(tenant, owner)
-    save_brand_color(tenant, "#B42318")
+    save_brand_color(tenant, "#BE123C")
 
     expect(page).to have_content("Marca atualizada.")
-    expect(computed("a.bg-brand-accent", "backgroundColor")).to eq("rgb(180, 35, 24)")
-    expect(computed("a.bg-brand-accent", "backgroundColor")).not_to eq("rgb(79, 70, 229)")
+    expect(computed("span.bg-brand-accent", "backgroundColor")).to eq("rgb(190, 18, 60)")
+    expect(computed("span.bg-brand-accent", "backgroundColor")).not_to eq("rgb(79, 70, 229)")
   end
 
   it "keeps the confirmation legible on the success tone in both color schemes" do
@@ -38,7 +38,7 @@ RSpec.describe "Owner branding repaint", type: :system, js: true do
     %w[light dark].each do |scheme|
       emulate_color_scheme(scheme)
       sign_in(tenant, owner)
-      save_brand_color(tenant, "#B42318")
+      save_brand_color(tenant, "#BE123C")
 
       expect(page).to have_css("[data-alert]")
       expect(contrast_ratio("[data-alert]")).to be >= Branding::ColorScale::MIN_CONTRAST

@@ -24,5 +24,20 @@ class Owner::BrandingsController < Owner::BaseController
   end
 
   def tenant_params = params.require(:tenant).permit(:name)
-  def branding_params = params.require(:branding).permit(:brand_600, :logo)
+
+  def branding_params
+    submitted = params.require(:branding).permit(
+      :logo, :brand_600, :brand_600_custom, :brand_secondary_600, :brand_secondary_600_custom
+    )
+
+    submitted.slice(:logo)
+      .merge(resolved_color(submitted, :brand_600))
+      .merge(resolved_color(submitted, :brand_secondary_600))
+  end
+
+  def resolved_color(submitted, attribute)
+    return {} unless submitted.key?(attribute)
+
+    { attribute => Branding.resolve_color(submitted[attribute], submitted[:"#{attribute}_custom"]) }
+  end
 end

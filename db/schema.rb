@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_08_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -45,6 +45,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_08_140000) do
 
   create_table "brandings", force: :cascade do |t|
     t.string "brand_600", null: false
+    t.string "brand_secondary_600"
     t.datetime "created_at", null: false
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false

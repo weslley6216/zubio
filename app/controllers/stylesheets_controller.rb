@@ -12,6 +12,10 @@ class StylesheetsController < ApplicationController
     serve(Landing::ShowcaseBrand)
   end
 
+  def palette
+    serve(Branding::Palette)
+  end
+
   private
 
   def browser_restricted? = false

@@ -6,18 +6,20 @@ RSpec.describe "Generated stylesheets", type: :request do
   end
 
   describe "GET /branding.css" do
-    it "serves the brand of the establishment in the host and never another one's" do
+    it "serves both ramps of the establishment in the host and never another one's" do
       aurora = create(:tenant, subdomain: "estudio-aurora")
       other = create(:tenant, subdomain: "salon-b")
-      branding = create(:branding, tenant: aurora, brand_600: "#1D4ED8")
-      create(:branding, tenant: other, brand_600: "#DC2626")
+      branding = create(:branding, tenant: aurora, brand_600: "#1D4ED8", brand_secondary_600: "#0B7658")
+      create(:branding, tenant: other, brand_600: "#DC2626", brand_secondary_600: "#96590B")
 
       host! "estudio-aurora.zubio.com.br"
       get branding_stylesheet_path(v: branding.stylesheet_digest)
 
       expect(response.media_type).to eq("text/css")
       expect(response.body).to include("--brand-600:#1D4ED8;")
-      expect(response.body).not_to include("--brand-600:#DC2626;")
+      expect(response.body).to include("--secondary-600:#0B7658;")
+      expect(response.body).not_to include("#DC2626")
+      expect(response.body).not_to include("#96590B")
     end
 
     it "serves the platform default at the platform root, where no establishment is resolved" do
@@ -92,6 +94,24 @@ RSpec.describe "Generated stylesheets", type: :request do
     it "lets the sheet be cached forever when the URL carries the digest of what it serves" do
       host! "zubio.com.br"
       get showcase_stylesheet_path(v: Landing::ShowcaseBrand.stylesheet_digest)
+
+      expect(response.headers["Cache-Control"]).to include("max-age=31536000")
+    end
+  end
+
+  describe "GET /palette.css" do
+    it "serves one background rule per swatch of the brand palette" do
+      host! "zubio.com.br"
+      get palette_stylesheet_path(v: Branding::Palette.stylesheet_digest)
+
+      expect(response.media_type).to eq("text/css")
+      expect(response.body).to include(%([data-swatch="#{Branding::Palette::FAMILIES.first}"]))
+      expect(response.body).not_to include("--brand-600:")
+    end
+
+    it "lets the sheet be cached forever when the URL carries the digest of what it serves" do
+      host! "zubio.com.br"
+      get palette_stylesheet_path(v: Branding::Palette.stylesheet_digest)
 
       expect(response.headers["Cache-Control"]).to include("max-age=31536000")
     end
