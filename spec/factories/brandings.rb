@@ -6,6 +6,10 @@ FactoryBot.define do
     tenant
     brand_600 { "#4F46E5" }
 
+    trait :with_secondary do
+      brand_secondary_600 { "#1E60C4" }
+    end
+
     trait :with_logo do
       after(:build) do |branding|
         branding.logo.attach(
