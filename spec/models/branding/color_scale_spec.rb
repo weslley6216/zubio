@@ -60,6 +60,25 @@ RSpec.describe Branding::ColorScale do
     end
   end
 
+  describe "#deepened_hex" do
+    it "returns a hex of the same hue that is darker than the input" do
+      color_scale = described_class.new("#4F46E5")
+
+      deepened = described_class.new(color_scale.deepened_hex)
+
+      expect(deepened.hex).to match(described_class::HEX)
+      expect(deepened.luminance).to be < color_scale.luminance
+    end
+
+    it "deepens a color that is already dark instead of lightening it back to a fixed step" do
+      color_scale = described_class.new("#0B7658")
+
+      deepened = described_class.new(color_scale.deepened_hex)
+
+      expect(deepened.luminance).to be < color_scale.luminance
+    end
+  end
+
   describe "#tokens" do
     it "returns the exact input at step 600 and a lighter-to-darker gray ramp for an achromatic input" do
       tokens = described_class.new("#000000").tokens
