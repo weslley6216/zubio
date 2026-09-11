@@ -10,9 +10,12 @@ class Branding < ApplicationRecord
   LOGO_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
   LOGO_MAX_BYTES = 5.megabytes
   DIGEST_LENGTH = 16
+  CONTRAST_MESSAGE = "não tem contraste suficiente com o texto que vai sobre ela (mínimo 4.5:1)".freeze
 
   validates :brand_600, presence: true, format: { with: ColorScale::HEX }
+  validates :brand_secondary_600, format: { with: ColorScale::HEX }, allow_blank: true
   validate :brand_600_meets_contrast_minimum
+  validate :brand_secondary_600_meets_contrast_minimum
   validate :logo_meets_upload_constraints
 
   def self.platform_default
@@ -20,7 +23,7 @@ class Branding < ApplicationRecord
   end
 
   def color_scale
-    @color_scale ||= ColorScale.new(valid_hex_brand_600? ? brand_600 : DEFAULT_BRAND_600)
+    @color_scale ||= ColorScale.new(hex?(brand_600) ? brand_600 : DEFAULT_BRAND_600)
   end
 
   def css_variables
@@ -61,15 +64,18 @@ class Branding < ApplicationRecord
 
   private
 
-  def valid_hex_brand_600?
-    brand_600.present? && brand_600.match?(ColorScale::HEX)
-  end
+  def hex?(value) = value.present? && value.match?(ColorScale::HEX)
 
-  def brand_600_meets_contrast_minimum
-    return unless valid_hex_brand_600?
-    return if ColorScale.new(brand_600).contrast_against_foreground >= ColorScale::MIN_CONTRAST
+  def brand_600_meets_contrast_minimum = validate_contrast(:brand_600)
 
-    errors.add(:brand_600, "não tem contraste suficiente com o texto que vai sobre ela (mínimo 4.5:1)")
+  def brand_secondary_600_meets_contrast_minimum = validate_contrast(:brand_secondary_600)
+
+  def validate_contrast(attribute)
+    value = public_send(attribute)
+    return unless hex?(value)
+    return if ColorScale.new(value).contrast_against_foreground >= ColorScale::MIN_CONTRAST
+
+    errors.add(attribute, CONTRAST_MESSAGE)
   end
 
   def logo_meets_upload_constraints

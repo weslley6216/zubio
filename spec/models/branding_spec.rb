@@ -40,6 +40,31 @@ RSpec.describe Branding, type: :model do
       expect(branding).to be_valid
     end
 
+    it "is valid without a brand_secondary_600" do
+      branding = build(:branding, brand_secondary_600: nil)
+
+      expect(branding).to be_valid
+    end
+
+    it "is valid with a brand_secondary_600 that has sufficient contrast" do
+      branding = build(:branding, :with_secondary)
+
+      expect(branding).to be_valid
+    end
+
+    it "is invalid when brand_secondary_600 is not a 6-digit hex color" do
+      branding = build(:branding, brand_secondary_600: "#fff")
+
+      expect(branding).not_to be_valid
+    end
+
+    it "refuses a brand_secondary_600 without contrast with the same message as the brand color" do
+      branding = build(:branding, brand_secondary_600: "#7A7A7A")
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:brand_secondary_600]).to eq([ Branding::CONTRAST_MESSAGE ])
+    end
+
     it "is invalid when logo content type is not png, jpeg or webp" do
       branding = build(:branding)
       branding.logo.attach(
