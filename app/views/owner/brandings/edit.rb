@@ -1,15 +1,15 @@
 class Views::Owner::Brandings::Edit < Views::Base
   include Components::Form::Styles
 
+  BRAND_LABEL = "Cor da marca".freeze
+  SECONDARY_LABEL = "Cor secundária".freeze
+  SECONDARY_BLANK_LABEL = "Igual à cor da marca".freeze
+
   def initialize(tenant:, branding:, current_section:)
     @tenant = tenant
     @branding = branding
     @current_section = current_section
   end
-
-  BRAND_LABEL = "Cor da marca".freeze
-  SECONDARY_LABEL = "Cor secundária".freeze
-  SECONDARY_BLANK_LABEL = "Igual à cor da marca".freeze
 
   def view_template
     render Views::Layouts::Application.new(title: "Marca · #{@tenant.name}", branding: @branding,
