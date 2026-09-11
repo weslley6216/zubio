@@ -166,6 +166,15 @@ RSpec.describe Branding, type: :model do
       expect(branding.css_variables).to include("--on-secondary:#{branding.color_scale.foreground};")
     end
 
+    it "gives every secondary token the value of its brand counterpart when no secondary color is set, so nothing already painted changes" do
+      branding = build(:branding, brand_600: "#BE123C", brand_secondary_600: nil)
+
+      renamed = branding.css_variables.scan(/--(?:on-)?secondary[\w-]*:[^;]+;/).map { |token| token.sub("secondary", "brand") }
+
+      expect(renamed).not_to be_empty
+      expect(renamed).to eq(branding.css_variables.scan(/--(?:on-)?brand[\w-]*:[^;]+;/))
+    end
+
     it "keeps the two ramps apart when a secondary color is set" do
       branding = build(:branding, brand_600: "#BE123C", brand_secondary_600: "#1E60C4")
 
