@@ -7,7 +7,6 @@ require 'rspec/rails'
 require_relative "support/capybara"
 require_relative "support/computed_style"
 require_relative "support/owner_session"
-require_relative "support/cache_isolation"
 require "webmock/rspec"
 
 WebMock.disable_net_connect!(allow_localhost: true)
@@ -28,7 +27,7 @@ RSpec.configure do |config|
 
   config.include FactoryBot::Syntax::Methods
 
-  config.before(:each, type: :request) { Rails.cache.clear }
+  config.before(:each) { Rails.cache.clear }
   config.include ActiveJob::TestHelper, type: :request
   config.include ActiveJob::TestHelper, type: :model
   config.include ActiveSupport::Testing::TimeHelpers

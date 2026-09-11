@@ -64,6 +64,46 @@ RSpec.describe "Owner branding on one screen", type: :system, js: true do
     end
   end
 
+  it "stores the color it read back when the owner asks for one of its own and saves without picking another" do
+    tenant, owner = establishment
+
+    open_branding(tenant, owner)
+    within_fieldset(Views::Owner::Brandings::Edit::SECONDARY_LABEL) do
+      click_on Components::Form::ColorSwatches::OWN_LABEL
+    end
+    click_on Views::Owner::Brandings::Edit::SUBMIT_LABEL
+
+    expect(page).to have_content("Marca atualizada.")
+    ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_secondary_600).to eq(stored_color) }
+  end
+
+  it "folds the typed code back away when the owner closes it" do
+    open_branding(*establishment)
+
+    within_fieldset(Views::Owner::Brandings::Edit::BRAND_LABEL) do
+      expect(page).to have_no_field(name: "branding[brand_600_custom]")
+
+      click_on Components::Form::ColorSwatches::CUSTOM_SUMMARY
+
+      expect(page).to have_field(name: "branding[brand_600_custom]")
+
+      click_on Components::Form::ColorSwatches::CUSTOM_SUMMARY
+
+      expect(page).to have_no_field(name: "branding[brand_600_custom]")
+    end
+  end
+
+  it "names the file the owner chose, since the compact row hides the browser's own label" do
+    open_branding(*establishment)
+
+    expect(page).to have_content(Views::Owner::Brandings::Edit::LOGO_HINT)
+
+    attach_file("branding[logo]", Rails.root.join("spec/fixtures/files/logo.png"), make_visible: true)
+
+    expect(page).to have_content("logo.png")
+    expect(page).to have_no_content(Views::Owner::Brandings::Edit::LOGO_HINT)
+  end
+
   it "reads the picked color back as a code beside the grid" do
     open_branding(*establishment)
 
