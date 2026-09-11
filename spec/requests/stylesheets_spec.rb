@@ -96,4 +96,22 @@ RSpec.describe "Generated stylesheets", type: :request do
       expect(response.headers["Cache-Control"]).to include("max-age=31536000")
     end
   end
+
+  describe "GET /palette.css" do
+    it "serves one background rule per swatch of the brand palette" do
+      host! "zubio.com.br"
+      get palette_stylesheet_path(v: Branding::Palette.stylesheet_digest)
+
+      expect(response.media_type).to eq("text/css")
+      expect(response.body).to include(%([data-swatch="#{Branding::Palette::FAMILIES.first}"]))
+      expect(response.body).not_to include("--brand-600:")
+    end
+
+    it "lets the sheet be cached forever when the URL carries the digest of what it serves" do
+      host! "zubio.com.br"
+      get palette_stylesheet_path(v: Branding::Palette.stylesheet_digest)
+
+      expect(response.headers["Cache-Control"]).to include("max-age=31536000")
+    end
+  end
 end

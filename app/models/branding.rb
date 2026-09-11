@@ -10,10 +10,6 @@ class Branding < ApplicationRecord
   LOGO_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
   LOGO_MAX_BYTES = 5.megabytes
   DIGEST_LENGTH = 16
-  SUGGESTED_COLORS = %w[
-    #4F46E5 #7E22CE #1E60C4 #0E7490 #14B8A6 #0B7658
-    #EAB308 #B45309 #FF5A5F #BE123C #FF00BB #334155
-  ].freeze
 
   validates :brand_600, presence: true, format: { with: ColorScale::HEX }
   validate :brand_600_meets_contrast_minimum
