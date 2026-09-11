@@ -209,7 +209,7 @@ RSpec.describe Branding, type: :model do
     end
 
     it "is short enough to travel in a URL" do
-      expect(build(:branding).stylesheet_digest.length).to eq(Branding::DIGEST_LENGTH)
+      expect(build(:branding).stylesheet_digest.length).to eq(StylesheetProducer::DIGEST_LENGTH)
     end
   end
 

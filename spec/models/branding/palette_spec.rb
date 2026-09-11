@@ -44,7 +44,7 @@ RSpec.describe Branding::Palette do
 
   describe ".stylesheet_digest" do
     it "is short enough to travel in a URL" do
-      expect(described_class.stylesheet_digest.length).to eq(Branding::DIGEST_LENGTH)
+      expect(described_class.stylesheet_digest.length).to eq(StylesheetProducer::DIGEST_LENGTH)
     end
   end
 end
