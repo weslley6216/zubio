@@ -1,6 +1,4 @@
 class Views::Owner::Services::Index < Views::Base
-  include Phlex::Rails::Helpers::NumberToCurrency
-
   TITLE = "Serviços".freeze
   SUBTITLE = "O que seu estabelecimento oferece.".freeze
   DISABLED_LABEL = "Desativado".freeze
@@ -80,7 +78,5 @@ class Views::Owner::Services::Index < Views::Base
 
   def duration(service) = "#{service.duration_minutes} min"
 
-  def price(service)
-    number_to_currency(service.price, unit: "R$", separator: ",", delimiter: ".", format: "%u %n")
-  end
+  def price(service) = Service::Price.new(service.price_cents).with_currency
 end
