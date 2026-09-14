@@ -56,11 +56,18 @@ class Views::Owner::Services::Index < Views::Base
   def render_service(service)
     li(class: CARD_CLASS) do
       div(class: "grid min-w-0 gap-0.5") do
-        span(class: NAME_CLASS) { service.name }
+        render_name(service)
         span(class: DESCRIPTION_CLASS) { service.description } if service.description.present?
         span(class: DURATION_CLASS) { duration(service) }
       end
       span(class: PRICE_CLASS) { price(service) }
+    end
+  end
+
+  def render_name(service)
+    div(class: NAME_ROW_CLASS) do
+      span(class: NAME_CLASS) { service.name }
+      render Components::Badge.new(text: DISABLED_LABEL, tone: :muted) unless service.active?
     end
   end
 

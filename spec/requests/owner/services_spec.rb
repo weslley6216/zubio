@@ -44,5 +44,17 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response.body).to include("Barba")
       expect(response.body.scan(Views::Owner::Services::Index::DESCRIPTION_CLASS).size).to eq(1)
     end
+
+    it "marks the disabled service and leaves the active one unmarked" do
+      create(:service, tenant: tenant, name: "Corte feminino")
+      create(:service, tenant: tenant, name: "Barba", active: false)
+      sign_in
+
+      get owner_services_path
+
+      expect(response.body).to include("Corte feminino")
+      expect(response.body).to include("Barba")
+      expect(response.body.scan(Views::Owner::Services::Index::DISABLED_LABEL).size).to eq(1)
+    end
   end
 end
