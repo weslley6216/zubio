@@ -56,5 +56,26 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response.body).to include("Barba")
       expect(response.body.scan(Views::Owner::Services::Index::DISABLED_LABEL).size).to eq(1)
     end
+
+    it "invites the first registration when there is no service yet" do
+      sign_in
+
+      get owner_services_path
+
+      expect(response.body).to include(Views::Owner::Services::Index::EMPTY_TITLE)
+      expect(response.body).to include(Views::Owner::Services::Index::EMPTY_BODY)
+      expect(response.body).not_to include("data-catalog")
+    end
+
+    it "drops the invitation once the catalog has a service" do
+      create(:service, tenant: tenant, name: "Corte feminino")
+      sign_in
+
+      get owner_services_path
+
+      expect(response.body).to include("Corte feminino")
+      expect(response.body).to include("data-catalog")
+      expect(response.body).not_to include(Views::Owner::Services::Index::EMPTY_TITLE)
+    end
   end
 end
