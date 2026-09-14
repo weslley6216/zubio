@@ -255,17 +255,73 @@ RSpec.describe Service, type: :model do
     end
   end
 
-  describe "#price" do
-    it "converts cents into reais as a decimal" do
-      service = build(:service, price_cents: 9_000)
+  describe "#price=" do
+    it "stores the reais the owner typed as cents" do
+      service = build(:service, price_cents: nil)
 
-      expect(service.price).to eq(BigDecimal("90"))
+      service.price = "R$ 1.234,56"
+
+      expect(service.price_cents).to eq(123_456)
+      expect(service).to be_valid
     end
 
-    it "keeps money out of floating point" do
-      service = build(:service, price_cents: 9_999)
+    it "refuses a price it cannot read with that single message instead of storing zero" do
+      service = build(:service)
 
-      expect(service.price).to be_a(BigDecimal)
+      service.price = "noventa"
+      service.valid?
+
+      expect(service.price_cents).to be_nil
+      expect(service.errors[:price_cents]).to eq([ Service::PRICE_UNREADABLE_MESSAGE ])
+    end
+
+    it "asks for the price with that single message when the typed text is blank" do
+      service = build(:service)
+
+      service.price = " "
+      service.valid?
+
+      expect(service.errors[:price_cents]).to eq([ Service::PRICE_REQUIRED_MESSAGE ])
+    end
+
+    it "refuses a readable price above the highest one with that single message" do
+      service = build(:service)
+
+      service.price = "100.000,00"
+      service.valid?
+
+      expect(service.errors[:price_cents]).to eq([ Service::PRICE_OUT_OF_RANGE_MESSAGE ])
+    end
+  end
+
+  describe "#price" do
+    it "reads the stored cents back as the text the owner types" do
+      service = build(:service, price_cents: 123_456)
+
+      expect(service.price).to eq("1.234,56")
+    end
+
+    it "gives back the text the owner typed when it could not be read" do
+      service = build(:service)
+
+      service.price = "noventa"
+
+      expect(service.price).to eq("noventa")
+    end
+
+    it "is empty for a service with no price yet" do
+      service = build(:service, price_cents: nil)
+
+      expect(service.price).to be_nil
+    end
+
+    it "keeps the stored price when the form sends back the text it showed" do
+      service = create(:service, price_cents: 123_456)
+      shown = service.price
+
+      service.price = shown
+
+      expect(service.price_cents_changed?).to be(false)
     end
   end
 

@@ -17,6 +17,7 @@ class Service < ApplicationRecord
   DURATION_OUT_OF_STEP_MESSAGE = "escolha um múltiplo de #{DURATION_STEP_MINUTES} entre #{MIN_DURATION_MINUTES} e #{MAX_DURATION_MINUTES} minutos".freeze
   PRICE_REQUIRED_MESSAGE = "informe o preço".freeze
   PRICE_OUT_OF_RANGE_MESSAGE = "use um valor entre #{Price.new(0).with_currency} e #{Price.new(MAX_PRICE_CENTS).with_currency}".freeze
+  PRICE_UNREADABLE_MESSAGE = "não foi possível ler o valor; escreva como 90,00".freeze
 
   normalizes :name, with: ->(name) { name.squish }
   normalizes :description, with: ->(description) { description.strip.presence }
@@ -29,13 +30,29 @@ class Service < ApplicationRecord
   validates :duration_minutes,
     numericality: { only_integer: true, message: DURATION_NOT_WHOLE_MESSAGE },
     inclusion: { in: DURATION_CHOICES, message: DURATION_OUT_OF_STEP_MESSAGE }
-  validates :price_cents, presence: { message: PRICE_REQUIRED_MESSAGE }
+  validates :price_cents, presence: { message: PRICE_REQUIRED_MESSAGE }, unless: :unreadable_price?
   validates :price_cents,
     numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_PRICE_CENTS, message: PRICE_OUT_OF_RANGE_MESSAGE },
     allow_nil: true
+  validate :price_must_be_readable
 
   scope :active, -> { where(active: true) }
   scope :ordered, -> { order(Arel.sql(%(name COLLATE "und-x-icu"))) }
 
-  def price = price_cents.to_d / 100
+  def price
+    @typed_price || (Price.new(price_cents).to_s if price_cents)
+  end
+
+  def price=(text)
+    @typed_price = text
+    self.price_cents = Price.parse(text)&.cents
+  end
+
+  private
+
+  def unreadable_price? = @typed_price.present? && Price.parse(@typed_price).nil?
+
+  def price_must_be_readable
+    errors.add(:price_cents, PRICE_UNREADABLE_MESSAGE) if unreadable_price?
+  end
 end
