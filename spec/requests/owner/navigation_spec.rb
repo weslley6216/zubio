@@ -27,9 +27,11 @@ RSpec.describe "Owner panel navigation", type: :request do
 
     get owner_dashboard_path
 
+    expect(response.body).to include(band_item(owner_services_path))
     expect(response.body).to include(band_item(edit_owner_branding_path))
     expect(response.body).to include(%(<a href="#{owner_dashboard_path}" aria-current="page"))
     expect(response.body).to include(current_menu_item(owner_dashboard_path))
+    expect(response.body).to include(menu_item(owner_services_path))
     expect(response.body).to include(menu_item(edit_owner_branding_path))
   end
 
@@ -40,6 +42,7 @@ RSpec.describe "Owner panel navigation", type: :request do
     get edit_owner_branding_path
 
     expect(response.body).to include(band_item(owner_dashboard_path))
+    expect(response.body).to include(band_item(owner_services_path))
     expect(response.body).to include(%(<a href="#{edit_owner_branding_path}" aria-current="page"))
     expect(response.body).to include(menu_item(owner_dashboard_path))
     expect(response.body).to include(current_menu_item(edit_owner_branding_path))
@@ -52,6 +55,7 @@ RSpec.describe "Owner panel navigation", type: :request do
     get owner_dashboard_path
 
     expect(response.body).to include(%(<a href="#{owner_dashboard_path}" aria-current="page"))
+    expect(response.body).not_to include(%(<a href="#{owner_services_path}" aria-current="page"))
     expect(response.body).not_to include(%(<a href="#{edit_owner_branding_path}" aria-current="page"))
   end
 
@@ -63,6 +67,31 @@ RSpec.describe "Owner panel navigation", type: :request do
 
     expect(response.body).to include(%(<a href="#{edit_owner_branding_path}" aria-current="page"))
     expect(response.body).not_to include(%(<a href="#{owner_dashboard_path}" aria-current="page"))
+    expect(response.body).not_to include(%(<a href="#{owner_services_path}" aria-current="page"))
+  end
+
+  it "offers the same destinations from the services screen, which is what persistent means" do
+    create(:branding, tenant: tenant)
+    sign_in
+
+    get owner_services_path
+
+    expect(response.body).to include(band_item(owner_dashboard_path))
+    expect(response.body).to include(band_item(edit_owner_branding_path))
+    expect(response.body).to include(%(<a href="#{owner_services_path}" aria-current="page"))
+    expect(response.body).to include(menu_item(owner_dashboard_path))
+    expect(response.body).to include(current_menu_item(owner_services_path))
+  end
+
+  it "marks the services screen as current on the services screen, and marks nothing else" do
+    create(:branding, tenant: tenant)
+    sign_in
+
+    get owner_services_path
+
+    expect(response.body).to include(%(<a href="#{owner_services_path}" aria-current="page"))
+    expect(response.body).not_to include(%(<a href="#{owner_dashboard_path}" aria-current="page"))
+    expect(response.body).not_to include(%(<a href="#{edit_owner_branding_path}" aria-current="page"))
   end
 
   it "folds the theme switch and the way out into the menu, where the band has no room" do
