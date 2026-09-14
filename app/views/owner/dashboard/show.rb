@@ -45,6 +45,6 @@ class Views::Owner::Dashboard::Show < Views::Base
   end
 
   def render_setup_badge
-    span(class: "justify-self-start rounded-full bg-brand-accent px-3 py-1 text-xs font-bold uppercase tracking-wide text-on-brand-accent") { SETUP_BADGE }
+    render Components::Badge.new(text: SETUP_BADGE, tone: :accent)
   end
 end
