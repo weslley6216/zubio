@@ -28,6 +28,7 @@ class Components::Owner::Header < Components::Base
   def sections
     [
       [ :dashboard, "Painel", owner_dashboard_path ],
+      [ :services, "Serviços", owner_services_path ],
       [ :branding, "Marca", edit_owner_branding_path ]
     ]
   end
