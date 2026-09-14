@@ -18,9 +18,12 @@ RSpec.describe Components::Badge, type: :component do
   end
 
   it "keeps the pill shape on every tone" do
-    html = described_class.new(text: "Desativado", tone: :muted).call
+    shapes = described_class::TONES.each_key.map do |tone|
+      described_class.new(text: "Desativado", tone: tone).call.include?(described_class::BASE_CLASS)
+    end
 
-    expect(html).to include(described_class::BASE_CLASS)
+    expect(shapes).to all(be(true))
+    expect(shapes.size).to eq(described_class::TONES.size)
   end
 
   it "refuses a tone with no palette behind it" do

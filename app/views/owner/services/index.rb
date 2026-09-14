@@ -64,7 +64,7 @@ class Views::Owner::Services::Index < Views::Base
     li(class: CARD_CLASS) do
       div(class: "grid min-w-0 gap-0.5") do
         render_name(service)
-        span(class: DESCRIPTION_CLASS) { service.description } if service.description.present?
+        span(class: DESCRIPTION_CLASS, data: { description: true }) { service.description } if service.description.present?
         span(class: DURATION_CLASS) { duration(service) }
       end
       span(class: PRICE_CLASS) { price(service) }

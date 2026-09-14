@@ -9,12 +9,11 @@ RSpec.describe "Owner services catalog", type: :request do
     post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
   end
 
-  IGNORED_QUERY_NAMES = %w[SCHEMA TRANSACTION].freeze
-
   def count_queries
+    ignored_query_names = %w[SCHEMA TRANSACTION]
     queries = 0
     subscription = ActiveSupport::Notifications.subscribe("sql.active_record") do |_name, _started, _finished, _id, payload|
-      queries += 1 unless IGNORED_QUERY_NAMES.include?(payload[:name])
+      queries += 1 unless ignored_query_names.include?(payload[:name])
     end
 
     yield
@@ -57,19 +56,27 @@ RSpec.describe "Owner services catalog", type: :request do
       get owner_services_path
 
       expect(response.body).to include("Barba")
-      expect(response.body.scan(Views::Owner::Services::Index::DESCRIPTION_CLASS).size).to eq(1)
+      expect(response.body.scan("data-description").size).to eq(1)
     end
 
-    it "marks the disabled service and leaves the active one unmarked" do
-      create(:service, tenant: tenant, name: "Corte feminino")
+    it "marks a service that is disabled" do
       create(:service, tenant: tenant, name: "Barba", active: false)
       sign_in
 
       get owner_services_path
 
-      expect(response.body).to include("Corte feminino")
       expect(response.body).to include("Barba")
-      expect(response.body.scan(Views::Owner::Services::Index::DISABLED_LABEL).size).to eq(1)
+      expect(response.body).to include(Views::Owner::Services::Index::DISABLED_LABEL)
+    end
+
+    it "leaves an active service unmarked" do
+      create(:service, tenant: tenant, name: "Corte feminino")
+      sign_in
+
+      get owner_services_path
+
+      expect(response.body).to include("Corte feminino")
+      expect(response.body).not_to include(Views::Owner::Services::Index::DISABLED_LABEL)
     end
 
     it "invites the first registration when there is no service yet" do
@@ -126,6 +133,7 @@ RSpec.describe "Owner services catalog", type: :request do
 
       create_list(:service, 4, tenant: tenant)
 
+      expect(single).to be_positive
       expect(count_queries { get owner_services_path }).to eq(single)
     end
   end
