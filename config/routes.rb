@@ -20,6 +20,7 @@ Rails.application.routes.draw do
     resource :session, only: %i[new create destroy]
     resource :handoff, only: :show
     resource :dashboard, only: :show, controller: "dashboard"
+    resources :services, only: :index
     resource :branding, only: %i[edit update]
   end
 
