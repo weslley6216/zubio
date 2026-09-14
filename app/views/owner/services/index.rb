@@ -33,7 +33,7 @@ class Views::Owner::Services::Index < Views::Base
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
       main(class: PAGE_CLASS) do
         render_heading
-        render_catalog
+        @services.empty? ? render_empty_state : render_catalog
       end
     end
   end
@@ -44,6 +44,13 @@ class Views::Owner::Services::Index < Views::Base
     div(class: "grid gap-2") do
       h1(class: HEADING_CLASS) { TITLE }
       p(class: SUBTITLE_CLASS) { SUBTITLE }
+    end
+  end
+
+  def render_empty_state
+    div(class: EMPTY_CLASS) do
+      h2(class: EMPTY_TITLE_CLASS) { EMPTY_TITLE }
+      p(class: EMPTY_BODY_CLASS) { EMPTY_BODY }
     end
   end
 
