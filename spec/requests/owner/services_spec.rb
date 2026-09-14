@@ -9,6 +9,21 @@ RSpec.describe "Owner services catalog", type: :request do
     post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
   end
 
+  IGNORED_QUERY_NAMES = %w[SCHEMA TRANSACTION].freeze
+
+  def count_queries
+    queries = 0
+    subscription = ActiveSupport::Notifications.subscribe("sql.active_record") do |_name, _started, _finished, _id, payload|
+      queries += 1 unless IGNORED_QUERY_NAMES.include?(payload[:name])
+    end
+
+    yield
+
+    queries
+  ensure
+    ActiveSupport::Notifications.unsubscribe(subscription)
+  end
+
   describe "GET /owner/services" do
     it "lists every service of the establishment with its duration and its price" do
       create(:service, tenant: tenant, name: "Corte feminino", duration_minutes: 45, price_cents: 9_000)
@@ -101,6 +116,17 @@ RSpec.describe "Owner services catalog", type: :request do
 
       expect(response.body).to include("Corte feminino")
       expect(response.body).not_to include("Barba do Zé")
+    end
+
+    it "asks the database the same number of times for many services as for one" do
+      create(:service, tenant: tenant, name: "Corte feminino")
+      sign_in
+      get owner_services_path
+      single = count_queries { get owner_services_path }
+
+      create_list(:service, 4, tenant: tenant)
+
+      expect(count_queries { get owner_services_path }).to eq(single)
     end
   end
 end
