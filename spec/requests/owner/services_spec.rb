@@ -77,5 +77,30 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response.body).to include("data-catalog")
       expect(response.body).not_to include(Views::Owner::Services::Index::EMPTY_TITLE)
     end
+
+    it "sends an anonymous visitor to the login without naming a service" do
+      create(:service, tenant: tenant, name: "Corte feminino")
+      host! "#{tenant.subdomain}.zubio.com.br"
+
+      get owner_services_path
+
+      expect(response).to redirect_to(new_owner_session_path)
+
+      follow_redirect!
+
+      expect(response.body).not_to include("Corte feminino")
+    end
+
+    it "lists the services of the establishment in the host and none of another one" do
+      other_tenant = create(:tenant, subdomain: "salon-b", name: "Barbearia do Zé")
+      create(:service, tenant: other_tenant, name: "Barba do Zé")
+      create(:service, tenant: tenant, name: "Corte feminino")
+      sign_in
+
+      get owner_services_path
+
+      expect(response.body).to include("Corte feminino")
+      expect(response.body).not_to include("Barba do Zé")
+    end
   end
 end
