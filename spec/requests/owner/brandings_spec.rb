@@ -19,6 +19,15 @@ RSpec.describe "Owner branding", type: :request do
       expect(response.body).to include("#2F6FED")
     end
 
+    it "renders the form inside the shared owner form card" do
+      create(:branding, tenant: tenant, brand_600: "#2F6FED")
+
+      get edit_owner_branding_path
+
+      expect(response.body).to include(%(<section aria-labelledby="#{Components::Owner::FormCard::HEADING_ID}"))
+      expect(response.body).to include(%(<h1 id="#{Components::Owner::FormCard::HEADING_ID}" class="#{Components::Owner::FormCard::TITLE_CLASS}">#{Views::Owner::Brandings::Edit::TITLE}</h1>))
+    end
+
     it "shows the current logo and a removal option when one is attached" do
       create(:branding, :with_logo, tenant: tenant, brand_600: "#4F46E5")
 
