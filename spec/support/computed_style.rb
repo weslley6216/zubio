@@ -19,6 +19,13 @@ module ComputedStyle
     foreground.contrast_against(background)
   end
 
+  def border_contrast_ratio(selector)
+    border = color_scale(computed(selector, "borderTopColor"))
+    background = color_scale(computed(selector, "backgroundColor"))
+
+    border.contrast_against(background)
+  end
+
   def opaque?(selector)
     computed(selector, "backgroundColor").start_with?("rgb(")
   end
