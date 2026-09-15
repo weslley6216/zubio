@@ -33,6 +33,12 @@ RSpec.describe "Owner services catalog", type: :request do
 
   def control(name) = field(name).at_css("input, textarea")
 
+  def serve_error_pages_as_in_production
+    allow(Rails.application).to receive(:env_config).and_wrap_original do |env_config|
+      env_config.call.merge("action_dispatch.show_detailed_exceptions" => false)
+    end
+  end
+
   describe "GET /owner/services" do
     it "lists every service of the establishment with its duration and its price" do
       create(:service, tenant: tenant, name: "Corte feminino", duration_minutes: 45, price_cents: 9_000)
@@ -343,6 +349,110 @@ RSpec.describe "Owner services catalog", type: :request do
       expect { post owner_services_path, params: service_params }.not_to change { service_count }
 
       expect(response).to redirect_to(new_owner_session_path)
+    end
+  end
+
+  describe "GET /owner/services/:id/edit" do
+    it "opens the form filled with what the service stores" do
+      service = create(:service, tenant: tenant, name: "Corte feminino", duration_minutes: 45, price_cents: 9_000)
+      sign_in
+
+      get edit_owner_service_path(service)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(%(action="#{owner_service_path(service)}"))
+      expect(response.body).to include(Views::Owner::Services::Form::EDIT_TITLE)
+      expect(response.body).to include(Views::Owner::Services::Form::UPDATE_LABEL)
+      expect(control("name")["value"]).to eq("Corte feminino")
+      expect(control("duration_minutes")["value"]).to eq("45")
+      expect(control("price")["value"]).to eq("90,00")
+    end
+
+    it "opens the form for a disabled service too" do
+      service = create(:service, tenant: tenant, name: "Barba", active: false)
+      sign_in
+
+      get edit_owner_service_path(service)
+
+      expect(response).to have_http_status(:ok)
+      expect(control("name")["value"]).to eq("Barba")
+    end
+
+    it "answers not found for the service of another establishment, with none of its data" do
+      other_tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      other_service = create(:service, tenant: other_tenant, name: "Barba do Zé", description: "Navalha e toalha quente.")
+      sign_in
+      serve_error_pages_as_in_production
+
+      get edit_owner_service_path(other_service)
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.body).not_to include("Barba do Zé")
+      expect(response.body).not_to include("Navalha e toalha quente.")
+    end
+
+    it "sends an anonymous visitor to the login from the edit form" do
+      service = create(:service, tenant: tenant, name: "Corte feminino")
+      host! "#{tenant.subdomain}.zubio.com.br"
+
+      get edit_owner_service_path(service)
+
+      expect(response).to redirect_to(new_owner_session_path)
+    end
+  end
+
+  describe "PATCH /owner/services/:id" do
+    it "changes the price and goes back to the catalog" do
+      service = create(:service, tenant: tenant, name: "Corte feminino", duration_minutes: 45, price_cents: 9_000)
+      sign_in
+
+      patch owner_service_path(service), params: service_params(price: "100,00")
+
+      expect(response).to redirect_to(owner_services_path)
+      ActsAsTenant.with_tenant(tenant) { expect(service.reload.price_cents).to eq(10_000) }
+
+      follow_redirect!
+
+      expect(response.body).to include("Serviço atualizado.")
+      expect(response.body).to include("R$ 100,00")
+    end
+
+    it "keeps the stored duration when the new one is out of range, with the error beside the duration" do
+      service = create(:service, tenant: tenant, name: "Corte feminino", duration_minutes: 45, price_cents: 9_000)
+      sign_in
+
+      patch owner_service_path(service), params: service_params(duration_minutes: "600")
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      ActsAsTenant.with_tenant(tenant) { expect(service.reload.duration_minutes).to eq(45) }
+      expect(control("duration_minutes")["value"]).to eq("600")
+      expect(field("duration_minutes").text).to include(Service::DURATION_OUT_OF_STEP_MESSAGE)
+      expect(field("price").text).not_to include(Service::DURATION_OUT_OF_STEP_MESSAGE)
+      expect(response.body).to include(Owner::ServicesController::REFUSED)
+    end
+
+    it "leaves the service of another establishment untouched and answers not found" do
+      other_tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      other_service = create(:service, tenant: other_tenant, name: "Barba do Zé", price_cents: 5_000)
+      sign_in
+
+      patch owner_service_path(other_service), params: service_params(name: "Hijacked", price: "1,00")
+
+      expect(response).to have_http_status(:not_found)
+      ActsAsTenant.with_tenant(other_tenant) do
+        expect(other_service.reload.name).to eq("Barba do Zé")
+        expect(other_service.price_cents).to eq(5_000)
+      end
+    end
+
+    it "sends an anonymous visitor to the login without changing the service" do
+      service = create(:service, tenant: tenant, name: "Corte feminino", price_cents: 9_000)
+      host! "#{tenant.subdomain}.zubio.com.br"
+
+      patch owner_service_path(service), params: service_params(price: "1,00")
+
+      expect(response).to redirect_to(new_owner_session_path)
+      ActsAsTenant.with_tenant(tenant) { expect(service.reload.price_cents).to eq(9_000) }
     end
   end
 end

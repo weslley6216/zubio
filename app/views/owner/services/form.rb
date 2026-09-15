@@ -2,6 +2,7 @@ class Views::Owner::Services::Form < Views::Base
   include Components::Form::Styles
 
   NEW_TITLE = "Novo serviço".freeze
+  EDIT_TITLE = "Editar serviço".freeze
   SUBTITLE = "Como ele aparece para a cliente e quanto tempo ocupa a sua agenda.".freeze
   NAME_LABEL = "Nome".freeze
   DESCRIPTION_LABEL = "Descrição (opcional)".freeze
@@ -10,6 +11,7 @@ class Views::Owner::Services::Form < Views::Base
   PRICE_LABEL = "Preço (R$)".freeze
   PRICE_HINT = "Em reais, com vírgula nos centavos: 90,00.".freeze
   CREATE_LABEL = "Cadastrar serviço".freeze
+  UPDATE_LABEL = "Salvar alterações".freeze
   DURATION_HINT_ID = "service-duration-hint".freeze
   PRICE_HINT_ID = "service-price-hint".freeze
   DESCRIPTION_ROWS = 3
@@ -30,9 +32,9 @@ class Views::Owner::Services::Form < Views::Base
 
   private
 
-  def form_title = NEW_TITLE
+  def form_title = @service.persisted? ? EDIT_TITLE : NEW_TITLE
 
-  def submit_label = CREATE_LABEL
+  def submit_label = @service.persisted? ? UPDATE_LABEL : CREATE_LABEL
 
   def render_form
     form_with(model: [ :owner, @service ], class: Components::Owner::FormCard::FORM_CLASS) do |form|
