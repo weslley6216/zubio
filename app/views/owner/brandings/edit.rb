@@ -15,8 +15,6 @@ class Views::Owner::Brandings::Edit < Views::Base
   LOGO_CONTENT_TYPES = Branding::LOGO_CONTENT_TYPES.join(",").freeze
 
   LOGO_CARD_CLASS = "flex items-center gap-3 rounded-xl border border-line bg-surface-2 p-3".freeze
-  LOGO_PREVIEW_CLASS = "h-12 w-12 flex-none rounded-xl object-contain".freeze
-  LOGO_INITIAL_CLASS = "grid h-12 w-12 flex-none place-items-center rounded-xl bg-brand-accent font-extrabold text-on-brand-accent".freeze
   LOGO_NAME_CLASS = "block truncate text-sm font-bold text-ink".freeze
   LOGO_HINT_CLASS = "block text-xs leading-snug text-ink-muted".freeze
   LOGO_CHANGE_CLASS = "inline-flex h-11 flex-none cursor-pointer items-center rounded-lg border border-line-strong px-4 text-sm font-bold text-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-accent".freeze
@@ -83,7 +81,7 @@ class Views::Owner::Brandings::Edit < Views::Base
   def render_logo_field
     div do
       div(class: LOGO_CARD_CLASS, data: { controller: "logo-field" }) do
-        render_logo_preview
+        render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :large)
         div(class: "min-w-0 flex-1") do
           span(class: LOGO_NAME_CLASS) { LOGO_LABEL }
           span(class: LOGO_HINT_CLASS, data: { "logo-field-target": "hint" }) { LOGO_HINT }
@@ -92,14 +90,6 @@ class Views::Owner::Brandings::Edit < Views::Base
       end
       render Components::Form::Errors.new(messages: @branding.errors[:logo])
       render_remove_logo_field if current_logo_attached?
-    end
-  end
-
-  def render_logo_preview
-    if current_logo_attached?
-      img(src: rails_storage_proxy_path(@branding.header_logo), alt: "", class: LOGO_PREVIEW_CLASS)
-    else
-      span(class: LOGO_INITIAL_CLASS) { @tenant.initial }
     end
   end
 

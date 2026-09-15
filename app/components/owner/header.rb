@@ -35,18 +35,8 @@ class Components::Owner::Header < Components::Base
 
   def render_identity
     a(href: owner_dashboard_path, class: "flex min-h-11 min-w-0 items-center gap-2 font-extrabold tracking-tight text-ink") do
-      render_emblem
+      render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :medium)
       span(class: "truncate") { @tenant.name }
-    end
-  end
-
-  def render_emblem
-    logo = @branding.header_logo
-
-    if logo
-      img(src: rails_storage_proxy_path(logo), alt: "", class: "h-8 w-8 flex-none rounded-lg object-contain")
-    else
-      span(class: "grid h-8 w-8 flex-none place-items-center rounded-lg bg-brand-accent text-on-brand-accent") { @tenant.initial }
     end
   end
 
