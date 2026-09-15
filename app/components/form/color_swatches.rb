@@ -6,12 +6,10 @@ class Components::Form::ColorSwatches < Components::Base
   PICKER_LABEL = "Escolher a cor em um seletor".freeze
   CODE_LABEL = "Código hexadecimal da cor".freeze
   OWN_LABEL = "Escolher outra".freeze
-  CHIP_CLASSES = { brand_600: "bg-brand-600", brand_secondary_600: "bg-secondary-600" }.freeze
 
   LEGEND_CLASS = "w-full".freeze
   ROW_CLASS = "flex w-full items-center justify-between gap-2".freeze
   READOUT_CLASS = "flex items-center gap-2".freeze
-  CHIP_CLASS = "h-4 w-4 flex-none rounded".freeze
   CODE_CLASS = "text-sm font-bold tabular-nums text-ink".freeze
   SUMMARY_CLASS = "cursor-pointer text-sm font-medium text-ink underline underline-offset-2".freeze
   SEGMENT_GROUP_CLASS = "mt-1.5 grid grid-cols-2 gap-1 rounded-xl bg-surface-3 p-1".freeze
@@ -51,7 +49,7 @@ class Components::Form::ColorSwatches < Components::Base
 
   def render_readout
     span(class: READOUT_CLASS, hidden: linked?, data: { "color-swatch-target": "readout" }) do
-      span(class: "#{CHIP_CLASS} #{CHIP_CLASSES.fetch(@attribute)}", data: { "color-swatch-target": "chip" })
+      render Components::ColorChip.new(attribute: @attribute, size: :small, data: { "color-swatch-target": "chip" })
       span(class: CODE_CLASS, data: { "color-swatch-target": "code" }) { resolved }
       button(type: "button", class: SUMMARY_CLASS, aria_expanded: custom?.to_s, aria_controls: code_panel_id,
         data: { "color-swatch-target": "customToggle", action: "color-swatch#toggleCustom" }) { CUSTOM_SUMMARY }
