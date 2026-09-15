@@ -1,7 +1,6 @@
 class Views::Owner::Brandings::Edit < Views::Base
   include Components::Form::Styles
 
-  HEADING_ID = "brand-heading".freeze
   TITLE = "Sua marca".freeze
   SUBTITLE = "É assim que a cliente vê seu link.".freeze
   NAME_LABEL = "Nome do estabelecimento".freeze
@@ -15,11 +14,6 @@ class Views::Owner::Brandings::Edit < Views::Base
   SUBMIT_LABEL = "Salvar minha marca".freeze
   LOGO_CONTENT_TYPES = Branding::LOGO_CONTENT_TYPES.join(",").freeze
 
-  PAGE_CLASS = "mx-auto w-full max-w-md px-3 py-4".freeze
-  CARD_CLASS = "rounded-2xl border border-line bg-surface p-4".freeze
-  TITLE_CLASS = "text-xl font-extrabold tracking-tight text-ink".freeze
-  SUBTITLE_CLASS = "text-sm text-ink-muted".freeze
-  FORM_CLASS = "mt-3 grid grid-cols-1 gap-3.5".freeze
   LOGO_CARD_CLASS = "flex items-center gap-3 rounded-xl border border-line bg-surface-2 p-3".freeze
   LOGO_PREVIEW_CLASS = "h-12 w-12 flex-none rounded-xl object-contain".freeze
   LOGO_INITIAL_CLASS = "grid h-12 w-12 flex-none place-items-center rounded-xl bg-brand-accent font-extrabold text-on-brand-accent".freeze
@@ -38,24 +32,14 @@ class Views::Owner::Brandings::Edit < Views::Base
     render Views::Layouts::Application.new(title: "Marca · #{@tenant.name}", branding: @branding,
       page_stylesheet: palette_stylesheet_path(v: Branding::Palette.stylesheet_digest)) do
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
-      main(class: PAGE_CLASS) do
-        section(aria_labelledby: HEADING_ID, data: { panel: true }, class: CARD_CLASS) do
-          render_heading
-          render_form
-        end
-      end
+      render Components::Owner::FormCard.new(title: TITLE, subtitle: SUBTITLE) { render_form }
     end
   end
 
   private
 
-  def render_heading
-    h1(id: HEADING_ID, class: TITLE_CLASS) { TITLE }
-    p(class: SUBTITLE_CLASS) { SUBTITLE }
-  end
-
   def render_form
-    form_with(url: owner_branding_path, method: :patch, multipart: true, class: FORM_CLASS) do |form|
+    form_with(url: owner_branding_path, method: :patch, multipart: true, class: Components::Owner::FormCard::FORM_CLASS) do |form|
       render_name_field(form)
       render_brand_color_field
       render_secondary_color_field
