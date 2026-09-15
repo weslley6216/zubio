@@ -27,11 +27,12 @@ RSpec.describe Components::Menu, type: :component do
     expect(html).not_to include(%(<a href="/owner/branding/edit" aria-current="page"))
   end
 
-  it "paints the current item with the secondary color, so a second brand color shows on a phone too" do
-    html = described_class.new(items: [ [ "Painel", "/owner/dashboard", true ] ]).call
+  it "lights the current item with the light pair of the brand and fills no item with the secondary color" do
+    html = described_class.new(items: [ [ "Configurações", "/owner/settings", true ], [ "Painel", "/owner/dashboard", false ] ]).call
 
-    expect(described_class::CURRENT_CLASS).to include("bg-secondary-accent")
-    expect(html).to include("bg-secondary-accent")
+    expect(described_class::CURRENT_CLASS.split).to include("bg-brand-soft", "text-brand-soft-ink")
+    expect(html).to include(%(<a href="/owner/settings" aria-current="page" class="#{described_class::ITEM_CLASS} #{described_class::CURRENT_CLASS}">))
+    expect(html).not_to match(/\bbg-secondary/)
   end
 
   it "leaves every item resting when the caller flags none of them" do

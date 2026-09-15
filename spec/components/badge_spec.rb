@@ -1,20 +1,21 @@
 require "rails_helper"
 
 RSpec.describe Components::Badge, type: :component do
-  it "paints the accent tone with the brand accent" do
+  it "paints the accent tone with the light pair of the secondary color" do
     html = described_class.new(text: "Comece por aqui", tone: :accent).call
 
-    expect(html).to include("bg-brand-accent")
-    expect(html).to include("text-on-brand-accent")
+    expect(html).to include("bg-secondary-soft")
+    expect(html).to include("text-secondary-soft-ink")
+    expect(html).not_to include("bg-brand-accent")
     expect(html).not_to include("bg-surface-3")
   end
 
-  it "paints the muted tone off the brand" do
+  it "paints the muted tone off both brand colors" do
     html = described_class.new(text: "Desativado", tone: :muted).call
 
     expect(html).to include("bg-surface-3")
     expect(html).to include("text-ink-muted")
-    expect(html).not_to include("bg-brand-accent")
+    expect(html).not_to include("bg-secondary-soft")
   end
 
   it "keeps the pill shape on every tone" do

@@ -2,9 +2,9 @@ class Components::Owner::Header < Components::Base
   include Phlex::Rails::Helpers::ButtonTo
 
   SIGN_OUT_LABEL = "Sair".freeze
-  ITEM_CLASS = "inline-flex min-h-11 items-center rounded-lg px-4 text-sm font-bold".freeze
-  CURRENT_CLASS = "bg-secondary-accent text-on-secondary-accent".freeze
-  RESTING_CLASS = "text-ink-muted hover:bg-surface-2 hover:text-ink".freeze
+  ITEM_CLASS = "inline-flex min-h-11 items-center border-b-2 px-4 text-sm font-bold".freeze
+  CURRENT_CLASS = "border-secondary-mark text-brand-ink".freeze
+  RESTING_CLASS = "border-transparent text-ink-muted hover:text-ink".freeze
 
   def initialize(tenant:, branding:, current_section:)
     @tenant = tenant
