@@ -9,20 +9,6 @@ RSpec.describe "Owner services catalog", type: :request do
     post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
   end
 
-  def count_queries
-    ignored_query_names = %w[SCHEMA TRANSACTION]
-    queries = 0
-    subscription = ActiveSupport::Notifications.subscribe("sql.active_record") do |_name, _started, _finished, _id, payload|
-      queries += 1 unless ignored_query_names.include?(payload[:name])
-    end
-
-    yield
-
-    queries
-  ensure
-    ActiveSupport::Notifications.unsubscribe(subscription)
-  end
-
   def service_params(**overrides)
     { service: { name: "Corte feminino", description: "", duration_minutes: "45", price: "90,00" }.merge(overrides) }
   end
