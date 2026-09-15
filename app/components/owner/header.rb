@@ -1,6 +1,7 @@
 class Components::Owner::Header < Components::Base
   include Phlex::Rails::Helpers::ButtonTo
 
+  SETTINGS_LABEL = "Configurações".freeze
   SIGN_OUT_LABEL = "Sair".freeze
   ITEM_CLASS = "inline-flex min-h-11 items-center border-b-2 px-4 text-sm font-bold".freeze
   CURRENT_CLASS = "border-secondary-mark text-brand-ink".freeze
