@@ -46,7 +46,7 @@ gem "ruby-vips", "~> 2.2"
 
 # S3 client required by Active Storage's S3 service, used against Supabase
 # Storage's S3-compatible endpoint [https://guides.rubyonrails.org/active_storage_overview.html]
-gem "aws-sdk-s3", "~> 1.48", require: false
+gem "aws-sdk-s3", "~> 1.232", require: false
 
 # Transactional email over HTTP API [https://github.com/resend/resend-ruby]
 gem "resend", "~> 1.7"
