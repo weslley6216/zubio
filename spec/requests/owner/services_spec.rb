@@ -116,6 +116,38 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response.body).not_to include(Views::Owner::Services::Index::EMPTY_TITLE)
     end
 
+    it "offers the registration from the heading once the catalog has a service" do
+      create(:service, tenant: tenant, name: "Corte feminino")
+      sign_in
+
+      get owner_services_path
+
+      expect(response.body).to include(%(<a href="#{new_owner_service_path}" class="#{Views::Owner::Services::Index::ACTION_CLASS}">#{Views::Owner::Services::Index::NEW_LABEL}</a>))
+      expect(response.body.scan(%(href="#{new_owner_service_path}")).size).to eq(1)
+      expect(response.body).not_to include(Views::Owner::Services::Index::FIRST_LABEL)
+    end
+
+    it "offers the registration inside the empty state alone when there is no service yet" do
+      sign_in
+
+      get owner_services_path
+
+      expect(response.body).to include(%(<a href="#{new_owner_service_path}" class="#{Views::Owner::Services::Index::ACTION_CLASS}">#{Views::Owner::Services::Index::FIRST_LABEL}</a>))
+      expect(response.body.scan(%(href="#{new_owner_service_path}")).size).to eq(1)
+      expect(response.body).not_to include(Views::Owner::Services::Index::NEW_LABEL)
+    end
+
+    it "opens the edit form from the name of every service" do
+      barba = create(:service, tenant: tenant, name: "Barba")
+      corte = create(:service, tenant: tenant, name: "Corte feminino")
+      sign_in
+
+      get owner_services_path
+
+      expect(response.body).to include(%(<a href="#{edit_owner_service_path(barba)}" class="#{Views::Owner::Services::Index::NAME_CLASS}">Barba</a>))
+      expect(response.body).to include(%(<a href="#{edit_owner_service_path(corte)}" class="#{Views::Owner::Services::Index::NAME_CLASS}">Corte feminino</a>))
+    end
+
     it "sends an anonymous visitor to the login without naming a service" do
       create(:service, tenant: tenant, name: "Corte feminino")
       host! "#{tenant.subdomain}.zubio.com.br"
