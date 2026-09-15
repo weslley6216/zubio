@@ -1,6 +1,7 @@
 class Branding::ColorScale
   HEX = /\A#[0-9a-fA-F]{6}\z/
   MIN_CONTRAST = 4.5
+  MIN_NON_TEXT_CONTRAST = 3.0
   WHITE = "#ffffff".freeze
   DARK_NEUTRAL = "#111827".freeze
   DEEP_LIGHTNESS_FACTOR = 0.6
@@ -45,9 +46,12 @@ class Branding::ColorScale
   }.freeze
 
   def tokens
-    steps = LIGHTNESS_BY_STEP.transform_values { |lightness| hex_at_lightness(lightness) }
-    steps[600] = hex
-    steps.sort.to_h
+    @tokens ||= LIGHTNESS_BY_STEP.transform_values { |lightness| hex_at_lightness(lightness) }
+      .merge(600 => hex).sort.to_h.freeze
+  end
+
+  def first_step_reaching(minimum, steps:, against:)
+    steps.find { |step| reaches?(tokens.fetch(step), minimum, against) } || steps.last
   end
 
   def deepened_hex
@@ -57,6 +61,12 @@ class Branding::ColorScale
   end
 
   private
+
+  def reaches?(step_hex, minimum, backgrounds)
+    step_scale = self.class.new(step_hex)
+
+    backgrounds.all? { |background| step_scale.contrast_against(self.class.new(background)) >= minimum }
+  end
 
   def hex_at_lightness(lightness)
     hue, saturation, = to_hsl
