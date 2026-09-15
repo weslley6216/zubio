@@ -26,6 +26,20 @@ class Owner::ServicesController < Owner::BaseController
     end
   end
 
+  def edit
+    render service_form(Service.find(params[:id]))
+  end
+
+  def update
+    service = Service.find(params[:id])
+
+    if service.update(service_params)
+      redirect_to owner_services_path, notice: "Serviço atualizado."
+    else
+      refuse(service)
+    end
+  end
+
   private
 
   def service_params = params.require(:service).permit(:name, :description, :duration_minutes, :price)
