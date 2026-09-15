@@ -138,14 +138,14 @@ RSpec.describe "Owner services catalog", type: :request do
     end
 
     it "opens the edit form from the name of every service" do
-      barba = create(:service, tenant: tenant, name: "Barba")
-      corte = create(:service, tenant: tenant, name: "Corte feminino")
+      beard_trim = create(:service, tenant: tenant, name: "Barba")
+      haircut = create(:service, tenant: tenant, name: "Corte feminino")
       sign_in
 
       get owner_services_path
 
-      expect(response.body).to include(%(<a href="#{edit_owner_service_path(barba)}" class="#{Views::Owner::Services::Index::NAME_CLASS}">Barba</a>))
-      expect(response.body).to include(%(<a href="#{edit_owner_service_path(corte)}" class="#{Views::Owner::Services::Index::NAME_CLASS}">Corte feminino</a>))
+      expect(response.body).to include(%(<a href="#{edit_owner_service_path(beard_trim)}" class="#{Views::Owner::Services::Index::NAME_CLASS}">Barba</a>))
+      expect(response.body).to include(%(<a href="#{edit_owner_service_path(haircut)}" class="#{Views::Owner::Services::Index::NAME_CLASS}">Corte feminino</a>))
     end
 
     it "sends an anonymous visitor to the login without naming a service" do
