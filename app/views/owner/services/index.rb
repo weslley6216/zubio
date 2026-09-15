@@ -8,7 +8,7 @@ class Views::Owner::Services::Index < Views::Base
   FIRST_LABEL = "Cadastrar primeiro serviço".freeze
 
   PAGE_CLASS = "mx-auto grid w-full max-w-6xl gap-6 px-6 py-10".freeze
-  HEADING_ROW_CLASS = "flex flex-wrap items-end justify-between gap-4".freeze
+  HEADING_ROW_CLASS = "flex max-w-2xl flex-wrap items-end justify-between gap-4".freeze
   HEADING_CLASS = "text-3xl font-extrabold tracking-tight text-ink".freeze
   SUBTITLE_CLASS = "text-lg text-ink-muted".freeze
   ACTION_CLASS = "inline-flex min-h-11 items-center justify-self-start rounded-lg bg-brand-accent px-4 text-sm font-bold text-on-brand-accent hover:opacity-90".freeze
