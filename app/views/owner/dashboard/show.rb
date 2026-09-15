@@ -36,7 +36,7 @@ class Views::Owner::Dashboard::Show < Views::Base
   def render_brand_card
     branded = @tenant.branded?
 
-    a(href: edit_owner_branding_path,
+    a(href: owner_settings_path,
       class: "grid max-w-xl gap-2 rounded-xl border border-line bg-surface p-6 hover:bg-surface-2") do
       render_setup_badge unless branded
       h2(class: "text-lg font-bold text-ink") { branded ? MANAGE_TITLE : SETUP_TITLE }

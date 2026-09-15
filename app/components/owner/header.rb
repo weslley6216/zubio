@@ -28,14 +28,13 @@ class Components::Owner::Header < Components::Base
 
   def sections
     [
-      [ :dashboard, "Painel", owner_dashboard_path ],
-      [ :services, "Serviços", owner_services_path ],
-      [ :branding, "Marca", edit_owner_branding_path ]
+      [ :settings, SETTINGS_LABEL, owner_settings_path ]
     ]
   end
 
   def render_identity
-    a(href: owner_dashboard_path, class: "flex min-h-11 min-w-0 items-center gap-2 font-extrabold tracking-tight text-ink") do
+    a(href: owner_dashboard_path, aria_current: @current_section == :dashboard ? "page" : nil,
+      class: "flex min-h-11 min-w-0 items-center gap-2 font-extrabold tracking-tight text-ink") do
       render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :medium)
       span(class: "truncate") { @tenant.name }
     end
