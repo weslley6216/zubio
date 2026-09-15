@@ -28,7 +28,7 @@ RSpec.describe "Owner branding accent", type: :system, js: true do
       page.driver.resize(1200, 800)
       emulate_color_scheme(scheme)
       sign_in_owner(tenant, owner)
-      visit "http://#{tenant.subdomain}.zubio.com.br#{edit_owner_branding_path}"
+      visit "http://#{tenant.subdomain}.zubio.com.br#{owner_settings_path}"
 
       expect(computed("nav a[aria-current='page']", "color")).to eq(rgb(role(branding, "brand-ink-#{scheme}")))
       expect(computed("nav a[aria-current='page']", "borderBottomColor")).to eq(rgb(role(branding, "secondary-mark-#{scheme}")))

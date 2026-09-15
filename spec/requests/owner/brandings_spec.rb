@@ -47,7 +47,7 @@ RSpec.describe "Owner branding", type: :request do
       expect(response.body).to include(%(action="#{owner_session_path}"))
       expect(response.body).to include(%(value="delete"))
       expect(response.body).to include("bg-brand-accent")
-      expect(response.body).to include(%(<a href="#{edit_owner_branding_path}" aria-current="page" class="#{Components::Owner::Header::ITEM_CLASS} #{Components::Owner::Header::CURRENT_CLASS}">))
+      expect(response.body).to include(%(<a href="#{owner_settings_path}" aria-current="page" class="#{Components::Owner::Header::ITEM_CLASS} #{Components::Owner::Header::CURRENT_CLASS}">))
       expect(Components::Owner::Header::CURRENT_CLASS.split).to include("text-brand-ink", "border-secondary-mark")
       expect(Components::Owner::Header::CURRENT_CLASS).not_to match(/\bbg-/)
     end

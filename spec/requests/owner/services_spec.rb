@@ -173,7 +173,7 @@ RSpec.describe "Owner services catalog", type: :request do
   end
 
   describe "GET /owner/services/new" do
-    it "opens an empty registration form in the owner form card, with the services section current" do
+    it "opens an empty registration form in the owner form card, with settings as the current section" do
       sign_in
 
       get new_owner_service_path
@@ -181,7 +181,7 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(%(<h1 id="#{Components::Owner::FormCard::HEADING_ID}" class="#{Components::Owner::FormCard::TITLE_CLASS}">#{Views::Owner::Services::Form::NEW_TITLE}</h1>))
       expect(response.body).to include(%(action="#{owner_services_path}"))
-      expect(response.body).to include(%(<a href="#{owner_services_path}" aria-current="page"))
+      expect(response.body).to include(%(<a href="#{owner_settings_path}" aria-current="page"))
       expect(response.body).to include(Views::Owner::Services::Form::CREATE_LABEL)
       expect(control("price")["value"]).to be_nil
     end
