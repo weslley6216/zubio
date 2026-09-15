@@ -210,9 +210,9 @@ RSpec.describe "Owner branding", type: :request do
       follow_redirect!
 
       expect(response.body).to include("Marca atualizada.")
-      expect(response.body).to include("bg-success-surface")
+      expect(response.body).to include(%(class="#{Components::Alert::FRAME_CLASS} border-success"))
       expect(response.body).to include(%(<div role="status"))
-      expect(response.body).not_to include("bg-danger-surface")
+      expect(response.body).not_to include("border-danger")
     end
 
     it "states the refusal in the danger tone on the same screen" do
@@ -222,8 +222,8 @@ RSpec.describe "Owner branding", type: :request do
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include(Owner::BrandingsController::REFUSED)
-      expect(response.body).to include("bg-danger-surface")
-      expect(response.body).not_to include("bg-success-surface")
+      expect(response.body).to include(%(class="#{Components::Alert::FRAME_CLASS} border-danger"))
+      expect(response.body).not_to include("border-success")
     end
 
     it "stores the chosen swatch without any typed code" do

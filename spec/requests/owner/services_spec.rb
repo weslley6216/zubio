@@ -287,8 +287,8 @@ RSpec.describe "Owner services catalog", type: :request do
       post owner_services_path, params: service_params(duration_minutes: "7")
 
       expect(response.body).to include(Owner::ServicesController::REFUSED)
-      expect(response.body).to include("bg-danger-surface")
-      expect(response.body).not_to include("bg-success-surface")
+      expect(response.body).to include(%(class="#{Components::Alert::FRAME_CLASS} border-danger"))
+      expect(response.body).not_to include("border-success")
     end
 
     it "refuses a duration with a fraction sent straight to the server" do
