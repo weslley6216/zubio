@@ -4,6 +4,7 @@ class Tenant < ApplicationRecord
   SUBDOMAIN_LENGTH = (3..63).freeze
   SUBDOMAIN_STATUS_PRIORITY = %i[blank too_short too_long invalid exclusion taken].freeze
   DOMAIN_FORMAT = /\A(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}\z/i
+  NAME_MAX_LENGTH = 40
 
   has_one :branding, dependent: :destroy
   has_many :users, dependent: :restrict_with_error
@@ -19,6 +20,7 @@ class Tenant < ApplicationRecord
     length: { in: SUBDOMAIN_LENGTH },
     exclusion: { in: RESERVED }
   validates :name, presence: true
+  validates :name, length: { maximum: NAME_MAX_LENGTH }, if: :will_save_change_to_name?
   validates :custom_domain,
     format: { with: DOMAIN_FORMAT, allow_blank: true },
     uniqueness: { case_sensitive: false, allow_blank: true }

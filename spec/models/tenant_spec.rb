@@ -58,6 +58,26 @@ RSpec.describe Tenant, type: :model do
 
       expect(tenant).not_to be_valid
     end
+
+    it "rejects a name longer than the maximum length" do
+      tenant = build(:tenant, name: "a" * (Tenant::NAME_MAX_LENGTH + 1))
+
+      expect(tenant).not_to be_valid
+      expect(tenant.errors[:name]).to be_present
+    end
+
+    it "accepts a name at the maximum length" do
+      tenant = build(:tenant, name: "a" * Tenant::NAME_MAX_LENGTH)
+
+      expect(tenant).to be_valid
+    end
+
+    it "keeps an over-long name that predates the limit editable in every other field" do
+      tenant = create(:tenant, name: "Studio")
+      tenant.update_column(:name, "a" * (Tenant::NAME_MAX_LENGTH + 1))
+
+      expect(tenant.update(status: "suspended")).to be(true)
+    end
   end
 
   describe "status" do
