@@ -100,13 +100,24 @@ RSpec.describe "Generated stylesheets", type: :request do
   end
 
   describe "GET /palette.css" do
-    it "serves one background rule per swatch of the brand palette" do
+    it "serves one background rule per swatch of the brand palette and the preview ramps" do
       host! "zubio.com.br"
       get palette_stylesheet_path(v: Branding::Palette.stylesheet_digest)
 
       expect(response.media_type).to eq("text/css")
       expect(response.body).to include(%([data-swatch="#{Branding::Palette::FAMILIES.first}"]))
-      expect(response.body).not_to include("--brand-600:")
+      expect(response.body).to include(%([data-preview-brand="#{Branding::Palette::FAMILIES.first}"]{))
+    end
+
+    it "is built from the families alone and never carries a stored brand color" do
+      tenant = create(:tenant, subdomain: "estudio-aurora")
+      create(:branding, tenant: tenant, brand_600: "#123456")
+
+      host! "estudio-aurora.zubio.com.br"
+      get palette_stylesheet_path(v: Branding::Palette.stylesheet_digest)
+
+      expect(response.body).to eq(Branding::Palette.stylesheet)
+      expect(response.body).not_to include("#123456")
     end
 
     it "lets the sheet be cached forever when the URL carries the digest of what it serves" do
