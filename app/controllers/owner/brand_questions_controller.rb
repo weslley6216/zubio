@@ -28,7 +28,6 @@ class Owner::BrandQuestionsController < Owner::BaseController
       branding: branding,
       current_section: panel_section,
       body: question_body,
-      back_to: owner_settings_path,
       url: submit_path,
       page_stylesheet: page_stylesheet
     )

@@ -1,6 +1,7 @@
 class Components::Owner::BrandQuestion::Name < Components::Base
   include Components::Form::Styles
 
+  HEADING_ID = "form-heading".freeze
   TITLE = "Qual é o nome da sua marca?".freeze
   SUBTITLE = "É o nome que seus clientes vão ver na página de agendamento.".freeze
   NAME_LABEL = "Nome da marca".freeze
@@ -25,7 +26,7 @@ class Components::Owner::BrandQuestion::Name < Components::Base
 
   def view_template
     div(data: { controller: "name-counter" }) do
-      h1(class: TITLE_CLASS) { TITLE }
+      h1(id: HEADING_ID, class: TITLE_CLASS) { TITLE }
       p(class: SUBTITLE_CLASS) { SUBTITLE }
       render_field
       render_address
