@@ -1,6 +1,7 @@
 class Components::Owner::BrandQuestion::Colors < Components::Base
   include Components::Form::Styles
 
+  HEADING_ID = "form-heading".freeze
   TITLE = "Escolha as cores da sua marca".freeze
   SUBTITLE = "A partir daqui o app inteiro já fica com a sua cara.".freeze
   BRAND_LABEL = "Cor principal".freeze
@@ -34,7 +35,7 @@ class Components::Owner::BrandQuestion::Colors < Components::Base
 
   def view_template
     div(data: { controller: "color-swatch" }) do
-      h1(class: TITLE_CLASS) { TITLE }
+      h1(id: HEADING_ID, class: TITLE_CLASS) { TITLE }
       p(class: SUBTITLE_CLASS) { SUBTITLE }
       div(class: GROUP_CLASS) do
         render_group(:brand_600, BRAND_LABEL, BRAND_HINT, @branding.brand_600)

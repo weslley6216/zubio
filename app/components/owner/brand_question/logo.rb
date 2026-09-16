@@ -1,6 +1,7 @@
 class Components::Owner::BrandQuestion::Logo < Components::Base
   include Components::Form::Styles
 
+  HEADING_ID = "form-heading".freeze
   TITLE = "Tem uma logo?".freeze
   SUBTITLE = "Pode ser a foto que você usa no Instagram.".freeze
   GALLERY_LABEL = "Galeria".freeze
@@ -23,7 +24,7 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
 
   def view_template
     div(data: { controller: "logo-field" }) do
-      h1(class: TITLE_CLASS) { TITLE }
+      h1(id: HEADING_ID, class: TITLE_CLASS) { TITLE }
       p(class: SUBTITLE_CLASS) { SUBTITLE }
       render_preview
       render_actions
