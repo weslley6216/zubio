@@ -80,13 +80,14 @@ RSpec.describe "Owner brand logo", type: :request do
     it "does not touch another establishment's logo" do
       other_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
       create(:branding, :with_logo, tenant: other_tenant)
-      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+      create(:branding, :with_logo, tenant: tenant, brand_600: "#4F46E5")
       sign_in
 
       perform_enqueued_jobs do
         patch owner_brand_logo_path, params: { branding: { remove_logo: "1" } }
       end
 
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.branding.reload.logo).not_to be_attached }
       ActsAsTenant.with_tenant(other_tenant) { expect(other_tenant.branding.reload.logo).to be_attached }
     end
   end

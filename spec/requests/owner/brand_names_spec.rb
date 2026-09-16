@@ -75,6 +75,7 @@ RSpec.describe "Owner brand name", type: :request do
 
       patch owner_brand_name_path, params: { tenant: { name: "Hijacked" } }
 
+      expect(tenant.reload.name).to eq("Hijacked")
       expect(other_tenant.reload.name).to eq("Estúdio Aurora")
     end
   end

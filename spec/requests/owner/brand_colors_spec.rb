@@ -94,6 +94,7 @@ RSpec.describe "Owner brand colors", type: :request do
 
       patch owner_brand_colors_path, params: { branding: { brand_600: "#2F6FED" } }
 
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq("#2F6FED") }
       expect(other_tenant.reload.name).to eq("Estúdio Aurora")
       ActsAsTenant.with_tenant(other_tenant) { expect(other_tenant.branding.reload.brand_600).to eq("#000000") }
 
