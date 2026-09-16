@@ -257,6 +257,15 @@ RSpec.describe Branding, type: :model do
       expect(role(css, "secondary-ink-light")).not_to eq("#E8493C")
     end
 
+    it "takes the light pair from the end of the ramp that belongs to each theme" do
+      branding = build(:branding, brand_600: "#2C6CB0")
+
+      css = branding.css_variables
+
+      expect(role(css, "brand-soft-light")).to eq(branding.color_scale.tokens.fetch(50))
+      expect(role(css, "brand-soft-dark")).to eq(branding.color_scale.tokens.fetch(900))
+    end
+
     it "draws the secondary underline and light pair from the brand ramp when no secondary color is set" do
       lone = build(:branding, brand_600: "#2C6CB0", brand_secondary_600: nil).css_variables
       paired = build(:branding, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C").css_variables

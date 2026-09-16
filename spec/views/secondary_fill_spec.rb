@@ -6,7 +6,7 @@ RSpec.describe "Secondary color discipline" do
   def color_chip_path = Rails.root.join("app/components/color_chip.rb").to_s
 
   it "keeps the secondary color off every background in views and components, but the chip that shows the chosen color" do
-    offenders = Dir[Rails.root.join("app/{views,components}/**/*.rb")].reject { |path| path == color_chip_path }.select do |path|
+    offenders = Dir[Rails.root.join("app/{views,components,javascript}/**/*.{rb,js}")].reject { |path| path == color_chip_path }.select do |path|
       File.read(path).match?(secondary_fill_pattern)
     end
 
