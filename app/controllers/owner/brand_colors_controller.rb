@@ -5,6 +5,8 @@ class Owner::BrandColorsController < Owner::BrandQuestionsController
 
   def edit_path = edit_owner_brand_colors_path
 
+  def submit_path = owner_brand_colors_path
+
   def page_stylesheet = palette_stylesheet_path(v: Branding::Palette.stylesheet_digest)
 
   def branding_attrs

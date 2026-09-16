@@ -29,7 +29,7 @@ class Owner::BrandQuestionsController < Owner::BaseController
       current_section: panel_section,
       body: question_body,
       back_to: owner_settings_path,
-      url: edit_path,
+      url: submit_path,
       page_stylesheet: page_stylesheet
     )
   end
