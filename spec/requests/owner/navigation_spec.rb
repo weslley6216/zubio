@@ -49,11 +49,11 @@ RSpec.describe "Owner panel navigation", type: :request do
     expect(response.body).not_to include(current_identity)
   end
 
-  it "keeps settings current on the catalog, the service form and the brand screen, which settings leads to" do
+  it "keeps settings current on the catalog, the service form and the three brand screens, which settings leads to" do
     create(:branding, tenant: tenant)
     sign_in
 
-    bodies = [ owner_services_path, new_owner_service_path, edit_owner_branding_path ].map do |path|
+    bodies = [ owner_services_path, new_owner_service_path, edit_owner_brand_colors_path, edit_owner_brand_name_path, edit_owner_brand_logo_path ].map do |path|
       get path
       response.body
     end
@@ -72,7 +72,7 @@ RSpec.describe "Owner panel navigation", type: :request do
     expect(response.body).to include(band_item(owner_settings_path))
     expect(response.body).to include(%(action="#{owner_session_path}"))
     expect(response.body).not_to include(%(href="#{owner_services_path}"))
-    expect(response.body).not_to include(%(href="#{edit_owner_branding_path}"))
+    expect(response.body).not_to include(%(href="#{edit_owner_brand_colors_path}"))
     [ "Minha agenda", "Meu link", "Ajuda" ].each { |label| expect(response.body).not_to include(label) }
   end
 
