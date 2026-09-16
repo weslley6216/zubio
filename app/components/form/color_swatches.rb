@@ -8,8 +8,6 @@ class Components::Form::ColorSwatches < Components::Base
   NONE_LABEL = "Sem".freeze
   ROW_SIZE = 5
 
-  FILLS = { brand_600: "bg-brand-600", brand_secondary_600: "bg-secondary-600" }.freeze
-
   LEGEND_CLASS = "flex w-full items-baseline gap-1.5 text-xs font-medium uppercase tracking-wide text-ink-subtle".freeze
   TAG_CLASS = "ml-auto normal-case".freeze
   ROW_CLASS = "mt-1.5 flex flex-wrap items-center gap-2".freeze
@@ -59,7 +57,7 @@ class Components::Form::ColorSwatches < Components::Base
       elsif Branding::Palette.swatches.include?(hex)
         span(class: SWATCH_CLASS, data: { swatch: hex })
       else
-        span(class: "#{SWATCH_CLASS} #{FILLS.fetch(@attribute)}")
+        render Components::ColorChip.new(attribute: @attribute, size: :row)
       end
     end
   end
