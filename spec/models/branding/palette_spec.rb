@@ -35,10 +35,39 @@ RSpec.describe Branding::Palette do
     end
   end
 
+  describe "SUGGESTIONS" do
+    it "suggests five brand colors, all drawn from the families" do
+      expect(described_class::SUGGESTIONS.fetch(:brand_600).size).to eq(5)
+      expect(described_class::SUGGESTIONS.fetch(:brand_600)).to all(be_in(described_class::FAMILIES))
+    end
+
+    it "opens the support suggestions with the none option and draws the rest from the families" do
+      support = described_class::SUGGESTIONS.fetch(:brand_secondary_600)
+
+      expect(support.first).to eq("")
+      expect(support.drop(1)).to all(be_in(described_class::FAMILIES))
+    end
+  end
+
   describe ".stylesheet" do
     it "carries one background rule per swatch, addressable by the swatch value" do
       expect(described_class.stylesheet).to include(%([data-swatch="#{described_class::FAMILIES.first}"]))
       expect(described_class.stylesheet.scan("background:").size).to eq(described_class.swatches.size)
+    end
+
+    it "carries a brand and a support preview ramp for each swatch" do
+      hex = described_class::FAMILIES.first
+
+      expect(described_class.stylesheet).to include(%([data-preview-brand="#{hex}"]{))
+      expect(described_class.stylesheet).to include(%([data-preview-secondary="#{hex}"]{))
+      expect(described_class.stylesheet).to include("--brand-600:#{hex};")
+    end
+
+    it "maps every support token to its brand counterpart under the none rule" do
+      rule = described_class.stylesheet[/\[data-preview-secondary="none"\]\{([^}]*)\}/, 1]
+
+      expect(rule).to include("--secondary-600:var(--brand-600);")
+      expect(rule).to include("--secondary-mark-light:var(--brand-mark-light);")
     end
   end
 
