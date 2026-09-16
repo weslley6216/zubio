@@ -66,15 +66,15 @@ class Tenant < ApplicationRecord
   def initial = name.first.upcase
 
   def update_branding!(tenant_attrs:, branding_attrs:, remove_logo:)
-    target_branding = branding || build_branding
+    writes_branding = branding_attrs.present? || remove_logo
     logo_replaced = branding_attrs[:logo].present?
 
     transaction do
       update!(tenant_attrs)
-      target_branding.update!(branding_attrs)
+      (branding || build_branding(brand_600: Branding::DEFAULT_BRAND_600)).update!(branding_attrs) if writes_branding
     end
 
-    target_branding.logo.purge_later if remove_logo && !logo_replaced
+    branding.logo.purge_later if remove_logo && !logo_replaced
     Branding::PrecomputeVariantsJob.perform_later(id) if logo_replaced
   end
 
