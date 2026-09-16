@@ -3,117 +3,62 @@ require "rails_helper"
 RSpec.describe "Owner branding on one screen", type: :system, js: true do
   let(:phone_screen) { [ 430, 800 ] }
   let(:narrow_screen) { [ 320, 800 ] }
-  let(:stored_color) { "#FF5A5F" }
-  let(:picked_color) { "#BE123C" }
-  let(:off_palette_color) { "#8E4B6B" }
 
-  def open_branding(tenant, owner, screen: phone_screen)
-    page.driver.resize(*screen)
-    sign_in_owner(tenant, owner)
-    visit "http://#{tenant.subdomain}.zubio.com.br#{edit_owner_branding_path}"
-  end
-
-  def establishment(brand_600: stored_color)
+  def establishment
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
-    create(:branding, tenant: tenant, brand_600: brand_600)
+    create(:branding, tenant: tenant, brand_600: "#4F46E5")
 
     [ tenant, create(:user, tenant: tenant, email: "owner@example.com") ]
   end
 
-  def scroll_width = page.evaluate_script("document.documentElement.scrollWidth")
+  def open(tenant, owner, path, screen: phone_screen)
+    page.driver.resize(*screen)
+    sign_in_owner(tenant, owner)
+    visit "http://#{tenant.subdomain}.zubio.com.br#{path}"
+  end
 
   def taller_than_screen?
     page.evaluate_script("document.documentElement.scrollHeight > window.innerHeight")
   end
 
-  it "fits the name, both colors, the logo and the action on a phone screen without scrolling" do
-    open_branding(*establishment)
+  def scroll_width = page.evaluate_script("document.documentElement.scrollWidth")
 
-    expect(page).to have_button(Views::Owner::Brandings::Edit::SUBMIT_LABEL)
-    expect(taller_than_screen?).to be false
+  def ramp(hex) = Branding.ramp_variables("brand", Branding::ColorScale.new(hex))
+
+  def role(hex, name) = ramp(hex)[/--#{name}:(#\h{6});/, 1]
+
+  def rgb(hex) = "rgb(#{hex.delete('#').scan(/../).map { |channel| channel.to_i(16) }.join(', ')})"
+
+  it "fits each brand question on a phone screen without scrolling, with the plus closed" do
+    tenant, owner = establishment
+
+    [ edit_owner_brand_colors_path, edit_owner_brand_name_path, edit_owner_brand_logo_path ].each do |path|
+      open(tenant, owner, path)
+
+      expect(page).to have_button(Views::Owner::BrandQuestions::Edit::SUBMIT_LABEL)
+      expect(taller_than_screen?).to be(false)
+    end
   end
 
-  it "keeps the widest row inside the narrowest phone, with the typed code unfolded" do
-    open_branding(*establishment(brand_600: off_palette_color), screen: narrow_screen)
+  it "keeps the brand row inside the narrowest phone" do
+    open(*establishment, edit_owner_brand_colors_path, screen: narrow_screen)
 
-    expect(page).to have_css(%(input[name="branding[brand_600_custom]"][value="#{off_palette_color}"]))
     expect(scroll_width).to eq(narrow_screen.first)
   end
 
-  it "shows the whole palette at once, with no swatch left out of the grid" do
-    open_branding(*establishment)
-
-    within_fieldset(Views::Owner::Brandings::Edit::BRAND_LABEL) do
-      expect(page).to have_css("[data-swatch]", count: Branding::Palette.swatches.size)
-    end
-  end
-
-  it "unfolds the second palette only when the owner asks for a color of its own" do
-    open_branding(*establishment)
-
-    within_fieldset(Views::Owner::Brandings::Edit::SECONDARY_LABEL) do
-      expect(page).to have_no_css("[data-swatch]")
-
-      click_on Components::Form::ColorSwatches::OWN_LABEL
-
-      expect(page).to have_css("[data-swatch]", count: Branding::Palette.swatches.size)
-
-      choose Views::Owner::Brandings::Edit::SECONDARY_LINKED_LABEL, allow_label_click: true
-
-      expect(page).to have_no_css("[data-swatch]")
-    end
-  end
-
-  it "stores the color it read back when the owner asks for one of its own and saves without picking another" do
+  it "repaints the two-color preview live as a swatch is chosen, in both color schemes" do
     tenant, owner = establishment
 
-    open_branding(tenant, owner)
-    within_fieldset(Views::Owner::Brandings::Edit::SECONDARY_LABEL) do
-      click_on Components::Form::ColorSwatches::OWN_LABEL
-    end
-    click_on Views::Owner::Brandings::Edit::SUBMIT_LABEL
+    %w[light dark].each do |scheme|
+      emulate_color_scheme(scheme)
+      sign_in_owner(tenant, owner)
+      visit "http://#{tenant.subdomain}.zubio.com.br#{edit_owner_brand_colors_path}"
+      within(%(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::BRAND_LABEL}"])) do
+        find(%([data-row-option] [data-swatch="#BE123C"])).click
+      end
 
-    expect(page).to have_content("Marca atualizada.")
-    ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_secondary_600).to eq(stored_color) }
-  end
-
-  it "folds the typed code back away when the owner closes it" do
-    open_branding(*establishment)
-
-    within_fieldset(Views::Owner::Brandings::Edit::BRAND_LABEL) do
-      expect(page).to have_no_field(name: "branding[brand_600_custom]")
-
-      click_on Components::Form::ColorSwatches::CUSTOM_SUMMARY
-
-      expect(page).to have_field(name: "branding[brand_600_custom]")
-
-      click_on Components::Form::ColorSwatches::CUSTOM_SUMMARY
-
-      expect(page).to have_no_field(name: "branding[brand_600_custom]")
-    end
-  end
-
-  it "names the file the owner chose, since the compact row hides the browser's own label" do
-    open_branding(*establishment)
-
-    expect(page).to have_content(Views::Owner::Brandings::Edit::LOGO_HINT)
-
-    attach_file("branding[logo]", Rails.root.join("spec/fixtures/files/logo.png"), make_visible: true)
-
-    expect(page).to have_content("logo.png")
-    expect(page).to have_no_content(Views::Owner::Brandings::Edit::LOGO_HINT)
-  end
-
-  it "reads the picked color back as a code beside the grid" do
-    open_branding(*establishment)
-
-    within_fieldset(Views::Owner::Brandings::Edit::BRAND_LABEL) do
-      expect(page).to have_content(stored_color)
-
-      find(%([data-swatch="#{picked_color}"])).click
-
-      expect(page).to have_content(picked_color)
-      expect(page).to have_no_content(stored_color)
+      step = scheme == "light" ? "brand-600" : "brand-400"
+      expect(computed("[data-color-swatch-target='preview'] .bg-brand-accent", "backgroundColor")).to eq(rgb(role("#BE123C", step)))
     end
   end
 end

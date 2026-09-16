@@ -24,6 +24,12 @@ RSpec.describe Components::ColorChip, type: :component do
     expect(small).not_to include(described_class::SIZES.fetch(:large))
   end
 
+  it "sizes the chip to stand in as a swatch row option" do
+    html = described_class.new(attribute: :brand_600, size: :row).call
+
+    expect(html).to include(described_class::SIZES.fetch(:row))
+  end
+
   it "carries the data attributes its caller hands it" do
     html = described_class.new(attribute: :brand_600, size: :small, data: { "color-swatch-target": "chip" }).call
 

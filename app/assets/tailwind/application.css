@@ -42,6 +42,17 @@
   --demo: var(--demo-600);
 }
 
+[data-preview-brand] {
+  --brand-accent: var(--brand-600);
+  --on-brand-accent: var(--on-brand, #ffffff);
+  --brand-ink: var(--brand-ink-light);
+  --brand-soft: var(--brand-soft-light);
+  --brand-soft-ink: var(--brand-soft-ink-light);
+  --secondary-mark: var(--secondary-mark-light);
+  --secondary-soft: var(--secondary-soft-light);
+  --secondary-soft-ink: var(--secondary-soft-ink-light);
+}
+
 /* The dark palette is declared twice on purpose: once for the system
    preference and once for an explicit choice stored on the root. CSS has no
    way to fold a selector inside a media query into one outside it. */
@@ -73,6 +84,17 @@
   :root:not([data-theme="light"]) [data-demo-brand] {
     --demo: var(--demo-400);
   }
+
+  :root:not([data-theme="light"]) [data-preview-brand] {
+    --brand-accent: var(--brand-400);
+    --on-brand-accent: var(--on-brand-400, #08121a);
+    --brand-ink: var(--brand-ink-dark);
+    --brand-soft: var(--brand-soft-dark);
+    --brand-soft-ink: var(--brand-soft-ink-dark);
+    --secondary-mark: var(--secondary-mark-dark);
+    --secondary-soft: var(--secondary-soft-dark);
+    --secondary-soft-ink: var(--secondary-soft-ink-dark);
+  }
 }
 
 :root[data-theme="dark"] {
@@ -101,6 +123,17 @@
 
 :root[data-theme="dark"] [data-demo-brand] {
   --demo: var(--demo-400);
+}
+
+:root[data-theme="dark"] [data-preview-brand] {
+  --brand-accent: var(--brand-400);
+  --on-brand-accent: var(--on-brand-400, #08121a);
+  --brand-ink: var(--brand-ink-dark);
+  --brand-soft: var(--brand-soft-dark);
+  --brand-soft-ink: var(--brand-soft-ink-dark);
+  --secondary-mark: var(--secondary-mark-dark);
+  --secondary-soft: var(--secondary-soft-dark);
+  --secondary-soft-ink: var(--secondary-soft-ink-dark);
 }
 
 /* One rule instead of a focus utility on every control: the ring then exists

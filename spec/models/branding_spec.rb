@@ -274,6 +274,13 @@ RSpec.describe Branding, type: :model do
       expect(roles.map { |name| role(lone, "secondary-#{name}") }).to eq(roles.map { |name| role(lone, "brand-#{name}") })
       expect(role(paired, "secondary-mark-light")).not_to eq(role(paired, "brand-mark-light"))
     end
+
+    it "derives the same ramp through the class method that the instance uses" do
+      scale = Branding::ColorScale.new("#4F46E5")
+
+      expect(Branding.ramp_variables("brand", scale)).to include("--brand-600:#4F46E5;")
+      expect(Branding.ramp_variables("brand", scale)).to include("--brand-ink-light:")
+    end
   end
 
   describe "#stylesheet" do

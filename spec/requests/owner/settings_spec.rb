@@ -118,7 +118,7 @@ RSpec.describe "Owner settings", type: :request do
 
       get owner_settings_path
 
-      expect(%w[name logo colors].map { |key| destination(key) }).to eq([ edit_owner_branding_path ] * 3)
+      expect(%w[name logo colors].map { |key| destination(key) }).to eq([ edit_owner_brand_name_path, edit_owner_brand_logo_path, edit_owner_brand_colors_path ])
       expect(destination("services")).to eq(owner_services_path)
       expect(destination("address")).to be_nil
     end

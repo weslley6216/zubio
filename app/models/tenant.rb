@@ -4,6 +4,7 @@ class Tenant < ApplicationRecord
   SUBDOMAIN_LENGTH = (3..63).freeze
   SUBDOMAIN_STATUS_PRIORITY = %i[blank too_short too_long invalid exclusion taken].freeze
   DOMAIN_FORMAT = /\A(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}\z/i
+  NAME_MAX_LENGTH = 40
 
   has_one :branding, dependent: :destroy
   has_many :users, dependent: :restrict_with_error
@@ -19,6 +20,7 @@ class Tenant < ApplicationRecord
     length: { in: SUBDOMAIN_LENGTH },
     exclusion: { in: RESERVED }
   validates :name, presence: true
+  validates :name, length: { maximum: NAME_MAX_LENGTH }, if: :will_save_change_to_name?
   validates :custom_domain,
     format: { with: DOMAIN_FORMAT, allow_blank: true },
     uniqueness: { case_sensitive: false, allow_blank: true }
@@ -64,15 +66,15 @@ class Tenant < ApplicationRecord
   def initial = name.first.upcase
 
   def update_branding!(tenant_attrs:, branding_attrs:, remove_logo:)
-    target_branding = branding || build_branding
+    writes_branding = branding_attrs.present? || remove_logo
     logo_replaced = branding_attrs[:logo].present?
 
     transaction do
       update!(tenant_attrs)
-      target_branding.update!(branding_attrs)
+      (branding || build_branding(brand_600: Branding::DEFAULT_BRAND_600)).update!(branding_attrs) if writes_branding
     end
 
-    target_branding.logo.purge_later if remove_logo && !logo_replaced
+    branding.logo.purge_later if remove_logo && !logo_replaced
     Branding::PrecomputeVariantsJob.perform_later(id) if logo_replaced
   end
 
