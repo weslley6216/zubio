@@ -13,15 +13,14 @@ RSpec.describe "Owner session", type: :request do
       expect(response.body).to include("Entrar")
     end
 
-    it "renders the alert message after an invalid login attempt" do
+    it "renders the alert message outlined in the danger color after an invalid login attempt" do
       create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
       post owner_session_path, params: { email: "owner@example.com", password: "wrong" }
 
       get new_owner_session_path
 
       expect(response.body).to include("E-mail ou senha inválidos.")
-      expect(response.body).to include("bg-danger-surface")
-      expect(response.body).to include("border-danger-line")
+      expect(response.body).to include(%(class="#{Components::Alert::FRAME_CLASS} border-danger"))
       expect(response.body).to include("text-danger")
     end
 

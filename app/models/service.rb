@@ -39,6 +39,12 @@ class Service < ApplicationRecord
   scope :active, -> { where(active: true) }
   scope :ordered, -> { order(Arel.sql(%(name COLLATE "und-x-icu"))) }
 
+  def self.count_by_state
+    counts = group(:active).count
+
+    { active: counts.fetch(true, 0), inactive: counts.fetch(false, 0) }
+  end
+
   def price
     @typed_price || (Price.new(price_cents).to_s if price_cents)
   end

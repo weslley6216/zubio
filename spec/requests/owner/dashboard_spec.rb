@@ -58,6 +58,7 @@ RSpec.describe "Owner dashboard", type: :request do
       expect(response.body).to include(Views::Owner::Dashboard::Show::SETUP_BADGE)
       expect(response.body).to include(Views::Owner::Dashboard::Show::SETUP_TITLE)
       expect(response.body).not_to include(Views::Owner::Dashboard::Show::MANAGE_TITLE)
+      expect(Nokogiri::HTML5(response.body).at_css("a:has(h2)")["href"]).to eq(owner_settings_path)
     end
 
     it "drops the invitation once a logo is attached" do
@@ -68,6 +69,7 @@ RSpec.describe "Owner dashboard", type: :request do
 
       expect(response.body).to include(Views::Owner::Dashboard::Show::MANAGE_TITLE)
       expect(response.body).not_to include(Views::Owner::Dashboard::Show::SETUP_TITLE)
+      expect(Nokogiri::HTML5(response.body).at_css("a:has(h2)")["href"]).to eq(owner_settings_path)
     end
 
     it "renders the platform default identity for a tenant with no branding at all" do
@@ -79,13 +81,13 @@ RSpec.describe "Owner dashboard", type: :request do
       expect(response.body).to include(%(href="/branding.css?v=#{Branding.platform_default.stylesheet_digest}"))
     end
 
-    it "offers a path to the brand screen and a way out of the session" do
+    it "offers a path to settings and a way out of the session" do
       create(:branding, tenant: tenant)
       sign_in
 
       get owner_dashboard_path
 
-      expect(response.body).to include(%(href="#{edit_owner_branding_path}"))
+      expect(response.body).to include(%(href="#{owner_settings_path}"))
       expect(response.body).to include(%(action="#{owner_session_path}"))
       expect(response.body).to include(%(value="delete"))
     end
