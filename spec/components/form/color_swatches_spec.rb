@@ -1,123 +1,91 @@
 require "rails_helper"
 
 RSpec.describe Components::Form::ColorSwatches, type: :component do
-  def brand_swatches(selected, fallback: Branding::DEFAULT_BRAND_600)
-    described_class.new(label: "Cor da marca", attribute: :brand_600, selected: selected, fallback: fallback).call
+  def brand_swatches(selected)
+    described_class.new(label: "Cor principal", hint: "Botões e cabeçalho", attribute: :brand_600, selected: selected).call
   end
 
-  def secondary_swatches(selected, fallback:)
-    described_class.new(label: "Cor secundária", attribute: :brand_secondary_600, selected: selected,
-      fallback: fallback, linked_label: "Igual à marca").call
+  def secondary_swatches(selected)
+    described_class.new(label: "Cor de apoio", hint: "Detalhes e destaques", attribute: :brand_secondary_600,
+      selected: selected, fallback: "#4F46E5", tag: "Opcional").call
   end
 
-  it "shows every swatch of the palette as a radio in one labelled group" do
-    html = brand_swatches(Branding::Palette.swatches.first)
-
-    expect(html).to include("<legend")
-    expect(html).to include("Cor da marca")
-    Branding::Palette.swatches.each { |hex| expect(html).to include(%(value="#{hex}")) }
+  it "names the group by the field alone" do
+    expect(brand_swatches("#4F46E5")).to include(%(<fieldset aria-label="Cor principal"))
   end
 
-  it "packs the palette into a grid of eight columns" do
-    html = brand_swatches(Branding::Palette.swatches.first)
-
-    expect(html).to include("grid-cols-8")
+  it "carries the label, the hint and an optional tag when given one" do
+    expect(secondary_swatches(nil)).to include("Cor de apoio")
+    expect(secondary_swatches(nil)).to include("Detalhes e destaques")
+    expect(secondary_swatches(nil)).to include("Opcional")
+    expect(brand_swatches("#4F46E5")).not_to include("Opcional")
   end
 
-  it "names the group by the field alone, so the code it reads back never becomes the group's name" do
-    html = brand_swatches("#4F46E5")
+  it "shows the five brand suggestions in the row" do
+    html = brand_swatches(Branding::Palette::SUGGESTIONS.fetch(:brand_600).first)
 
-    expect(html).to include(%(<fieldset aria-label="Cor da marca"))
-    expect(html).to include(%(data-color-swatch-target="code">#4F46E5<))
+    Branding::Palette::SUGGESTIONS.fetch(:brand_600).each { |hex| expect(html).to include(%(value="#{hex}")) }
   end
 
-  it "marks the swatch that matches the current color and leaves the others unmarked" do
-    current = Branding::Palette.swatches.first
-    other = Branding::Palette.swatches.last
+  it "opens the support suggestions with a none option carrying the empty value" do
+    html = secondary_swatches(nil)
 
-    html = brand_swatches(current)
-
-    expect(html).to include(%(value="#{current}" checked))
-    expect(html).not_to include(%(value="#{other}" checked))
+    expect(html).to include("Sem")
+    expect(html).to include(%(value="" checked))
   end
 
-  it "marks the swatch even when the stored code is written in the other letter case" do
-    html = brand_swatches(Branding::Palette.swatches.last.downcase)
+  it "marks the stored suggestion in the row and never in the grid" do
+    stored = Branding::Palette::SUGGESTIONS.fetch(:brand_600).last
 
-    expect(html).to include(%(value="#{Branding::Palette.swatches.last}" checked))
+    html = brand_swatches(stored)
+
+    expect(html).to include(%(value="#{stored}" checked))
+    expect(html.scan(%(value="#{stored}" checked)).size).to eq(1)
   end
 
-  it "reads the current color back as a code beside a chip painted by the field's own token" do
-    html = brand_swatches("#4F46E5")
+  it "injects a stored color that is not a suggestion at the head of the row, keeping five options" do
+    off_suggestion = "#7E22CE"
 
-    expect(html).to include(%(data-color-swatch-target="code">#4F46E5<))
+    document = Nokogiri::HTML5.fragment(brand_swatches(off_suggestion))
+    row_radios = document.css("[data-row-option] input[type=radio]")
+
+    expect(row_radios.map { |radio| radio["value"] }).to eq([ off_suggestion, *Branding::Palette::SUGGESTIONS.fetch(:brand_600).first(4) ])
+    expect(document.at_css(%([data-row-option] input[value="#{off_suggestion}"])).key?("checked")).to be(true)
+  end
+
+  it "paints an off-palette stored color through the tenant sheet, never through the palette sheet" do
+    html = brand_swatches("#123456")
+
     expect(html).to include("bg-brand-600")
+    expect(html).not_to include(%(data-swatch="#123456"))
   end
 
-  it "reads the secondary color back through the secondary token, never the brand one" do
-    html = secondary_swatches(nil, fallback: "#4F46E5")
+  it "packs the whole palette into a grid of eight columns inside the plus" do
+    document = Nokogiri::HTML5.fragment(brand_swatches(Branding::Palette.swatches.first))
+
+    grid = document.at_css("details [data-swatch-grid]")
+    expect(grid["class"]).to include("grid-cols-8")
+    Branding::Palette.swatches.each { |hex| expect(grid.to_html).to include(%(data-swatch="#{hex}")) }
+  end
+
+  it "keeps the plus closed when the stored color is a swatch" do
+    document = Nokogiri::HTML5.fragment(brand_swatches(Branding::Palette.swatches.first))
+
+    expect(document.at_css("details").key?("open")).to be(false)
+  end
+
+  it "opens the plus and carries the typed code when the stored color is off the palette" do
+    document = Nokogiri::HTML5.fragment(brand_swatches("#123456"))
+
+    expect(document.at_css("details").key?("open")).to be(true)
+    expect(document.at_css(%(input[name="branding[brand_600_custom]"]))["value"]).to eq("#123456")
+  end
+
+  it "reads the support color back through the support token, never the brand one" do
+    html = secondary_swatches("#123456")
 
     expect(html).to include("bg-secondary-600")
     expect(html).not_to include("bg-brand-600")
-  end
-
-  it "falls back to the platform color when the record carries no color to read back" do
-    html = brand_swatches(nil, fallback: nil)
-
-    expect(html).to include(%(data-color-swatch-target="code">#{Branding::DEFAULT_BRAND_600}<))
-  end
-
-  it "keeps the typed code folded away when the current color is a swatch" do
-    html = brand_swatches(Branding::Palette.swatches.first)
-
-    expect(html).to include(%(hidden data-color-swatch-target="customPanel"))
-    expect(html).to include(described_class::CUSTOM_SUMMARY)
-    expect(html).to include(%(name="branding[brand_600_custom]"))
-  end
-
-  it "unfolds the typed code and carries it when the current color is not on the palette" do
-    html = brand_swatches("#123456")
-
-    expect(html).not_to include(%(hidden data-color-swatch-target="customPanel"))
-    expect(html).to include(%(value="#123456"))
-    expect(html).to include(%(value="#{Branding::CUSTOM_COLOR_CHOICE}" checked))
-  end
-
-  it "offers no way to follow another color when it is not told a linked label" do
-    html = brand_swatches(Branding::Palette.swatches.first)
-
-    expect(html).not_to include(%(value="" checked))
-    expect(html).not_to include(described_class::OWN_LABEL)
-  end
-
-  it "starts linked, with the grid and the code it reads back both folded away, when nothing of its own is stored" do
-    html = secondary_swatches(nil, fallback: "#4F46E5")
-
-    expect(html).to include("Igual à marca")
-    expect(html).to include(%(value="" checked))
-    expect(html).to include(%(hidden data-color-swatch-target="panel"))
-    expect(html).to include(%(hidden data-color-swatch-target="readout"))
-    expect(html).to include(%(aria-expanded="false"))
-  end
-
-  it "starts on its own color, with the grid and the code it reads back both unfolded, when one is stored" do
-    current = Branding::Palette.swatches.last
-
-    html = secondary_swatches(current, fallback: "#4F46E5")
-
-    expect(html).not_to include(%(value="" checked))
-    expect(html).not_to include(%(hidden data-color-swatch-target="panel"))
-    expect(html).not_to include(%(hidden data-color-swatch-target="readout"))
-    expect(html).to include(%(aria-expanded="true"))
-  end
-
-  it "points each disclosure at the panel it opens, and says whether that panel is open" do
-    html = secondary_swatches(nil, fallback: "#4F46E5")
-
-    expect(html).to include(%(aria-controls="brand_secondary_600-palette"))
-    expect(html).to include(%(id="brand_secondary_600-palette"))
-    expect(html).to include(%(aria-controls="brand_secondary_600-code"))
-    expect(html).to include(%(id="brand_secondary_600-code"))
   end
 
   it "paints each swatch through the served palette sheet, never an inline style attribute" do
@@ -125,12 +93,5 @@ RSpec.describe Components::Form::ColorSwatches, type: :component do
 
     expect(html).to include(%(data-swatch="#{Branding::Palette.swatches.first}"))
     expect(html).not_to include("style=")
-  end
-
-  it "reaches the touch target the design system asks of every control outside the swatch grid" do
-    html = brand_swatches("#123456")
-
-    expect(html).to include("h-11 w-11")
-    expect(html).to include("min-h-11")
   end
 end

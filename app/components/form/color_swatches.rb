@@ -1,128 +1,116 @@
 class Components::Form::ColorSwatches < Components::Base
   include Components::Form::Styles
 
-  CUSTOM_SUMMARY = "Outra".freeze
+  CUSTOM_SUMMARY = "+".freeze
   CUSTOM_CHOICE_LABEL = "Usar este código".freeze
   PICKER_LABEL = "Escolher a cor em um seletor".freeze
   CODE_LABEL = "Código hexadecimal da cor".freeze
-  OWN_LABEL = "Escolher outra".freeze
+  NONE_LABEL = "Sem".freeze
+  ROW_SIZE = 5
 
-  LEGEND_CLASS = "w-full".freeze
-  ROW_CLASS = "flex w-full items-center justify-between gap-2".freeze
-  READOUT_CLASS = "flex items-center gap-2".freeze
-  CODE_CLASS = "text-sm font-bold tabular-nums text-ink".freeze
-  SUMMARY_CLASS = "cursor-pointer text-sm font-medium text-ink underline underline-offset-2".freeze
-  SEGMENT_GROUP_CLASS = "mt-1.5 grid grid-cols-2 gap-1 rounded-xl bg-surface-3 p-1".freeze
-  SEGMENT_CLASS = "inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-lg px-3 text-sm font-bold text-ink-muted".freeze
-  SEGMENT_CHECKED_CLASS = "peer-checked:bg-surface peer-checked:text-ink peer-checked:shadow-sm".freeze
-  SEGMENT_EXPANDED_CLASS = "aria-expanded:bg-surface aria-expanded:text-ink aria-expanded:shadow-sm".freeze
-  GRID_CLASS = "mt-2 grid grid-cols-8 gap-2".freeze
-  SWATCH_CLASS = "block aspect-square rounded-lg ring-1 ring-line peer-checked:ring-2 peer-checked:ring-ink peer-checked:ring-offset-2 peer-checked:ring-offset-surface".freeze
-  CUSTOM_PANEL_CLASS = "mt-2 flex items-end gap-2".freeze
+  FILLS = { brand_600: "bg-brand-600", brand_secondary_600: "bg-secondary-600" }.freeze
+
+  LEGEND_CLASS = "flex w-full items-baseline gap-1.5 text-xs font-medium uppercase tracking-wide text-ink-subtle".freeze
+  TAG_CLASS = "ml-auto normal-case".freeze
+  ROW_CLASS = "mt-1.5 flex flex-wrap items-center gap-2".freeze
+  ROW_OPTION_CLASS = "flex-1 basis-0".freeze
+  SWATCH_CLASS = "block h-11 w-full rounded-lg ring-1 ring-line peer-checked:ring-2 peer-checked:ring-ink peer-checked:ring-offset-2 peer-checked:ring-offset-surface".freeze
+  NONE_CLASS = "flex h-11 w-full items-center justify-center rounded-lg text-xs font-bold text-ink-muted ring-1 ring-line peer-checked:ring-2 peer-checked:ring-ink".freeze
+  DETAILS_CLASS = "contents".freeze
+  SUMMARY_CLASS = "grid h-11 w-11 flex-none cursor-pointer list-none place-items-center rounded-lg text-lg font-bold text-ink-muted ring-1 ring-line [&::-webkit-details-marker]:hidden".freeze
+  GRID_CLASS = "mt-2 grid w-full basis-full grid-cols-8 gap-2".freeze
+  GRID_OPTION_CLASS = "block".freeze
+  GRID_SWATCH_CLASS = "block aspect-square rounded-lg ring-1 ring-line peer-checked:ring-2 peer-checked:ring-ink peer-checked:ring-offset-2 peer-checked:ring-offset-surface".freeze
+  CUSTOM_PANEL_CLASS = "mt-2 flex w-full basis-full items-end gap-2".freeze
   CUSTOM_CHOICE_CLASS = "inline-flex min-h-11 flex-none items-center gap-2 text-sm text-ink".freeze
   PICKER_CLASS = "h-11 w-11 flex-none cursor-pointer rounded-lg border border-line".freeze
 
-  def initialize(label:, attribute:, selected:, fallback: Branding::DEFAULT_BRAND_600, linked_label: nil)
+  def initialize(label:, hint:, attribute:, selected:, fallback: Branding::DEFAULT_BRAND_600, tag: nil)
     @label = label
+    @hint = hint
     @attribute = attribute
     @selected = selected
     @fallback = fallback
-    @linked_label = linked_label
+    @tag = tag
   end
 
   def view_template
-    fieldset(aria_label: @label, data: { controller: "color-swatch", action: "change->color-swatch#showChoice" }) do
-      legend(class: LEGEND_CLASS) { render_row }
-      render_link_choice if @linked_label
-      render_panel
+    fieldset(aria_label: @label) do
+      legend(class: LEGEND_CLASS) do
+        span { @label }
+        span(aria_hidden: "true") { "·" }
+        span { @hint }
+        span(class: TAG_CLASS) { @tag } if @tag
+      end
+      div(class: ROW_CLASS, data: { swatch_row: true }) do
+        row_options.each { |hex| render_row_option(hex) }
+        render_details
+      end
     end
   end
 
   private
 
-  def render_row
-    span(class: ROW_CLASS) do
-      span(class: LABEL) { @label }
-      render_readout
-    end
-  end
-
-  def render_readout
-    span(class: READOUT_CLASS, hidden: linked?, data: { "color-swatch-target": "readout" }) do
-      render Components::ColorChip.new(attribute: @attribute, size: :small, data: { "color-swatch-target": "chip" })
-      span(class: CODE_CLASS, data: { "color-swatch-target": "code" }) { resolved }
-      button(type: "button", class: SUMMARY_CLASS, aria_expanded: custom?.to_s, aria_controls: code_panel_id,
-        data: { "color-swatch-target": "customToggle", action: "color-swatch#toggleCustom" }) { CUSTOM_SUMMARY }
-    end
-  end
-
-  def render_link_choice
-    div(class: SEGMENT_GROUP_CLASS) do
-      label do
-        input(type: "radio", name: name, value: "", checked: linked?, class: "peer sr-only",
-          data: { "color-swatch-target": "linked", action: "change->color-swatch#chooseLinked" })
-        span(class: "#{SEGMENT_CLASS} #{SEGMENT_CHECKED_CLASS}") { @linked_label }
+  def render_row_option(hex)
+    label(class: ROW_OPTION_CLASS, data: { row_option: true }) do
+      input(type: "radio", name: field_name, value: hex, checked: hex == selected, class: "peer sr-only", aria_label: option_label(hex))
+      if hex.empty?
+        span(class: NONE_CLASS) { NONE_LABEL }
+      elsif Branding::Palette.swatches.include?(hex)
+        span(class: SWATCH_CLASS, data: { swatch: hex })
+      else
+        span(class: "#{SWATCH_CLASS} #{FILLS.fetch(@attribute)}")
       end
-      button(type: "button", class: "#{SEGMENT_CLASS} #{SEGMENT_EXPANDED_CLASS}", aria_expanded: (!linked?).to_s,
-        aria_controls: palette_id, data: { "color-swatch-target": "own", action: "color-swatch#chooseOwn" }) { OWN_LABEL }
     end
   end
 
-  def render_panel
-    div(id: palette_id, hidden: linked?, data: { "color-swatch-target": "panel" }) do
-      div(class: GRID_CLASS) { Branding::Palette.swatches.each { |hex| render_swatch(hex) } }
+  def render_details
+    details(class: DETAILS_CLASS, open: custom?) do
+      summary(class: SUMMARY_CLASS, aria_label: "#{@label}: mais cores") { CUSTOM_SUMMARY }
+      div(class: GRID_CLASS, data: { swatch_grid: true }) { Branding::Palette.swatches.each { |hex| render_grid_swatch(hex) } }
       render_custom_panel
     end
   end
 
-  def render_swatch(hex)
-    label(class: "block") do
-      input(type: "radio", name: name, value: hex, checked: selected == hex, class: "peer sr-only", aria_label: hex)
-      span(class: SWATCH_CLASS, data: { swatch: hex })
+  def render_grid_swatch(hex)
+    label(class: GRID_OPTION_CLASS) do
+      input(type: "radio", name: field_name, value: hex, class: "peer sr-only", aria_label: hex)
+      span(class: GRID_SWATCH_CLASS, data: { swatch: hex })
     end
   end
 
   def render_custom_panel
-    div(id: code_panel_id, class: CUSTOM_PANEL_CLASS, hidden: !custom?, data: { "color-swatch-target": "customPanel" }) do
-      render_picker
-      render_code_field
-      render_custom_choice
+    div(class: CUSTOM_PANEL_CLASS, data: { custom: true }) do
+      input(type: "color", value: resolved, class: PICKER_CLASS, aria_label: PICKER_LABEL,
+        data: { color: true, action: "input->color-swatch#syncFromSwatch" })
+      input(type: "text", name: custom_field_name, value: resolved, class: CONTROL, aria_label: CODE_LABEL,
+        data: { code: true, action: "input->color-swatch#syncFromText" })
+      label(class: CUSTOM_CHOICE_CLASS) do
+        input(type: "radio", name: field_name, value: Branding::CUSTOM_COLOR_CHOICE, checked: false, class: CHECKBOX)
+        plain CUSTOM_CHOICE_LABEL
+      end
     end
   end
 
-  def render_custom_choice
-    label(class: CUSTOM_CHOICE_CLASS) do
-      input(type: "radio", name: name, value: Branding::CUSTOM_COLOR_CHOICE, checked: custom?,
-        class: CHECKBOX, data: { "color-swatch-target": "custom" })
-      plain CUSTOM_CHOICE_LABEL
-    end
+  def suggestions = Branding::Palette::SUGGESTIONS.fetch(@attribute)
+
+  def row_options
+    return suggestions if suggestions.include?(selected)
+
+    [ selected ] + suggestions.first(ROW_SIZE - 1)
   end
 
-  def render_picker
-    input(type: "color", value: resolved, class: PICKER_CLASS, aria_label: PICKER_LABEL,
-      data: { "color-swatch-target": "swatch", action: "input->color-swatch#syncFromSwatch" })
-  end
+  def option_label(hex) = hex.empty? ? NONE_LABEL : hex
 
-  def render_code_field
-    input(type: "text", name: custom_name, value: resolved, class: CONTROL, aria_label: CODE_LABEL,
-      data: { "color-swatch-target": "text", action: "input->color-swatch#syncFromText" })
-  end
+  def field_name = "branding[#{@attribute}]"
 
-  def name = "branding[#{@attribute}]"
-
-  def custom_name = "branding[#{@attribute}_custom]"
-
-  def palette_id = "#{@attribute}-palette"
-
-  def code_panel_id = "#{@attribute}-code"
+  def custom_field_name = "branding[#{@attribute}_custom]"
 
   def normalized(value) = value.presence&.upcase
 
-  def selected = normalized(@selected)
+  def selected = normalized(@selected).to_s
 
-  def resolved = selected || normalized(@fallback) || Branding::DEFAULT_BRAND_600
+  def resolved = normalized(@selected) || normalized(@fallback) || Branding::DEFAULT_BRAND_600
 
-  def linked? = @linked_label.present? && selected.blank?
-
-  def custom? = selected.present? && !Branding::Palette.swatches.include?(selected)
+  def custom? = normalized(@selected).present? && !Branding::Palette.swatches.include?(normalized(@selected))
 end
