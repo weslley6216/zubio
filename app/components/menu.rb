@@ -1,7 +1,7 @@
 class Components::Menu < Components::Base
   LABEL = "Abrir menu".freeze
   ITEM_CLASS = "rounded-lg px-3 py-3 text-sm font-semibold".freeze
-  CURRENT_CLASS = "bg-secondary-accent text-on-secondary-accent".freeze
+  CURRENT_CLASS = "bg-brand-soft text-brand-soft-ink".freeze
   RESTING_CLASS = "text-ink hover:bg-surface-2".freeze
 
   def initialize(items:)

@@ -108,4 +108,50 @@ RSpec.describe Branding::ColorScale do
       end
     end
   end
+
+  describe "#first_step_reaching" do
+    it "returns the first step that reaches the minimum, not the one with the most contrast" do
+      color_scale = described_class.new("#2C6CB0")
+
+      step = color_scale.first_step_reaching(described_class::MIN_CONTRAST, steps: [ 600, 700, 800, 900 ], against: %w[#ffffff #eef2f5])
+
+      expect(step).to eq(600)
+    end
+
+    it "measures a step against every background, so one that reads on white alone is passed over" do
+      color_scale = described_class.new("#B45309")
+
+      on_white = color_scale.first_step_reaching(described_class::MIN_CONTRAST, steps: [ 600, 700, 800, 900 ], against: %w[#ffffff])
+      on_every_neutral = color_scale.first_step_reaching(described_class::MIN_CONTRAST, steps: [ 600, 700, 800, 900 ], against: %w[#ffffff #eef2f5])
+
+      expect(on_white).to eq(600)
+      expect(on_every_neutral).to eq(800)
+    end
+
+    it "passes over the 700 of a light teal for the text of its light pair" do
+      color_scale = described_class.new("#14B8A6")
+
+      step = color_scale.first_step_reaching(described_class::MIN_CONTRAST, steps: [ 700, 800, 900 ], against: [ color_scale.tokens.fetch(50) ])
+
+      expect(step).to eq(900)
+    end
+
+    it "takes a lower minimum for a mark than for text" do
+      color_scale = described_class.new("#E8493C")
+
+      text_step = color_scale.first_step_reaching(described_class::MIN_CONTRAST, steps: [ 600, 700, 800, 900 ], against: %w[#ffffff #eef2f5])
+      mark_step = color_scale.first_step_reaching(described_class::MIN_NON_TEXT_CONTRAST, steps: [ 600, 700, 800, 900 ], against: %w[#ffffff #eef2f5])
+
+      expect(text_step).to eq(700)
+      expect(mark_step).to eq(600)
+    end
+
+    it "falls back to the last step when no step reaches the minimum, instead of raising" do
+      color_scale = described_class.new("#808080")
+
+      step = color_scale.first_step_reaching(21, steps: [ 600, 700 ], against: %w[#ffffff])
+
+      expect(step).to eq(700)
+    end
+  end
 end

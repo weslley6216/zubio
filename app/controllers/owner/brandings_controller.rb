@@ -1,7 +1,7 @@
 class Owner::BrandingsController < Owner::BaseController
   REFUSED = "Não foi possível salvar a marca. Confira os campos destacados.".freeze
 
-  self.panel_section = :branding
+  self.panel_section = :settings
 
   def edit
     render Views::Owner::Brandings::Edit.new(tenant: ActsAsTenant.current_tenant, branding: current_branding, current_section: panel_section)

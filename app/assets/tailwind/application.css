@@ -22,16 +22,16 @@
   --ink-muted: #68798a;
   --ink-subtle: #94a6b4;
   --danger: #b42318;
-  --danger-surface: #fef3f2;
-  --danger-line: #f4bfb8;
   --success: #067647;
-  --success-surface: #ecfdf3;
-  --success-line: #a9dfc3;
 
   --brand-accent: var(--brand-600);
   --on-brand-accent: var(--on-brand, #ffffff);
-  --secondary-accent: var(--secondary-600);
-  --on-secondary-accent: var(--on-secondary, #ffffff);
+  --brand-ink: var(--brand-ink-light);
+  --brand-soft: var(--brand-soft-light);
+  --brand-soft-ink: var(--brand-soft-ink-light);
+  --secondary-mark: var(--secondary-mark-light);
+  --secondary-soft: var(--secondary-soft-light);
+  --secondary-soft-ink: var(--secondary-soft-ink-light);
   --on-demo: #ffffff;
 }
 
@@ -57,16 +57,16 @@
     --ink-muted: #9baebc;
     --ink-subtle: #75899a;
     --danger: #fda29b;
-    --danger-surface: #1c1417;
-    --danger-line: #4a2a2a;
     --success: #75e0a7;
-    --success-surface: #0f1a15;
-    --success-line: #2a4a3a;
 
     --brand-accent: var(--brand-400);
     --on-brand-accent: var(--on-brand-400, #08121a);
-    --secondary-accent: var(--secondary-400);
-    --on-secondary-accent: var(--on-secondary-400, #08121a);
+    --brand-ink: var(--brand-ink-dark);
+    --brand-soft: var(--brand-soft-dark);
+    --brand-soft-ink: var(--brand-soft-ink-dark);
+    --secondary-mark: var(--secondary-mark-dark);
+    --secondary-soft: var(--secondary-soft-dark);
+    --secondary-soft-ink: var(--secondary-soft-ink-dark);
     --on-demo: #08121a;
   }
 
@@ -86,16 +86,16 @@
   --ink-muted: #9baebc;
   --ink-subtle: #75899a;
   --danger: #fda29b;
-  --danger-surface: #1c1417;
-  --danger-line: #4a2a2a;
   --success: #75e0a7;
-  --success-surface: #0f1a15;
-  --success-line: #2a4a3a;
 
   --brand-accent: var(--brand-400);
   --on-brand-accent: var(--on-brand-400, #08121a);
-  --secondary-accent: var(--secondary-400);
-  --on-secondary-accent: var(--on-secondary-400, #08121a);
+  --brand-ink: var(--brand-ink-dark);
+  --brand-soft: var(--brand-soft-dark);
+  --brand-soft-ink: var(--brand-soft-ink-dark);
+  --secondary-mark: var(--secondary-mark-dark);
+  --secondary-soft: var(--secondary-soft-dark);
+  --secondary-soft-ink: var(--secondary-soft-ink-dark);
   --on-demo: #08121a;
 }
 
@@ -136,6 +136,9 @@
   --color-on-brand: var(--on-brand);
   --color-brand-accent: var(--brand-accent);
   --color-on-brand-accent: var(--on-brand-accent);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-soft-ink: var(--brand-soft-ink);
 
   --color-secondary-50: var(--secondary-50);
   --color-secondary-100: var(--secondary-100);
@@ -148,8 +151,9 @@
   --color-secondary-800: var(--secondary-800);
   --color-secondary-900: var(--secondary-900);
   --color-on-secondary: var(--on-secondary);
-  --color-secondary-accent: var(--secondary-accent);
-  --color-on-secondary-accent: var(--on-secondary-accent);
+  --color-secondary-mark: var(--secondary-mark);
+  --color-secondary-soft: var(--secondary-soft);
+  --color-secondary-soft-ink: var(--secondary-soft-ink);
 
   --color-demo-100: var(--demo-100);
   --color-demo-700: var(--demo-700);
@@ -166,9 +170,5 @@
   --color-ink-muted: var(--ink-muted);
   --color-ink-subtle: var(--ink-subtle);
   --color-danger: var(--danger);
-  --color-danger-surface: var(--danger-surface);
-  --color-danger-line: var(--danger-line);
   --color-success: var(--success);
-  --color-success-surface: var(--success-surface);
-  --color-success-line: var(--success-line);
 }

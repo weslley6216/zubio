@@ -255,6 +255,48 @@ RSpec.describe Service, type: :model do
     end
   end
 
+  describe ".count_by_state" do
+    it "counts the active and the disabled services of the tenant apart" do
+      tenant = create(:tenant)
+      create(:service, tenant: tenant)
+      create(:service, tenant: tenant)
+      create(:service, tenant: tenant, active: false)
+
+      counts = ActsAsTenant.with_tenant(tenant) { Service.count_by_state }
+
+      expect(counts).to eq(active: 2, inactive: 1)
+    end
+
+    it "counts zero in both states for an empty catalog" do
+      tenant = create(:tenant)
+
+      counts = ActsAsTenant.with_tenant(tenant) { Service.count_by_state }
+
+      expect(counts).to eq(active: 0, inactive: 0)
+    end
+
+    it "asks the database once for both states" do
+      tenant = create(:tenant)
+      create(:service, tenant: tenant)
+      create(:service, tenant: tenant, active: false)
+
+      queries = ActsAsTenant.with_tenant(tenant) { count_queries { Service.count_by_state } }
+
+      expect(queries).to eq(1)
+    end
+
+    it "counts only the services of the tenant in scope" do
+      tenant = create(:tenant)
+      other_tenant = create(:tenant)
+      create(:service, tenant: tenant)
+      create_list(:service, 3, tenant: other_tenant, active: false)
+
+      counts = ActsAsTenant.with_tenant(tenant) { Service.count_by_state }
+
+      expect(counts).to eq(active: 1, inactive: 0)
+    end
+  end
+
   describe "#price=" do
     it "stores the reais the owner typed as cents" do
       service = build(:service, price_cents: nil)

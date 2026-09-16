@@ -1,6 +1,6 @@
 class Components::Badge < Components::Base
   TONES = {
-    accent: "bg-brand-accent text-on-brand-accent",
+    accent: "bg-secondary-soft text-secondary-soft-ink",
     muted: "bg-surface-3 text-ink-muted"
   }.freeze
 

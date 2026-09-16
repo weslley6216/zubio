@@ -52,7 +52,7 @@ RSpec.describe "Application surface", type: :system, js: true do
     expect(page).to have_css("html[data-theme='dark']")
   end
 
-  it "renders the login alert as a band that separates from the panel in the light theme" do
+  it "renders the login alert with an outline and an icon on the neutral surface of the panel in the light theme" do
     tenant = create(:tenant, subdomain: "joes-barbershop")
     create(:branding, tenant: tenant)
 
@@ -62,11 +62,12 @@ RSpec.describe "Application surface", type: :system, js: true do
 
     expect(contrast_ratio("[data-alert]")).to be >= Branding::ColorScale::MIN_CONTRAST
     expect(computed("[data-alert]", "borderTopWidth")).not_to eq("0px")
-    expect(computed("[data-alert]", "borderTopColor")).not_to eq(computed("[data-alert]", "color"))
-    expect(computed("[data-alert]", "backgroundColor")).not_to eq(computed("[data-panel]", "backgroundColor"))
+    expect(border_contrast_ratio("[data-alert]")).to be >= Branding::ColorScale::MIN_NON_TEXT_CONTRAST
+    expect(page).to have_css("[data-alert] svg")
+    expect(computed("[data-alert]", "backgroundColor")).to eq(computed("[data-panel]", "backgroundColor"))
   end
 
-  it "renders the login alert as a band that separates from the panel in the dark theme" do
+  it "renders the login alert with an outline and an icon on the neutral surface of the panel in the dark theme" do
     tenant = create(:tenant, subdomain: "joes-barbershop")
     create(:branding, tenant: tenant)
 
@@ -76,7 +77,8 @@ RSpec.describe "Application surface", type: :system, js: true do
 
     expect(contrast_ratio("[data-alert]")).to be >= Branding::ColorScale::MIN_CONTRAST
     expect(computed("[data-alert]", "borderTopWidth")).not_to eq("0px")
-    expect(computed("[data-alert]", "borderTopColor")).not_to eq(computed("[data-alert]", "color"))
-    expect(computed("[data-alert]", "backgroundColor")).not_to eq(computed("[data-panel]", "backgroundColor"))
+    expect(border_contrast_ratio("[data-alert]")).to be >= Branding::ColorScale::MIN_NON_TEXT_CONTRAST
+    expect(page).to have_css("[data-alert] svg")
+    expect(computed("[data-alert]", "backgroundColor")).to eq(computed("[data-panel]", "backgroundColor"))
   end
 end

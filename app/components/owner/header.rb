@@ -1,10 +1,11 @@
 class Components::Owner::Header < Components::Base
   include Phlex::Rails::Helpers::ButtonTo
 
+  SETTINGS_LABEL = "Configurações".freeze
   SIGN_OUT_LABEL = "Sair".freeze
-  ITEM_CLASS = "inline-flex min-h-11 items-center rounded-lg px-4 text-sm font-bold".freeze
-  CURRENT_CLASS = "bg-secondary-accent text-on-secondary-accent".freeze
-  RESTING_CLASS = "text-ink-muted hover:bg-surface-2 hover:text-ink".freeze
+  ITEM_CLASS = "inline-flex min-h-11 items-center border-b-2 px-4 text-sm font-bold".freeze
+  CURRENT_CLASS = "border-secondary-mark text-brand-ink".freeze
+  RESTING_CLASS = "border-transparent text-ink-muted hover:text-ink".freeze
 
   def initialize(tenant:, branding:, current_section:)
     @tenant = tenant
@@ -27,26 +28,15 @@ class Components::Owner::Header < Components::Base
 
   def sections
     [
-      [ :dashboard, "Painel", owner_dashboard_path ],
-      [ :services, "Serviços", owner_services_path ],
-      [ :branding, "Marca", edit_owner_branding_path ]
+      [ :settings, SETTINGS_LABEL, owner_settings_path ]
     ]
   end
 
   def render_identity
-    a(href: owner_dashboard_path, class: "flex min-h-11 min-w-0 items-center gap-2 font-extrabold tracking-tight text-ink") do
-      render_emblem
+    a(href: owner_dashboard_path, aria_current: @current_section == :dashboard ? "page" : nil,
+      class: "flex min-h-11 min-w-0 items-center gap-2 font-extrabold tracking-tight text-ink") do
+      render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :medium)
       span(class: "truncate") { @tenant.name }
-    end
-  end
-
-  def render_emblem
-    logo = @branding.header_logo
-
-    if logo
-      img(src: rails_storage_proxy_path(logo), alt: "", class: "h-8 w-8 flex-none rounded-lg object-contain")
-    else
-      span(class: "grid h-8 w-8 flex-none place-items-center rounded-lg bg-brand-accent text-on-brand-accent") { @tenant.initial }
     end
   end
 

@@ -1,7 +1,7 @@
 class Owner::ServicesController < Owner::BaseController
   REFUSED = "Não foi possível salvar o serviço. Confira os campos destacados.".freeze
 
-  self.panel_section = :services
+  self.panel_section = :settings
 
   def index
     render Views::Owner::Services::Index.new(

@@ -38,7 +38,7 @@ RSpec.describe "Owner branding", type: :request do
       expect(response.body).not_to include("/rails/active_storage/blobs/proxy/")
     end
 
-    it "renders the authenticated header with a way back to the panel, a way out of the session, the brand on the emblem and the secondary on the current section" do
+    it "renders the authenticated header with a way back to the panel, a way out of the session, the brand on the emblem and the current section labelled in the brand and underlined in the secondary" do
       create(:branding, tenant: tenant, brand_600: "#2F6FED")
 
       get edit_owner_branding_path
@@ -47,8 +47,9 @@ RSpec.describe "Owner branding", type: :request do
       expect(response.body).to include(%(action="#{owner_session_path}"))
       expect(response.body).to include(%(value="delete"))
       expect(response.body).to include("bg-brand-accent")
-      expect(response.body).to include(Components::Owner::Header::CURRENT_CLASS)
-      expect(Components::Owner::Header::CURRENT_CLASS).to include("bg-secondary-accent")
+      expect(response.body).to include(%(<a href="#{owner_settings_path}" aria-current="page" class="#{Components::Owner::Header::ITEM_CLASS} #{Components::Owner::Header::CURRENT_CLASS}">))
+      expect(Components::Owner::Header::CURRENT_CLASS.split).to include("text-brand-ink", "border-secondary-mark")
+      expect(Components::Owner::Header::CURRENT_CLASS).not_to match(/\bbg-/)
     end
 
     it "shows the whole palette as a grid, with the current color marked, without opening any dialog" do
@@ -210,9 +211,9 @@ RSpec.describe "Owner branding", type: :request do
       follow_redirect!
 
       expect(response.body).to include("Marca atualizada.")
-      expect(response.body).to include("bg-success-surface")
+      expect(response.body).to include(%(class="#{Components::Alert::FRAME_CLASS} border-success"))
       expect(response.body).to include(%(<div role="status"))
-      expect(response.body).not_to include("bg-danger-surface")
+      expect(response.body).not_to include("border-danger")
     end
 
     it "states the refusal in the danger tone on the same screen" do
@@ -222,8 +223,8 @@ RSpec.describe "Owner branding", type: :request do
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include(Owner::BrandingsController::REFUSED)
-      expect(response.body).to include("bg-danger-surface")
-      expect(response.body).not_to include("bg-success-surface")
+      expect(response.body).to include(%(class="#{Components::Alert::FRAME_CLASS} border-danger"))
+      expect(response.body).not_to include("border-success")
     end
 
     it "stores the chosen swatch without any typed code" do

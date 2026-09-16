@@ -9,20 +9,6 @@ RSpec.describe "Owner services catalog", type: :request do
     post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
   end
 
-  def count_queries
-    ignored_query_names = %w[SCHEMA TRANSACTION]
-    queries = 0
-    subscription = ActiveSupport::Notifications.subscribe("sql.active_record") do |_name, _started, _finished, _id, payload|
-      queries += 1 unless ignored_query_names.include?(payload[:name])
-    end
-
-    yield
-
-    queries
-  ensure
-    ActiveSupport::Notifications.unsubscribe(subscription)
-  end
-
   def service_params(**overrides)
     { service: { name: "Corte feminino", description: "", duration_minutes: "45", price: "90,00" }.merge(overrides) }
   end
@@ -187,7 +173,7 @@ RSpec.describe "Owner services catalog", type: :request do
   end
 
   describe "GET /owner/services/new" do
-    it "opens an empty registration form in the owner form card, with the services section current" do
+    it "opens an empty registration form in the owner form card, with settings as the current section" do
       sign_in
 
       get new_owner_service_path
@@ -195,7 +181,7 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(%(<h1 id="#{Components::Owner::FormCard::HEADING_ID}" class="#{Components::Owner::FormCard::TITLE_CLASS}">#{Views::Owner::Services::Form::NEW_TITLE}</h1>))
       expect(response.body).to include(%(action="#{owner_services_path}"))
-      expect(response.body).to include(%(<a href="#{owner_services_path}" aria-current="page"))
+      expect(response.body).to include(%(<a href="#{owner_settings_path}" aria-current="page"))
       expect(response.body).to include(Views::Owner::Services::Form::CREATE_LABEL)
       expect(control("price")["value"]).to be_nil
     end
@@ -301,8 +287,8 @@ RSpec.describe "Owner services catalog", type: :request do
       post owner_services_path, params: service_params(duration_minutes: "7")
 
       expect(response.body).to include(Owner::ServicesController::REFUSED)
-      expect(response.body).to include("bg-danger-surface")
-      expect(response.body).not_to include("bg-success-surface")
+      expect(response.body).to include(%(class="#{Components::Alert::FRAME_CLASS} border-danger"))
+      expect(response.body).not_to include("border-success")
     end
 
     it "refuses a duration with a fraction sent straight to the server" do
