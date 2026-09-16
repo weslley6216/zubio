@@ -35,12 +35,33 @@ class Branding < ApplicationRecord
     (choice == CUSTOM_COLOR_CHOICE ? custom : choice).presence
   end
 
+  def self.ramp_variables(prefix, scale)
+    ramp = scale.tokens.map { |step, value| "--#{prefix}-#{step}:#{value};" }.join
+    dark_accent = ColorScale.new(scale.tokens[DARK_ACCENT_STEP])
+    roles = NEUTRALS.each_key.map { |theme| role_variables(prefix, scale, theme) }.join
+
+    "#{ramp}--on-#{prefix}:#{scale.foreground};--on-#{prefix}-#{DARK_ACCENT_STEP}:#{dark_accent.foreground};#{roles}"
+  end
+
+  def self.role_variables(prefix, scale, theme)
+    neutrals = NEUTRALS.fetch(theme).values
+    soft_step = SOFT_STEP.fetch(theme)
+    steps = {
+      "ink" => scale.first_step_reaching(ColorScale::MIN_CONTRAST, steps: ON_NEUTRAL_STEPS.fetch(theme), against: neutrals),
+      "mark" => scale.first_step_reaching(ColorScale::MIN_NON_TEXT_CONTRAST, steps: ON_NEUTRAL_STEPS.fetch(theme), against: neutrals),
+      "soft" => soft_step,
+      "soft-ink" => scale.first_step_reaching(ColorScale::MIN_CONTRAST, steps: ON_SOFT_STEPS.fetch(theme), against: [ scale.tokens.fetch(soft_step) ])
+    }
+
+    steps.map { |role, step| "--#{prefix}-#{role}-#{theme}:#{scale.tokens.fetch(step)};" }.join
+  end
+
   def color_scale
     @color_scale ||= ColorScale.new(hex?(brand_600) ? brand_600 : DEFAULT_BRAND_600)
   end
 
   def css_variables
-    ramp_variables("brand", color_scale) + ramp_variables("secondary", secondary_color_scale)
+    self.class.ramp_variables("brand", color_scale) + self.class.ramp_variables("secondary", secondary_color_scale)
   end
 
   def stylesheet
@@ -71,27 +92,6 @@ class Branding < ApplicationRecord
 
   def secondary_color_scale
     @secondary_color_scale ||= hex?(brand_secondary_600) ? ColorScale.new(brand_secondary_600) : color_scale
-  end
-
-  def ramp_variables(prefix, scale)
-    ramp = scale.tokens.map { |step, value| "--#{prefix}-#{step}:#{value};" }.join
-    dark_accent = ColorScale.new(scale.tokens[DARK_ACCENT_STEP])
-    roles = NEUTRALS.each_key.map { |theme| role_variables(prefix, scale, theme) }.join
-
-    "#{ramp}--on-#{prefix}:#{scale.foreground};--on-#{prefix}-#{DARK_ACCENT_STEP}:#{dark_accent.foreground};#{roles}"
-  end
-
-  def role_variables(prefix, scale, theme)
-    neutrals = NEUTRALS.fetch(theme).values
-    soft_step = SOFT_STEP.fetch(theme)
-    steps = {
-      "ink" => scale.first_step_reaching(ColorScale::MIN_CONTRAST, steps: ON_NEUTRAL_STEPS.fetch(theme), against: neutrals),
-      "mark" => scale.first_step_reaching(ColorScale::MIN_NON_TEXT_CONTRAST, steps: ON_NEUTRAL_STEPS.fetch(theme), against: neutrals),
-      "soft" => soft_step,
-      "soft-ink" => scale.first_step_reaching(ColorScale::MIN_CONTRAST, steps: ON_SOFT_STEPS.fetch(theme), against: [ scale.tokens.fetch(soft_step) ])
-    }
-
-    steps.map { |role, step| "--#{prefix}-#{role}-#{theme}:#{scale.tokens.fetch(step)};" }.join
   end
 
   def brand_600_meets_contrast_minimum = validate_contrast(:brand_600)
