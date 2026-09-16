@@ -58,6 +58,26 @@ RSpec.describe Tenant, type: :model do
 
       expect(tenant).not_to be_valid
     end
+
+    it "rejects a name longer than the maximum length" do
+      tenant = build(:tenant, name: "a" * (Tenant::NAME_MAX_LENGTH + 1))
+
+      expect(tenant).not_to be_valid
+      expect(tenant.errors[:name]).to be_present
+    end
+
+    it "accepts a name at the maximum length" do
+      tenant = build(:tenant, name: "a" * Tenant::NAME_MAX_LENGTH)
+
+      expect(tenant).to be_valid
+    end
+
+    it "keeps an over-long name that predates the limit editable in every other field" do
+      tenant = create(:tenant, name: "Studio")
+      tenant.update_column(:name, "a" * (Tenant::NAME_MAX_LENGTH + 1))
+
+      expect(tenant.update(status: "suspended")).to be(true)
+    end
   end
 
   describe "status" do
@@ -243,6 +263,27 @@ RSpec.describe Tenant, type: :model do
         end
 
         expect(tenant.branding.reload.logo).to be_attached
+      end
+    end
+
+    it "renames a tenant that has no branding yet without creating one" do
+      tenant = create(:tenant, name: "Old Name")
+
+      ActsAsTenant.with_tenant(tenant) do
+        tenant.update_branding!(tenant_attrs: { name: "New Name" }, branding_attrs: {}, remove_logo: false)
+
+        expect(tenant.reload.name).to eq("New Name")
+        expect(tenant.branding).to be_nil
+      end
+    end
+
+    it "creates the missing branding with the default color when a color is saved for a tenant that had none" do
+      tenant = create(:tenant)
+
+      ActsAsTenant.with_tenant(tenant) do
+        tenant.update_branding!(tenant_attrs: { name: tenant.name }, branding_attrs: { brand_600: "#2F6FED" }, remove_logo: false)
+
+        expect(tenant.reload.branding.brand_600).to eq("#2F6FED")
       end
     end
   end

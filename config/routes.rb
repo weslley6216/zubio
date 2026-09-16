@@ -21,7 +21,9 @@ Rails.application.routes.draw do
     resource :handoff, only: :show
     resource :dashboard, only: :show, controller: "dashboard"
     resources :services, only: %i[index new create edit update]
-    resource :branding, only: %i[edit update]
+    resource :brand_colors, only: %i[edit update]
+    resource :brand_name, only: %i[edit update]
+    resource :brand_logo, only: %i[edit update]
     resource :settings, only: :show
   end
 
