@@ -55,11 +55,11 @@ class Views::Owner::Settings::Show < Views::Base
 
   def render_brand_group
     render_group("brand-group", BRAND_GROUP) do
-      render_link_row("name", NAME_LABEL, @tenant.name, edit_owner_branding_path)
-      render_link_row("logo", LOGO_LABEL, logo_summary, edit_owner_branding_path) do
+      render_link_row("name", NAME_LABEL, @tenant.name, edit_owner_brand_name_path)
+      render_link_row("logo", LOGO_LABEL, logo_summary, edit_owner_brand_logo_path) do
         render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :small)
       end
-      render_link_row("colors", COLORS_LABEL, colors_summary, edit_owner_branding_path) { render_chips }
+      render_link_row("colors", COLORS_LABEL, colors_summary, edit_owner_brand_colors_path) { render_chips }
       render_row("address", ADDRESS_LABEL, @tenant.canonical_host)
     end
   end
