@@ -265,6 +265,27 @@ RSpec.describe Tenant, type: :model do
         expect(tenant.branding.reload.logo).to be_attached
       end
     end
+
+    it "renames a tenant that has no branding yet without creating one" do
+      tenant = create(:tenant, name: "Old Name")
+
+      ActsAsTenant.with_tenant(tenant) do
+        tenant.update_branding!(tenant_attrs: { name: "New Name" }, branding_attrs: {}, remove_logo: false)
+
+        expect(tenant.reload.name).to eq("New Name")
+        expect(tenant.branding).to be_nil
+      end
+    end
+
+    it "creates the missing branding with the default color when a color is saved for a tenant that had none" do
+      tenant = create(:tenant)
+
+      ActsAsTenant.with_tenant(tenant) do
+        tenant.update_branding!(tenant_attrs: { name: tenant.name }, branding_attrs: { brand_600: "#2F6FED" }, remove_logo: false)
+
+        expect(tenant.reload.branding.brand_600).to eq("#2F6FED")
+      end
+    end
   end
 
   describe ".provision_owner!" do
