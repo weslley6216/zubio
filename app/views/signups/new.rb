@@ -1,8 +1,9 @@
 class Views::Signups::New < Views::Base
   include Components::Form::Styles
 
-  def initialize(tenant:, user:, branding:)
-    @tenant = tenant
+  TOGGLE_CLASS = "mt-1 text-xs font-medium text-brand-600".freeze
+
+  def initialize(user:, branding:)
     @user = user
     @branding = branding
   end
@@ -11,15 +12,10 @@ class Views::Signups::New < Views::Base
     render Views::Layouts::Application.new(title: "Criar conta · Zubio", branding: @branding) do
       render Components::Platform::Header.new
       render Components::Panel.new(title: "Criar sua conta") do
-        form_with(url: signup_path, method: :post, class: "space-y-4",
-          data: { turbo: false, controller: "subdomain", subdomain_url_value: subdomain_signup_path,
-                  subdomain_max_length_value: Tenant::SUBDOMAIN_LENGTH.max }) do |form|
-          render_establishment_name_field(form)
-          render_subdomain_field(form)
+        form_with(url: signup_path, method: :post, class: "space-y-4", data: { turbo: false }) do |form|
           render_owner_name_field(form)
           render_email_field(form)
           render_password_field(form)
-          render_password_confirmation_field(form)
           form.submit "Criar conta", class: SUBMIT
         end
       end
@@ -28,25 +24,6 @@ class Views::Signups::New < Views::Base
   end
 
   private
-
-  def render_establishment_name_field(form)
-    div do
-      form.label :tenant_name, "Nome do estabelecimento", class: LABEL
-      form.text_field :tenant_name, name: "tenant[name]", value: @tenant.name, required: true, class: CONTROL,
-        data: { subdomain_target: "name", action: "input->subdomain#suggest" }
-      render Components::Form::Errors.new(messages: @tenant.errors[:name])
-    end
-  end
-
-  def render_subdomain_field(form)
-    div do
-      form.label :tenant_subdomain, "Subdomínio", class: LABEL
-      form.text_field :tenant_subdomain, name: "tenant[subdomain]", value: @tenant.subdomain, required: true, class: CONTROL,
-        data: { subdomain_target: "field", action: "input->subdomain#edit" }
-      div(role: "status", aria_live: "polite", data: { subdomain_target: "status" })
-      render Components::Form::Errors.new(messages: @tenant.errors[:subdomain])
-    end
-  end
 
   def render_owner_name_field(form)
     div do
@@ -65,18 +42,15 @@ class Views::Signups::New < Views::Base
   end
 
   def render_password_field(form)
-    div do
+    div(data: { controller: "password-visibility" }) do
       form.label :user_password, "Senha", class: LABEL
-      form.password_field :user_password, name: "user[password]", required: true, class: CONTROL
+      form.password_field :user_password, name: "user[password]", required: true, class: CONTROL,
+        data: { "password-visibility-target": "input" }
+      button(type: "button", class: TOGGLE_CLASS, data: { action: "password-visibility#toggle" }) do
+        span(data: { "password-visibility-target": "hidden" }) { "Mostrar senha" }
+        span(data: { "password-visibility-target": "shown" }, hidden: true) { "Ocultar senha" }
+      end
       render Components::Form::Errors.new(messages: @user.errors[:password])
-    end
-  end
-
-  def render_password_confirmation_field(form)
-    div do
-      form.label :user_password_confirmation, "Confirme a senha", class: LABEL
-      form.password_field :user_password_confirmation, name: "user[password_confirmation]", required: true, class: CONTROL
-      render Components::Form::Errors.new(messages: @user.errors[:password_confirmation])
     end
   end
 end

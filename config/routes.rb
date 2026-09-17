@@ -12,9 +12,7 @@ Rails.application.routes.draw do
   get "showcase.css" => "stylesheets#showcase", as: :showcase_stylesheet
   get "palette.css" => "stylesheets#palette", as: :palette_stylesheet
 
-  resource :signup, only: %i[new create] do
-    get :subdomain
-  end
+  resource :signup, only: %i[new create]
 
   namespace :owner do
     resource :session, only: %i[new create destroy]
