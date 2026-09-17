@@ -12,10 +12,11 @@ class Views::Layouts::Application < Views::Base
   SURFACE_CLASS = "bg-canvas text-ink [color-scheme:light_dark]".freeze
   FLASH_TONES = { "notice" => :success, "alert" => :danger }.freeze
 
-  def initialize(title:, branding:, page_stylesheet: nil)
+  def initialize(title:, branding:, page_stylesheet: nil, view_transition: false)
     @title = title
     @branding = branding
     @page_stylesheet = page_stylesheet
+    @view_transition = view_transition
   end
 
   def view_template(&block)
@@ -34,6 +35,7 @@ class Views::Layouts::Application < Views::Base
   def render_head
     meta(charset: "utf-8")
     meta(name: "viewport", content: "width=device-width, initial-scale=1")
+    meta(name: "view-transition", content: "same-origin") if @view_transition
     render_theme_bootstrap
     title { @title }
     csrf_meta_tags

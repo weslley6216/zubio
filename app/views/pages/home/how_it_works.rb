@@ -1,6 +1,6 @@
 class Views::Pages::Home::HowItWorks < Views::Base
   STEPS = [
-    [ "1", "Você cadastra o negócio", "Nome, endereço e a cor da sua marca. Na mesma hora seu link já está no ar: seusalao.zubio.com.br." ],
+    [ "1", "Você cria a conta", "E-mail e senha. No primeiro acesso, sua cor e o nome da marca — e o link nasce do nome: seusalao.zubio.com.br." ],
     [ "2", "Você diz o que faz e quando atende", "Serviço, preço, duração e quem atende cada um. O Zubio monta os encaixes e nunca oferece um horário que já está ocupado." ],
     [ "3", "Você manda o link", "Na bio do Instagram, no WhatsApp, no cartão. O cliente escolhe sozinho e você só recebe o aviso." ]
   ].freeze

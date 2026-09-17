@@ -53,7 +53,7 @@ class Views::Pages::Home::Hero < Views::Base
     div(class: "justify-self-start rounded-lg border border-dashed border-line-strong bg-surface px-4 py-3 text-sm font-semibold text-ink-muted") do
       span { "seusalao" }
       span(class: "text-ink") { ".zubio.com.br" }
-      plain " — pronto no cadastro"
+      plain " — a partir da sua marca"
     end
   end
 end

@@ -5,6 +5,11 @@ class Tenant < ApplicationRecord
   SUBDOMAIN_STATUS_PRIORITY = %i[blank too_short too_long invalid exclusion taken].freeze
   DOMAIN_FORMAT = /\A(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}\z/i
   NAME_MAX_LENGTH = 40
+  DEFAULT_SUBDOMAIN_BASE = "estabelecimento".freeze
+  PROVISIONAL_SUBDOMAIN_LENGTH = 12
+  PROVISIONAL_MANIFEST_NAME = "Zubio".freeze
+  ONBOARDING_ORDER = %w[welcome colors name logo services working_hours done].freeze
+  ONBOARDING_QUESTIONS = %w[colors name logo services working_hours].freeze
 
   has_one :branding, dependent: :destroy
   has_many :users, dependent: :restrict_with_error
@@ -12,6 +17,9 @@ class Tenant < ApplicationRecord
   has_many :services, dependent: :restrict_with_error
 
   enum :status, { active: "active", suspended: "suspended" }
+  enum :onboarding_step,
+    { welcome: 0, colors: 1, name: 2, logo: 3, services: 4, working_hours: 5, done: 6 },
+    prefix: :onboarding, default: :welcome
 
   validates :subdomain,
     presence: true,
@@ -19,8 +27,7 @@ class Tenant < ApplicationRecord
     format: { with: /\A[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\z/ },
     length: { in: SUBDOMAIN_LENGTH },
     exclusion: { in: RESERVED }
-  validates :name, presence: true
-  validates :name, length: { maximum: NAME_MAX_LENGTH }, if: :will_save_change_to_name?
+  validates :name, presence: true, length: { maximum: NAME_MAX_LENGTH }, if: :will_save_change_to_name?
   validates :custom_domain,
     format: { with: DOMAIN_FORMAT, allow_blank: true },
     uniqueness: { case_sensitive: false, allow_blank: true }
@@ -63,7 +70,7 @@ class Tenant < ApplicationRecord
 
   def branded? = branding&.logo&.attached? || false
 
-  def initial = name.first.upcase
+  def initial = name.presence&.first&.upcase
 
   def update_branding!(tenant_attrs:, branding_attrs:, remove_logo:)
     writes_branding = branding_attrs.present? || remove_logo
@@ -78,9 +85,9 @@ class Tenant < ApplicationRecord
     Branding::PrecomputeVariantsJob.perform_later(id) if logo_replaced
   end
 
-  def self.provision_owner!(tenant_attributes:, owner_attributes:)
+  def self.provision_owner!(owner_attributes:)
     transaction do
-      tenant = create!(tenant_attributes)
+      tenant = create!(subdomain: generate_provisional_subdomain)
       ActsAsTenant.with_tenant(tenant) do
         owner = tenant.users.create!(owner_attributes.merge(role: :owner))
         tenant.professionals.create!(display_name: owner.name, user: owner)
@@ -89,11 +96,57 @@ class Tenant < ApplicationRecord
     end
   end
 
+  def self.generate_provisional_subdomain
+    loop do
+      candidate = SecureRandom.alphanumeric(PROVISIONAL_SUBDOMAIN_LENGTH).downcase
+      return candidate if subdomain_status(candidate) == :available
+    end
+  end
+  private_class_method :generate_provisional_subdomain
+
+  def self.derive_subdomain(brand_name)
+    base = subdomain_base(brand_name)
+    candidate = base
+    suffix = 1
+    until subdomain_status(candidate) == :available
+      suffix += 1
+      candidate = suffixed_subdomain(base, suffix)
+    end
+    candidate
+  end
+
+  def self.subdomain_base(brand_name)
+    slug = ActiveSupport::Inflector.transliterate(brand_name.to_s).downcase
+      .gsub(/[^a-z0-9]+/, "-").delete_prefix("-").delete_suffix("-")
+    slug.first(SUBDOMAIN_LENGTH.max).presence || DEFAULT_SUBDOMAIN_BASE
+  end
+
+  def self.suffixed_subdomain(base, suffix)
+    tail = "-#{suffix}"
+    "#{base.first(SUBDOMAIN_LENGTH.max - tail.length)}#{tail}"
+  end
+  private_class_method :subdomain_base, :suffixed_subdomain
+
+  def claim_address_from_brand_name!(brand_name)
+    transaction do
+      update!(name: brand_name, subdomain: self.class.derive_subdomain(brand_name))
+      advance_onboarding!
+    end
+  end
+
+  def advance_onboarding!
+    return if onboarding_done?
+
+    update!(onboarding_step: ONBOARDING_ORDER[ONBOARDING_ORDER.index(onboarding_step) + 1])
+  end
+
   def manifest_identity
+    display = name.presence || PROVISIONAL_MANIFEST_NAME
+
     {
       id: "/?tenant=#{subdomain}",
-      name: name,
-      short_name: name.truncate(12, omission: ""),
+      name: display,
+      short_name: display.truncate(12, omission: ""),
       start_url: "/",
       scope: "/",
       display: "standalone",

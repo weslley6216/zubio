@@ -2,7 +2,7 @@ class Views::Pages::Home::FinalCta < Views::Base
   GUARANTEES = [
     "Sem comissão por agendamento",
     "Sua lista de clientes não é compartilhada",
-    "Seu endereço próprio no cadastro"
+    "Seu endereço próprio, a partir da sua marca"
   ].freeze
 
   def view_template

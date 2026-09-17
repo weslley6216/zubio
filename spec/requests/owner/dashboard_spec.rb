@@ -49,27 +49,15 @@ RSpec.describe "Owner dashboard", type: :request do
       expect(response.body).to include("bg-brand-accent")
     end
 
-    it "invites a tenant without a logo to configure its brand" do
+    it "shows no brand card for a tenant that has finished onboarding" do
       create(:branding, tenant: tenant)
       sign_in
 
       get owner_dashboard_path
 
-      expect(response.body).to include(Views::Owner::Dashboard::Show::SETUP_BADGE)
-      expect(response.body).to include(Views::Owner::Dashboard::Show::SETUP_TITLE)
-      expect(response.body).not_to include(Views::Owner::Dashboard::Show::MANAGE_TITLE)
-      expect(Nokogiri::HTML5(response.body).at_css("a:has(h2)")["href"]).to eq(owner_settings_path)
-    end
-
-    it "drops the invitation once a logo is attached" do
-      create(:branding, :with_logo, tenant: tenant)
-      sign_in
-
-      get owner_dashboard_path
-
-      expect(response.body).to include(Views::Owner::Dashboard::Show::MANAGE_TITLE)
-      expect(response.body).not_to include(Views::Owner::Dashboard::Show::SETUP_TITLE)
-      expect(Nokogiri::HTML5(response.body).at_css("a:has(h2)")["href"]).to eq(owner_settings_path)
+      expect(response.body).to include("Olá, Ana")
+      expect(response.body).not_to include("Configure a marca")
+      expect(response.body).not_to include("Marca do estabelecimento")
     end
 
     it "renders the platform default identity for a tenant with no branding at all" do
