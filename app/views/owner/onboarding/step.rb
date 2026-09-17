@@ -4,8 +4,7 @@ class Views::Owner::Onboarding::Step < Views::Base
   TITLE = "Zubio".freeze
   SECONDARY_CLASS = "mt-2 h-11 w-full cursor-pointer text-sm font-medium text-ink-muted".freeze
 
-  def initialize(tenant:, branding:, body:, step:, submit_url:, submit_label:, secondary: nil, page_stylesheet: nil)
-    @tenant = tenant
+  def initialize(branding:, body:, step:, submit_url:, submit_label:, secondary: nil, page_stylesheet: nil)
     @branding = branding
     @body = body
     @step = step

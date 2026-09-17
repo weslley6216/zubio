@@ -13,7 +13,7 @@ RSpec.describe "Owner onboarding step frame", type: :view do
 
   def render_step(step:)
     render Views::Owner::Onboarding::Step.new(
-      tenant: build(:tenant, :onboarding), branding: Branding.platform_default, body: dummy_body_class.new,
+      branding: Branding.platform_default, body: dummy_body_class.new,
       step: step, submit_url: "/owner/onboarding/#{step}", submit_label: "Continuar"
     )
   end

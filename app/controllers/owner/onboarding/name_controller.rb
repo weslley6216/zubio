@@ -19,7 +19,7 @@ class Owner::Onboarding::NameController < Owner::Onboarding::BaseController
   def render_name(status: :ok)
     tenant = ActsAsTenant.current_tenant
     render Views::Owner::Onboarding::Step.new(
-      tenant: tenant, branding: current_branding,
+      branding: current_branding,
       body: Components::Owner::BrandQuestion::Name.new(tenant: tenant, branding: current_branding, deriving: true),
       step: "name", submit_url: owner_onboarding_name_path, submit_label: "Continuar"
     ), status: status

@@ -7,8 +7,7 @@ class Views::Owner::Onboarding::Services < Views::Base
   LIST_CLASS = "mt-4 grid gap-2".freeze
   ITEM_CLASS = "flex items-center justify-between rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-ink".freeze
 
-  def initialize(tenant:, branding:, service:, services:)
-    @tenant = tenant
+  def initialize(branding:, service:, services:)
     @branding = branding
     @service = service
     @services = services
