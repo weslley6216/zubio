@@ -99,6 +99,13 @@ RSpec.describe "Landing page", type: :request do
       expect(response.body).not_to include(joes_branding.stylesheet_digest)
     end
 
+    it "describes the address as born from the brand name, not chosen at signup" do
+      get root_path
+
+      expect(response.body).not_to include("no cadastro")
+      expect(response.body).to include("nome da sua marca")
+    end
+
     it "offers no path to the sign in screen" do
       get root_path
 

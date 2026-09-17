@@ -1,6 +1,6 @@
 class Views::Pages::Home::Whitelabel < Views::Base
   GUARANTEES = [
-    [ "Seu endereço", "seunegocio.zubio.com.br fica pronto assim que você se cadastra." ],
+    [ "Seu endereço", "seunegocio.zubio.com.br, criado a partir do nome da sua marca no primeiro acesso." ],
     [ "Sua cor em todo lugar", "Botão, seleção, destaque: tudo segue a cor que você escolheu." ],
     [ "Sempre legível", "A gente confere o contraste da sua cor antes de publicar. Nada de texto que some no fundo." ]
   ].freeze
