@@ -4,7 +4,7 @@ class Views::Pages::Home::Faq < Views::Base
     [ "Já uso caderno e WhatsApp. Vou perder meu histórico?", "Não. Você continua atendendo como sempre — o Zubio vale do próximo agendamento em diante. Lançar à mão no painel quem marcou por telefone está no plano." ],
     [ "E se dois clientes escolherem o mesmo horário?", "O horário fica travado na primeira reserva: a segunda pessoa recebe o aviso na hora e a lista de horários livres se atualiza. Não deixar reserva dupla passar é a regra mais importante do sistema." ],
     [ "Trabalho sozinho. Serve para mim?", "Serve. Com um profissional o painel fica mais simples: sua agenda, seus serviços, seu link. Se um dia a equipe crescer, é só adicionar gente." ],
-    [ "Que endereço meu negócio recebe?", "Todo estabelecimento recebe um endereço no formato seunegocio.zubio.com.br assim que se cadastra, já com a sua marca aplicada." ]
+    [ "Que endereço meu negócio recebe?", "Um endereço no formato seunegocio.zubio.com.br, criado a partir do nome da sua marca no primeiro acesso, já com a sua cara." ]
   ].freeze
 
   def view_template
