@@ -7,7 +7,7 @@ class OwnerMailer < ApplicationMailer
 
       mail(
         to: owner.email,
-        subject: "#{tenant.name} está no ar no Zubio",
+        subject: "Sua conta no Zubio está pronta",
         body: welcome_body(tenant, owner),
         content_type: "text/plain"
       )
@@ -20,11 +20,9 @@ class OwnerMailer < ApplicationMailer
     <<~TEXT
       Olá, #{owner.name}!
 
-      A conta de #{tenant.name} está pronta. O endereço do seu estabelecimento é:
+      Sua conta no Zubio está criada. Quando quiser voltar e continuar de onde parou, é por este link:
 
       #{new_owner_session_url(host: tenant.canonical_host)}
-
-      Guarde esse link: é por ele que você e sua equipe entram no painel.
     TEXT
   end
 end
