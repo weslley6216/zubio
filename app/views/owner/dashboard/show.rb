@@ -1,10 +1,4 @@
 class Views::Owner::Dashboard::Show < Views::Base
-  SETUP_BADGE = "Comece por aqui".freeze
-  SETUP_TITLE = "Configure a marca do seu estabelecimento".freeze
-  SETUP_BODY = "Envie o logotipo e escolha a cor que vão pintar este painel, o aplicativo e a página do seu estabelecimento.".freeze
-  MANAGE_TITLE = "Marca do estabelecimento".freeze
-  MANAGE_BODY = "Ajuste o logotipo e a cor sempre que quiser.".freeze
-
   def initialize(tenant:, branding:, owner:, current_section:)
     @tenant = tenant
     @branding = branding
@@ -17,7 +11,6 @@ class Views::Owner::Dashboard::Show < Views::Base
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
       div(class: "mx-auto grid w-full max-w-6xl gap-6 px-6 py-10") do
         render_greeting
-        render_brand_card
       end
     end
   end
@@ -32,19 +25,4 @@ class Views::Owner::Dashboard::Show < Views::Base
   end
 
   def owner_first_name = @owner.name.split.first
-
-  def render_brand_card
-    branded = @tenant.branded?
-
-    a(href: owner_settings_path,
-      class: "grid max-w-xl gap-2 rounded-xl border border-line bg-surface p-6 hover:bg-surface-2") do
-      render_setup_badge unless branded
-      h2(class: "text-lg font-bold text-ink") { branded ? MANAGE_TITLE : SETUP_TITLE }
-      p(class: "text-sm text-ink-muted") { branded ? MANAGE_BODY : SETUP_BODY }
-    end
-  end
-
-  def render_setup_badge
-    render Components::Badge.new(text: SETUP_BADGE, tone: :accent)
-  end
 end
