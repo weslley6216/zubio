@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_17_150001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -81,7 +81,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
     t.datetime "created_at", null: false
     t.citext "custom_domain"
     t.datetime "custom_domain_verified_at"
-    t.string "name", null: false
+    t.string "name"
+    t.integer "onboarding_step", default: 0, null: false
     t.string "status", default: "active", null: false
     t.citext "subdomain", null: false
     t.datetime "updated_at", null: false
@@ -102,6 +103,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
     t.index ["tenant_id"], name: "index_users_on_tenant_id"
   end
 
+  create_table "working_hours", force: :cascade do |t|
+    t.time "closes_at", null: false
+    t.datetime "created_at", null: false
+    t.time "opens_at", null: false
+    t.bigint "professional_id", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "weekday", limit: 2, null: false
+    t.index ["professional_id"], name: "index_working_hours_on_professional_id"
+    t.index ["tenant_id", "professional_id", "weekday"], name: "idx_on_tenant_id_professional_id_weekday_d9e149b6a6"
+    t.index ["tenant_id"], name: "index_working_hours_on_tenant_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "brandings", "tenants"
@@ -109,4 +123,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
   add_foreign_key "professionals", "users"
   add_foreign_key "services", "tenants"
   add_foreign_key "users", "tenants"
+  add_foreign_key "working_hours", "professionals"
+  add_foreign_key "working_hours", "tenants"
 end

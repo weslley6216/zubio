@@ -3,11 +3,8 @@ require "rails_helper"
 RSpec.describe "Signup", type: :request do
   before { host! "zubio.com.br" }
 
-  def signup_params(subdomain:, password: "s3cr3t123", password_confirmation: "s3cr3t123")
-    {
-      tenant: { name: "Studio Aurora", subdomain: subdomain },
-      user: { name: "Ana Lima", email: "ana@example.com", password: password, password_confirmation: password_confirmation }
-    }
+  def signup_params(name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123")
+    { user: { name: name, email: email, password: password } }
   end
 
   describe "GET /signup/new" do
@@ -46,143 +43,69 @@ RSpec.describe "Signup", type: :request do
       expect(response.body).to include(%(aria-label="Trocar o tema"))
       expect(response.body).not_to include("#como")
     end
-  end
 
-  describe "GET /signup/subdomain" do
-    it "reports a free subdomain as available under the platform host" do
-      get subdomain_signup_path(candidate: "estudio-aurora")
+    it "does not ask for an establishment name or a subdomain" do
+      get new_signup_path
 
-      expect(response.body).to include("estudio-aurora.zubio.com.br")
-      expect(response.body).to include("está disponível")
+      expect(response.body).not_to include("Nome do estabelecimento")
+      expect(response.body).not_to include("Subdomínio")
     end
 
-    it "reports a subdomain already taken by another establishment" do
-      create(:tenant, subdomain: "estudio-aurora")
+    it "does not ask the visitor to confirm the password" do
+      get new_signup_path
 
-      get subdomain_signup_path(candidate: "estudio-aurora")
-
-      expect(response.body).to include("já está em uso")
+      expect(response.body).not_to include("Confirme a senha")
     end
 
-    it "reports a subdomain reserved by the platform" do
-      get subdomain_signup_path(candidate: "admin")
+    it "asks only for the person's name, email and password" do
+      get new_signup_path
 
-      expect(response.body).to include("reservado")
-    end
-
-    it "reports a subdomain with characters the format does not allow" do
-      get subdomain_signup_path(candidate: "estudio aurora")
-
-      expect(response.body).to include("letras minúsculas")
-    end
-
-    it "reports a subdomain shorter than the minimum" do
-      get subdomain_signup_path(candidate: "ab")
-
-      expect(response.body).to include("3 caracteres")
-    end
-
-    it "reports a subdomain longer than the maximum" do
-      get subdomain_signup_path(candidate: "a" * 64)
-
-      expect(response.body).to include("63 caracteres")
-    end
-
-    it "prompts for a subdomain when the field is empty" do
-      get subdomain_signup_path(candidate: "")
-
-      expect(response.body).to include("Escolha um subdomínio")
-    end
-
-    it "stops answering the check once the rate limit is exceeded" do
-      30.times { get subdomain_signup_path(candidate: "estudio-aurora") }
-
-      get subdomain_signup_path(candidate: "estudio-aurora")
-
-      expect(response).to have_http_status(:too_many_requests)
-    end
-
-    it "leaves the signup quota untouched however much the visitor types" do
-      30.times { get subdomain_signup_path(candidate: "estudio-aurora") }
-
-      expect {
-        post signup_path, params: signup_params(subdomain: "estudio-aurora")
-      }.to change(Tenant, :count).by(1)
-    end
-
-    it "sends the check back to the platform host when reached on a tenant subdomain" do
-      host! "joes-barbershop.zubio.com.br"
-
-      get subdomain_signup_path(candidate: "estudio-aurora")
-
-      expect(response).to redirect_to(new_signup_url(host: Tenant::PLATFORM_HOST))
+      expect(response.body).to include("Seu nome")
+      expect(response.body).to include("E-mail")
+      expect(response.body).to include("Senha")
     end
   end
 
   describe "POST /signup" do
-    it "creates the tenant and its owner, then hands the owner over to the new subdomain" do
-      post signup_path, params: signup_params(subdomain: "estudio-aurora")
+    it "creates a nameless tenant with a provisional subdomain, its owner and professional" do
+      post signup_path, params: signup_params
 
-      tenant = Tenant.find_by(subdomain: "estudio-aurora")
+      owner = User.unscoped.sole
+      tenant = owner.tenant
 
+      expect(tenant.name).to be_nil
       expect(tenant).to be_active
       ActsAsTenant.with_tenant(tenant) { expect(tenant.users.sole).to be_owner }
-      expect(response.location).to start_with(owner_handoff_url(subdomain: "estudio-aurora"))
+      ActsAsTenant.with_tenant(tenant) { expect(Professional.sole.display_name).to eq("Ana Lima") }
     end
 
-    it "creates the owner's professional through the public signup form" do
-      post signup_path, params: signup_params(subdomain: "estudio-aurora")
+    it "hands the owner over to the provisional subdomain" do
+      post signup_path, params: signup_params
 
-      tenant = Tenant.find_by(subdomain: "estudio-aurora")
-      professional, owner = ActsAsTenant.with_tenant(tenant) { [ Professional.sole, User.sole ] }
+      tenant = User.unscoped.sole.tenant
 
-      expect(professional).to have_attributes(display_name: "Ana Lima", user_id: owner.id)
+      expect(response.location).to start_with(owner_handoff_url(subdomain: tenant.subdomain))
     end
 
-    it "lands the new owner on their own dashboard without a second login" do
-      post signup_path, params: signup_params(subdomain: "estudio-aurora")
+    it "creates the account with the single password the visitor typed, without confirmation" do
+      post signup_path, params: signup_params(password: "s3cr3t123")
 
-      follow_redirect!
-      follow_redirect!
+      owner = User.unscoped.sole
 
-      expect(response.body).to include("Painel")
+      expect(owner.authenticate("s3cr3t123")).to eq(owner)
     end
 
-    it "emails the new owner the address of their establishment" do
-      perform_enqueued_jobs do
-        post signup_path, params: signup_params(subdomain: "estudio-aurora")
-      end
+    it "rejects an invalid email and re-renders the form with the typed name kept" do
+      post signup_path, params: signup_params(email: "not-an-email")
 
-      expect(ActionMailer::Base.deliveries.last.body.to_s).to include("estudio-aurora.zubio.com.br")
-    end
-
-    it "rejects signup when the subdomain is already in use" do
-      create(:tenant, subdomain: "estudio-aurora")
-
-      ActsAsTenant.without_tenant do
-        expect {
-          post signup_path, params: signup_params(subdomain: "estudio-aurora")
-        }.to change(Tenant, :count).by(0).and change(User, :count).by(0).and change(Professional, :count).by(0)
-      end
-
-      expect(response.body).to include("has already been taken")
-    end
-
-    it "rejects signup when the subdomain is reserved" do
-      post signup_path, params: signup_params(subdomain: "admin")
-
-      expect(response.body).to include("is reserved")
-    end
-
-    it "rejects signup when the password confirmation does not match" do
-      post signup_path, params: signup_params(subdomain: "estudio-aurora", password: "s3cr3t123", password_confirmation: "different")
-
-      expect(response.body).to include("doesn&#39;t match Password")
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(%(value="Ana Lima"))
+      expect(User.unscoped.count).to eq(0)
     end
 
     it "blocks further signup attempts after the rate limit is exceeded" do
-      5.times { post signup_path, params: signup_params(subdomain: "estudio-aurora") }
-      post signup_path, params: signup_params(subdomain: "estudio-aurora")
+      5.times { |index| post signup_path, params: signup_params(email: "ana#{index}@example.com") }
+      post signup_path, params: signup_params(email: "ana-over@example.com")
 
       expect(response).to redirect_to(new_signup_path)
 
@@ -195,7 +118,7 @@ RSpec.describe "Signup", type: :request do
       existing_tenant = create(:tenant, subdomain: "barbearia-do-ze")
       owner = create(:user, tenant: existing_tenant, email: "ze@example.com", password: "s3cr3t123")
 
-      post signup_path, params: signup_params(subdomain: "estudio-aurora")
+      post signup_path, params: signup_params
 
       host! "#{existing_tenant.subdomain}.zubio.com.br"
       post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
@@ -203,6 +126,18 @@ RSpec.describe "Signup", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(User.unscoped.where(tenant: existing_tenant).count).to eq(1)
+    end
+
+    it "emails the new owner the provisional address" do
+      perform_enqueued_jobs do
+        post signup_path, params: signup_params
+      end
+
+      tenant = User.unscoped.sole.tenant
+      delivery = ActionMailer::Base.deliveries.last
+
+      expect(delivery.subject).to eq("Sua conta no Zubio está pronta")
+      expect(delivery.body.to_s).to include(tenant.subdomain)
     end
   end
 end

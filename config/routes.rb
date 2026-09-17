@@ -12,11 +12,19 @@ Rails.application.routes.draw do
   get "showcase.css" => "stylesheets#showcase", as: :showcase_stylesheet
   get "palette.css" => "stylesheets#palette", as: :palette_stylesheet
 
-  resource :signup, only: %i[new create] do
-    get :subdomain
-  end
+  resource :signup, only: %i[new create]
 
   namespace :owner do
+    namespace :onboarding do
+      resource :welcome,       only: %i[show update], controller: "welcome"
+      resource :colors,        only: %i[show update]
+      resource :name,          only: %i[show update], controller: "name"
+      resource :logo,          only: %i[show update], controller: "logo"
+      resource :services,      only: %i[show create update]
+      resource :working_hours, only: %i[show update]
+      resource :final,         only: :show, controller: "final"
+    end
+
     resource :session, only: %i[new create destroy]
     resource :handoff, only: :show
     resource :dashboard, only: :show, controller: "dashboard"

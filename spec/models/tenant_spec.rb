@@ -53,10 +53,19 @@ RSpec.describe Tenant, type: :model do
   end
 
   describe "name" do
-    it "is invalid without a name" do
-      tenant = build(:tenant, name: nil)
+    it "does not require a name while the brand has not been named yet" do
+      tenant = build(:tenant, :onboarding)
 
-      expect(tenant).not_to be_valid
+      expect(tenant).to be_valid
+    end
+
+    it "starts requiring a name once it is answered" do
+      tenant = build(:tenant, :onboarding)
+      tenant.name = ""
+
+      tenant.valid?
+
+      expect(tenant.errors[:name]).to be_present
     end
 
     it "rejects a name longer than the maximum length" do
@@ -157,6 +166,12 @@ RSpec.describe Tenant, type: :model do
       tenant = build(:tenant, name: "estúdio aurora")
 
       expect(tenant.initial).to eq("E")
+    end
+
+    it "is nil when the establishment has no name yet" do
+      tenant = build(:tenant, :onboarding)
+
+      expect(tenant.initial).to be_nil
     end
   end
 
@@ -289,35 +304,37 @@ RSpec.describe Tenant, type: :model do
   end
 
   describe ".provision_owner!" do
-    def provision(subdomain: "estudio-aurora", tenant_name: "Studio Aurora", owner_name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123")
-      Tenant.provision_owner!(
-        tenant_attributes: { name: tenant_name, subdomain: subdomain },
-        owner_attributes: { name: owner_name, email: email, password: password, password_confirmation: password }
-      )
+    def provision(owner_name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123")
+      Tenant.provision_owner!(owner_attributes: { name: owner_name, email: email, password: password })
     end
 
     it "returns the owner it created for the new tenant" do
       owner = provision
 
       expect(owner).to be_owner
-      expect(owner.tenant.subdomain).to eq("estudio-aurora")
+    end
+
+    it "gives the tenant no name yet" do
+      owner = provision
+
+      expect(owner.tenant.name).to be_nil
+    end
+
+    it "gives the tenant a provisional address that leaks neither the owner's name nor their email" do
+      owner = provision
+
+      expect(owner.tenant.subdomain).not_to include("ana")
+    end
+
+    it "starts the tenant at the welcome step" do
+      owner = provision
+
+      expect(owner.tenant).to be_onboarding_welcome
     end
 
     it "rolls back the tenant when the owner attributes are invalid" do
       ActsAsTenant.without_tenant do
         expect { provision(password: "") }
-          .to raise_error(ActiveRecord::RecordInvalid)
-          .and change(Tenant, :count).by(0)
-          .and change(User, :count).by(0)
-          .and change(Professional, :count).by(0)
-      end
-    end
-
-    it "raises for a duplicate subdomain without creating a user or a professional" do
-      create(:tenant, subdomain: "estudio-aurora")
-
-      ActsAsTenant.without_tenant do
-        expect { provision(tenant_name: "Studio Aurora 2") }
           .to raise_error(ActiveRecord::RecordInvalid)
           .and change(Tenant, :count).by(0)
           .and change(User, :count).by(0)
@@ -351,11 +368,79 @@ RSpec.describe Tenant, type: :model do
 
     it "keeps each establishment's professional inside its own tenant" do
       aurora = provision.tenant
-      provision(subdomain: "barbearia-do-ze", tenant_name: "Barbearia do Zé", owner_name: "José Silva", email: "ze@example.com")
+      provision(owner_name: "José Silva", email: "ze@example.com")
 
       professionals = ActsAsTenant.with_tenant(aurora) { Professional.all }
 
       expect(professionals.map(&:display_name)).to eq([ "Ana Lima" ])
+    end
+  end
+
+  describe ".derive_subdomain" do
+    it "slugifies the brand name" do
+      subdomain = Tenant.derive_subdomain("Barbearia do Zé")
+
+      expect(subdomain).to eq("barbearia-do-ze")
+    end
+
+    it "normalizes accents and spaces" do
+      subdomain = Tenant.derive_subdomain("Estúdio   Aurora")
+
+      expect(subdomain).to eq("estudio-aurora")
+    end
+
+    it "disambiguates with a numeric suffix when the base is already taken" do
+      create(:tenant, subdomain: "barbearia-do-ze")
+
+      subdomain = Tenant.derive_subdomain("Barbearia do Zé")
+
+      expect(subdomain).to eq("barbearia-do-ze-2")
+    end
+
+    it "does not hand out a reserved subdomain" do
+      subdomain = Tenant.derive_subdomain("Admin")
+
+      expect(subdomain).to eq("admin-2")
+    end
+  end
+
+  describe "#claim_address_from_brand_name!" do
+    it "sets the name, derives the subdomain and advances from name to logo, atomically" do
+      tenant = create(:tenant, :at_name)
+
+      ActsAsTenant.with_tenant(tenant) { tenant.claim_address_from_brand_name!("Barbearia do Zé") }
+
+      expect(tenant.reload).to have_attributes(name: "Barbearia do Zé", subdomain: "barbearia-do-ze")
+      expect(tenant).to be_onboarding_logo
+    end
+
+    it "raises for a blank name without changing the subdomain or the step" do
+      tenant = create(:tenant, :at_name)
+      original_subdomain = tenant.subdomain
+
+      expect { ActsAsTenant.with_tenant(tenant) { tenant.claim_address_from_brand_name!("") } }
+        .to raise_error(ActiveRecord::RecordInvalid)
+
+      expect(tenant.reload.subdomain).to eq(original_subdomain)
+      expect(tenant).to be_onboarding_name
+    end
+  end
+
+  describe "#advance_onboarding!" do
+    it "moves from welcome to colors" do
+      tenant = create(:tenant, :onboarding)
+
+      ActsAsTenant.with_tenant(tenant) { tenant.advance_onboarding! }
+
+      expect(tenant).to be_onboarding_colors
+    end
+
+    it "is a no-op once the establishment is done" do
+      tenant = create(:tenant)
+
+      ActsAsTenant.with_tenant(tenant) { tenant.advance_onboarding! }
+
+      expect(tenant).to be_onboarding_done
     end
   end
 
@@ -492,6 +577,13 @@ RSpec.describe Tenant, type: :model do
       tenant = create(:tenant, name: "Barbearia do Zé")
 
       expect(tenant.manifest_identity[:name]).to eq("Barbearia do Zé")
+    end
+
+    it "falls back to Zubio for name and short_name while the establishment has none" do
+      tenant = create(:tenant, :onboarding)
+
+      expect(tenant.manifest_identity[:name]).to eq("Zubio")
+      expect(tenant.manifest_identity[:short_name]).to eq("Zubio")
     end
 
     it "truncates the short_name to 12 characters without an ellipsis" do
