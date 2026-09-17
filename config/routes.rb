@@ -16,13 +16,13 @@ Rails.application.routes.draw do
 
   namespace :owner do
     namespace :onboarding do
-      resource :welcome,       only: %i[show update]
+      resource :welcome,       only: %i[show update], controller: "welcome"
       resource :colors,        only: %i[show update]
-      resource :name,          only: %i[show update]
-      resource :logo,          only: %i[show update]
+      resource :name,          only: %i[show update], controller: "name"
+      resource :logo,          only: %i[show update], controller: "logo"
       resource :services,      only: %i[show create update]
       resource :working_hours, only: %i[show update]
-      resource :final,         only: :show
+      resource :final,         only: :show, controller: "final"
     end
 
     resource :session, only: %i[new create destroy]
