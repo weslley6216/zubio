@@ -1,5 +1,6 @@
 class Professional < ApplicationRecord
   belongs_to :user, optional: true, dependent: nil
+  has_many :working_hours, dependent: :destroy
 
   acts_as_tenant(:tenant)
 
