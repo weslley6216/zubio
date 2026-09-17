@@ -23,7 +23,7 @@ class Owner::Onboarding::LogoController < Owner::Onboarding::BaseController
   def render_logo(status: :ok)
     tenant = ActsAsTenant.current_tenant
     render Views::Owner::Onboarding::Step.new(
-      tenant: tenant, branding: current_branding,
+      branding: current_branding,
       body: Components::Owner::BrandQuestion::Logo.new(tenant: tenant, branding: current_branding),
       step: "logo", submit_url: owner_onboarding_logo_path, submit_label: "Continuar", secondary: "Pular por enquanto"
     ), status: status

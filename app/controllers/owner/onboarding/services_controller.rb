@@ -27,7 +27,7 @@ class Owner::Onboarding::ServicesController < Owner::Onboarding::BaseController
 
   def render_services(service, status: :ok)
     render Views::Owner::Onboarding::Services.new(
-      tenant: ActsAsTenant.current_tenant, branding: current_branding,
+      branding: current_branding,
       service: service, services: Service.ordered.to_a
     ), status: status
   end

@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["name", "address"]
-  static values = { suffix: String }
+  static values = { suffix: String, maxLength: Number }
 
   connect() {
     this.render()

@@ -30,7 +30,7 @@ class Owner::Onboarding::WorkingHoursController < Owner::Onboarding::BaseControl
 
   def render_hours(status: :ok)
     render Views::Owner::Onboarding::Step.new(
-      tenant: ActsAsTenant.current_tenant, branding: current_branding,
+      branding: current_branding,
       body: Components::Owner::WorkingHours::Fields.new,
       step: "working_hours", submit_url: owner_onboarding_working_hours_path, submit_label: "Continuar"
     ), status: status

@@ -17,8 +17,7 @@ class Views::Owner::Onboarding::Welcome < Views::Base
   SUBTITLE_CLASS = "mt-1 text-sm text-ink-muted".freeze
   LIST_CLASS = "mt-4 grid list-decimal gap-2 pl-5 text-sm text-ink".freeze
 
-  def initialize(tenant:, branding:)
-    @tenant = tenant
+  def initialize(branding:)
     @branding = branding
   end
 

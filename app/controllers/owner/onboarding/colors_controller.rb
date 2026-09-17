@@ -20,7 +20,7 @@ class Owner::Onboarding::ColorsController < Owner::Onboarding::BaseController
 
   def render_colors(status: :ok)
     render Views::Owner::Onboarding::Step.new(
-      tenant: ActsAsTenant.current_tenant, branding: current_branding,
+      branding: current_branding,
       body: Components::Owner::BrandQuestion::Colors.new(tenant: ActsAsTenant.current_tenant, branding: current_branding),
       step: "colors", submit_url: owner_onboarding_colors_path, submit_label: "Continuar",
       page_stylesheet: palette_stylesheet_path(v: Branding::Palette.stylesheet_digest)

@@ -39,7 +39,8 @@ class Components::Owner::BrandQuestion::Name < Components::Base
   def root_data
     return { controller: "name-counter" } unless @deriving
 
-    { controller: "name-counter brand-address", brand_address_suffix_value: Tenant::PLATFORM_HOST }
+    { controller: "name-counter brand-address", brand_address_suffix_value: Tenant::PLATFORM_HOST,
+      brand_address_max_length_value: Tenant::SUBDOMAIN_LENGTH.max }
   end
 
   def render_field
