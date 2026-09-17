@@ -95,6 +95,14 @@ RSpec.describe "Signup", type: :request do
       expect(owner.authenticate("s3cr3t123")).to eq(owner)
     end
 
+    it "rejects an invalid email and re-renders the form with the typed name kept" do
+      post signup_path, params: signup_params(email: "not-an-email")
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(%(value="Ana Lima"))
+      expect(User.unscoped.count).to eq(0)
+    end
+
     it "blocks further signup attempts after the rate limit is exceeded" do
       5.times { |index| post signup_path, params: signup_params(email: "ana#{index}@example.com") }
       post signup_path, params: signup_params(email: "ana-over@example.com")

@@ -69,6 +69,6 @@ class Views::Owner::Onboarding::Final < Views::Base
   def days_summary
     return NO_DAYS if @working_hours.blank?
 
-    @working_hours.map(&:weekday).uniq.map { |weekday| WorkingHour::WEEKDAY_NAMES[weekday] }.join(", ")
+    @working_hours.uniq(&:weekday).map(&:weekday_name).join(", ")
   end
 end
