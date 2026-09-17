@@ -9,7 +9,7 @@ class Owner::Onboarding::NameController < Owner::Onboarding::BaseController
     tenant = ActsAsTenant.current_tenant
     tenant.claim_address_from_brand_name!(params.require(:tenant).permit(:name).fetch(:name, ""))
     redirect_to owner_handoff_url(host: tenant.canonical_host, token: current_owner.handoff_token), allow_other_host: true
-  rescue ActiveRecord::RecordInvalid
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
     flash.now[:alert] = REFUSED
     render_name(status: :unprocessable_entity)
   end

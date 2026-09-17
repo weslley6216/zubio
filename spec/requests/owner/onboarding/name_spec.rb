@@ -20,6 +20,15 @@ RSpec.describe "Owner onboarding name", type: :request do
       expect(response.body).not_to include("Ana Lima")
       expect(response.body).to include("2 de 5")
     end
+
+    it "redirects a tenant that has already finished onboarding to the dashboard" do
+      tenant = create(:tenant, subdomain: "joes-barbershop")
+      sign_in(tenant)
+
+      get owner_onboarding_name_path
+
+      expect(response).to redirect_to(owner_dashboard_path)
+    end
   end
 
   describe "PATCH /owner/onboarding/name" do

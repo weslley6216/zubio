@@ -18,6 +18,15 @@ RSpec.describe "Owner onboarding colors", type: :request do
       expect(response.body).to include(Components::Owner::BrandQuestion::Colors::TITLE)
       expect(response.body).to include("1 de 5")
     end
+
+    it "redirects a tenant that has already finished onboarding to the dashboard" do
+      tenant = create(:tenant, subdomain: "joes-barbershop")
+      sign_in(tenant)
+
+      get owner_onboarding_colors_path
+
+      expect(response).to redirect_to(owner_dashboard_path)
+    end
   end
 
   describe "PATCH /owner/onboarding/colors" do

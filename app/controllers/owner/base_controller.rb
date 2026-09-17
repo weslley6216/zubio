@@ -22,7 +22,8 @@ class Owner::BaseController < ApplicationController
       "name" => owner_onboarding_name_path,
       "logo" => owner_onboarding_logo_path,
       "services" => owner_onboarding_services_path,
-      "working_hours" => owner_onboarding_working_hours_path
+      "working_hours" => owner_onboarding_working_hours_path,
+      "done" => owner_dashboard_path
     }.fetch(step)
   end
 

@@ -22,6 +22,15 @@ RSpec.describe "Owner onboarding working hours", type: :request do
 
       expect(response.body).to include("5 de 5")
     end
+
+    it "redirects a tenant that has already finished onboarding to the dashboard" do
+      tenant = create(:tenant, subdomain: "barbearia-do-ze")
+      sign_in(tenant)
+
+      get owner_onboarding_working_hours_path
+
+      expect(response).to redirect_to(owner_dashboard_path)
+    end
   end
 
   describe "PATCH /owner/onboarding/working_hours" do
