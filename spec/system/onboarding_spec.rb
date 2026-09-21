@@ -28,7 +28,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     click_on "Pular por enquanto"
     fill_in "Nome", with: "Corte"
     fill_in "Duração (minutos)", with: "45"
-    fill_in "Preço (R$)", with: "90,00"
+    fill_in "Preço (R$, opcional)", with: "90,00"
     click_on "Continuar"
     %w[2 3 4 5 6].each { |weekday| find("input[type=checkbox][value='#{weekday}']").check }
     page.execute_script(%(document.getElementById('working_hours_opens_at').value = '09:00'))
@@ -86,7 +86,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     click_on "Continuar"
     fill_in "Nome", with: "Corte"
     fill_in "Duração (minutos)", with: "45"
-    fill_in "Preço (R$)", with: "90,00"
+    fill_in "Preço (R$, opcional)", with: "90,00"
     click_on "Continuar"
     %w[2 3].each { |weekday| find("input[type=checkbox][value='#{weekday}']").check }
     page.execute_script(%(document.getElementById('working_hours_opens_at').value = '09:00'))
