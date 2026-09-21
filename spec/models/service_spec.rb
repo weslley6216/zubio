@@ -170,12 +170,10 @@ RSpec.describe Service, type: :model do
   end
 
   describe "price_cents" do
-    it "is invalid without a price, asking for one" do
+    it "is valid without a price, to be shown as sob consulta" do
       service = build(:service, price_cents: nil)
 
-      service.valid?
-
-      expect(service.errors[:price_cents]).to eq([ Service::PRICE_REQUIRED_MESSAGE ])
+      expect(service).to be_valid
     end
 
     it "is invalid with a negative price, naming the accepted range" do
@@ -317,13 +315,14 @@ RSpec.describe Service, type: :model do
       expect(service.errors[:price_cents]).to eq([ Service::PRICE_UNREADABLE_MESSAGE ])
     end
 
-    it "asks for the price with that single message when the typed text is blank" do
+    it "stores no price when the typed text is blank, without asking for one" do
       service = build(:service)
 
       service.price = " "
       service.valid?
 
-      expect(service.errors[:price_cents]).to eq([ Service::PRICE_REQUIRED_MESSAGE ])
+      expect(service.price_cents).to be_nil
+      expect(service.errors[:price_cents]).to be_empty
     end
 
     it "refuses a readable price above the highest one with that single message" do

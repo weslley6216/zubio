@@ -15,7 +15,6 @@ class Service < ApplicationRecord
   DESCRIPTION_TOO_LONG_MESSAGE = "use no máximo #{DESCRIPTION_MAX_LENGTH} caracteres".freeze
   DURATION_NOT_WHOLE_MESSAGE = "informe a duração em minutos inteiros".freeze
   DURATION_OUT_OF_STEP_MESSAGE = "escolha um múltiplo de #{DURATION_STEP_MINUTES} entre #{MIN_DURATION_MINUTES} e #{MAX_DURATION_MINUTES} minutos".freeze
-  PRICE_REQUIRED_MESSAGE = "informe o preço".freeze
   PRICE_OUT_OF_RANGE_MESSAGE = "use um valor entre #{Price.new(0).with_currency} e #{Price.new(MAX_PRICE_CENTS).with_currency}".freeze
   PRICE_UNREADABLE_MESSAGE = "não foi possível ler o valor; escreva como 90,00".freeze
 
@@ -30,7 +29,6 @@ class Service < ApplicationRecord
   validates :duration_minutes,
     numericality: { only_integer: true, message: DURATION_NOT_WHOLE_MESSAGE },
     inclusion: { in: DURATION_CHOICES, message: DURATION_OUT_OF_STEP_MESSAGE }
-  validates :price_cents, presence: { message: PRICE_REQUIRED_MESSAGE }, unless: :unreadable_price?
   validates :price_cents,
     numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_PRICE_CENTS, message: PRICE_OUT_OF_RANGE_MESSAGE },
     allow_nil: true
