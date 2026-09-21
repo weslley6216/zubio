@@ -90,5 +90,5 @@ class Views::Owner::Services::Index < Views::Base
 
   def duration(service) = "#{service.duration_minutes} min"
 
-  def price(service) = Service::Price.new(service.price_cents).with_currency
+  def price(service) = Service::Price.label(service.price_cents)
 end

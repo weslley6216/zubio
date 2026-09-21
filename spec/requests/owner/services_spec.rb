@@ -159,6 +159,19 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response.body).not_to include("Barba do Zé")
     end
 
+    it "shows the price of the establishment in the host and not the sob consulta service of another one" do
+      other_tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      create(:service, tenant: other_tenant, name: "Avaliação do Zé", price_cents: nil)
+      create(:service, tenant: tenant, name: "Coloração", price_cents: 9_000)
+      sign_in
+
+      get owner_services_path
+
+      expect(response.body).to include("R$ 90,00")
+      expect(response.body).not_to include("Avaliação do Zé")
+      expect(response.body).not_to include(Service::Price::UNPRICED_LABEL)
+    end
+
     it "asks the database the same number of times for many services as for one" do
       create(:service, tenant: tenant, name: "Corte feminino")
       sign_in
@@ -257,6 +270,20 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response.body).to include("Corte feminino")
       expect(response.body).to include("R$ 90,00")
       expect(response.body).to include("Serviço cadastrado.")
+    end
+
+    it "creates a service without a price and shows it as sob consulta on the catalog" do
+      sign_in
+
+      post owner_services_path, params: service_params(name: "Consulta de visagismo", price: "")
+
+      expect(response).to redirect_to(owner_services_path)
+      ActsAsTenant.with_tenant(tenant) { expect(Service.find_by!(name: "Consulta de visagismo").price_cents).to be_nil }
+
+      follow_redirect!
+
+      expect(response.body).to include("Consulta de visagismo")
+      expect(response.body).to include(Service::Price::UNPRICED_LABEL)
     end
 
     it "accepts a service without a description and stores none" do
@@ -433,6 +460,20 @@ RSpec.describe "Owner services catalog", type: :request do
 
       expect(response.body).to include("Serviço atualizado.")
       expect(response.body).to include("R$ 100,00")
+    end
+
+    it "clears the price when the owner erases it and shows the service as sob consulta" do
+      service = create(:service, tenant: tenant, name: "Corte", price_cents: 4_500)
+      sign_in
+
+      patch owner_service_path(service), params: service_params(name: "Corte", price: "")
+
+      expect(response).to redirect_to(owner_services_path)
+      ActsAsTenant.with_tenant(tenant) { expect(service.reload.price_cents).to be_nil }
+
+      follow_redirect!
+
+      expect(response.body).to include(Service::Price::UNPRICED_LABEL)
     end
 
     it "keeps the stored duration when the new one is out of range, with the error beside the duration" do
