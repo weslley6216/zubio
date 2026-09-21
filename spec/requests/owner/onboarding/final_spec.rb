@@ -35,13 +35,13 @@ RSpec.describe "Owner onboarding final", type: :request do
       expect(response.body).to include(%(href="#{new_owner_service_path}"))
     end
 
-    it "sends a tenant still mid-onboarding to their current step instead" do
-      tenant = create(:tenant, :at_logo, subdomain: "barbearia-do-ze")
+    it "sends a tenant still mid-onboarding to the onboarding document instead" do
+      tenant = create(:tenant, :onboarding, subdomain: "barbearia-do-ze")
       sign_in(tenant)
 
       get owner_onboarding_final_path
 
-      expect(response).to redirect_to(owner_onboarding_logo_path)
+      expect(response).to redirect_to(owner_onboarding_path)
     end
 
     it "lets a tenant who has finished onboarding reach the panel, with no way back into setup" do
@@ -51,7 +51,7 @@ RSpec.describe "Owner onboarding final", type: :request do
       get owner_dashboard_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).not_to include(owner_onboarding_welcome_path)
+      expect(response.body).not_to include(owner_onboarding_path)
     end
 
     it "does not leak another tenant's summary" do

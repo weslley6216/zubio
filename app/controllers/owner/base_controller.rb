@@ -11,20 +11,7 @@ class Owner::BaseController < ApplicationController
   end
 
   def enforce_onboarding_gate
-    tenant = ActsAsTenant.current_tenant
-    redirect_to onboarding_step_path(tenant.onboarding_step) unless tenant.onboarding_done?
-  end
-
-  def onboarding_step_path(step)
-    {
-      "welcome" => owner_onboarding_welcome_path,
-      "colors" => owner_onboarding_colors_path,
-      "name" => owner_onboarding_name_path,
-      "logo" => owner_onboarding_logo_path,
-      "services" => owner_onboarding_services_path,
-      "working_hours" => owner_onboarding_working_hours_path,
-      "done" => owner_dashboard_path
-    }.fetch(step)
+    redirect_to owner_onboarding_path unless ActsAsTenant.current_tenant.onboarding_completed?
   end
 
   def current_owner

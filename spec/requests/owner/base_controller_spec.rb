@@ -22,15 +22,15 @@ RSpec.describe "Owner base controller authentication", type: :request do
     expect(response.body).to include("Este é o painel de #{tenant.name}.")
   end
 
-  it "sends an owner mid-onboarding to their current step instead of the dashboard" do
-    at_logo_tenant = create(:tenant, :at_logo, subdomain: "joes-onboarding")
-    owner = create(:user, tenant: at_logo_tenant, name: "Ana Lima", email: "owner@example.com", password: "s3cr3t123")
-    host! "#{at_logo_tenant.subdomain}.zubio.com.br"
+  it "sends an owner mid-onboarding to the onboarding document instead of the dashboard" do
+    onboarding_tenant = create(:tenant, :onboarding, subdomain: "joes-onboarding")
+    owner = create(:user, tenant: onboarding_tenant, name: "Ana Lima", email: "owner@example.com", password: "s3cr3t123")
+    host! "#{onboarding_tenant.subdomain}.zubio.com.br"
 
     post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
     follow_redirect!
 
-    expect(response).to redirect_to(owner_onboarding_logo_path)
+    expect(response).to redirect_to(owner_onboarding_path)
   end
 
   it "does not restore a session created for another tenant's owner" do

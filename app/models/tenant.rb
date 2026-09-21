@@ -8,8 +8,6 @@ class Tenant < ApplicationRecord
   DEFAULT_SUBDOMAIN_BASE = "estabelecimento".freeze
   PROVISIONAL_SUBDOMAIN_LENGTH = 12
   PROVISIONAL_MANIFEST_NAME = "Zubio".freeze
-  ONBOARDING_ORDER = %w[welcome colors name logo services working_hours done].freeze
-  ONBOARDING_QUESTIONS = %w[colors name logo services working_hours].freeze
 
   has_one :branding, dependent: :destroy
   has_many :users, dependent: :restrict_with_error
@@ -17,9 +15,6 @@ class Tenant < ApplicationRecord
   has_many :services, dependent: :restrict_with_error
 
   enum :status, { active: "active", suspended: "suspended" }
-  enum :onboarding_step,
-    { welcome: 0, colors: 1, name: 2, logo: 3, services: 4, working_hours: 5, done: 6 },
-    prefix: :onboarding, default: :welcome
 
   validates :subdomain,
     presence: true,
@@ -127,17 +122,16 @@ class Tenant < ApplicationRecord
   end
   private_class_method :subdomain_base, :suffixed_subdomain
 
-  def claim_address_from_brand_name!(brand_name)
+  def onboarding_completed? = onboarding_completed_at.present?
+
+  def complete_onboarding!(name:, branding_attrs:, services_attrs:, schedule:, professional:)
     transaction do
-      update!(name: brand_name, subdomain: self.class.derive_subdomain(brand_name))
-      advance_onboarding!
+      update!(name: name, subdomain: self.class.derive_subdomain(name))
+      (branding || build_branding(brand_600: Branding::DEFAULT_BRAND_600)).update!(branding_attrs) if branding_attrs.present?
+      services_attrs.each { |service_attrs| services.create!(service_attrs) }
+      professional.replace_weekly_hours!(**schedule) if schedule[:weekdays].present?
+      update!(onboarding_completed_at: Time.current)
     end
-  end
-
-  def advance_onboarding!
-    return if onboarding_done?
-
-    update!(onboarding_step: ONBOARDING_ORDER[ONBOARDING_ORDER.index(onboarding_step) + 1])
   end
 
   def manifest_identity
