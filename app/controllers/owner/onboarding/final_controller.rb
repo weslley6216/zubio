@@ -1,6 +1,4 @@
-class Owner::Onboarding::FinalController < Owner::Onboarding::BaseController
-  self.step = "done"
-
+class Owner::Onboarding::FinalController < Owner::BaseController
   def show
     tenant = ActsAsTenant.current_tenant
     render Views::Owner::Onboarding::Final.new(

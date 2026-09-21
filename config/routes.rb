@@ -15,14 +15,9 @@ Rails.application.routes.draw do
   resource :signup, only: %i[new create]
 
   namespace :owner do
+    resource :onboarding, only: %i[show create], controller: "onboarding"
     namespace :onboarding do
-      resource :welcome,       only: %i[show update], controller: "welcome"
-      resource :colors,        only: %i[show update]
-      resource :name,          only: %i[show update], controller: "name"
-      resource :logo,          only: %i[show update], controller: "logo"
-      resource :services,      only: %i[show create update]
-      resource :working_hours, only: %i[show update]
-      resource :final,         only: :show, controller: "final"
+      resource :final, only: :show, controller: "final"
     end
 
     resource :session, only: %i[new create destroy]
