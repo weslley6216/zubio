@@ -7,18 +7,18 @@ RSpec.describe "Owner handoff", type: :request do
   before { host! "#{tenant.subdomain}.zubio.com.br" }
 
   describe "GET /owner/handoff" do
-    it "opens the owner session and lands on the dashboard" do
+    it "opens the owner session and lands on the onboarding final page for a finished tenant" do
       get owner_handoff_path(token: owner.handoff_token)
 
-      expect(response).to redirect_to(owner_dashboard_path)
+      expect(response).to redirect_to(owner_onboarding_final_path)
     end
 
-    it "reaches the dashboard without asking for the password again" do
+    it "reaches the final page without asking for the password again" do
       get owner_handoff_path(token: owner.handoff_token)
 
       follow_redirect!
 
-      expect(response.body).to include("Painel")
+      expect(response.body).to include(Views::Owner::Onboarding::Final::TITLE)
     end
 
     it "refuses a token that arrives as a subresource instead of a navigation" do
@@ -30,7 +30,7 @@ RSpec.describe "Owner handoff", type: :request do
     it "accepts a token that arrives as a top-level navigation" do
       get owner_handoff_path(token: owner.handoff_token), headers: { "Sec-Fetch-Dest" => "document" }
 
-      expect(response).to redirect_to(owner_dashboard_path)
+      expect(response).to redirect_to(owner_onboarding_final_path)
     end
 
     it "leaves the token usable after a subresource attempt is refused" do
@@ -39,7 +39,7 @@ RSpec.describe "Owner handoff", type: :request do
 
       get owner_handoff_path(token: token)
 
-      expect(response).to redirect_to(owner_dashboard_path)
+      expect(response).to redirect_to(owner_onboarding_final_path)
     end
 
     it "refuses the same token a second time" do
@@ -93,6 +93,16 @@ RSpec.describe "Owner handoff", type: :request do
       create(:user, tenant: create(:tenant, subdomain: "salon-b"), role: "owner")
 
       get owner_handoff_path(token: owner.handoff_token)
+
+      expect(response).to redirect_to(owner_onboarding_final_path)
+    end
+
+    it "sends the owner of a tenant still onboarding to the dashboard, where the gate reroutes to setup" do
+      onboarding_tenant = create(:tenant, :onboarding, subdomain: "salon-c")
+      onboarding_owner = create(:user, tenant: onboarding_tenant, role: "owner")
+      host! "#{onboarding_tenant.subdomain}.zubio.com.br"
+
+      get owner_handoff_path(token: onboarding_owner.handoff_token)
 
       expect(response).to redirect_to(owner_dashboard_path)
     end
