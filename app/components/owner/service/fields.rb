@@ -5,8 +5,8 @@ class Components::Owner::Service::Fields < Components::Base
   DESCRIPTION_LABEL = "Descrição (opcional)".freeze
   DURATION_LABEL = "Duração (minutos)".freeze
   DURATION_HINT = "Múltiplos de #{Service::DURATION_STEP_MINUTES} minutos, até #{Service::MAX_DURATION_MINUTES.minutes.in_hours.to_i} horas.".freeze
-  PRICE_LABEL = "Preço (R$)".freeze
-  PRICE_HINT = "Em reais, com vírgula nos centavos: 90,00.".freeze
+  PRICE_LABEL = "Preço (R$, opcional)".freeze
+  PRICE_HINT = "Em reais, com vírgula nos centavos: 90,00. Sem preço fixo? Deixe em branco: o cliente vê \"sob consulta\".".freeze
   DURATION_HINT_ID = "service-duration-hint".freeze
   PRICE_HINT_ID = "service-price-hint".freeze
   DESCRIPTION_ROWS = 3
@@ -49,7 +49,7 @@ class Components::Owner::Service::Fields < Components::Base
 
   def render_price_field
     render_field(:price, PRICE_LABEL, hint: PRICE_HINT, hint_id: PRICE_HINT_ID, error_attribute: :price_cents) do |id, described_by|
-      input(type: "text", id: id, name: field_name(:price), value: @service.price, required: true,
+      input(type: "text", id: id, name: field_name(:price), value: @service.price,
         inputmode: "decimal", **described_by_attrs(described_by), class: CONTROL)
     end
   end

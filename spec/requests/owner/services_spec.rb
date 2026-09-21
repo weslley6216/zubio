@@ -159,6 +159,19 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response.body).not_to include("Barba do Zé")
     end
 
+    it "shows the price of the establishment in the host and not the sob consulta service of another one" do
+      other_tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      create(:service, tenant: other_tenant, name: "Avaliação do Zé", price_cents: nil)
+      create(:service, tenant: tenant, name: "Coloração", price_cents: 9_000)
+      sign_in
+
+      get owner_services_path
+
+      expect(response.body).to include("R$ 90,00")
+      expect(response.body).not_to include("Avaliação do Zé")
+      expect(response.body).not_to include(Service::Price::UNPRICED_LABEL)
+    end
+
     it "asks the database the same number of times for many services as for one" do
       create(:service, tenant: tenant, name: "Corte feminino")
       sign_in
@@ -186,14 +199,14 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(control("price")["value"]).to be_nil
     end
 
-    it "requires every field but the description" do
+    it "requires the name and the duration but not the price or the description" do
       sign_in
 
       get new_owner_service_path
 
       expect(control("name")["required"]).not_to be_nil
       expect(control("duration_minutes")["required"]).not_to be_nil
-      expect(control("price")["required"]).not_to be_nil
+      expect(control("price")["required"]).to be_nil
       expect(control("description")["required"]).to be_nil
       expect(control("description").name).to eq("textarea")
     end
@@ -231,6 +244,14 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(field("price").at_css("##{Views::Owner::Services::Form::PRICE_HINT_ID}").text).to eq(Views::Owner::Services::Form::PRICE_HINT)
     end
 
+    it "tells the owner a blank price shows to the client as sob consulta" do
+      sign_in
+
+      get new_owner_service_path
+
+      expect(field("price").at_css("##{Views::Owner::Services::Form::PRICE_HINT_ID}").text).to include("sob consulta")
+    end
+
     it "sends an anonymous visitor to the login" do
       host! "#{tenant.subdomain}.zubio.com.br"
 
@@ -257,6 +278,20 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response.body).to include("Corte feminino")
       expect(response.body).to include("R$ 90,00")
       expect(response.body).to include("Serviço cadastrado.")
+    end
+
+    it "creates a service without a price and shows it as sob consulta on the catalog" do
+      sign_in
+
+      post owner_services_path, params: service_params(name: "Consulta de visagismo", price: "")
+
+      expect(response).to redirect_to(owner_services_path)
+      ActsAsTenant.with_tenant(tenant) { expect(Service.find_by!(name: "Consulta de visagismo").price_cents).to be_nil }
+
+      follow_redirect!
+
+      expect(response.body).to include("Consulta de visagismo")
+      expect(response.body).to include(Service::Price::UNPRICED_LABEL)
     end
 
     it "accepts a service without a description and stores none" do
@@ -433,6 +468,20 @@ RSpec.describe "Owner services catalog", type: :request do
 
       expect(response.body).to include("Serviço atualizado.")
       expect(response.body).to include("R$ 100,00")
+    end
+
+    it "clears the price when the owner erases it and shows the service as sob consulta" do
+      service = create(:service, tenant: tenant, name: "Corte", price_cents: 4_500)
+      sign_in
+
+      patch owner_service_path(service), params: service_params(name: "Corte", price: "")
+
+      expect(response).to redirect_to(owner_services_path)
+      ActsAsTenant.with_tenant(tenant) { expect(service.reload.price_cents).to be_nil }
+
+      follow_redirect!
+
+      expect(response.body).to include(Service::Price::UNPRICED_LABEL)
     end
 
     it "keeps the stored duration when the new one is out of range, with the error beside the duration" do
