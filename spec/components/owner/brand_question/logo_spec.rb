@@ -45,4 +45,19 @@ RSpec.describe Components::Owner::BrandQuestion::Logo, type: :component do
 
     expect(body(branding)).to include(%(name="branding[remove_logo]"))
   end
+
+  it "wires direct upload and a signed-id field when asked to" do
+    rendered = described_class.new(tenant: tenant, branding: build(:branding, tenant: tenant),
+      direct_upload_url: "/rails/active_storage/direct_uploads").call
+
+    expect(rendered).to include("logo-upload")
+    expect(rendered).to include(%(data-logo-upload-target="signedId"))
+  end
+
+  it "keeps the plain multipart field outside onboarding" do
+    rendered = body(build(:branding, tenant: tenant))
+
+    expect(rendered).to include(%(name="branding[logo]"))
+    expect(rendered).not_to include("logo-upload")
+  end
 end
