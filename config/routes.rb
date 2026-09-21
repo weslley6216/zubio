@@ -8,6 +8,8 @@ Rails.application.routes.draw do
   get "manifest.webmanifest" => "pwa#manifest", as: :pwa_manifest
   get "service-worker.js" => "pwa#service_worker", as: :pwa_service_worker
 
+  post "/rails/active_storage/direct_uploads" => "direct_uploads#create", as: :authenticated_direct_uploads
+
   get "branding.css" => "stylesheets#branding", as: :branding_stylesheet
   get "showcase.css" => "stylesheets#showcase", as: :showcase_stylesheet
   get "palette.css" => "stylesheets#palette", as: :palette_stylesheet
