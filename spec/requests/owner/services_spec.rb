@@ -199,14 +199,14 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(control("price")["value"]).to be_nil
     end
 
-    it "requires every field but the description" do
+    it "requires the name and the duration but not the price or the description" do
       sign_in
 
       get new_owner_service_path
 
       expect(control("name")["required"]).not_to be_nil
       expect(control("duration_minutes")["required"]).not_to be_nil
-      expect(control("price")["required"]).not_to be_nil
+      expect(control("price")["required"]).to be_nil
       expect(control("description")["required"]).to be_nil
       expect(control("description").name).to eq("textarea")
     end
@@ -242,6 +242,14 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(control("price")["inputmode"]).to eq("decimal")
       expect(control("price")["aria-describedby"]).to eq(Views::Owner::Services::Form::PRICE_HINT_ID)
       expect(field("price").at_css("##{Views::Owner::Services::Form::PRICE_HINT_ID}").text).to eq(Views::Owner::Services::Form::PRICE_HINT)
+    end
+
+    it "tells the owner a blank price shows to the client as sob consulta" do
+      sign_in
+
+      get new_owner_service_path
+
+      expect(field("price").at_css("##{Views::Owner::Services::Form::PRICE_HINT_ID}").text).to include("sob consulta")
     end
 
     it "sends an anonymous visitor to the login" do
