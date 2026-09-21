@@ -51,7 +51,8 @@ class Views::Owner::Onboarding::Document < Views::Base
         div(data: root_data) do
           render Components::Owner::Onboarding::Progress.new
           section(class: Components::Owner::FormCard::CARD_CLASS) do
-            form_with(url: owner_onboarding_path, method: :post, class: Components::Owner::FormCard::FORM_CLASS, data: { turbo: false }) do
+            form_with(url: owner_onboarding_path, method: :post, class: Components::Owner::FormCard::FORM_CLASS,
+              data: { turbo: false, action: "input->onboarding#save change->onboarding#save submit->onboarding#submit" }) do
               render_welcome
               render_question("colors") { render Components::Owner::BrandQuestion::Colors.new(tenant: @tenant, branding: @branding) }
               render_question("name") { render Components::Owner::BrandQuestion::Name.new(tenant: @tenant, branding: @branding, deriving: true) }
