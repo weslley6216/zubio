@@ -10,7 +10,6 @@ class Views::Owner::Onboarding::Document < Views::Base
   ADD_SERVICE_LABEL = "Cadastrar serviço".freeze
   REMOVE_SERVICE_LABEL = "Remover".freeze
   BACK_CLASS = "mt-2 h-11 w-full cursor-pointer text-sm font-medium text-ink-muted".freeze
-  SECTIONS = %w[welcome colors name logo services working_hours].freeze
   BRAND_GROUP = "Sua marca".freeze
   ATTEND_GROUP = "Seu atendimento".freeze
   GROUPS = { "colors" => BRAND_GROUP, "name" => BRAND_GROUP, "logo" => BRAND_GROUP,
