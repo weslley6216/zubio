@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_17_150001) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_20_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -82,7 +82,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_150001) do
     t.citext "custom_domain"
     t.datetime "custom_domain_verified_at"
     t.string "name"
-    t.integer "onboarding_step", default: 0, null: false
+    t.datetime "onboarding_completed_at"
     t.string "status", default: "active", null: false
     t.citext "subdomain", null: false
     t.datetime "updated_at", null: false
