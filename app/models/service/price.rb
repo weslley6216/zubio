@@ -8,6 +8,7 @@ class Service::Price
   CURRENCY_PREFIX = /\A#{Regexp.escape(CURRENCY)}[[:space:]]*/
   BRAZILIAN_FORMAT = /\A(?<reais>\d{1,3}(?:\.\d{3})+|\d+)(?:,(?<fraction>\d{1,2}))?\z/
   DOT_DECIMAL_FORMAT = /\A(?<reais>\d+)\.(?<fraction>\d{1,2})\z/
+  UNPRICED_LABEL = "Sob consulta".freeze
 
   attr_reader :cents
 
@@ -20,6 +21,10 @@ class Service::Price
     fraction = match[:fraction].to_s.ljust(CENTS_DIGITS, "0").to_i
 
     new(reais * CENTS_PER_REAL + fraction)
+  end
+
+  def self.label(cents)
+    cents ? new(cents).with_currency : UNPRICED_LABEL
   end
 
   def initialize(cents)

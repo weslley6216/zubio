@@ -60,6 +60,20 @@ RSpec.describe Service::Price do
     end
   end
 
+  describe ".label" do
+    it "shows a stored price with the currency" do
+      expect(described_class.label(9_000)).to eq("R$ 90,00")
+    end
+
+    it "shows a price of zero as a price, not as sob consulta" do
+      expect(described_class.label(0)).to eq("R$ 0,00")
+    end
+
+    it "shows a service with no price as sob consulta" do
+      expect(described_class.label(nil)).to eq("Sob consulta")
+    end
+  end
+
   describe "round trip" do
     [ 0, 5, 50, 9_000, 9_050, 123_456, 9_999_999 ].each do |cents|
       it "reads #{cents} cents back from the text it wrote, with or without the currency" do
