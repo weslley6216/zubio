@@ -17,15 +17,17 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
   PICKER_CLASS = "inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-lg border border-line-strong text-sm font-bold text-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-accent".freeze
   REMOVE_CLASS = "mt-3 flex items-center gap-2 text-sm text-ink-muted".freeze
 
-  def initialize(tenant:, branding:)
+  def initialize(tenant:, branding:, direct_upload_url: nil)
     @tenant = tenant
     @branding = branding
+    @direct_upload_url = direct_upload_url
   end
 
   def view_template
-    div(data: { controller: "logo-field" }) do
+    div(data: root_data) do
       h1(id: HEADING_ID, class: TITLE_CLASS) { TITLE }
       p(class: SUBTITLE_CLASS) { SUBTITLE }
+      input(type: "hidden", name: "branding[logo]", data: { "logo-upload-target": "signedId" }) if direct_upload?
       render_preview
       render_actions
       render_remove if attached?
@@ -33,6 +35,14 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
   end
 
   private
+
+  def direct_upload? = @direct_upload_url.present?
+
+  def root_data
+    return { controller: "logo-field" } unless direct_upload?
+
+    { controller: "logo-field logo-upload", logo_upload_url_value: @direct_upload_url }
+  end
 
   def render_preview
     div(class: PREVIEW_CLASS) do
@@ -52,10 +62,14 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
   def render_picker(text, extra)
     label(class: PICKER_CLASS) do
       plain text
-      input(type: "file", name: "branding[logo]", accept: accept, class: "sr-only",
-        data: { action: "logo-field#showChosen" }, **extra)
+      input(type: "file", name: field_name, accept: accept, class: "sr-only",
+        data: { action: picker_actions }, **extra)
     end
   end
+
+  def field_name = direct_upload? ? nil : "branding[logo]"
+
+  def picker_actions = direct_upload? ? "logo-field#showChosen logo-upload#upload" : "logo-field#showChosen"
 
   def render_remove
     label(class: REMOVE_CLASS) do

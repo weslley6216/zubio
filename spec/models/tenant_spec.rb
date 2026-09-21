@@ -326,10 +326,10 @@ RSpec.describe Tenant, type: :model do
       expect(owner.tenant.subdomain).not_to include("ana")
     end
 
-    it "starts the tenant at the welcome step" do
+    it "leaves the tenant's onboarding unfinished" do
       owner = provision
 
-      expect(owner.tenant).to be_onboarding_welcome
+      expect(owner.tenant.onboarding_completed?).to be(false)
     end
 
     it "rolls back the tenant when the owner attributes are invalid" do
@@ -404,43 +404,83 @@ RSpec.describe Tenant, type: :model do
     end
   end
 
-  describe "#claim_address_from_brand_name!" do
-    it "sets the name, derives the subdomain and advances from name to logo, atomically" do
-      tenant = create(:tenant, :at_name)
+  describe "#onboarding_completed?" do
+    it "is false for a tenant still in onboarding" do
+      tenant = build(:tenant, :onboarding)
 
-      ActsAsTenant.with_tenant(tenant) { tenant.claim_address_from_brand_name!("Barbearia do Zé") }
-
-      expect(tenant.reload).to have_attributes(name: "Barbearia do Zé", subdomain: "barbearia-do-ze")
-      expect(tenant).to be_onboarding_logo
+      expect(tenant.onboarding_completed?).to be(false)
     end
 
-    it "raises for a blank name without changing the subdomain or the step" do
-      tenant = create(:tenant, :at_name)
-      original_subdomain = tenant.subdomain
+    it "is true once the completion timestamp is set" do
+      tenant = build(:tenant, onboarding_completed_at: Time.current)
 
-      expect { ActsAsTenant.with_tenant(tenant) { tenant.claim_address_from_brand_name!("") } }
-        .to raise_error(ActiveRecord::RecordInvalid)
-
-      expect(tenant.reload.subdomain).to eq(original_subdomain)
-      expect(tenant).to be_onboarding_name
+      expect(tenant.onboarding_completed?).to be(true)
     end
   end
 
-  describe "#advance_onboarding!" do
-    it "moves from welcome to colors" do
-      tenant = create(:tenant, :onboarding)
-
-      ActsAsTenant.with_tenant(tenant) { tenant.advance_onboarding! }
-
-      expect(tenant).to be_onboarding_colors
+  describe "#complete_onboarding!" do
+    def answers(name: "Barbearia do Zé", price: "90,00")
+      {
+        name: name,
+        branding_attrs: { brand_600: "#2F6FED" },
+        services_attrs: [ { name: "Corte", duration_minutes: 45, price: price } ],
+        schedule: { weekdays: [ 2, 3 ], opens_at: "09:00", closes_at: "18:00", break_starts_at: nil, break_ends_at: nil }
+      }
     end
 
-    it "is a no-op once the establishment is done" do
-      tenant = create(:tenant)
+    it "writes brand, name, derived address, services and schedule in one shot" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
+      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
 
-      ActsAsTenant.with_tenant(tenant) { tenant.advance_onboarding! }
+      ActsAsTenant.with_tenant(tenant) do
+        tenant.complete_onboarding!(professional: professional, **answers)
 
-      expect(tenant).to be_onboarding_done
+        expect(tenant.reload).to have_attributes(name: "Barbearia do Zé", subdomain: "barbearia-do-ze")
+        expect(tenant.branding.brand_600).to eq("#2F6FED")
+        expect(Service.pluck(:name)).to eq([ "Corte" ])
+        expect(professional.working_hours.count).to eq(2)
+        expect(tenant.onboarding_completed?).to be(true)
+      end
+    end
+
+    it "rolls the whole thing back when one answer is invalid, leaving nothing written" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
+      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+
+      ActsAsTenant.with_tenant(tenant) do
+        expect { tenant.complete_onboarding!(professional: professional, **answers(price: "abc")) }
+          .to raise_error(ActiveRecord::RecordInvalid)
+
+        expect(tenant.reload).to have_attributes(name: nil)
+        expect(tenant.onboarding_completed?).to be(false)
+        expect(Service.count).to eq(0)
+        expect(professional.working_hours.count).to eq(0)
+      end
+    end
+
+    it "disambiguates the address with a suffix when the brand name collides" do
+      create(:tenant, subdomain: "barbearia-do-ze")
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
+      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+
+      ActsAsTenant.with_tenant(tenant) { tenant.complete_onboarding!(professional: professional, **answers) }
+
+      expect(tenant.reload.subdomain).to eq("barbearia-do-ze-2")
+    end
+
+    it "writes only to the target tenant" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
+      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      other_tenant = create(:tenant, :onboarding, subdomain: "other123abc456")
+
+      ActsAsTenant.with_tenant(tenant) { tenant.complete_onboarding!(professional: professional, **answers) }
+
+      expect(other_tenant.reload).to have_attributes(name: nil)
+      ActsAsTenant.with_tenant(other_tenant) { expect(Service.count).to eq(0) }
     end
   end
 

@@ -8,6 +8,8 @@ Rails.application.routes.draw do
   get "manifest.webmanifest" => "pwa#manifest", as: :pwa_manifest
   get "service-worker.js" => "pwa#service_worker", as: :pwa_service_worker
 
+  post "/rails/active_storage/direct_uploads" => "direct_uploads#create", as: :authenticated_direct_uploads
+
   get "branding.css" => "stylesheets#branding", as: :branding_stylesheet
   get "showcase.css" => "stylesheets#showcase", as: :showcase_stylesheet
   get "palette.css" => "stylesheets#palette", as: :palette_stylesheet
@@ -15,14 +17,9 @@ Rails.application.routes.draw do
   resource :signup, only: %i[new create]
 
   namespace :owner do
+    resource :onboarding, only: %i[show create], controller: "onboarding"
     namespace :onboarding do
-      resource :welcome,       only: %i[show update], controller: "welcome"
-      resource :colors,        only: %i[show update]
-      resource :name,          only: %i[show update], controller: "name"
-      resource :logo,          only: %i[show update], controller: "logo"
-      resource :services,      only: %i[show create update]
-      resource :working_hours, only: %i[show update]
-      resource :final,         only: :show, controller: "final"
+      resource :final, only: :show, controller: "final"
     end
 
     resource :session, only: %i[new create destroy]

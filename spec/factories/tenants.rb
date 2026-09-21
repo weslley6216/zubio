@@ -3,36 +3,11 @@ FactoryBot.define do
     sequence(:subdomain) { |index| "establishment-#{index}" }
     name { "Test Establishment" }
     status { "active" }
-    onboarding_step { :done }
+    onboarding_completed_at { Time.current }
 
     trait :onboarding do
       name { nil }
-      onboarding_step { :welcome }
-    end
-
-    trait :at_colors do
-      onboarding
-      onboarding_step { :colors }
-    end
-
-    trait :at_name do
-      onboarding
-      onboarding_step { :name }
-    end
-
-    trait :at_logo do
-      onboarding
-      onboarding_step { :logo }
-    end
-
-    trait :at_services do
-      onboarding
-      onboarding_step { :services }
-    end
-
-    trait :at_working_hours do
-      onboarding
-      onboarding_step { :working_hours }
+      onboarding_completed_at { nil }
     end
 
     trait :with_pending_custom_domain do
