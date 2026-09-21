@@ -11,7 +11,7 @@ class Owner::HandoffsController < ApplicationController
 
     if user&.owner? && user.tenant_id == ActsAsTenant.current_tenant&.id
       user.consume_handoff_token!
-      start_owner_session(user, redirect_to: post_handoff_path)
+      start_owner_session(user, destination: post_handoff_path)
     else
       redirect_to new_owner_session_path, alert: REFUSED
     end

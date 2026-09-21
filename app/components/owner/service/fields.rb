@@ -26,78 +26,53 @@ class Components::Owner::Service::Fields < Components::Base
   private
 
   def render_name_field
-    div(data: { field: "name" }) do
-      if @collection
-        label(class: LABEL) do
-          plain NAME_LABEL
-          input(type: "text", name: field_name(:name), value: @service.name, required: true,
-            maxlength: Service::NAME_MAX_LENGTH, class: CONTROL)
-        end
-      else
-        label(for: "service_name", class: LABEL) { NAME_LABEL }
-        input(type: "text", id: "service_name", name: field_name(:name), value: @service.name, required: true,
-          maxlength: Service::NAME_MAX_LENGTH, class: CONTROL)
-      end
-      render Components::Form::Errors.new(messages: @service.errors[:name])
+    render_field(:name, NAME_LABEL) do |id|
+      input(type: "text", id: id, name: field_name(:name), value: @service.name, required: true,
+        maxlength: Service::NAME_MAX_LENGTH, class: CONTROL)
     end
   end
 
   def render_description_field
-    div(data: { field: "description" }) do
-      if @collection
-        label(class: LABEL) do
-          plain DESCRIPTION_LABEL
-          textarea(name: field_name(:description), rows: DESCRIPTION_ROWS,
-            maxlength: Service::DESCRIPTION_MAX_LENGTH, class: TEXTAREA) { @service.description }
-        end
-      else
-        label(for: "service_description", class: LABEL) { DESCRIPTION_LABEL }
-        textarea(id: "service_description", name: field_name(:description), rows: DESCRIPTION_ROWS,
-          maxlength: Service::DESCRIPTION_MAX_LENGTH, class: TEXTAREA) { @service.description }
-      end
-      render Components::Form::Errors.new(messages: @service.errors[:description])
+    render_field(:description, DESCRIPTION_LABEL) do |id|
+      textarea(id: id, name: field_name(:description), rows: DESCRIPTION_ROWS,
+        maxlength: Service::DESCRIPTION_MAX_LENGTH, class: TEXTAREA) { @service.description }
     end
   end
 
   def render_duration_field
-    div(data: { field: "duration_minutes" }) do
-      if @collection
-        label(class: LABEL) do
-          plain DURATION_LABEL
-          input(type: "number", name: field_name(:duration_minutes), value: @service.duration_minutes,
-            required: true, min: Service::MIN_DURATION_MINUTES, max: Service::MAX_DURATION_MINUTES, step: Service::DURATION_STEP_MINUTES,
-            class: CONTROL)
-        end
-        p(class: HINT) { DURATION_HINT }
-      else
-        label(for: "service_duration_minutes", class: LABEL) { DURATION_LABEL }
-        input(type: "number", id: "service_duration_minutes", name: field_name(:duration_minutes), value: @service.duration_minutes,
-          required: true, min: Service::MIN_DURATION_MINUTES, max: Service::MAX_DURATION_MINUTES, step: Service::DURATION_STEP_MINUTES,
-          aria: { describedby: DURATION_HINT_ID }, class: CONTROL)
-        p(id: DURATION_HINT_ID, class: HINT) { DURATION_HINT }
-      end
-      render Components::Form::Errors.new(messages: @service.errors[:duration_minutes])
+    render_field(:duration_minutes, DURATION_LABEL, hint: DURATION_HINT, hint_id: DURATION_HINT_ID) do |id, described_by|
+      input(type: "number", id: id, name: field_name(:duration_minutes), value: @service.duration_minutes,
+        required: true, min: Service::MIN_DURATION_MINUTES, max: Service::MAX_DURATION_MINUTES, step: Service::DURATION_STEP_MINUTES,
+        **described_by_attrs(described_by), class: CONTROL)
     end
   end
 
   def render_price_field
-    div(data: { field: "price" }) do
-      if @collection
-        label(class: LABEL) do
-          plain PRICE_LABEL
-          input(type: "text", name: field_name(:price), value: @service.price, required: true,
-            inputmode: "decimal", class: CONTROL)
-        end
-        p(class: HINT) { PRICE_HINT }
-      else
-        label(for: "service_price", class: LABEL) { PRICE_LABEL }
-        input(type: "text", id: "service_price", name: field_name(:price), value: @service.price, required: true,
-          inputmode: "decimal", aria: { describedby: PRICE_HINT_ID }, class: CONTROL)
-        p(id: PRICE_HINT_ID, class: HINT) { PRICE_HINT }
-      end
-      render Components::Form::Errors.new(messages: @service.errors[:price_cents])
+    render_field(:price, PRICE_LABEL, hint: PRICE_HINT, hint_id: PRICE_HINT_ID, error_attribute: :price_cents) do |id, described_by|
+      input(type: "text", id: id, name: field_name(:price), value: @service.price, required: true,
+        inputmode: "decimal", **described_by_attrs(described_by), class: CONTROL)
     end
   end
+
+  def render_field(attribute, label_text, hint: nil, hint_id: nil, error_attribute: attribute)
+    div(data: { field: attribute.to_s }) do
+      if @collection
+        label(class: LABEL) do
+          plain label_text
+          yield(nil, nil)
+        end
+        p(class: HINT) { hint } if hint
+      else
+        field_id = "service_#{attribute}"
+        label(for: field_id, class: LABEL) { label_text }
+        yield(field_id, hint ? hint_id : nil)
+        p(id: hint_id, class: HINT) { hint } if hint
+      end
+      render Components::Form::Errors.new(messages: @service.errors[error_attribute])
+    end
+  end
+
+  def described_by_attrs(described_by) = described_by ? { aria: { describedby: described_by } } : {}
 
   def field_name(attribute) = @collection ? "services[][#{attribute}]" : "service[#{attribute}]"
 end
