@@ -16,7 +16,7 @@ class Branding::Palette
   end
 
   def self.stylesheet
-    @stylesheet ||= swatches.map { |hex| %([data-swatch="#{hex}"]{background:#{hex}}) }.join + preview_rules
+    @stylesheet ||= swatches.map { |hex| %([data-swatch="#{hex}"]{background:#{hex};color:#{hex}}) }.join + preview_rules
   end
 
   def self.preview_rules
