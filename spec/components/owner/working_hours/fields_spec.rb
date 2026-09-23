@@ -21,6 +21,14 @@ RSpec.describe Components::Owner::WorkingHours::Fields, type: :component do
     expect(document.at_css(%([data-onboarding-target="break"]))["class"]).to include("hidden")
   end
 
+  it "summarizes the lunch break in a target the client fills" do
+    document = Nokogiri::HTML5.fragment(body)
+
+    expect(document.at_css(%([data-onboarding-target="breakSummary"]))).not_to be_nil
+    expect(document.at_css("#working_hours_break_starts_at")["data-action"]).to include("onboarding#summarizeBreak")
+    expect(document.at_css("#working_hours_opens_at")["data-action"]).to be_nil
+  end
+
   it "gives the schedule fields a stable id" do
     html = body
 
