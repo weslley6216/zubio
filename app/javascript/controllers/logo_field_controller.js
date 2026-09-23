@@ -6,6 +6,6 @@ export default class extends Controller {
   showChosen(event) {
     const [ file ] = event.target.files
 
-    if (file) this.hintTarget.textContent = file.name
+    if (file && this.hasHintTarget) this.hintTarget.textContent = file.name
   }
 }

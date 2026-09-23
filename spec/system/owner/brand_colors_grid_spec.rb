@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Owner brand colors without JavaScript", type: :system do
-  it "reaches the full grid through the plus and saves a swatch from it" do
+  it "reaches the custom code field through the plus and saves a color off the suggestions" do
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
     owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
     create(:branding, tenant: tenant, brand_600: "#4F46E5")
@@ -13,8 +13,8 @@ RSpec.describe "Owner brand colors without JavaScript", type: :system do
     visit "http://#{tenant.subdomain}.zubio.com.br#{edit_owner_brand_colors_path}"
 
     within(%(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::BRAND_LABEL}"])) do
-      find("summary", match: :first).click
-      choose(option: "#7E22CE", allow_label_click: true)
+      choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
+      fill_in "branding[brand_600_custom]", with: "#7E22CE"
     end
     click_on Views::Owner::BrandQuestions::Edit::SUBMIT_LABEL
 

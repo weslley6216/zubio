@@ -34,6 +34,6 @@ export default class extends Controller {
   }
 
   #chooseCustom(panel) {
-    panel.querySelector("input[type=radio]").checked = true
+    panel.parentElement.querySelector('input[value="custom"]').checked = true
   }
 }

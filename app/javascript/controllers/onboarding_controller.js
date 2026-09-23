@@ -1,28 +1,87 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["section", "progress", "group", "counter", "back", "servicesList", "serviceTemplate"]
+  static targets = [
+    "section", "back", "servicesList", "serviceRowTemplate", "count",
+    "dayCount", "breakToggle", "break", "breakSummary",
+    "serviceName", "serviceDuration", "servicePrice"
+  ]
   static values = { tenant: String, open: String }
 
   connect() {
     this.draft = this.#readDraft()
     if (!this.#servicesPrefilled()) this.#restoreServices()
     this.#restoreFields()
+    this.#syncBreak()
+    this.paintInitials()
     this.index = this.#initialIndex()
     this.#render()
+    this.updateDayCount()
+    this.#updateServiceCount()
   }
 
   next() { this.#go(this.index + 1) }
   back() { this.#go(this.index - 1) }
 
+  selectAllDays() {
+    this.element.querySelectorAll('input[name="working_hours[weekdays][]"]').forEach((checkbox) => {
+      checkbox.checked = true
+    })
+    this.updateDayCount()
+    this.#save()
+  }
+
+  updateDayCount() {
+    const count = this.element.querySelectorAll('input[name="working_hours[weekdays][]"]:checked').length
+    this.dayCountTarget.textContent = `${count} ${count === 1 ? "dia selecionado" : "dias selecionados"}`
+  }
+
+  toggleBreak() {
+    const shown = this.breakToggleTarget.checked
+    this.breakTarget.classList.toggle("hidden", !shown)
+    if (!shown) this.#breakFields().forEach((field) => { field.value = "" })
+    this.summarizeBreak()
+    this.#save()
+  }
+
+  paintInitials() {
+    const initial = this.element.querySelector("#tenant_name").value.trim().charAt(0).toUpperCase()
+    this.element.querySelectorAll("[data-brand-initial]").forEach((emblem) => { emblem.textContent = initial })
+  }
+
+  summarizeBreak() {
+    const [ starts, ends ] = this.#breakFields()
+    this.breakSummaryTarget.textContent = starts.value && ends.value ? `${starts.value} às ${ends.value}` : ""
+  }
+
   addService() {
-    const fragment = this.serviceTemplateTarget.content.cloneNode(true)
+    const name = this.serviceNameTarget.value.trim()
+    if (!name) return
+
+    const fragment = this.serviceRowTemplateTarget.content.cloneNode(true)
+    this.#fillRow(fragment.querySelector("[data-service-row]"), {
+      name, duration_minutes: this.serviceDurationTarget.value, price: this.servicePriceTarget.value
+    })
     this.servicesListTarget.appendChild(fragment)
+    this.#clearDraft()
+    this.#updateServiceCount()
+    this.#save()
+  }
+
+  editService(event) {
+    const row = event.target.closest("[data-service-row]")
+
+    this.serviceNameTarget.value = this.#rowField(row, "name")
+    this.serviceDurationTarget.value = this.#rowField(row, "duration_minutes")
+    this.servicePriceTarget.value = this.#rowField(row, "price")
+    row.remove()
+    this.#updateServiceCount()
     this.#save()
   }
 
   removeService(event) {
     event.target.closest("[data-service-row]").remove()
+    this.#updateServiceCount()
     this.#save()
   }
 
@@ -50,15 +109,7 @@ export default class extends Controller {
 
   #render() {
     this.sectionTargets.forEach((section, position) => { section.hidden = position !== this.index })
-    const current = this.sectionTargets[this.index]
-    const isQuestion = current.hasAttribute("data-onboarding-question")
-    this.progressTarget.hidden = !isQuestion
     this.backTargets.forEach((button) => { button.hidden = this.index === 0 })
-    if (isQuestion) {
-      const questions = this.sectionTargets.filter((section) => section.hasAttribute("data-onboarding-question"))
-      this.groupTarget.textContent = current.dataset.onboardingGroup
-      this.counterTarget.textContent = `${questions.indexOf(current) + 1} de ${questions.length}`
-    }
   }
 
   #initialIndex() {
@@ -102,6 +153,17 @@ export default class extends Controller {
     return this.sectionTargets[this.index]?.dataset.onboardingSection
   }
 
+  #breakFields() {
+    return [ ...this.breakTarget.querySelectorAll("input") ]
+  }
+
+  #syncBreak() {
+    const shown = this.#breakFields().some((field) => field.value)
+    this.breakToggleTarget.checked = shown
+    this.breakTarget.classList.toggle("hidden", !shown)
+    this.summarizeBreak()
+  }
+
   #serializeFields() {
     const fields = {}
     this.element.querySelectorAll("input[name], textarea[name]").forEach((field) => {
@@ -119,14 +181,11 @@ export default class extends Controller {
   }
 
   #serializeServices() {
-    return [ ...this.servicesListTarget.querySelectorAll("[data-service-row]") ].map((row) => {
-      const service = {}
-      row.querySelectorAll("input[name], textarea[name]").forEach((field) => {
-        const attribute = field.name.match(/\[(\w+)\]$/)?.[1]
-        if (attribute) service[attribute] = field.value
-      })
-      return service
-    })
+    return [ ...this.servicesListTarget.querySelectorAll("[data-service-row]") ].map((row) => ({
+      name: this.#rowField(row, "name"),
+      duration_minutes: this.#rowField(row, "duration_minutes"),
+      price: this.#rowField(row, "price")
+    }))
   }
 
   #restoreFields() {
@@ -155,13 +214,59 @@ export default class extends Controller {
 
     this.servicesListTarget.innerHTML = ""
     services.forEach((service) => {
-      const fragment = this.serviceTemplateTarget.content.cloneNode(true)
-      const row = fragment.querySelector("[data-service-row]")
-      Object.entries(service).forEach(([ attribute, value ]) => {
-        const field = row.querySelector(`[name$="[${attribute}]"]`)
-        if (field) field.value = value
-      })
+      const fragment = this.serviceRowTemplateTarget.content.cloneNode(true)
+      this.#fillRow(fragment.querySelector("[data-service-row]"), service)
       this.servicesListTarget.appendChild(fragment)
     })
+  }
+
+  #fillRow(row, service) {
+    row.querySelector("[data-service-name]").textContent = service.name
+    row.querySelector("[data-service-meta]").textContent = this.#metaLabel(service)
+    this.#setRowField(row, "name", service.name)
+    this.#setRowField(row, "duration_minutes", service.duration_minutes)
+    this.#setRowField(row, "price", service.price)
+  }
+
+  #metaLabel(service) {
+    const duration = this.#durationLabel(service.duration_minutes)
+    if (!duration) return ""
+
+    return `${duration} · ${this.#priceLabel(service.price)}`
+  }
+
+  #durationLabel(minutes) {
+    const value = parseInt(minutes, 10)
+    if (!value) return ""
+
+    const hours = Math.floor(value / 60)
+    const rest = value % 60
+    return [ hours > 0 ? `${hours} h` : null, rest > 0 ? `${rest} min` : null ].filter(Boolean).join(" ")
+  }
+
+  #priceLabel(price) {
+    const text = price?.trim()
+    return text ? `R$ ${text}` : "Sob consulta"
+  }
+
+  #rowField(row, attribute) {
+    return row.querySelector(`[data-service-field="${attribute}"]`).value
+  }
+
+  #setRowField(row, attribute, value) {
+    row.querySelector(`[data-service-field="${attribute}"]`).value = value ?? ""
+  }
+
+  #clearDraft() {
+    this.serviceNameTarget.value = ""
+    this.serviceDurationTarget.value = ""
+    this.servicePriceTarget.value = ""
+  }
+
+  #updateServiceCount() {
+    if (!this.hasCountTarget) return
+
+    const count = this.servicesListTarget.querySelectorAll("[data-service-row]").length
+    this.countTarget.textContent = count === 0 ? "Continuar" : `Continuar com ${count} ${count === 1 ? "serviço" : "serviços"}`
   }
 }

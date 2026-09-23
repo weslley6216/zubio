@@ -26,4 +26,17 @@ RSpec.describe Components::Owner::BrandQuestion::Name, type: :component do
     expect(body).to include(described_class::ADDRESS_LABEL)
     expect(body).to include("barbearia-do-ze.zubio.com.br")
   end
+
+  it "shows the emblem, the brand name and the address in the derived card" do
+    tenant = Tenant.new(name: "Barbearia do Zé")
+    branding = ActsAsTenant.with_tenant(tenant) { Branding.new(tenant: tenant, brand_600: "#2C6CB0") }
+
+    html = described_class.new(tenant: tenant, branding: branding, deriving: true).call
+
+    expect(html).to include("Barbearia do Zé")
+    expect(html).to include(%(data-brand-address-target="name"))
+    expect(html).to include(%(data-brand-address-target="address"))
+    expect(html).to include(%(data-brand-address-target="namePreview"))
+    expect(html).to include(">B</span>")
+  end
 end

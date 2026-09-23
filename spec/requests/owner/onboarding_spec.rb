@@ -71,6 +71,50 @@ RSpec.describe "Owner onboarding", type: :request do
       expect(response.body).not_to include("Estúdio Aurora")
       expect(response.body).not_to include("Massagem")
     end
+
+    it "lists three welcome groups with the Zubio emblem and the estimated time" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      get owner_onboarding_path
+
+      expect(response.body).to include("Sua marca: nome, logo e cor")
+      expect(response.body).to include("O que você cobra")
+      expect(response.body).to include("Quando você atende")
+      expect(response.body).to include(">z</span>")
+      expect(response.body).to include("Leva menos de três minutos")
+    end
+
+    it "shows the derived address card with the emblem and the typed name on the name question" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      get owner_onboarding_path
+
+      expect(response.body).to include(%(data-brand-address-target="name"))
+      expect(response.body).to include(%(data-brand-address-target="address"))
+    end
+
+    it "offers gallery, camera and skipping without a logo, explaining the initial on the logo question" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      get owner_onboarding_path
+
+      expect(response.body).to include(Components::Owner::BrandQuestion::Logo::GALLERY_LABEL)
+      expect(response.body).to include(Components::Owner::BrandQuestion::Logo::CAMERA_LABEL)
+      expect(response.body).to include(Views::Owner::Onboarding::Document::SKIP_LABEL)
+      expect(response.body).to include(Components::Owner::BrandQuestion::Logo::NO_LOGO_TEXT)
+    end
+
+    it "explains the sob consulta hint on the services question" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      get owner_onboarding_path
+
+      expect(response.body).to include("sob consulta")
+    end
   end
 
   describe "POST /owner/onboarding" do
@@ -110,6 +154,25 @@ RSpec.describe "Owner onboarding", type: :request do
       expect(tenant.reload).to have_attributes(name: nil)
       expect(tenant.onboarding_completed?).to be(false)
       ActsAsTenant.with_tenant(tenant) { expect(Service.count).to eq(0) }
+    end
+
+    it "shows a submitted service with its formatted duration and price, with the new-service card below, when a later section fails" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      other_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+      ActsAsTenant.with_tenant(other_tenant) { create(:service, tenant: other_tenant, name: "Massagem") }
+      sign_in(tenant)
+
+      post owner_onboarding_path, params: answers.merge(
+        services: [ { name: "Corte na máquina", duration_minutes: "30", price: "45,00" } ],
+        working_hours: { weekdays: %w[2], opens_at: "18:00", closes_at: "09:00" }
+      )
+
+      expect(response.body).to include("Corte na máquina")
+      expect(response.body).to include("30 min")
+      expect(response.body).to include(Service::Price.label(4_500))
+      expect(response.body).to include(Views::Owner::Onboarding::Document::NEW_SERVICE_LABEL)
+      expect(response.body).not_to include("Massagem")
+      expect(response.body).not_to include("Estúdio Aurora")
     end
 
     it "does not write to another tenant" do

@@ -22,13 +22,13 @@ RSpec.describe "Owner brand colors", type: :request do
       expect(response.body).to include(%(<a href="#{owner_settings_path}" aria-current="page"))
     end
 
-    it "reaches the whole grid and the code field through the plus, without JavaScript" do
+    it "reaches the suggestions and the custom code field through the plus, without JavaScript" do
       create(:branding, tenant: tenant, brand_600: "#2C6CB0")
       sign_in
 
       get edit_owner_brand_colors_path
 
-      Branding::Palette.swatches.each { |hex| expect(response.body).to include(%(data-swatch="#{hex}")) }
+      Branding::Palette::SUGGESTIONS.fetch(:brand_600).each { |hex| expect(response.body).to include(%(data-swatch="#{hex}")) }
       expect(response.body).to include(%(name="branding[brand_600_custom]"))
     end
 
