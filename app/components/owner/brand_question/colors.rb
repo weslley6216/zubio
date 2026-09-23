@@ -5,9 +5,9 @@ class Components::Owner::BrandQuestion::Colors < Components::Base
   TITLE = "Escolha as cores da sua marca".freeze
   SUBTITLE = "A partir daqui o app inteiro já fica com a sua cara.".freeze
   BRAND_LABEL = "Cor principal".freeze
-  BRAND_HINT = "Botões e cabeçalho".freeze
+  BRAND_HINT = "botões e cabeçalho".freeze
   SECONDARY_LABEL = "Cor de apoio".freeze
-  SECONDARY_HINT = "Detalhes e destaques".freeze
+  SECONDARY_HINT = "detalhes e destaques".freeze
   SECONDARY_OPTIONAL = "Opcional".freeze
   SECONDARY_HELP = "É o caso de quem tem duas cores na fachada, como azul e vermelho na barbearia.".freeze
   PREVIEW_LABEL = "Prévia com as duas cores".freeze
@@ -23,6 +23,7 @@ class Components::Owner::BrandQuestion::Colors < Components::Base
   PREVIEW_LABEL_CLASS = "text-xs font-medium uppercase tracking-wide text-ink-subtle".freeze
   PREVIEW_CARD_CLASS = "mt-1.5 grid gap-3 rounded-xl border border-line bg-surface-2 p-3".freeze
   PREVIEW_HEADER_CLASS = "flex items-center justify-between rounded-lg bg-brand-accent px-3 py-2 text-on-brand-accent".freeze
+  PREVIEW_EMBLEM_CLASS = "grid h-9 w-9 place-items-center rounded-[11px] bg-white/22 text-base font-extrabold".freeze
   PREVIEW_TODAY_CLASS = "rounded-full bg-secondary-soft px-2 py-0.5 text-xs font-bold text-secondary-soft-ink".freeze
   PREVIEW_ACTIONS_CLASS = "grid grid-cols-2 gap-2".freeze
   PREVIEW_PRIMARY_CLASS = "h-9 rounded-lg bg-brand-600 text-sm font-bold text-on-brand".freeze
@@ -60,7 +61,10 @@ class Components::Owner::BrandQuestion::Colors < Components::Base
       span(class: PREVIEW_LABEL_CLASS) { PREVIEW_LABEL }
       div(class: PREVIEW_CARD_CLASS, data: { "color-swatch-target": "preview", preview_brand: @branding.brand_600, preview_secondary: preview_secondary }) do
         div(class: PREVIEW_HEADER_CLASS) do
-          span(class: "text-sm font-bold") { PREVIEW_PAGE }
+          div(class: "flex items-center gap-3") do
+            span(class: PREVIEW_EMBLEM_CLASS) { "z" }
+            span(class: "text-sm font-bold") { PREVIEW_PAGE }
+          end
           span(class: PREVIEW_TODAY_CLASS) { PREVIEW_TODAY }
         end
         div(class: PREVIEW_ACTIONS_CLASS) do
