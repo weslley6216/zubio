@@ -33,5 +33,11 @@ RSpec.describe WorkingHour::Summary do
     it "bands the opening and closing time with an en dash and no spaces" do
       expect(described_class.new([ hour(2) ]).hours_label).to eq("09:00–18:00")
     end
+
+    it "spans the whole day across a lunch break split into two segments" do
+      summary = described_class.new([ hour(2, "09:00", "12:00"), hour(2, "14:00", "18:00") ])
+
+      expect(summary.hours_label).to eq("09:00–18:00")
+    end
   end
 end
