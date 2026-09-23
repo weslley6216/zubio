@@ -86,6 +86,7 @@ class Components::Owner::WorkingHours::Fields < Components::Base
   end
 
   def render_time_field(name, label_text)
-    input(type: "time", aria_label: label_text, name: "working_hours[#{name}]", step: WorkingHour::MINUTE_STEP * 60, class: RANGE_FIELD_CLASS)
+    input(type: "time", id: "working_hours_#{name}", aria_label: label_text, name: "working_hours[#{name}]",
+      step: WorkingHour::MINUTE_STEP * 60, class: RANGE_FIELD_CLASS)
   end
 end

@@ -12,7 +12,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     fill_in "Senha", with: "s3cr3t123"
     click_on "Criar conta"
 
-    expect(page).to have_content("Vamos deixar sua página pronta").or have_button("Começar")
+    expect(page).to have_content("Vamos montar a sua página de agendamentos").or have_button("Começar")
   end
 
   it "crosses the five questions with no request between them and one at the end" do
@@ -29,16 +29,17 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     fill_in "Nome", with: "Corte"
     fill_in "Duração (minutos)", with: "45"
     fill_in "Preço (R$, opcional)", with: "90,00"
-    click_on "Continuar"
-    %w[2 3 4 5 6].each { |weekday| find("input[type=checkbox][value='#{weekday}']").check }
+    click_on "Adicionar à lista"
+    click_on "Continuar com 1 serviço"
+    %w[2 3 4 5 6].each { |weekday| find("label", text: WorkingHour::WEEKDAY_NAMES[weekday.to_i].first(3), exact_text: true).click }
     page.execute_script(%(document.getElementById('working_hours_opens_at').value = '09:00'))
     page.execute_script(%(document.getElementById('working_hours_closes_at').value = '18:00'))
 
     expect(document_requests).to eq(0)
 
-    click_on "Publicar minha página"
+    click_on "Ver minha página"
 
-    expect(page).to have_content("Sua página está no ar!")
+    expect(page).to have_content("Sua página está no ar, Ana")
     expect(page).to have_content("barbearia-do-ze.zubio.com.br")
     expect(page).to have_content("1 serviço")
   end
@@ -51,8 +52,8 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     click_on "Continuar"
     fill_in "Nome da marca", with: "Barbearia do Zé"
     click_on "Continuar"
-    click_on "Voltar"
-    click_on "Voltar"
+    find("[data-onboarding-target='back']").click
+    find("[data-onboarding-target='back']").click
     all("[data-swatch-row] [data-swatch]")[1].click
     click_on "Continuar"
     click_on "Continuar"
@@ -87,13 +88,14 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     fill_in "Nome", with: "Corte"
     fill_in "Duração (minutos)", with: "45"
     fill_in "Preço (R$, opcional)", with: "90,00"
-    click_on "Continuar"
-    %w[2 3].each { |weekday| find("input[type=checkbox][value='#{weekday}']").check }
+    click_on "Adicionar à lista"
+    click_on "Continuar com 1 serviço"
+    %w[2 3].each { |weekday| find("label", text: WorkingHour::WEEKDAY_NAMES[weekday.to_i].first(3), exact_text: true).click }
     page.execute_script(%(document.getElementById('working_hours_opens_at').value = '09:00'))
     page.execute_script(%(document.getElementById('working_hours_closes_at').value = '18:00'))
-    click_on "Publicar minha página"
+    click_on "Ver minha página"
 
-    expect(page).to have_content("Sua página está no ar!")
+    expect(page).to have_content("Sua página está no ar, Ana")
     tenant = Tenant.find_by(subdomain: "barbearia-do-ze")
     expect(ActsAsTenant.with_tenant(tenant) { tenant.branding.logo }).to be_attached
   end

@@ -20,4 +20,13 @@ RSpec.describe Components::Owner::WorkingHours::Fields, type: :component do
     expect(document.at_css(%([data-onboarding-target="breakToggle"]))).not_to be_nil
     expect(document.at_css(%([data-onboarding-target="break"]))["class"]).to include("hidden")
   end
+
+  it "gives the schedule fields a stable id" do
+    html = body
+
+    expect(html).to include(%(id="working_hours_opens_at"))
+    expect(html).to include(%(id="working_hours_closes_at"))
+    expect(html).to include(%(id="working_hours_break_starts_at"))
+    expect(html).to include(%(id="working_hours_break_ends_at"))
+  end
 end
