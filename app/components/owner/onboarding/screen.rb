@@ -1,4 +1,5 @@
 class Components::Owner::Onboarding::Screen < Components::Base
+  BACK_LABEL = "Voltar".freeze
   HEADER_CLASS = "flex items-center gap-3.5 px-6 pt-5 pb-3.5".freeze
   BACK_CLASS = "grid h-11 w-11 flex-none place-items-center rounded-full border border-line bg-surface".freeze
   BACK_ICON_CLASS = "h-5 w-5 text-ink".freeze
@@ -45,7 +46,7 @@ class Components::Owner::Onboarding::Screen < Components::Base
 
   def render_header
     div(class: HEADER_CLASS) do
-      button(type: "button", class: BACK_CLASS, data: { onboarding_target: "back", action: "onboarding#back" }) { render_back_icon }
+      button(type: "button", class: BACK_CLASS, aria_label: BACK_LABEL, data: { onboarding_target: "back", action: "onboarding#back" }) { render_back_icon }
       span(class: GROUP_CLASS) { @group }
       span(class: COUNTER_CLASS) { "#{@position} de #{@total}" }
     end
