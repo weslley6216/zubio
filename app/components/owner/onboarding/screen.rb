@@ -41,7 +41,7 @@ class Components::Owner::Onboarding::Screen < Components::Base
   private
 
   def section_data
-    { onboarding_target: "section", onboarding_section: @section, onboarding_question: "", onboarding_group: @group }
+    { onboarding_target: "section", onboarding_section: @section }
   end
 
   def render_header
