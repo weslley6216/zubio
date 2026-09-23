@@ -29,7 +29,7 @@ RSpec.describe "Owner branding on one screen", type: :system, js: true do
 
   def rgb(hex) = "rgb(#{hex.delete('#').scan(/../).map { |channel| channel.to_i(16) }.join(', ')})"
 
-  it "fits each brand question on a phone screen without scrolling, with the plus closed" do
+  it "fits each brand question on a phone screen without scrolling" do
     tenant, owner = establishment
 
     [ edit_owner_brand_colors_path, edit_owner_brand_name_path, edit_owner_brand_logo_path ].each do |path|

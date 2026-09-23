@@ -36,7 +36,7 @@ export default class extends Controller {
 
   toggleBreak() {
     const shown = this.breakToggleTarget.checked
-    this.breakTarget.hidden = !shown
+    this.breakTarget.classList.toggle("hidden", !shown)
     if (!shown) this.breakTarget.querySelectorAll("input").forEach((field) => { field.value = "" })
     this.#save()
   }
