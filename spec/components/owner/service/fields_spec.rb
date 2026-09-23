@@ -31,4 +31,18 @@ RSpec.describe Components::Owner::Service::Fields, type: :component do
   it "keeps the name attribute in the catalog variant" do
     expect(described_class.new(service: service).call).to include(%(name="service[name]"))
   end
+
+  it "lays duration and price side by side in the onboarding variant, like the canvas card" do
+    document = Nokogiri::HTML5.fragment(described_class.new(service: service, onboarding: true).call)
+
+    row = document.at_css(%([data-onboarding-target="serviceDuration"])).ancestors("[data-fields-row]").first
+    expect(row).not_to be_nil
+    expect(row.at_css(%([data-onboarding-target="servicePrice"]))).not_to be_nil
+  end
+
+  it "stacks duration and price in the catalog variant" do
+    document = Nokogiri::HTML5.fragment(described_class.new(service: service).call)
+
+    expect(document.at_css("[data-fields-row]")).to be_nil
+  end
 end
