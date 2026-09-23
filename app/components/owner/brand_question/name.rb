@@ -57,7 +57,7 @@ class Components::Owner::BrandQuestion::Name < Components::Base
     return { "name-counter-target": "field", action: "input->name-counter#count" } unless @deriving
 
     { "name-counter-target": "field", "brand-address-target": "name",
-      action: "input->name-counter#count input->brand-address#render" }
+      action: "input->name-counter#count input->brand-address#render input->onboarding#paintInitials" }
   end
 
   def render_address
@@ -77,7 +77,9 @@ class Components::Owner::BrandQuestion::Name < Components::Base
     div(class: ADDRESS_CARD_CLASS) do
       span(class: ADDRESS_LABEL_CLASS) { ADDRESS_LABEL }
       div(class: ADDRESS_ROW_CLASS) do
+        render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :address)
         div(class: ADDRESS_TEXT_CLASS) do
+          span(class: ADDRESS_NAME_CLASS, data: { "brand-address-target": "namePreview" }) { @tenant.name }
           span(class: ADDRESS_HOST_CLASS, data: { "brand-address-target": "address" }) { Tenant::PLATFORM_HOST }
         end
       end

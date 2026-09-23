@@ -8,6 +8,7 @@ RSpec.describe Components::Owner::Emblem, type: :component do
     html = described_class.new(tenant: tenant, branding: branding, size: :medium).call
 
     expect(html).to include(">B</span>")
+    expect(html).to include("data-brand-initial")
     expect(html).to include("bg-brand-accent")
     expect(html).not_to include("<img")
   end

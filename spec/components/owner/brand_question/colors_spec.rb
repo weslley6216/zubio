@@ -43,6 +43,15 @@ RSpec.describe Components::Owner::BrandQuestion::Colors, type: :component do
     expect(html).to include("data-preview-brand")
   end
 
+  it "matches the canvas copy for the two legends and shows the translucent emblem in the preview" do
+    html = body(build(:branding, tenant: tenant, brand_600: "#2C6CB0"))
+
+    expect(html).to include("botões e cabeçalho")
+    expect(html).to include("detalhes e destaques")
+    expect(html).to include(">z</span>")
+    expect(html).to include("bg-white/22")
+  end
+
   it "surfaces the brand color error beside its group" do
     branding = build(:branding, tenant: tenant, brand_600: "#7A7A7A")
     branding.valid?

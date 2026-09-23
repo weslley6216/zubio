@@ -19,7 +19,7 @@ class Components::Platform::Header < Components::Base
 
   def render_wordmark
     a(href: root_path, class: "flex min-h-11 items-center gap-2 font-extrabold tracking-tight text-ink") do
-      span(class: "grid h-8 w-8 place-items-center rounded-lg bg-brand-accent text-on-brand-accent") { "z" }
+      render Components::Platform::Emblem.new(size: :header)
       span { "Zubio" }
     end
   end

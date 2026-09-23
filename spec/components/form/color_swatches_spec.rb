@@ -21,6 +21,13 @@ RSpec.describe Components::Form::ColorSwatches, type: :component do
     expect(brand_swatches("#4F46E5")).not_to include("Opcional")
   end
 
+  it "arranges the five suggestions and the plus in a grid of six columns" do
+    document = Nokogiri::HTML5.fragment(brand_swatches(Branding::Palette::SUGGESTIONS.fetch(:brand_600).first))
+
+    expect(document.at_css("[data-swatch-row]")["class"]).to include("grid-cols-6")
+    expect(document.to_html).to include(Components::Form::ColorSwatches::CUSTOM_SUMMARY)
+  end
+
   it "shows the five brand suggestions in the row" do
     html = brand_swatches(Branding::Palette::SUGGESTIONS.fetch(:brand_600).first)
 
@@ -34,7 +41,7 @@ RSpec.describe Components::Form::ColorSwatches, type: :component do
     expect(html).to include(%(value="" checked))
   end
 
-  it "marks the stored suggestion in the row and never in the grid" do
+  it "marks the stored suggestion in the row exactly once" do
     stored = Branding::Palette::SUGGESTIONS.fetch(:brand_600).last
 
     html = brand_swatches(stored)
@@ -43,14 +50,13 @@ RSpec.describe Components::Form::ColorSwatches, type: :component do
     expect(html.scan(%(value="#{stored}" checked)).size).to eq(1)
   end
 
-  it "injects a stored color that is not a suggestion at the head of the row, keeping five options" do
+  it "injects a stored color that is not a suggestion at the head of the row, keeping five suggestions plus the plus" do
     off_suggestion = "#7E22CE"
 
     document = Nokogiri::HTML5.fragment(brand_swatches(off_suggestion))
     row_radios = document.css("[data-row-option] input[type=radio]")
 
-    expect(row_radios.map { |radio| radio["value"] }).to eq([ off_suggestion, *Branding::Palette::SUGGESTIONS.fetch(:brand_600).first(4) ])
-    expect(document.at_css(%([data-row-option] input[value="#{off_suggestion}"])).key?("checked")).to be(true)
+    expect(row_radios.map { |radio| radio["value"] }).to eq([ off_suggestion, *Branding::Palette::SUGGESTIONS.fetch(:brand_600).first(4), "custom" ])
   end
 
   it "paints an off-palette stored color through the tenant sheet, never through the palette sheet" do
@@ -60,25 +66,18 @@ RSpec.describe Components::Form::ColorSwatches, type: :component do
     expect(html).not_to include(%(data-swatch="#123456"))
   end
 
-  it "packs the whole palette into a grid of eight columns inside the plus" do
-    document = Nokogiri::HTML5.fragment(brand_swatches(Branding::Palette.swatches.first))
-
-    grid = document.at_css("details [data-swatch-grid]")
-    expect(grid["class"]).to include("grid-cols-8")
-    Branding::Palette.swatches.each { |hex| expect(grid.to_html).to include(%(data-swatch="#{hex}")) }
-  end
-
-  it "keeps the plus closed when the stored color is a swatch" do
-    document = Nokogiri::HTML5.fragment(brand_swatches(Branding::Palette.swatches.first))
-
-    expect(document.at_css("details").key?("open")).to be(false)
-  end
-
-  it "opens the plus and carries the typed code when the stored color is off the palette" do
+  it "reveals the custom panel without a details element when the stored color is off the palette" do
     document = Nokogiri::HTML5.fragment(brand_swatches("#123456"))
 
-    expect(document.at_css("details").key?("open")).to be(true)
+    expect(document.at_css("details")).to be_nil
+    expect(document.at_css(%(input[value="custom"])).key?("checked")).to be(true)
     expect(document.at_css(%(input[name="branding[brand_600_custom]"]))["value"]).to eq("#123456")
+  end
+
+  it "keeps the plus unchecked when the stored color is a suggestion" do
+    document = Nokogiri::HTML5.fragment(brand_swatches(Branding::Palette::SUGGESTIONS.fetch(:brand_600).first))
+
+    expect(document.at_css(%(input[value="custom"]))["checked"]).to be_nil
   end
 
   it "reads the support color back through the support token, never the brand one" do
