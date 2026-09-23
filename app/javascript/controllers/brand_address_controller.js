@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["name", "address"]
+  static targets = ["name", "address", "namePreview"]
   static values = { suffix: String, maxLength: Number }
 
   connect() {
@@ -11,6 +11,7 @@ export default class extends Controller {
   render() {
     const slug = this.#slugify(this.nameTarget.value)
     this.addressTarget.textContent = slug ? `${slug}.${this.suffixValue}` : this.suffixValue
+    if (this.hasNamePreviewTarget) this.namePreviewTarget.textContent = this.nameTarget.value
   }
 
   #slugify(value) {

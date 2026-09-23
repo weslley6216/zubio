@@ -60,4 +60,22 @@ RSpec.describe Components::Owner::BrandQuestion::Logo, type: :component do
     expect(rendered).to include(%(name="branding[logo]"))
     expect(rendered).not_to include("logo-upload")
   end
+
+  it "offers gallery and camera and explains the initial, without a removal box, in the onboarding variant" do
+    html = described_class.new(tenant: tenant, branding: build(:branding, tenant: tenant), onboarding: true).call
+
+    expect(html).to include(described_class::GALLERY_LABEL)
+    expect(html).to include(described_class::CAMERA_LABEL)
+    expect(html).to include(described_class::NO_LOGO_LABEL)
+    expect(html).not_to include(%(name="branding[remove_logo]"))
+  end
+
+  it "keeps the removal box outside the onboarding variant when a logo is attached" do
+    branding = create(:branding, :with_logo, tenant: tenant)
+    allow(branding).to receive(:header_logo).and_return(nil)
+
+    html = described_class.new(tenant: tenant, branding: branding, onboarding: true).call
+
+    expect(html).not_to include(%(name="branding[remove_logo]"))
+  end
 end
