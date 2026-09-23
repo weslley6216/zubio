@@ -11,14 +11,15 @@ class Components::Owner::Service::Fields < Components::Base
   PRICE_HINT_ID = "service-price-hint".freeze
   DESCRIPTION_ROWS = 3
 
-  def initialize(service:, collection: false)
+  def initialize(service:, collection: false, onboarding: false)
     @service = service
     @collection = collection
+    @onboarding = onboarding
   end
 
   def view_template
     render_name_field
-    render_description_field
+    render_description_field unless @onboarding
     render_duration_field
     render_price_field
   end
@@ -40,7 +41,7 @@ class Components::Owner::Service::Fields < Components::Base
   end
 
   def render_duration_field
-    render_field(:duration_minutes, DURATION_LABEL, hint: DURATION_HINT, hint_id: DURATION_HINT_ID) do |id, described_by|
+    render_field(:duration_minutes, DURATION_LABEL, hint: duration_hint, hint_id: DURATION_HINT_ID) do |id, described_by|
       input(type: "number", id: id, name: field_name(:duration_minutes), value: @service.duration_minutes,
         required: true, min: Service::MIN_DURATION_MINUTES, max: Service::MAX_DURATION_MINUTES, step: Service::DURATION_STEP_MINUTES,
         **described_by_attrs(described_by), class: CONTROL)
@@ -48,10 +49,18 @@ class Components::Owner::Service::Fields < Components::Base
   end
 
   def render_price_field
-    render_field(:price, PRICE_LABEL, hint: PRICE_HINT, hint_id: PRICE_HINT_ID, error_attribute: :price_cents) do |id, described_by|
+    render_field(:price, PRICE_LABEL, hint: price_hint, hint_id: PRICE_HINT_ID, error_attribute: :price_cents) do |id, described_by|
       input(type: "text", id: id, name: field_name(:price), value: @service.price,
         inputmode: "decimal", **described_by_attrs(described_by), class: CONTROL)
     end
+  end
+
+  def duration_hint
+    DURATION_HINT unless @onboarding
+  end
+
+  def price_hint
+    PRICE_HINT unless @onboarding
   end
 
   def render_field(attribute, label_text, hint: nil, hint_id: nil, error_attribute: attribute)
