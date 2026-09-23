@@ -10,6 +10,13 @@ RSpec.describe Components::Owner::ShareLink, type: :component do
     expect(html).to include("wa.me")
   end
 
+  it "shows the bare host but copies the full address" do
+    document = Nokogiri::HTML5.fragment(body)
+
+    expect(document.at_css("[data-share-address]").text).to eq("barbearia-do-ze.zubio.com.br")
+    expect(document.at_css("[data-controller='clipboard']")["data-clipboard-text-value"]).to eq("https://barbearia-do-ze.zubio.com.br")
+  end
+
   it "puts WhatsApp before the copy action, WhatsApp filled and copy outlined" do
     document = Nokogiri::HTML5.fragment(body)
     actions = document.css("[data-share-actions] > *")

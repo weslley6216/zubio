@@ -22,7 +22,7 @@ class Views::Owner::Onboarding::Final < Views::Base
   ROW_CLASS = "flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3.5".freeze
   ROW_TEXT_CLASS = "min-w-0 flex-grow".freeze
   ROW_PRIMARY_CLASS = "block truncate text-sm font-bold text-ink".freeze
-  ROW_SECONDARY_CLASS = "block text-xs text-ink-muted".freeze
+  ROW_VALUE_CLASS = "flex-none text-[13px] text-ink-muted".freeze
   ROW_EDIT_CLASS = "text-[13px] font-bold text-brand-ink".freeze
   LOGO_NOTICE_CLASS = "flex items-center gap-3 rounded-xl border border-dashed border-line-strong bg-surface px-4 py-3.5 text-[13px] leading-relaxed text-ink-muted".freeze
   LOGO_NOTICE_ICON_CLASS = "h-5 w-5 flex-none text-ink-muted".freeze
@@ -92,10 +92,8 @@ class Views::Owner::Onboarding::Final < Views::Base
       if @services.empty?
         div(class: ROW_TEXT_CLASS) { span(class: ROW_PRIMARY_CLASS) { NO_SERVICES } }
       else
-        div(class: ROW_TEXT_CLASS) do
-          span(class: ROW_PRIMARY_CLASS) { pluralized_services }
-          span(class: ROW_SECONDARY_CLASS) { services_durations }
-        end
+        div(class: ROW_TEXT_CLASS) { span(class: ROW_PRIMARY_CLASS) { pluralized_services } }
+        span(class: ROW_VALUE_CLASS, data: { summary_value: true }) { services_durations }
       end
     end
   end
@@ -106,10 +104,8 @@ class Views::Owner::Onboarding::Final < Views::Base
         div(class: ROW_TEXT_CLASS) { span(class: ROW_PRIMARY_CLASS) { NO_DAYS } }
       else
         summary = WorkingHour::Summary.new(@working_hours)
-        div(class: ROW_TEXT_CLASS) do
-          span(class: ROW_PRIMARY_CLASS) { summary.weekdays_label }
-          span(class: ROW_SECONDARY_CLASS) { summary.hours_label }
-        end
+        div(class: ROW_TEXT_CLASS) { span(class: ROW_PRIMARY_CLASS) { summary.weekdays_label } }
+        span(class: ROW_VALUE_CLASS, data: { summary_value: true }) { summary.hours_label }
       end
     end
   end
