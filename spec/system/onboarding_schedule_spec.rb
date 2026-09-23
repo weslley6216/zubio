@@ -50,4 +50,24 @@ RSpec.describe "Onboarding weekday chips and lunch break", type: :system, js: tr
     expect(find("#working_hours_break_starts_at", visible: :all).value).to eq("")
     expect(find("#working_hours_break_ends_at", visible: :all).value).to eq("")
   end
+
+  it "summarizes the lunch break and keeps it on after resuming the draft" do
+    sign_up_and_reach_working_hours
+    find("label:has([data-onboarding-target='breakToggle'])").click
+    page.execute_script(<<~JS)
+      ["working_hours_break_starts_at", "working_hours_break_ends_at"].forEach((id, index) => {
+        const field = document.getElementById(id)
+        field.value = index === 0 ? "12:00" : "14:00"
+        field.dispatchEvent(new Event("input", { bubbles: true }))
+      })
+    JS
+
+    expect(page).to have_content("12:00 às 14:00")
+
+    page.refresh
+
+    expect(page).to have_content("12:00 às 14:00")
+    expect(find("[data-onboarding-target='breakToggle']", visible: :all)).to be_checked
+    expect(page).to have_css("#working_hours_break_starts_at", visible: true)
+  end
 end

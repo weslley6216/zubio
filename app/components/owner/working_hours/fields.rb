@@ -9,6 +9,7 @@ class Components::Owner::WorkingHours::Fields < Components::Base
   BREAK_TOGGLE_LABEL = "Paro para o almoço".freeze
   BREAK_STARTS_LABEL = "Início do intervalo".freeze
   BREAK_ENDS_LABEL = "Fim do intervalo".freeze
+  BREAK_FIELD_ACTION = "input->onboarding#summarizeBreak change->onboarding#summarizeBreak".freeze
 
   CHIPS_CLASS = "grid grid-cols-4 gap-2".freeze
   CHIP_BASE_CLASS = "grid min-h-13 place-items-center rounded-xl text-sm".freeze
@@ -23,7 +24,8 @@ class Components::Owner::WorkingHours::Fields < Components::Base
   RANGE_FIELD_CLASS = "flex-grow min-h-12 justify-center rounded-lg border border-line-strong text-base font-bold".freeze
 
   BREAK_ROW_CLASS = "mt-3 flex items-center justify-between gap-3 rounded-lg border border-line bg-surface-2 px-3.5 py-3".freeze
-  BREAK_TEXT_CLASS = "text-sm font-bold text-ink".freeze
+  BREAK_TEXT_CLASS = "block text-sm font-bold text-ink".freeze
+  BREAK_SUMMARY_CLASS = "block text-xs text-ink-muted empty:hidden".freeze
   BREAK_FIELDS_CLASS = "mt-3 grid grid-cols-2 gap-3".freeze
   TOGGLE_CLASS = "relative inline-flex h-[26px] w-[46px] flex-none cursor-pointer items-center rounded-full bg-line p-[3px] has-checked:bg-brand-600".freeze
   TOGGLE_THUMB_CLASS = "h-5 w-5 rounded-full bg-white transition-transform peer-checked:translate-x-5".freeze
@@ -72,21 +74,24 @@ class Components::Owner::WorkingHours::Fields < Components::Base
   def render_break
     div do
       div(class: BREAK_ROW_CLASS) do
-        span(class: BREAK_TEXT_CLASS) { BREAK_TOGGLE_LABEL }
+        div do
+          span(class: BREAK_TEXT_CLASS) { BREAK_TOGGLE_LABEL }
+          span(class: BREAK_SUMMARY_CLASS, data: { onboarding_target: "breakSummary" })
+        end
         label(class: TOGGLE_CLASS) do
           input(type: "checkbox", class: "peer sr-only", data: { action: "change->onboarding#toggleBreak", onboarding_target: "breakToggle" })
           span(class: TOGGLE_THUMB_CLASS)
         end
       end
       div(class: "#{BREAK_FIELDS_CLASS} hidden", data: { onboarding_target: "break" }) do
-        render_time_field(:break_starts_at, BREAK_STARTS_LABEL)
-        render_time_field(:break_ends_at, BREAK_ENDS_LABEL)
+        render_time_field(:break_starts_at, BREAK_STARTS_LABEL, action: BREAK_FIELD_ACTION)
+        render_time_field(:break_ends_at, BREAK_ENDS_LABEL, action: BREAK_FIELD_ACTION)
       end
     end
   end
 
-  def render_time_field(name, label_text)
+  def render_time_field(name, label_text, action: nil)
     input(type: "time", id: "working_hours_#{name}", aria_label: label_text, name: "working_hours[#{name}]",
-      step: WorkingHour::MINUTE_STEP * 60, class: RANGE_FIELD_CLASS)
+      step: WorkingHour::MINUTE_STEP * 60, class: RANGE_FIELD_CLASS, data: { action: action })
   end
 end

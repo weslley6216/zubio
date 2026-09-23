@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "section", "back", "servicesList", "serviceRowTemplate", "count",
-    "dayCount", "breakToggle", "break",
+    "dayCount", "breakToggle", "break", "breakSummary",
     "serviceName", "serviceDuration", "servicePrice"
   ]
   static values = { tenant: String, open: String }
@@ -12,6 +12,7 @@ export default class extends Controller {
     this.draft = this.#readDraft()
     if (!this.#servicesPrefilled()) this.#restoreServices()
     this.#restoreFields()
+    this.#syncBreak()
     this.index = this.#initialIndex()
     this.#render()
     this.updateDayCount()
@@ -37,8 +38,14 @@ export default class extends Controller {
   toggleBreak() {
     const shown = this.breakToggleTarget.checked
     this.breakTarget.classList.toggle("hidden", !shown)
-    if (!shown) this.breakTarget.querySelectorAll("input").forEach((field) => { field.value = "" })
+    if (!shown) this.#breakFields().forEach((field) => { field.value = "" })
+    this.summarizeBreak()
     this.#save()
+  }
+
+  summarizeBreak() {
+    const [ starts, ends ] = this.#breakFields()
+    this.breakSummaryTarget.textContent = starts.value && ends.value ? `${starts.value} às ${ends.value}` : ""
   }
 
   addService() {
@@ -138,6 +145,17 @@ export default class extends Controller {
 
   #currentSectionName() {
     return this.sectionTargets[this.index]?.dataset.onboardingSection
+  }
+
+  #breakFields() {
+    return [ ...this.breakTarget.querySelectorAll("input") ]
+  }
+
+  #syncBreak() {
+    const shown = this.#breakFields().some((field) => field.value)
+    this.breakToggleTarget.checked = shown
+    this.breakTarget.classList.toggle("hidden", !shown)
+    this.summarizeBreak()
   }
 
   #serializeFields() {
