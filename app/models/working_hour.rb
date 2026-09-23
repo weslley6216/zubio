@@ -15,10 +15,6 @@ class WorkingHour < ApplicationRecord
   scope :for_weekday, ->(weekday) { where(weekday: weekday) }
   scope :ordered, -> { order(:weekday, :opens_at) }
 
-  def weekday_name
-    WEEKDAY_NAMES[weekday] if weekday.in?(WEEKDAYS)
-  end
-
   private
 
   def closes_after_opens
