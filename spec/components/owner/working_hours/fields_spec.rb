@@ -29,6 +29,14 @@ RSpec.describe Components::Owner::WorkingHours::Fields, type: :component do
     expect(document.at_css("#working_hours_opens_at")["data-action"]).to be_nil
   end
 
+  it "keeps the lunch toggle inside the schedule card" do
+    document = Nokogiri::HTML5.fragment(body)
+    card = document.at_css("[data-schedule-card]")
+
+    expect(card.at_css("#working_hours_opens_at")).not_to be_nil
+    expect(card.at_css(%([data-onboarding-target="breakToggle"]))).not_to be_nil
+  end
+
   it "gives the schedule fields a stable id" do
     html = body
 

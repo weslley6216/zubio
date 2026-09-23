@@ -23,17 +23,17 @@ class Components::Owner::WorkingHours::Fields < Components::Base
   RANGE_JOINER_CLASS = "text-sm text-ink-muted".freeze
   RANGE_FIELD_CLASS = "flex-grow min-h-12 justify-center rounded-lg border border-line-strong text-base font-bold".freeze
 
-  BREAK_ROW_CLASS = "mt-3 flex items-center justify-between gap-3 rounded-lg border border-line bg-surface-2 px-3.5 py-3".freeze
+  BREAK_ROW_CLASS = "flex items-center justify-between gap-3 rounded-[10px] border border-line bg-surface-2 px-3.5 py-3".freeze
   BREAK_TEXT_CLASS = "block text-sm font-bold text-ink".freeze
   BREAK_SUMMARY_CLASS = "block text-xs text-ink-muted empty:hidden".freeze
-  BREAK_FIELDS_CLASS = "mt-3 grid grid-cols-2 gap-3".freeze
+  BREAK_CLASS = "grid gap-3".freeze
+  BREAK_FIELDS_CLASS = "grid grid-cols-2 gap-3".freeze
   TOGGLE_CLASS = "relative inline-flex h-[26px] w-[46px] flex-none cursor-pointer items-center rounded-full bg-line p-[3px] has-checked:bg-brand-600".freeze
   TOGGLE_THUMB_CLASS = "h-5 w-5 rounded-full bg-white transition-transform peer-checked:translate-x-5".freeze
 
   def view_template
     render_weekdays
-    render_range
-    render_break
+    render_schedule_card
   end
 
   private
@@ -60,19 +60,20 @@ class Components::Owner::WorkingHours::Fields < Components::Base
     button(type: "button", class: ALL_DAYS_CLASS, data: { action: "onboarding#selectAllDays" }) { ALL_DAYS_LABEL }
   end
 
-  def render_range
-    div(class: RANGE_CARD_CLASS) do
+  def render_schedule_card
+    div(class: RANGE_CARD_CLASS, data: { schedule_card: true }) do
       span(class: RANGE_LABEL_CLASS) { RANGE_LABEL }
       div(class: RANGE_ROW_CLASS) do
         render_time_field(:opens_at, OPENS_LABEL)
         span(class: RANGE_JOINER_CLASS) { RANGE_JOINER }
         render_time_field(:closes_at, CLOSES_LABEL)
       end
+      render_break
     end
   end
 
   def render_break
-    div do
+    div(class: BREAK_CLASS) do
       div(class: BREAK_ROW_CLASS) do
         div do
           span(class: BREAK_TEXT_CLASS) { BREAK_TOGGLE_LABEL }
