@@ -35,4 +35,16 @@ RSpec.describe Components::Owner::Onboarding::Screen, type: :component do
   it "yields the body between header and footer" do
     expect(screen { "meu corpo" }).to include("meu corpo")
   end
+
+  it "hides the section when asked, so the client can reveal only the open question" do
+    document = Nokogiri::HTML5.fragment(screen(hidden: true))
+
+    expect(document.at_css(%([data-onboarding-target="section"])).key?("hidden")).to be(true)
+  end
+
+  it "shows the section by default" do
+    document = Nokogiri::HTML5.fragment(screen)
+
+    expect(document.at_css(%([data-onboarding-target="section"]))["hidden"]).to be_nil
+  end
 end
