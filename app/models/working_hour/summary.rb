@@ -23,8 +23,9 @@ class WorkingHour::Summary
   def hours_label
     return "" if @working_hours.empty?
 
-    first = @working_hours.min_by(&:weekday)
-    "#{format_time(first.opens_at)}#{RANGE_SEPARATOR}#{format_time(first.closes_at)}"
+    opens_at = @working_hours.map(&:opens_at).min
+    closes_at = @working_hours.map(&:closes_at).max
+    "#{format_time(opens_at)}#{RANGE_SEPARATOR}#{format_time(closes_at)}"
   end
 
   private
