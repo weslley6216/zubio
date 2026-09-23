@@ -15,6 +15,6 @@ RSpec.describe "Signup", type: :system, js: true do
 
     click_on "Criar conta"
 
-    expect(page).to have_content("Vamos deixar sua página pronta")
+    expect(page).to have_content("Vamos montar a sua página de agendamentos")
   end
 end
