@@ -1,56 +1,90 @@
 class Components::Owner::WorkingHours::Fields < Components::Base
   include Components::Form::Styles
 
-  WEEKDAYS_LABEL = "Dias de atendimento".freeze
-  RANGE_LABEL = "Horário de atendimento".freeze
+  ALL_DAYS_LABEL = "Todos".freeze
+  RANGE_LABEL = "Horário desses dias".freeze
   OPENS_LABEL = "Abre".freeze
   CLOSES_LABEL = "Fecha".freeze
-  BREAK_LABEL = "Intervalo (opcional)".freeze
+  RANGE_JOINER = "até".freeze
+  BREAK_TOGGLE_LABEL = "Paro para o almoço".freeze
   BREAK_STARTS_LABEL = "Início do intervalo".freeze
   BREAK_ENDS_LABEL = "Fim do intervalo".freeze
 
-  WEEKDAYS_CLASS = "mt-4 grid grid-cols-4 gap-2 sm:grid-cols-7".freeze
-  DAY_CLASS = "flex flex-col items-center gap-1 rounded-lg border border-line px-2 py-2 text-xs text-ink".freeze
-  RANGE_CLASS = "mt-4 grid grid-cols-2 gap-3".freeze
+  CHIPS_CLASS = "grid grid-cols-4 gap-2".freeze
+  CHIP_BASE_CLASS = "grid min-h-13 place-items-center rounded-xl text-sm".freeze
+  CHIP_UNCHECKED_CLASS = "border border-line bg-surface font-bold text-ink-subtle peer-checked:border-2 peer-checked:border-brand-600 peer-checked:bg-brand-soft peer-checked:font-extrabold peer-checked:text-brand-ink".freeze
+  ALL_DAYS_CLASS = "grid min-h-13 place-items-center rounded-xl border border-dashed border-line-strong bg-surface text-xs font-bold text-ink-muted".freeze
+  COUNTER_CLASS = "mt-2 text-xs text-ink-muted".freeze
+
+  RANGE_CARD_CLASS = "mt-4 grid gap-3 rounded-2xl border border-line bg-surface p-4".freeze
+  RANGE_LABEL_CLASS = "text-xs font-medium uppercase tracking-wide text-ink-subtle".freeze
+  RANGE_ROW_CLASS = "flex items-center gap-2.5".freeze
+  RANGE_JOINER_CLASS = "text-sm text-ink-muted".freeze
+  RANGE_FIELD_CLASS = "flex-grow min-h-12 justify-center rounded-lg border border-line-strong text-base font-bold".freeze
+
+  BREAK_ROW_CLASS = "mt-3 flex items-center justify-between gap-3 rounded-lg border border-line bg-surface-2 px-3.5 py-3".freeze
+  BREAK_TEXT_CLASS = "text-sm font-bold text-ink".freeze
+  BREAK_FIELDS_CLASS = "mt-3 grid grid-cols-2 gap-3".freeze
+  TOGGLE_CLASS = "relative inline-flex h-[26px] w-[46px] flex-none cursor-pointer items-center rounded-full bg-line p-[3px] has-checked:bg-brand-600".freeze
+  TOGGLE_THUMB_CLASS = "h-5 w-5 rounded-full bg-white transition-transform peer-checked:translate-x-5".freeze
 
   def view_template
     render_weekdays
-    render_range(RANGE_LABEL, :opens_at, OPENS_LABEL, :closes_at, CLOSES_LABEL)
-    render_range(BREAK_LABEL, :break_starts_at, BREAK_STARTS_LABEL, :break_ends_at, BREAK_ENDS_LABEL)
+    render_range
+    render_break
   end
 
   private
 
   def render_weekdays
     div do
-      span(class: LABEL) { WEEKDAYS_LABEL }
-      div(class: WEEKDAYS_CLASS) do
-        WorkingHour::WEEKDAYS.each { |weekday| render_weekday_checkbox(weekday) }
+      div(class: CHIPS_CLASS) do
+        WorkingHour::WEEKDAYS.each { |weekday| render_weekday_chip(weekday) }
+        render_all_days_chip
+      end
+      span(class: COUNTER_CLASS, data: { onboarding_target: "dayCount" })
+    end
+  end
+
+  def render_weekday_chip(weekday)
+    label(class: "block") do
+      input(type: "checkbox", name: "working_hours[weekdays][]", value: weekday, class: "peer sr-only")
+      span(class: "#{CHIP_BASE_CLASS} #{CHIP_UNCHECKED_CLASS}") { plain WorkingHour::WEEKDAY_NAMES[weekday].first(3) }
+    end
+  end
+
+  def render_all_days_chip
+    button(type: "button", class: ALL_DAYS_CLASS, data: { action: "onboarding#selectAllDays" }) { ALL_DAYS_LABEL }
+  end
+
+  def render_range
+    div(class: RANGE_CARD_CLASS) do
+      span(class: RANGE_LABEL_CLASS) { RANGE_LABEL }
+      div(class: RANGE_ROW_CLASS) do
+        render_time_field(:opens_at, OPENS_LABEL)
+        span(class: RANGE_JOINER_CLASS) { RANGE_JOINER }
+        render_time_field(:closes_at, CLOSES_LABEL)
       end
     end
   end
 
-  def render_weekday_checkbox(weekday)
-    label(class: DAY_CLASS) do
-      input(type: "checkbox", name: "working_hours[weekdays][]", value: weekday, class: CHECKBOX)
-      plain WorkingHour::WEEKDAY_NAMES[weekday].first(3)
-    end
-  end
-
-  def render_range(legend, starts_name, starts_label, ends_name, ends_label)
+  def render_break
     div do
-      span(class: LABEL) { legend }
-      div(class: RANGE_CLASS) do
-        render_time_field(starts_name, starts_label)
-        render_time_field(ends_name, ends_label)
+      div(class: BREAK_ROW_CLASS) do
+        span(class: BREAK_TEXT_CLASS) { BREAK_TOGGLE_LABEL }
+        label(class: TOGGLE_CLASS) do
+          input(type: "checkbox", class: "peer sr-only", data: { action: "onboarding#toggleBreak", onboarding_target: "breakToggle" })
+          span(class: TOGGLE_THUMB_CLASS)
+        end
+      end
+      div(class: "#{BREAK_FIELDS_CLASS} hidden", data: { onboarding_target: "break" }) do
+        render_time_field(:break_starts_at, BREAK_STARTS_LABEL)
+        render_time_field(:break_ends_at, BREAK_ENDS_LABEL)
       end
     end
   end
 
   def render_time_field(name, label_text)
-    div do
-      label(for: "working_hours_#{name}", class: LABEL) { label_text }
-      input(type: "time", id: "working_hours_#{name}", name: "working_hours[#{name}]", step: WorkingHour::MINUTE_STEP * 60, class: CONTROL)
-    end
+    input(type: "time", aria_label: label_text, name: "working_hours[#{name}]", step: WorkingHour::MINUTE_STEP * 60, class: RANGE_FIELD_CLASS)
   end
 end
