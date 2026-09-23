@@ -57,7 +57,7 @@ class Components::Owner::BrandQuestion::Name < Components::Base
     return { "name-counter-target": "field", action: "input->name-counter#count" } unless @deriving
 
     { "name-counter-target": "field", "brand-address-target": "name",
-      action: "input->name-counter#count input->brand-address#render" }
+      action: "input->name-counter#count input->brand-address#render input->onboarding#paintInitials" }
   end
 
   def render_address

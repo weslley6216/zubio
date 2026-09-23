@@ -22,7 +22,7 @@ class Components::Owner::Emblem < Components::Base
     if logo
       img(src: rails_storage_proxy_path(logo), alt: "", class: "#{size_class} #{IMAGE_CLASS}")
     else
-      span(class: "#{size_class} #{INITIAL_CLASS}") { @tenant.initial }
+      span(class: "#{size_class} #{INITIAL_CLASS}", data: { brand_initial: true }) { @tenant.initial }
     end
   end
 end
