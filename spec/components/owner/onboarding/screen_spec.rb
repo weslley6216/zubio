@@ -47,4 +47,10 @@ RSpec.describe Components::Owner::Onboarding::Screen, type: :component do
 
     expect(document.at_css(%([data-onboarding-target="section"]))["hidden"]).to be_nil
   end
+
+  it "names the icon-only back button for assistive tech and for clicking it by name" do
+    document = Nokogiri::HTML5.fragment(screen)
+
+    expect(document.at_css(%([data-onboarding-target="back"]))["aria-label"]).to eq("Voltar")
+  end
 end
