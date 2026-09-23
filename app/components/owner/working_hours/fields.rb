@@ -48,7 +48,8 @@ class Components::Owner::WorkingHours::Fields < Components::Base
 
   def render_weekday_chip(weekday)
     label(class: "block") do
-      input(type: "checkbox", name: "working_hours[weekdays][]", value: weekday, class: "peer sr-only")
+      input(type: "checkbox", name: "working_hours[weekdays][]", value: weekday, class: "peer sr-only",
+        data: { action: "change->onboarding#updateDayCount" })
       span(class: "#{CHIP_BASE_CLASS} #{CHIP_UNCHECKED_CLASS}") { plain WorkingHour::WEEKDAY_NAMES[weekday].first(3) }
     end
   end
@@ -73,7 +74,7 @@ class Components::Owner::WorkingHours::Fields < Components::Base
       div(class: BREAK_ROW_CLASS) do
         span(class: BREAK_TEXT_CLASS) { BREAK_TOGGLE_LABEL }
         label(class: TOGGLE_CLASS) do
-          input(type: "checkbox", class: "peer sr-only", data: { action: "onboarding#toggleBreak", onboarding_target: "breakToggle" })
+          input(type: "checkbox", class: "peer sr-only", data: { action: "change->onboarding#toggleBreak", onboarding_target: "breakToggle" })
           span(class: TOGGLE_THUMB_CLASS)
         end
       end

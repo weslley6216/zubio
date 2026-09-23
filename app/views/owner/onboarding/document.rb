@@ -138,8 +138,8 @@ class Views::Owner::Onboarding::Document < Views::Base
   def render_service_row(service)
     div(class: SERVICE_ROW_CLASS, data: { service_row: true }) do
       div(class: SERVICE_TEXT_CLASS) do
-        span(class: SERVICE_NAME_CLASS) { service.name }
-        span(class: SERVICE_META_CLASS) { service_meta(service) }
+        span(class: SERVICE_NAME_CLASS, data: { service_name: true }) { service.name }
+        span(class: SERVICE_META_CLASS, data: { service_meta: true }) { service_meta(service) }
         render Components::Form::Errors.new(messages: service.errors.full_messages)
       end
       render_service_action(EDIT_LABEL, "onboarding#editService") { render_edit_icon }
