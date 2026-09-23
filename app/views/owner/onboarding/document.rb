@@ -103,10 +103,12 @@ class Views::Owner::Onboarding::Document < Views::Base
 
   def render_welcome
     section(class: WELCOME_CLASS, hidden: @open_section != "welcome", data: { onboarding_target: "section", onboarding_section: "welcome" }) do
-      render Components::Platform::Emblem.new(size: :onboarding)
-      h1(class: WELCOME_HEADING_CLASS) { WELCOME_TITLE }
-      p(class: WELCOME_SUBTITLE_CLASS) { WELCOME_SUBTITLE }
-      div(class: WELCOME_GROUPS_CLASS) { WELCOME_GROUPS.each_with_index { |text, index| render_welcome_group(text, index) } }
+      div do
+        render Components::Platform::Emblem.new(size: :onboarding)
+        h1(class: WELCOME_HEADING_CLASS) { WELCOME_TITLE }
+        p(class: WELCOME_SUBTITLE_CLASS) { WELCOME_SUBTITLE }
+        div(class: WELCOME_GROUPS_CLASS) { WELCOME_GROUPS.each_with_index { |text, index| render_welcome_group(text, index) } }
+      end
       div(class: WELCOME_FOOTER_CLASS) do
         button(type: "button", class: WELCOME_BUTTON_CLASS, data: { action: "onboarding#next" }) { START_LABEL }
         p(class: WELCOME_NOTE_CLASS) { WELCOME_NOTE }
