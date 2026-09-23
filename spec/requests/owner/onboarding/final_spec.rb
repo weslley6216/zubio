@@ -9,19 +9,33 @@ RSpec.describe "Owner onboarding final", type: :request do
   end
 
   describe "GET /owner/onboarding/final" do
-    it "shows the full address, the copy and WhatsApp actions, and the summary" do
+    it "shows the owner's first name, the full address, the copy and WhatsApp actions, and the summary" do
       tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
       owner = sign_in(tenant)
       professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
-      ActsAsTenant.with_tenant(tenant) { create(:service, tenant: tenant, name: "Corte") }
+      ActsAsTenant.with_tenant(tenant) { create(:service, tenant: tenant, name: "Corte", duration_minutes: 30) }
       ActsAsTenant.with_tenant(tenant) { professional.replace_weekly_hours!(weekdays: [ 2, 3 ], opens_at: "09:00", closes_at: "18:00") }
 
       get owner_onboarding_final_path
 
+      expect(response.body).to include("Sua página está no ar, Ana")
       expect(response.body).to include("barbearia-do-ze.zubio.com.br")
       expect(response.body).to include("Barbearia do Zé")
       expect(response.body).to include("1 serviço")
+      expect(response.body).to include("30 min")
       expect(response.body).to include("wa.me")
+    end
+
+    it "bands the weekly schedule in the summary, like the canvas" do
+      tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      owner = sign_in(tenant)
+      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      ActsAsTenant.with_tenant(tenant) { professional.replace_weekly_hours!(weekdays: (2..6).to_a, opens_at: "09:00", closes_at: "18:00") }
+
+      get owner_onboarding_final_path
+
+      expect(response.body).to include("Ter a Sáb")
+      expect(response.body).to include("09:00–18:00")
     end
 
     it "names the missing service and leads back to registering one" do
@@ -54,7 +68,7 @@ RSpec.describe "Owner onboarding final", type: :request do
       expect(response.body).not_to include(owner_onboarding_path)
     end
 
-    it "does not leak another tenant's summary" do
+    it "does not leak another tenant's summary, but shows its own" do
       tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
       other_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
       sign_in(tenant)
@@ -63,6 +77,8 @@ RSpec.describe "Owner onboarding final", type: :request do
 
       expect(response.body).not_to include("Estúdio Aurora")
       expect(response.body).not_to include(other_tenant.canonical_host)
+      expect(response.body).to include("Barbearia do Zé")
+      expect(response.body).to include(tenant.canonical_host)
     end
   end
 end
