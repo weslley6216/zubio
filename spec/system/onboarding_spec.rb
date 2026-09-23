@@ -44,6 +44,25 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     expect(page).to have_content("1 serviço")
   end
 
+  it "adds a service through the card and sees it listed above a cleared registration card" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    find("[data-swatch-row] [data-swatch]", match: :first).click
+    click_on "Continuar"
+    fill_in "Nome da marca", with: "Barbearia do Zé"
+    click_on "Continuar"
+    click_on "Pular por enquanto"
+
+    fill_in "Nome", with: "Corte na máquina"
+    fill_in "Duração (minutos)", with: "30"
+    fill_in "Preço (R$, opcional)", with: "45,00"
+    click_on "Adicionar à lista"
+
+    expect(page).to have_css("[data-service-row]", text: "Corte na máquina")
+    expect(page).to have_content("30 min · R$ 45,00")
+    expect(find_field("Nome", with: "")).to be_present
+  end
+
   it "goes back, changes the colour and keeps the other answers on submit" do
     sign_up_and_reach_onboarding
     click_on "Começar"
