@@ -13,6 +13,7 @@ export default class extends Controller {
     if (!this.#servicesPrefilled()) this.#restoreServices()
     this.#restoreFields()
     this.#syncBreak()
+    this.paintInitials()
     this.index = this.#initialIndex()
     this.#render()
     this.updateDayCount()
@@ -41,6 +42,11 @@ export default class extends Controller {
     if (!shown) this.#breakFields().forEach((field) => { field.value = "" })
     this.summarizeBreak()
     this.#save()
+  }
+
+  paintInitials() {
+    const initial = this.element.querySelector("#tenant_name").value.trim().charAt(0).toUpperCase()
+    this.element.querySelectorAll("[data-brand-initial]").forEach((emblem) => { emblem.textContent = initial })
   }
 
   summarizeBreak() {

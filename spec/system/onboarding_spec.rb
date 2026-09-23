@@ -81,6 +81,19 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     expect(find_field("Nome da marca", visible: :all).value).to eq("Barbearia do Zé")
   end
 
+  it "paints the brand initial into the emblems as the name is typed" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    find("[data-swatch-row] [data-swatch]", match: :first).click
+    click_on "Continuar"
+
+    fill_in "Nome da marca", with: "Barbearia do Zé"
+    click_on "Continuar"
+
+    expect(page).to have_content("Tem uma logo?")
+    expect(page).to have_css("[data-onboarding-section='logo'] [data-brand-initial]", text: "B", exact_text: true)
+  end
+
   it "resumes where it was left off on the same browser" do
     sign_up_and_reach_onboarding
     click_on "Começar"
