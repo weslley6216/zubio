@@ -16,7 +16,7 @@ class Components::Owner::Onboarding::Screen < Components::Base
   PRIMARY_CLASS = "min-h-13 w-full rounded-xl bg-brand-600 text-base font-extrabold text-on-brand".freeze
   SECONDARY_CLASS = "mt-2 min-h-10 w-full bg-none text-sm font-bold text-ink-muted".freeze
 
-  def initialize(section:, group:, position:, primary:, total: 5, submit: false, secondary: nil, count: false)
+  def initialize(section:, group:, position:, primary:, total: 5, submit: false, secondary: nil, count: false, hidden: false)
     @section = section
     @group = group
     @position = position
@@ -25,10 +25,11 @@ class Components::Owner::Onboarding::Screen < Components::Base
     @submit = submit
     @secondary = secondary
     @count = count
+    @hidden = hidden
   end
 
   def view_template
-    section(class: "flex min-h-0 flex-grow flex-col", data: section_data) do
+    section(class: "flex min-h-0 flex-grow flex-col", hidden: @hidden, data: section_data) do
       render_header
       render_bar
       div(class: BODY_CLASS) { yield }
