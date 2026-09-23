@@ -38,6 +38,20 @@ RSpec.describe "Owner onboarding final", type: :request do
       expect(response.body).to include("09:00–18:00")
     end
 
+    it "lays each summary value beside its label on the same row" do
+      tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      owner = sign_in(tenant)
+      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      ActsAsTenant.with_tenant(tenant) { create(:service, tenant: tenant, name: "Corte", duration_minutes: 30) }
+      ActsAsTenant.with_tenant(tenant) { professional.replace_weekly_hours!(weekdays: (2..6).to_a, opens_at: "09:00", closes_at: "18:00") }
+
+      get owner_onboarding_final_path
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_xpath("//*[@data-summary-value][text()='09:00–18:00']/..").text).to include("Ter a Sáb")
+      expect(document.at_xpath("//*[@data-summary-value][text()='30 min']/..").text).to include("1 serviço")
+    end
+
     it "names the missing service and leads back to registering one" do
       tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
       owner = sign_in(tenant)

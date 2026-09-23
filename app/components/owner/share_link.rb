@@ -14,8 +14,8 @@ class Components::Owner::ShareLink < Components::Base
   end
 
   def view_template
-    div(class: CARD_CLASS, data: { controller: "clipboard" }) do
-      span(class: ADDRESS_CLASS, data: { "clipboard-target": "source" }) { address }
+    div(class: CARD_CLASS, data: { controller: "clipboard", clipboard_text_value: address }) do
+      span(class: ADDRESS_CLASS, data: { share_address: true }) { @host }
       div(class: ACTIONS_CLASS, data: { share_actions: true }) do
         a(href: whatsapp_url, class: WHATSAPP_CLASS, target: "_blank", rel: "noopener") do
           render_whatsapp_icon
