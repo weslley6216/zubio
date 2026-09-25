@@ -142,6 +142,20 @@ RSpec.describe Branding, type: :model do
       expect(branding).to be_valid
     end
 
+    it "is invalid when a direct upload signed id points to text bytes declared as PNG" do
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new("not an image"),
+        filename: "logo.png",
+        content_type: "image/png",
+        identify: false
+      )
+      branding = build(:branding)
+
+      branding.logo = blob.signed_id
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:logo]).to eq([ Branding::INVALID_IMAGE_MESSAGE ])
+    end
     it "does not re-check an already stored logo when another field changes" do
       branding = create(:branding, :with_logo)
       branding.reload
