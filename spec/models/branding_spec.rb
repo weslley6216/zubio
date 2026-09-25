@@ -98,6 +98,45 @@ RSpec.describe Branding, type: :model do
       expect(branding).not_to be_valid
       expect(branding.logo.blob.content_type).to eq("application/pdf")
     end
+
+    it "is invalid when the logo has an image extension but text bytes" do
+      branding = build(:branding)
+      branding.logo.attach(
+        io: StringIO.new("not an image"),
+        filename: "logo.png",
+        content_type: "image/png"
+      )
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:logo]).to eq([ Branding::INVALID_IMAGE_MESSAGE ])
+    end
+
+    it "is invalid when the logo is a truncated image the processor cannot decode" do
+      branding = build(:branding)
+      branding.logo.attach(
+        io: StringIO.new(File.binread(Rails.root.join("spec/fixtures/files/logo.png"))[0, 40]),
+        filename: "logo.png",
+        content_type: "image/png"
+      )
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:logo]).to eq([ Branding::INVALID_IMAGE_MESSAGE ])
+    end
+
+    it "accepts a real PNG logo" do
+      branding = build(:branding, :with_logo)
+
+      expect(branding).to be_valid
+    end
+
+    it "does not re-check an already stored logo when another field changes" do
+      branding = create(:branding, :with_logo)
+      branding.reload
+
+      branding.brand_600 = "#2C6CB0"
+
+      expect(branding).to be_valid
+    end
   end
 
   describe ".platform_default" do
