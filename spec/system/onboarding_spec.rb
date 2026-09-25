@@ -156,6 +156,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     find("input[type=file]", visible: :all, match: :first).attach_file(Rails.root.join("spec/fixtures/files/logo.png"))
 
     expect(page).to have_css("[data-onboarding-section='logo'] img[data-logo-target='preview']:not([hidden])")
+    expect(page).to have_css("img[data-logo-target='preview']") { |preview| preview.evaluate_script("this.naturalWidth") > 0 }
     expect(page).to have_no_content(Components::Owner::BrandQuestion::Logo::NO_LOGO_TEXT)
     expect(page).to have_css("[data-logo-target='signedId']", visible: :all)
     expect(find("[data-logo-target='signedId']", visible: :all).value).to be_present

@@ -21,6 +21,7 @@ RSpec.describe "Owner brand logo", type: :system, js: true do
 
     expect(page).to have_css("img[data-logo-target='preview']:not([hidden])")
     expect(find("img[data-logo-target='preview']")[:src]).to start_with("blob:")
+    expect(page).to have_css("img[data-logo-target='preview']") { |preview| preview.evaluate_script("this.naturalWidth") > 0 }
     expect(page).to have_css("[data-logo-target='placeholder'][hidden]", visible: :all)
   end
 
