@@ -50,15 +50,40 @@ RSpec.describe Components::Owner::BrandQuestion::Logo, type: :component do
     rendered = described_class.new(tenant: tenant, branding: build(:branding, tenant: tenant),
       direct_upload_url: "/rails/active_storage/direct_uploads").call
 
-    expect(rendered).to include("logo-upload")
-    expect(rendered).to include(%(data-logo-upload-target="signedId"))
+    expect(rendered).to include(%(data-logo-url-value="/rails/active_storage/direct_uploads"))
+    expect(rendered).to include(%(data-logo-target="signedId"))
   end
 
   it "keeps the plain multipart field outside onboarding" do
     rendered = body(build(:branding, tenant: tenant))
 
     expect(rendered).to include(%(name="branding[logo]"))
-    expect(rendered).not_to include("logo-upload")
+    expect(rendered).not_to include("logo-url-value")
+  end
+
+  it "carries the size and type limits for client-side validation as data attributes" do
+    rendered = Nokogiri::HTML5.fragment(
+      described_class.new(tenant: tenant, branding: build(:branding, tenant: tenant),
+        direct_upload_url: "/rails/active_storage/direct_uploads", onboarding: true).call
+    )
+    root = rendered.at_css("[data-controller='logo']")
+
+    expect(root["data-logo-max-bytes-value"]).to eq(Branding::LOGO_MAX_BYTES.to_s)
+    expect(root["data-logo-content-types-value"]).to eq(Branding::LOGO_CONTENT_TYPES.to_json)
+  end
+
+  it "describes the preview image for assistive technology in both variants" do
+    onboarding = Nokogiri::HTML5.fragment(described_class.new(tenant: tenant, branding: build(:branding, tenant: tenant), onboarding: true).call)
+    settings = Nokogiri::HTML5.fragment(described_class.new(tenant: tenant, branding: build(:branding, tenant: tenant)).call)
+
+    expect(onboarding.at_css("img[data-logo-target='preview']")["alt"]).to eq(described_class::PREVIEW_ALT)
+    expect(settings.at_css("img[data-logo-target='preview']")["alt"]).to eq(described_class::PREVIEW_ALT)
+  end
+
+  it "states the format and size rule in the onboarding variant too" do
+    html = described_class.new(tenant: tenant, branding: build(:branding, tenant: tenant), onboarding: true).call
+
+    expect(html).to include("#{Branding::LOGO_MAX_BYTES / 1.megabyte} MB")
   end
 
   it "offers gallery and camera and explains the initial, without a removal box, in the onboarding variant" do

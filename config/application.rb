@@ -23,6 +23,21 @@ module Zubio
   # need it at boot, before autoloading can reach a model.
   PLATFORM_HOST = ENV.fetch("APP_HOST", "zubio.com.br")
 
+  def self.storage_upload_origin
+    active_storage = Rails.application.config.active_storage
+    origin_from(active_storage.service_configurations&.dig(active_storage.service.to_s, "endpoint"))
+  end
+
+  def self.origin_from(endpoint)
+    return if endpoint.blank?
+
+    uri = URI.parse(endpoint)
+    port = uri.port && uri.port != uri.default_port ? ":#{uri.port}" : ""
+    "#{uri.scheme}://#{uri.host}#{port}"
+  rescue URI::InvalidURIError
+    nil
+  end
+
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
