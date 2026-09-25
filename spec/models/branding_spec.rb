@@ -129,6 +129,19 @@ RSpec.describe Branding, type: :model do
       expect(branding).to be_valid
     end
 
+    it "accepts a real PNG logo assigned by signed id, as a direct upload does" do
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: File.open(Rails.root.join("spec/fixtures/files/logo.png")),
+        filename: "logo.png",
+        content_type: "image/png"
+      )
+      branding = build(:branding)
+
+      branding.logo = blob.signed_id
+
+      expect(branding).to be_valid
+    end
+
     it "does not re-check an already stored logo when another field changes" do
       branding = create(:branding, :with_logo)
       branding.reload
