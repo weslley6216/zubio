@@ -90,5 +90,39 @@ RSpec.describe "Owner brand logo", type: :request do
       ActsAsTenant.with_tenant(tenant) { expect(tenant.branding.reload.logo).not_to be_attached }
       ActsAsTenant.with_tenant(other_tenant) { expect(other_tenant.branding.reload.logo).to be_attached }
     end
+
+    it "rejects a file whose bytes are not an image, keeping the previous logo" do
+      branding = create(:branding, :with_logo, tenant: tenant, brand_600: "#4F46E5")
+      original_blob_id = ActsAsTenant.with_tenant(tenant) { branding.logo.blob.id }
+      sign_in
+      fake = Tempfile.new([ "logo", ".png" ])
+      fake.write("not an image")
+      fake.rewind
+
+      patch owner_brand_logo_path, params: { branding: { logo: Rack::Test::UploadedFile.new(fake.path, "image/png") } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.logo.blob.id).to eq(original_blob_id) }
+    ensure
+      fake.close!
+    end
+
+    it "does not touch another establishment's logo when it rejects a non-image" do
+      other_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+      other_branding = create(:branding, :with_logo, tenant: other_tenant)
+      other_blob_id = ActsAsTenant.with_tenant(other_tenant) { other_branding.logo.blob.id }
+      create(:branding, :with_logo, tenant: tenant, brand_600: "#4F46E5")
+      sign_in
+      fake = Tempfile.new([ "logo", ".png" ])
+      fake.write("not an image")
+      fake.rewind
+
+      patch owner_brand_logo_path, params: { branding: { logo: Rack::Test::UploadedFile.new(fake.path, "image/png") } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      ActsAsTenant.with_tenant(other_tenant) { expect(other_tenant.branding.reload.logo.blob.id).to eq(other_blob_id) }
+    ensure
+      fake.close!
+    end
   end
 end
