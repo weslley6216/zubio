@@ -156,6 +156,17 @@ RSpec.describe "Owner onboarding", type: :request do
       ActsAsTenant.with_tenant(tenant) { expect(Service.count).to eq(0) }
     end
 
+    it "states a service without a duration in Portuguese, with no attribute name in English" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      post owner_onboarding_path, params: answers.merge(services: [ { name: "Corte", duration_minutes: "", price: "90,00" } ])
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(Service::DURATION_NOT_WHOLE_MESSAGE)
+      expect(response.body).not_to include("Duration minutes")
+    end
+
     it "shows a submitted service with its formatted duration and price, with the new-service card below, when a later section fails" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       other_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
