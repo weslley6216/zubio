@@ -98,6 +98,73 @@ RSpec.describe Branding, type: :model do
       expect(branding).not_to be_valid
       expect(branding.logo.blob.content_type).to eq("application/pdf")
     end
+
+    it "is invalid when the logo has an image extension but text bytes" do
+      branding = build(:branding)
+      branding.logo.attach(
+        io: StringIO.new("not an image"),
+        filename: "logo.png",
+        content_type: "image/png"
+      )
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:logo]).to eq([ Branding::INVALID_IMAGE_MESSAGE ])
+    end
+
+    it "is invalid when the logo is a truncated image the processor cannot decode" do
+      branding = build(:branding)
+      branding.logo.attach(
+        io: StringIO.new(File.binread(Rails.root.join("spec/fixtures/files/logo.png"))[0, 40]),
+        filename: "logo.png",
+        content_type: "image/png"
+      )
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:logo]).to eq([ Branding::INVALID_IMAGE_MESSAGE ])
+    end
+
+    it "accepts a real PNG logo" do
+      branding = build(:branding, :with_logo)
+
+      expect(branding).to be_valid
+    end
+
+    it "accepts a real PNG logo assigned by signed id, as a direct upload does" do
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: File.open(Rails.root.join("spec/fixtures/files/logo.png")),
+        filename: "logo.png",
+        content_type: "image/png"
+      )
+      branding = build(:branding)
+
+      branding.logo = blob.signed_id
+
+      expect(branding).to be_valid
+    end
+
+    it "is invalid when a direct upload signed id points to text bytes declared as PNG" do
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new("not an image"),
+        filename: "logo.png",
+        content_type: "image/png",
+        identify: false
+      )
+      branding = build(:branding)
+
+      branding.logo = blob.signed_id
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:logo]).to eq([ Branding::INVALID_IMAGE_MESSAGE ])
+    end
+
+    it "does not re-check an already stored logo when another field changes" do
+      branding = create(:branding, :with_logo)
+      branding.reload
+
+      branding.brand_600 = "#2C6CB0"
+
+      expect(branding).to be_valid
+    end
   end
 
   describe ".platform_default" do
