@@ -38,6 +38,29 @@ RSpec.describe "Content Security Policy", type: :request do
     end
   end
 
+  describe "the connect-src directive" do
+    it "allows the configured storage origin so the direct upload PUT is not blocked" do
+      allow(Zubio).to receive(:storage_upload_origin).and_return("https://abcxyz.storage.supabase.co")
+      create(:branding, tenant: tenant)
+      sign_in
+
+      get owner_dashboard_path
+
+      expect(response.headers["Content-Security-Policy"]).to include("connect-src 'self' https://abcxyz.storage.supabase.co")
+    end
+
+    it "falls back to self when storage is same-origin" do
+      allow(Zubio).to receive(:storage_upload_origin).and_return(nil)
+      create(:branding, tenant: tenant)
+      sign_in
+
+      get owner_dashboard_path
+
+      expect(response.headers["Content-Security-Policy"]).to include("connect-src 'self'")
+      expect(response.headers["Content-Security-Policy"]).not_to include("storage.supabase.co")
+    end
+  end
+
   describe "the platform root, where no tenant is resolved" do
     before { host! Tenant::PLATFORM_HOST }
 
