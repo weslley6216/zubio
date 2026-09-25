@@ -93,7 +93,22 @@ export default class extends Controller {
       return
     }
 
+    if (this.#logoUploading()) {
+      event.preventDefault()
+      const form = event.target
+      if (event.submitter) {
+        event.submitter.disabled = true
+        event.submitter.textContent = "Enviando a sua logo…"
+      }
+      this.element.addEventListener("logo:settled", () => form.requestSubmit(), { once: true })
+      return
+    }
+
     this.clear()
+  }
+
+  #logoUploading() {
+    return !!this.element.querySelector("[data-upload-state='uploading']")
   }
 
   clear() {
