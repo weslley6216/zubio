@@ -50,6 +50,16 @@ RSpec.describe "Owner brand name", type: :request do
       expect(tenant.reload.name).to eq("Barbearia do Zé")
     end
 
+    it "states a blank name in Portuguese, without the default English" do
+      sign_in
+
+      patch owner_brand_name_path, params: { tenant: { name: "" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("não pode ficar em branco")
+      expect(response.body).not_to include("can't be blank")
+    end
+
     it "keeps the address after a rename, since the subdomain does not change" do
       sign_in
 

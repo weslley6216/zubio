@@ -22,6 +22,17 @@ RSpec.describe User, type: :model do
       expect(user).not_to be_valid
     end
 
+    it "names a duplicate email in Portuguese, not the default English" do
+      tenant = create(:tenant)
+      create(:user, tenant: tenant, email: "owner@example.com")
+      user = build(:user, tenant: tenant, email: "owner@example.com")
+
+      user.valid?
+
+      expect(user.errors[:email]).to include("já está em uso")
+      expect(user.errors[:email]).not_to include("has already been taken")
+    end
+
     it "is valid with the same email in different tenants" do
       create(:user, email: "owner@example.com")
       user = build(:user, email: "owner@example.com")
