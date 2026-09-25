@@ -121,7 +121,8 @@ class Branding < ApplicationRecord
     change = attachment_changes["logo"]
     return true unless change
 
-    Vips::Image.new_from_buffer(logo_upload_bytes(change.attachable), "", access: :sequential, fail_on: :error).avg
+    bytes = change.attachable.is_a?(String) ? logo.blob.download : logo_upload_bytes(change.attachable)
+    Vips::Image.new_from_buffer(bytes, "", access: :sequential, fail_on: :error).avg
     true
   rescue Vips::Error
     false
