@@ -72,6 +72,14 @@ RSpec.describe Components::Owner::BrandQuestion::Logo, type: :component do
     expect(root["data-logo-content-types-value"]).to eq(Branding::LOGO_CONTENT_TYPES.to_json)
   end
 
+  it "describes the preview image for assistive technology in both variants" do
+    onboarding = Nokogiri::HTML5.fragment(described_class.new(tenant: tenant, branding: build(:branding, tenant: tenant), onboarding: true).call)
+    settings = Nokogiri::HTML5.fragment(described_class.new(tenant: tenant, branding: build(:branding, tenant: tenant)).call)
+
+    expect(onboarding.at_css("img[data-logo-target='preview']")["alt"]).to eq(described_class::PREVIEW_ALT)
+    expect(settings.at_css("img[data-logo-target='preview']")["alt"]).to eq(described_class::PREVIEW_ALT)
+  end
+
   it "states the format and size rule in the onboarding variant too" do
     html = described_class.new(tenant: tenant, branding: build(:branding, tenant: tenant), onboarding: true).call
 

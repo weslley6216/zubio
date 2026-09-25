@@ -12,6 +12,7 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
   NO_LOGO_LABEL = "Sem logo por enquanto".freeze
   NO_LOGO_TEXT = "Usamos a inicial do seu nome em um quadrinho com a sua cor. Dá para trocar depois.".freeze
   MEGABYTE = 1.megabyte
+  PREVIEW_ALT = "Prévia da logo escolhida".freeze
 
   TITLE_CLASS = "text-xl font-extrabold tracking-tight text-ink".freeze
   SUBTITLE_CLASS = "mt-1 text-sm text-ink-muted".freeze
@@ -80,7 +81,7 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
       div(data: { "logo-target": "placeholder" }) do
         render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :large)
       end
-      img(src: "", alt: "", hidden: true, class: SETTINGS_PREVIEW_CLASS, data: { "logo-target": "preview" })
+      img(src: "", alt: PREVIEW_ALT, hidden: true, class: SETTINGS_PREVIEW_CLASS, data: { "logo-target": "preview" })
       span(class: HINT_CLASS) { hint }
     end
     p(class: STATE_CLASS, aria_live: "polite", data: { "logo-target": "state" })
@@ -97,7 +98,7 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
   def render_upload_area
     div(class: UPLOAD_CLASS) do
       div(class: UPLOAD_ICON_WRAPPER_CLASS, data: { "logo-target": "placeholder" }) { render_upload_icon }
-      img(src: "", alt: "", hidden: true, class: ONBOARDING_PREVIEW_CLASS, data: { "logo-target": "preview" })
+      img(src: "", alt: PREVIEW_ALT, hidden: true, class: ONBOARDING_PREVIEW_CLASS, data: { "logo-target": "preview" })
       p(class: UPLOAD_TITLE_CLASS) { UPLOAD_TITLE }
       p(class: UPLOAD_SUBTITLE_CLASS) { UPLOAD_SUBTITLE }
       div(class: ONBOARDING_ACTIONS_CLASS) do

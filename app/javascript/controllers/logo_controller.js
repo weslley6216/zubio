@@ -35,12 +35,18 @@ export default class extends Controller {
   #forget() {
     if (this.hasSignedIdTarget) this.signedIdTarget.value = ""
     delete this.element.dataset.uploadState
+    this.#releasePreview()
     this.previewTarget.hidden = true
     this.placeholderTarget.hidden = false
     if (this.hasNoLogoTarget) this.noLogoTarget.hidden = false
   }
 
+  #releasePreview() {
+    if (this.previewTarget.src.startsWith("blob:")) URL.revokeObjectURL(this.previewTarget.src)
+  }
+
   #showPreview(file) {
+    this.#releasePreview()
     this.previewTarget.src = URL.createObjectURL(file)
     this.previewTarget.hidden = false
     this.placeholderTarget.hidden = true
