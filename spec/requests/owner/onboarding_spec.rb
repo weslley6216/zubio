@@ -226,6 +226,24 @@ RSpec.describe "Owner onboarding", type: :request do
       pdf_file.close!
     end
 
+    it "refuses a logo whose bytes are not an image and reopens the logo section" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+      fake = Tempfile.new([ "logo", ".png" ])
+      fake.write("not an image")
+      fake.rewind
+
+      post owner_onboarding_path, params: answers.merge(
+        branding: { brand_600: "#2F6FED", logo: Rack::Test::UploadedFile.new(fake.path, "image/png") }
+      )
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(%(data-onboarding-open-value="logo"))
+      expect(tenant.reload.onboarding_completed?).to be(false)
+    ensure
+      fake.close!
+    end
+
     it "refuses a schedule that closes before it opens and reopens the working_hours section" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       sign_in(tenant)
