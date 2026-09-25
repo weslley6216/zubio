@@ -61,6 +61,17 @@ RSpec.describe "Content Security Policy", type: :request do
     end
   end
 
+  describe "the img-src directive" do
+    it "allows blob images so the chosen logo can be previewed before upload" do
+      create(:branding, tenant: tenant)
+      sign_in
+
+      get owner_dashboard_path
+
+      expect(response.headers["Content-Security-Policy"]).to include("img-src 'self' blob:")
+    end
+  end
+
   describe "the platform root, where no tenant is resolved" do
     before { host! Tenant::PLATFORM_HOST }
 
