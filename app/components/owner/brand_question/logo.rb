@@ -34,6 +34,10 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
   NO_LOGO_ROW_CLASS = "flex items-center gap-3".freeze
   NO_LOGO_TEXT_CLASS = "text-[13px] leading-normal text-ink-muted".freeze
 
+  STATE_CLASS = "mt-2 text-center text-xs leading-snug text-ink-muted".freeze
+  ONBOARDING_PREVIEW_CLASS = "h-14 w-14 rounded-full object-cover".freeze
+  SETTINGS_PREVIEW_CLASS = "h-12 w-12 rounded-xl object-cover".freeze
+
   def initialize(tenant:, branding:, direct_upload_url: nil, onboarding: false)
     @tenant = tenant
     @branding = branding
@@ -45,7 +49,7 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
     div(data: root_data) do
       h1(id: HEADING_ID, class: TITLE_CLASS) { TITLE }
       p(class: SUBTITLE_CLASS) { SUBTITLE }
-      input(type: "hidden", name: "branding[logo]", data: { "logo-upload-target": "signedId" }) if direct_upload?
+      input(type: "hidden", name: "branding[logo]", data: { "logo-target": "signedId" }) if direct_upload?
       if @onboarding
         render_upload_area
         render_no_logo_card unless attached?
@@ -62,16 +66,24 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
   def direct_upload? = @direct_upload_url.present?
 
   def root_data
-    return { controller: "logo-field" } unless direct_upload?
-
-    { controller: "logo-field logo-upload", logo_upload_url_value: @direct_upload_url }
+    data = {
+      controller: "logo",
+      logo_max_bytes_value: Branding::LOGO_MAX_BYTES,
+      logo_content_types_value: Branding::LOGO_CONTENT_TYPES.to_json
+    }
+    data[:logo_url_value] = @direct_upload_url if direct_upload?
+    data
   end
 
   def render_preview
     div(class: PREVIEW_CLASS) do
-      render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :large)
-      span(class: HINT_CLASS, data: { "logo-field-target": "hint" }) { hint }
+      div(data: { "logo-target": "placeholder" }) do
+        render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :large)
+      end
+      img(src: "", alt: "", hidden: true, class: SETTINGS_PREVIEW_CLASS, data: { "logo-target": "preview" })
+      span(class: HINT_CLASS) { hint }
     end
+    p(class: STATE_CLASS, aria_live: "polite", data: { "logo-target": "state" })
   end
 
   def render_actions
@@ -84,14 +96,17 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
 
   def render_upload_area
     div(class: UPLOAD_CLASS) do
-      div(class: UPLOAD_ICON_WRAPPER_CLASS) { render_upload_icon }
+      div(class: UPLOAD_ICON_WRAPPER_CLASS, data: { "logo-target": "placeholder" }) { render_upload_icon }
+      img(src: "", alt: "", hidden: true, class: ONBOARDING_PREVIEW_CLASS, data: { "logo-target": "preview" })
       p(class: UPLOAD_TITLE_CLASS) { UPLOAD_TITLE }
       p(class: UPLOAD_SUBTITLE_CLASS) { UPLOAD_SUBTITLE }
       div(class: ONBOARDING_ACTIONS_CLASS) do
         render_picker(GALLERY_LABEL, PRIMARY_PICKER_CLASS, {})
         render_picker(CAMERA_LABEL, SECONDARY_PICKER_CLASS, capture: "environment")
       end
+      p(class: HINT_CLASS) { hint }
     end
+    p(class: STATE_CLASS, aria_live: "polite", data: { "logo-target": "state" })
     render Components::Form::Errors.new(messages: @branding.errors[:logo])
   end
 
@@ -105,7 +120,7 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
   end
 
   def render_no_logo_card
-    div(class: NO_LOGO_CARD_CLASS) do
+    div(class: NO_LOGO_CARD_CLASS, data: { "logo-target": "noLogo" }) do
       span(class: NO_LOGO_LABEL_CLASS) { NO_LOGO_LABEL }
       div(class: NO_LOGO_ROW_CLASS) do
         render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :large)
@@ -124,7 +139,7 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
 
   def field_name = direct_upload? ? nil : "branding[logo]"
 
-  def picker_actions = direct_upload? ? "logo-field#showChosen logo-upload#upload" : "logo-field#showChosen"
+  def picker_actions = "logo#choose"
 
   def render_remove
     label(class: REMOVE_CLASS) do
