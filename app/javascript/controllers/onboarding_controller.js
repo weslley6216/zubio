@@ -96,6 +96,10 @@ export default class extends Controller {
     if (this.#logoUploading()) {
       event.preventDefault()
       const form = event.target
+      if (event.submitter) {
+        event.submitter.disabled = true
+        event.submitter.textContent = "Enviando a sua logo…"
+      }
       this.element.addEventListener("logo:settled", () => form.requestSubmit(), { once: true })
       return
     }

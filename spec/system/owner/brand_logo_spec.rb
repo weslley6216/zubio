@@ -25,6 +25,18 @@ RSpec.describe "Owner brand logo", type: :system, js: true do
     expect(page).to have_css("[data-logo-target='placeholder'][hidden]", visible: :all)
   end
 
+  it "clears a valid file chosen through the other picker when a later one is refused" do
+    tenant, owner = establishment
+    open(tenant, owner)
+    gallery, camera = all("input[type=file]", visible: :all).to_a
+
+    gallery.attach_file(Rails.root.join("spec/fixtures/files/logo.png"))
+    camera.attach_file(Rails.root.join("spec/fixtures/files/not-an-image.txt"))
+
+    expect(page).to have_content("não foi aceita")
+    expect(page.evaluate_script("[...document.querySelectorAll('input[type=file]')].every((input) => input.files.length === 0)")).to be(true)
+  end
+
   it "refuses an oversized file and clears the field" do
     tenant, owner = establishment
     open(tenant, owner)
