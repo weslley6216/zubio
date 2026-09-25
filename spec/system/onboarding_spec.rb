@@ -19,6 +19,26 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     page.driver.network_traffic.count { |exchange| exchange.url&.include?("/rails/active_storage/direct_uploads") }
   end
 
+  def finished_storage_uploads
+    page.driver.network_traffic.count { |exchange| exchange.url&.include?("/rails/active_storage/disk/") && exchange.finished? }
+  end
+
+  def wait_until(&condition)
+    Timeout.timeout(Capybara.default_max_wait_time) { sleep 0.05 until condition.call }
+  end
+
+  def another_logo
+    @another_logo = Tempfile.new([ "another-logo", ".png" ])
+    @another_logo.binmode
+    @another_logo.write(File.binread(Rails.root.join("spec/fixtures/files/logo.png")))
+    @another_logo.rewind
+    @another_logo.path
+  end
+
+  def signed_id
+    find("[data-logo-target='signedId']", visible: :all).value
+  end
+
   def reach_logo_question
     sign_up_and_reach_onboarding
     click_on "Começar"
@@ -169,6 +189,55 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
 
     expect(page).to have_content("Logo enviada")
     expect(page).to have_css("[data-upload-state='done']")
+    expect(direct_upload_requests).to be_positive
+  end
+
+  it "keeps the newest choice when an older upload settles last" do
+    reach_logo_question
+    held = []
+    page.driver.browser.on(:request) { |request| held << request }
+    page.driver.browser.network.intercept(pattern: "*direct_uploads*")
+    picker = find("input[type=file]", visible: :all, match: :first)
+    picker.attach_file(Rails.root.join("spec/fixtures/files/logo.png"))
+    wait_until { held.size == 1 }
+    picker.attach_file(another_logo)
+    wait_until { held.size == 2 }
+    held.last.continue
+    expect(page).to have_css("[data-upload-state='done']")
+    newest = signed_id
+
+    held.first.continue
+    wait_until { finished_storage_uploads == 2 }
+
+    expect(page).to have_css("[data-upload-state='done']")
+    expect(signed_id).to eq(newest)
+  end
+
+  it "drops the previous signed id as soon as a new file starts uploading" do
+    reach_logo_question
+    picker = find("input[type=file]", visible: :all, match: :first)
+    picker.attach_file(Rails.root.join("spec/fixtures/files/logo.png"))
+    expect(page).to have_css("[data-upload-state='done']")
+    page.driver.browser.on(:request) { |request| request }
+    page.driver.browser.network.intercept(pattern: "*direct_uploads*")
+
+    picker.attach_file(another_logo)
+
+    expect(page).to have_css("[data-upload-state='uploading']")
+    expect(page).to have_css("[data-logo-target='signedId']", visible: :all) { |field| field.value.blank? }
+  end
+
+  it "forgets an accepted upload when a later file is refused" do
+    reach_logo_question
+    find("input[type=file]", visible: :all, match: :first).attach_file(Rails.root.join("spec/fixtures/files/logo.png"))
+    expect(page).to have_css("[data-upload-state='done']")
+
+    find("input[type=file]", visible: :all, match: :first).attach_file(Rails.root.join("spec/fixtures/files/not-an-image.txt"))
+
+    expect(page).to have_content("não foi aceita")
+    expect(page).to have_no_css("[data-upload-state]", visible: :all)
+    expect(signed_id).to be_blank
+    expect(page).to have_content(Components::Owner::BrandQuestion::Logo::NO_LOGO_TEXT)
   end
 
   it "keeps waiting for a pending upload before leaving the page" do
@@ -190,6 +259,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     page.execute_script(%(document.getElementById('working_hours_closes_at').value = '18:00'))
     click_on "Ver minha página"
 
+    expect(page).to have_button("Enviando a sua logo…", disabled: true)
     expect(page).to have_no_content("Sua página está no ar")
     expect(page).to have_css("[data-upload-state='uploading']", visible: :all)
 
@@ -209,7 +279,9 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
 
     expect(page).to have_content("Não deu para enviar a logo")
     expect(page).to have_css("[data-upload-state='failed']")
-    expect(find("[data-logo-target='signedId']", visible: :all).value).to be_blank
+    expect(signed_id).to be_blank
+    expect(page).to have_css("img[data-logo-target='preview'][hidden]", visible: :all)
+    expect(page).to have_content(Components::Owner::BrandQuestion::Logo::NO_LOGO_TEXT)
   end
 
   it "refuses a file over the size limit before any upload starts" do
