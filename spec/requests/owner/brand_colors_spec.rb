@@ -86,6 +86,17 @@ RSpec.describe "Owner brand colors", type: :request do
       ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq("#4F46E5") }
     end
 
+    it "states an unrecognised color in Portuguese, not the default English" do
+      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+      sign_in
+
+      patch owner_brand_colors_path, params: { branding: { brand_600: "azul" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("não é válido")
+      expect(response.body).not_to include("is invalid")
+    end
+
     it "does not touch another establishment's brand and shows nothing of it" do
       other_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
       create(:branding, tenant: other_tenant, brand_600: "#000000")

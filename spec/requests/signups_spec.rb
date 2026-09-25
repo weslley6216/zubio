@@ -103,6 +103,22 @@ RSpec.describe "Signup", type: :request do
       expect(User.unscoped.count).to eq(0)
     end
 
+    it "names blank fields in Portuguese, without the default English" do
+      post signup_path, params: signup_params(name: "", email: "", password: "")
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("não pode ficar em branco")
+      expect(response.body).not_to include("can't be blank")
+    end
+
+    it "states a malformed email in Portuguese, without the default English" do
+      post signup_path, params: signup_params(email: "not-an-email")
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("não é válido")
+      expect(response.body).not_to include("is invalid")
+    end
+
     it "blocks further signup attempts after the rate limit is exceeded" do
       5.times { |index| post signup_path, params: signup_params(email: "ana#{index}@example.com") }
       post signup_path, params: signup_params(email: "ana-over@example.com")

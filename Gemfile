@@ -25,6 +25,9 @@ gem "bcrypt", "~> 3.1.7"
 # Row-level multi-tenancy scoped by tenant_id [https://github.com/ErwinM/acts_as_tenant]
 gem "acts_as_tenant"
 
+# Traduções padrão do ActiveRecord/Rails em pt-BR [https://github.com/svenfuchs/rails-i18n]
+gem "rails-i18n"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
