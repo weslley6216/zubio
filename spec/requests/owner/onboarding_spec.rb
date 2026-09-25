@@ -244,6 +244,37 @@ RSpec.describe "Owner onboarding", type: :request do
       fake.close!
     end
 
+    it "refuses a direct-upload signed id pointing to non-image bytes and reopens the logo section" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new("not an image"),
+        filename: "logo.png",
+        content_type: "image/png",
+        identify: false
+      )
+
+      post owner_onboarding_path, params: answers.merge(branding: { brand_600: "#2F6FED", logo: blob.signed_id })
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(%(data-onboarding-open-value="logo"))
+      expect(tenant.reload.onboarding_completed?).to be(false)
+    end
+
+    it "completes onboarding with a direct-upload signed id pointing to a real PNG" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: File.open(Rails.root.join("spec/fixtures/files/logo.png")),
+        filename: "logo.png",
+        content_type: "image/png"
+      )
+
+      post owner_onboarding_path, params: answers.merge(branding: { brand_600: "#2F6FED", logo: blob.signed_id })
+
+      expect(tenant.reload.onboarding_completed?).to be(true)
+    end
+
     it "refuses a schedule that closes before it opens and reopens the working_hours section" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       sign_in(tenant)
