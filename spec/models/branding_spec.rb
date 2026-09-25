@@ -156,6 +156,7 @@ RSpec.describe Branding, type: :model do
       expect(branding).not_to be_valid
       expect(branding.errors[:logo]).to eq([ Branding::INVALID_IMAGE_MESSAGE ])
     end
+
     it "does not re-check an already stored logo when another field changes" do
       branding = create(:branding, :with_logo)
       branding.reload
