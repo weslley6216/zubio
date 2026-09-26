@@ -118,6 +118,119 @@ RSpec.describe "Owner onboarding", type: :request do
   end
 
   describe "POST /owner/onboarding" do
+    it "refuses two services with the same name in one submit and reopens services" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      post owner_onboarding_path, params: answers.merge(
+        services: [ { name: "Corte", duration_minutes: "45", price: "90,00" }, { name: "Corte", duration_minutes: "30", price: "50,00" } ]
+      )
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(%(data-onboarding-open-value="services"))
+      expect(response.body).to include(Service::NAME_TAKEN_MESSAGE)
+      ActsAsTenant.with_tenant(tenant) { expect(Service.count).to eq(0) }
+    end
+
+    it "carries the uploaded logo back on refill: fills the signed id, shows the preview and drops the no-logo card" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: File.open(Rails.root.join("spec/fixtures/files/logo.png")),
+        filename: "logo.png",
+        content_type: "image/png"
+      )
+
+      post owner_onboarding_path, params: answers(name: "").merge(branding: { brand_600: "#2F6FED", logo: blob.signed_id })
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css(%(input[name="branding[logo]"]))["value"]).to eq(blob.signed_id)
+      expect(document.at_css(%(img[data-logo-target="preview"]))["src"]).to be_present
+      expect(response.body).not_to include(Components::Owner::BrandQuestion::Logo::NO_LOGO_TEXT)
+    end
+
+    it "opens the first failing section and still carries a later section's error" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      post owner_onboarding_path, params: answers.merge(
+        branding: { brand_600: "not-a-hex" },
+        services: [ { name: "Corte", duration_minutes: "", price: "90,00" } ]
+      )
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(%(data-onboarding-open-value="colors"))
+      expect(response.body).to include(Service::DURATION_NOT_WHOLE_MESSAGE)
+      ActsAsTenant.with_tenant(tenant) { expect(Service.count).to eq(0) }
+    end
+
+    it "carries back the marked days, hours and lunch values when another section fails" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      post owner_onboarding_path, params: answers(name: "").merge(
+        working_hours: { weekdays: %w[2 3 4 5 6], opens_at: "09:00", closes_at: "18:00", break_starts_at: "12:00", break_ends_at: "14:00" }
+      )
+
+      document = Nokogiri::HTML5(response.body)
+      checked = document.css(%(input[name="working_hours[weekdays][]"][checked])).map { |node| node["value"] }
+      expect(checked).to contain_exactly("2", "3", "4", "5", "6")
+      expect(document.at_css("#working_hours_opens_at")["value"]).to eq("09:00")
+      expect(document.at_css("#working_hours_break_starts_at")["value"]).to eq("12:00")
+    end
+
+    it "keeps the brand name and colours intact when only the schedule is refused" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      post owner_onboarding_path, params: answers.merge(
+        working_hours: { weekdays: %w[2], opens_at: "18:00", closes_at: "09:00" }
+      )
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(%(data-onboarding-open-value="working_hours"))
+      expect(response.body).to include(%(value="Barbearia do Zé"))
+    end
+
+    it "refuses a schedule with no weekday and reopens working_hours" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      post owner_onboarding_path, params: answers.merge(working_hours: { weekdays: [], opens_at: "09:00", closes_at: "18:00" })
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(%(data-onboarding-open-value="working_hours"))
+      expect(response.body).to include(Onboarding::Schedule::NO_WEEKDAY_MESSAGE)
+      expect(tenant.reload.onboarding_completed?).to be(false)
+    end
+
+    it "refuses an inverted lunch break with a re-render instead of a crash" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      post owner_onboarding_path, params: answers.merge(
+        working_hours: { weekdays: %w[2], opens_at: "09:00", closes_at: "18:00", break_starts_at: "14:00", break_ends_at: "12:00" }
+      )
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(%(data-onboarding-open-value="working_hours"))
+      expect(response.body).to include(Onboarding::Schedule::BREAK_INVERTED_MESSAGE)
+      expect(tenant.reload.onboarding_completed?).to be(false)
+    end
+
+    it "refuses a marked day without a closing time, flagging the range" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      post owner_onboarding_path, params: answers.merge(working_hours: { weekdays: %w[2 3 4 5 6], opens_at: "09:00", closes_at: "" })
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(%(data-onboarding-open-value="working_hours"))
+      expect(response.body).to include("não pode ficar em branco")
+      expect(tenant.reload.onboarding_completed?).to be(false)
+    end
+
     it "writes everything, enqueues the completion email and hands off to the derived host" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       sign_in(tenant)

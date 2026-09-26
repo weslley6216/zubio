@@ -168,4 +168,13 @@ RSpec.describe WorkingHour, type: :model do
       expect(results).to contain_exactly(own)
     end
   end
+  describe ".day_segments" do
+    it "returns a single range when there is no break" do
+      expect(described_class.day_segments("09:00", "18:00", nil, nil)).to eq([ [ "09:00", "18:00" ] ])
+    end
+
+    it "splits the day around the break into two ranges" do
+      expect(described_class.day_segments("09:00", "18:00", "12:00", "14:00")).to eq([ [ "09:00", "12:00" ], [ "14:00", "18:00" ] ])
+    end
+  end
 end

@@ -39,6 +39,14 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     find("[data-logo-target='signedId']", visible: :all).value
   end
 
+  def fill_time(field_id, value)
+    page.execute_script(<<~JS, field_id, value)
+      const field = document.getElementById(arguments[0])
+      field.value = arguments[1]
+      field.dispatchEvent(new Event("input", { bubbles: true }))
+    JS
+  end
+
   def reach_logo_question
     sign_up_and_reach_onboarding
     click_on "Começar"
@@ -75,6 +83,43 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     expect(page).to have_content("Sua página está no ar, Ana")
     expect(page).to have_content("barbearia-do-ze.zubio.com.br")
     expect(page).to have_content("1 serviço")
+  end
+
+  it "keeps every answer on a refused submit, then finishes once the schedule is fixed" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    find("[data-swatch-row] [data-swatch]", match: :first).click
+    click_on "Continuar"
+    fill_in "Nome da marca", with: "Barbearia do Zé"
+    click_on "Continuar"
+    attach_file(Components::Owner::BrandQuestion::Logo::GALLERY_LABEL, another_logo, make_visible: true)
+    wait_until { signed_id.present? }
+    click_on "Continuar"
+    fill_in "Nome", with: "Corte"
+    fill_in "Duração (minutos)", with: "45"
+    fill_in "Preço (R$, opcional)", with: "90,00"
+    click_on "Adicionar à lista"
+    click_on "Continuar com 1 serviço"
+    %w[2 3 4 5 6].each { |weekday| find("label", text: WorkingHour::WEEKDAY_NAMES[weekday.to_i].first(3), exact_text: true).click }
+    fill_time("working_hours_opens_at", "18:00")
+    fill_time("working_hours_closes_at", "09:00")
+    find("label:has([data-onboarding-target='breakToggle'])").click
+    fill_time("working_hours_break_starts_at", "12:00")
+    fill_time("working_hours_break_ends_at", "14:00")
+
+    click_on "Ver minha página"
+
+    expect(page).to have_content(Owner::OnboardingController::REFUSED)
+    expect(page).to have_css(%(input[name="working_hours[weekdays][]"][value="2"]:checked), visible: :all)
+    expect(find("#working_hours_break_starts_at", visible: :all).value).to eq("12:00")
+    expect(find("[data-onboarding-target='breakToggle']", visible: :all)).to be_checked
+    expect(find(%(img[data-logo-target="preview"]), visible: :all)[:src]).to be_present
+
+    fill_time("working_hours_opens_at", "09:00")
+    fill_time("working_hours_closes_at", "18:00")
+    click_on "Ver minha página"
+
+    expect(page).to have_content("Sua página está no ar, Ana")
   end
 
   it "adds a service through the card and sees it listed above a cleared registration card" do
