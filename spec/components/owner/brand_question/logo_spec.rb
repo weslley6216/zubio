@@ -99,7 +99,7 @@ RSpec.describe Components::Owner::BrandQuestion::Logo, type: :component do
     branding = create(:branding, :with_logo, tenant: tenant)
     allow(branding).to receive(:header_logo).and_return(nil)
 
-    html = described_class.new(tenant: tenant, branding: branding, onboarding: true).call
+    html = ApplicationController.render(described_class.new(tenant: tenant, branding: branding, onboarding: true), layout: false)
 
     expect(html).not_to include(%(name="branding[remove_logo]"))
   end

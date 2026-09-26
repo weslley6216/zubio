@@ -50,7 +50,7 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
     div(data: root_data) do
       h1(id: HEADING_ID, class: TITLE_CLASS) { TITLE }
       p(class: SUBTITLE_CLASS) { SUBTITLE }
-      input(type: "hidden", name: "branding[logo]", data: { "logo-target": "signedId" }) if direct_upload?
+      input(type: "hidden", name: "branding[logo]", value: signed_id_value, data: { "logo-target": "signedId" }) if direct_upload?
       if @onboarding
         render_upload_area
         render_no_logo_card unless attached?
@@ -97,8 +97,8 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
 
   def render_upload_area
     div(class: UPLOAD_CLASS) do
-      div(class: UPLOAD_ICON_WRAPPER_CLASS, data: { "logo-target": "placeholder" }) { render_upload_icon }
-      img(src: "", alt: PREVIEW_ALT, hidden: true, class: ONBOARDING_PREVIEW_CLASS, data: { "logo-target": "preview" })
+      div(class: UPLOAD_ICON_WRAPPER_CLASS, hidden: attached?, data: { "logo-target": "placeholder" }) { render_upload_icon }
+      img(src: preview_src, alt: PREVIEW_ALT, hidden: !attached?, class: ONBOARDING_PREVIEW_CLASS, data: { "logo-target": "preview" })
       p(class: UPLOAD_TITLE_CLASS) { UPLOAD_TITLE }
       p(class: UPLOAD_SUBTITLE_CLASS) { UPLOAD_SUBTITLE }
       div(class: ONBOARDING_ACTIONS_CLASS) do
@@ -150,7 +150,11 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
     end
   end
 
-  def attached? = @branding.logo.attached? && @branding.logo.blob.persisted?
+  def attached? = @branding.logo.attached? && @branding.logo.blob&.persisted?
+
+  def signed_id_value = attached? ? @branding.logo.blob.signed_id : nil
+
+  def preview_src = attached? ? rails_storage_proxy_path(@branding.logo) : ""
 
   def accept = Branding::LOGO_CONTENT_TYPES.join(",")
 

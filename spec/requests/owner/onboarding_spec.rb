@@ -118,6 +118,24 @@ RSpec.describe "Owner onboarding", type: :request do
   end
 
   describe "POST /owner/onboarding" do
+    it "carries the uploaded logo back on refill: fills the signed id, shows the preview and drops the no-logo card" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: File.open(Rails.root.join("spec/fixtures/files/logo.png")),
+        filename: "logo.png",
+        content_type: "image/png"
+      )
+
+      post owner_onboarding_path, params: answers(name: "").merge(branding: { brand_600: "#2F6FED", logo: blob.signed_id })
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css(%(input[name="branding[logo]"]))["value"]).to eq(blob.signed_id)
+      expect(document.at_css(%(img[data-logo-target="preview"]))["src"]).to be_present
+      expect(response.body).not_to include(Components::Owner::BrandQuestion::Logo::NO_LOGO_TEXT)
+    end
+
     it "opens the first failing section and still carries a later section's error" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       sign_in(tenant)
