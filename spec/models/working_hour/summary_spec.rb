@@ -60,7 +60,7 @@ RSpec.describe WorkingHour::Summary do
       expect(summary.line).to eq("3 dias de atendimento")
     end
 
-    it "uses the singular for a single divergent day" do
+    it "names a lone day with its own hours" do
       summary = described_class.new([ hour(2, "09:00", "12:00") ])
 
       expect(summary.line).to eq("Ter, 09:00–12:00")
