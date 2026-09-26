@@ -136,7 +136,7 @@ RSpec.describe "Owner working hours", type: :request do
       patch owner_working_hours_path, params: { working_hours: { "2" => { active: "1", opens_at_0: "09:00", closes_at_0: "18:00" }, "3" => { active: "1", opens_at_0: "18:00", closes_at_0: "09:00" } } }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(document.at_css("[data-day='3'] .text-danger")).to be_present
+      expect(document.at_css("[data-day='3'] .text-danger").text).to eq("o fechamento precisa ser depois da abertura")
       expect(saved_hours(professional).map(&:weekday)).to eq([ 2 ])
     end
 
