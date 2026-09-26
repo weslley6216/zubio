@@ -164,6 +164,37 @@ RSpec.describe WorkingHour, type: :model do
     end
   end
 
+  describe "scopes" do
+    it "returns only the requested day through for_weekday" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      tuesday = ActsAsTenant.with_tenant(tenant) do
+        create(:working_hour, tenant: tenant, professional: professional, weekday: 3, opens_at: "09:00", closes_at: "12:00")
+        create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      end
+
+      results = ActsAsTenant.with_tenant(tenant) { WorkingHour.for_weekday(2).to_a }
+
+      expect(results).to eq([ tuesday ])
+    end
+
+    it "orders by weekday then opens_at" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      wednesday, tuesday_afternoon, tuesday_morning = ActsAsTenant.with_tenant(tenant) do
+        [
+          create(:working_hour, tenant: tenant, professional: professional, weekday: 3, opens_at: "09:00", closes_at: "12:00"),
+          create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "14:00", closes_at: "18:00"),
+          create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+        ]
+      end
+
+      results = ActsAsTenant.with_tenant(tenant) { WorkingHour.ordered.to_a }
+
+      expect(results).to eq([ tuesday_morning, tuesday_afternoon, wednesday ])
+    end
+  end
+
   describe "tenant isolation" do
     it "does not bring another tenant's row through for_weekday or ordered" do
       tenant = create(:tenant)
