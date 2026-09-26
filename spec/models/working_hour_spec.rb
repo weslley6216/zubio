@@ -109,6 +109,16 @@ RSpec.describe WorkingHour, type: :model do
       expect(with_seconds.errors[:opens_at]).to be_present
     end
 
+    it "accepts a range aligned to the five-minute step" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      aligned = build(:working_hour, tenant: tenant, professional: professional, opens_at: "09:05", closes_at: "18:00")
+
+      valid = ActsAsTenant.with_tenant(tenant) { aligned.valid? }
+
+      expect(valid).to be true
+    end
+
     it "rejects a weekday outside 0..6" do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
@@ -151,6 +161,37 @@ RSpec.describe WorkingHour, type: :model do
       valid = ActsAsTenant.with_tenant(second_tenant) { overlapping_elsewhere.valid? }
 
       expect(valid).to be true
+    end
+  end
+
+  describe "scopes" do
+    it "returns only the requested day through for_weekday" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      tuesday = ActsAsTenant.with_tenant(tenant) do
+        create(:working_hour, tenant: tenant, professional: professional, weekday: 3, opens_at: "09:00", closes_at: "12:00")
+        create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      end
+
+      results = ActsAsTenant.with_tenant(tenant) { WorkingHour.for_weekday(2).to_a }
+
+      expect(results).to eq([ tuesday ])
+    end
+
+    it "orders by weekday then opens_at" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      wednesday, tuesday_afternoon, tuesday_morning = ActsAsTenant.with_tenant(tenant) do
+        [
+          create(:working_hour, tenant: tenant, professional: professional, weekday: 3, opens_at: "09:00", closes_at: "12:00"),
+          create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "14:00", closes_at: "18:00"),
+          create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+        ]
+      end
+
+      results = ActsAsTenant.with_tenant(tenant) { WorkingHour.ordered.to_a }
+
+      expect(results).to eq([ tuesday_morning, tuesday_afternoon, wednesday ])
     end
   end
 
