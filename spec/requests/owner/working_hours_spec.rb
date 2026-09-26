@@ -174,11 +174,14 @@ RSpec.describe "Owner working hours", type: :request do
       sign_in
 
       get edit_owner_working_hours_path
+
       expect(toggle(2)["checked"]).to be_truthy
       expect(toggle(5)["checked"]).to be_falsey
 
       patch owner_working_hours_path, params: { working_hours: { "4" => { active: "1", opens_at_0: "10:00", closes_at_0: "16:00" } } }
 
+      expect(response).to redirect_to(edit_owner_working_hours_path)
+      expect(saved_hours(professional).map(&:weekday)).to eq([ 4 ])
       expect(saved_hours(aurora_professional, aurora).map(&:weekday)).to eq([ 5 ])
     end
   end

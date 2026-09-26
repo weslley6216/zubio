@@ -188,7 +188,9 @@ RSpec.describe Professional, type: :model do
 
       ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(3 => [ [ "10:00", "16:00" ] ]) }
 
+      hours = ActsAsTenant.with_tenant(tenant) { professional.working_hours.ordered.to_a }
       other_hours = ActsAsTenant.with_tenant(other_tenant) { other_professional.working_hours.ordered.to_a }
+      expect(hours.map(&:weekday)).to eq([ 3 ])
       expect(other_hours.map(&:weekday)).to eq([ 2 ])
     end
   end
