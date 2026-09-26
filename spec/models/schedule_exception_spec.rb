@@ -103,4 +103,45 @@ RSpec.describe ScheduleException, type: :model do
       expect(exception.reason).to be_nil
     end
   end
+
+  describe "uniqueness" do
+    it "rejects a second exception on the same date for the same professional, adding the error to occurs_on" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      date = Date.current.next_week(:monday)
+      ActsAsTenant.with_tenant(tenant) { create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: date) }
+      duplicate = build(:schedule_exception, tenant: tenant, professional: professional, occurs_on: date)
+
+      ActsAsTenant.with_tenant(tenant) { duplicate.valid? }
+
+      expect(duplicate.errors[:occurs_on]).to be_present
+    end
+
+    it "accepts the same date for another professional in the same tenant" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      another_professional = create(:professional, tenant: tenant)
+      date = Date.current.next_week(:monday)
+      ActsAsTenant.with_tenant(tenant) { create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: date) }
+      same_date = build(:schedule_exception, tenant: tenant, professional: another_professional, occurs_on: date)
+
+      valid = ActsAsTenant.with_tenant(tenant) { same_date.valid? }
+
+      expect(valid).to be true
+    end
+
+    it "accepts the same date in another tenant" do
+      first_tenant = create(:tenant)
+      first_professional = create(:professional, tenant: first_tenant)
+      date = Date.current.next_week(:monday)
+      ActsAsTenant.with_tenant(first_tenant) { create(:schedule_exception, tenant: first_tenant, professional: first_professional, occurs_on: date) }
+      second_tenant = create(:tenant)
+      second_professional = create(:professional, tenant: second_tenant)
+      same_date_elsewhere = build(:schedule_exception, tenant: second_tenant, professional: second_professional, occurs_on: date)
+
+      valid = ActsAsTenant.with_tenant(second_tenant) { same_date_elsewhere.valid? }
+
+      expect(valid).to be true
+    end
+  end
 end
