@@ -5,6 +5,9 @@ class Views::Owner::WorkingHours::Edit < Views::Base
   SUBTITLE = "Marque os dias em que você atende e as faixas de cada um.".freeze
   INVITE = "Você ainda não declarou seu expediente. Marque abaixo os dias em que atende.".freeze
   SUBMIT_LABEL = "Salvar horários".freeze
+  OPENS_LABEL = Components::Owner::WorkingHours::Fields::OPENS_LABEL
+  CLOSES_LABEL = Components::Owner::WorkingHours::Fields::CLOSES_LABEL
+  SECOND_RANGE_HINT = "Após o intervalo (opcional)".freeze
   BACK_LABEL = Components::Owner::Header::SETTINGS_LABEL
   BACK_ICON = "m15 6-6 6 6 6".freeze
   BACK_CLASS = "inline-flex min-h-11 items-center gap-1 text-sm font-bold text-ink-muted hover:text-ink".freeze
@@ -81,12 +84,18 @@ class Views::Owner::WorkingHours::Edit < Views::Base
 
   def render_range(weekday, index)
     ranges = @schedule.ranges_for(weekday)[index]
-    div(class: "grid grid-cols-2 gap-2") do
-      input(type: "time", name: "working_hours[#{weekday}][opens_at_#{index}]", value: ranges[0],
-        step: WorkingHour::MINUTE_STEP * 60, class: "min-h-11 #{Components::Form::Styles::CONTROL}")
-      input(type: "time", name: "working_hours[#{weekday}][closes_at_#{index}]", value: ranges[1],
-        step: WorkingHour::MINUTE_STEP * 60, class: "min-h-11 #{Components::Form::Styles::CONTROL}")
+    div(class: "grid gap-1") do
+      span(class: HINT) { SECOND_RANGE_HINT } if index == 1
+      div(class: "grid grid-cols-2 gap-2") do
+        render_time_field(weekday, "opens_at_#{index}", ranges[0], OPENS_LABEL)
+        render_time_field(weekday, "closes_at_#{index}", ranges[1], CLOSES_LABEL)
+      end
     end
+  end
+
+  def render_time_field(weekday, key, value, label_text)
+    input(type: "time", name: "working_hours[#{weekday}][#{key}]", value: value, aria_label: label_text,
+      step: WorkingHour::MINUTE_STEP * 60, class: "min-h-11 #{CONTROL}")
   end
 
   def render_invite
