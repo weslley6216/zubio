@@ -71,8 +71,19 @@ RSpec.describe WeeklySchedule do
 
       weekdays = ActsAsTenant.with_tenant(tenant) { professional.reload.working_hours.ordered.map(&:weekday) }
       expect(saved).to be(false)
-      expect(schedule.errors_for(3)).to be_present
+      expect(schedule.errors_for(3)).to eq([ "o fechamento precisa ser depois da abertura" ])
       expect(weekdays).to eq([ 2 ])
+    end
+
+    it "refuses a time off the five-minute step with a legible error" do
+      tenant = create(:tenant)
+      professional = professional_for(tenant)
+
+      schedule = described_class.new(professional: professional, days: { "2" => day(opens_at_0: "09:03", closes_at_0: "18:00") })
+      saved = ActsAsTenant.with_tenant(tenant) { schedule.save }
+
+      expect(saved).to be(false)
+      expect(schedule.errors_for(2)).to eq([ "use múltiplos de 5 minutos" ])
     end
 
     it "refuses overlapping ranges on the same day with a legible error and writes nothing" do
