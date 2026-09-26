@@ -58,10 +58,11 @@ class Views::Owner::Onboarding::Document < Views::Base
   HOURS_TITLE_CLASS = "text-[28px] leading-tight font-extrabold tracking-tight text-balance text-ink".freeze
   HOURS_SUBTITLE_CLASS = "text-sm leading-relaxed text-ink-muted".freeze
 
-  def initialize(tenant:, branding:, services:, open_section:, page_stylesheet:, direct_upload_url:)
+  def initialize(tenant:, branding:, services:, schedule:, open_section:, page_stylesheet:, direct_upload_url:)
     @tenant = tenant
     @branding = branding
     @services = services
+    @schedule = schedule
     @open_section = open_section
     @page_stylesheet = page_stylesheet
     @direct_upload_url = direct_upload_url
@@ -201,6 +202,6 @@ class Views::Owner::Onboarding::Document < Views::Base
   def render_working_hours
     h1(class: HOURS_TITLE_CLASS) { HOURS_TITLE }
     p(class: HOURS_SUBTITLE_CLASS) { HOURS_SUBTITLE }
-    render Components::Owner::WorkingHours::Fields.new
+    render Components::Owner::WorkingHours::Fields.new(schedule: @schedule)
   end
 end
