@@ -45,4 +45,31 @@ RSpec.describe Components::Owner::WorkingHours::Fields, type: :component do
     expect(html).to include(%(id="working_hours_break_starts_at"))
     expect(html).to include(%(id="working_hours_break_ends_at"))
   end
+  it "marks the answered days and fills the range and lunch values on refill" do
+    schedule = Onboarding::Schedule.new(weekdays: [ 2, 3 ], opens_at: "09:00", closes_at: "18:00", break_starts_at: "12:00", break_ends_at: "14:00")
+
+    document = Nokogiri::HTML5.fragment(described_class.new(schedule: schedule).call)
+
+    checked = document.css(%(input[name="working_hours[weekdays][]"][checked])).map { |node| node["value"] }
+    expect(checked).to contain_exactly("2", "3")
+    expect(document.at_css("#working_hours_opens_at")["value"]).to eq("09:00")
+    expect(document.at_css("#working_hours_closes_at")["value"]).to eq("18:00")
+    expect(document.at_css("#working_hours_break_starts_at")["value"]).to eq("12:00")
+  end
+
+  it "renders the closing-time error next to the range on refill" do
+    schedule = Onboarding::Schedule.new(weekdays: [ 2 ], opens_at: "09:00", closes_at: "")
+    schedule.errors.add(:closes_at, "não pode ficar em branco")
+
+    html = described_class.new(schedule: schedule).call
+
+    expect(html).to include("não pode ficar em branco")
+  end
+
+  it "renders no day marked and no values without a schedule" do
+    document = Nokogiri::HTML5.fragment(described_class.new.call)
+
+    expect(document.css(%(input[name="working_hours[weekdays][]"][checked]))).to be_empty
+    expect(document.at_css("#working_hours_opens_at")["value"]).to be_nil
+  end
 end

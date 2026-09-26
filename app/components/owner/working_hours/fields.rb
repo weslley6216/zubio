@@ -31,6 +31,10 @@ class Components::Owner::WorkingHours::Fields < Components::Base
   TOGGLE_CLASS = "relative inline-flex h-[26px] w-[46px] flex-none cursor-pointer items-center rounded-full bg-line p-[3px] has-checked:bg-brand-600".freeze
   TOGGLE_THUMB_CLASS = "h-5 w-5 rounded-full bg-white transition-transform peer-checked:translate-x-5".freeze
 
+  def initialize(schedule: nil)
+    @schedule = schedule
+  end
+
   def view_template
     render_weekdays
     render_schedule_card
@@ -45,13 +49,14 @@ class Components::Owner::WorkingHours::Fields < Components::Base
         render_all_days_chip
       end
       span(class: COUNTER_CLASS, data: { onboarding_target: "dayCount" })
+      render Components::Form::Errors.new(messages: errors_for(:weekdays))
     end
   end
 
   def render_weekday_chip(weekday)
     label(class: "block") do
       input(type: "checkbox", name: "working_hours[weekdays][]", value: weekday, class: "peer sr-only",
-        data: { action: "change->onboarding#updateDayCount" })
+        checked: marked?(weekday), data: { action: "change->onboarding#updateDayCount" })
       span(class: "#{CHIP_BASE_CLASS} #{CHIP_UNCHECKED_CLASS}") { plain WorkingHour::WEEKDAY_NAMES[weekday].first(3) }
     end
   end
@@ -68,6 +73,7 @@ class Components::Owner::WorkingHours::Fields < Components::Base
         span(class: RANGE_JOINER_CLASS) { RANGE_JOINER }
         render_time_field(:closes_at, CLOSES_LABEL)
       end
+      render Components::Form::Errors.new(messages: errors_for(:opens_at) + errors_for(:closes_at))
       render_break
     end
   end
@@ -93,6 +99,12 @@ class Components::Owner::WorkingHours::Fields < Components::Base
 
   def render_time_field(name, label_text, action: nil)
     input(type: "time", id: "working_hours_#{name}", aria_label: label_text, name: "working_hours[#{name}]",
-      step: WorkingHour::MINUTE_STEP * 60, class: RANGE_FIELD_CLASS, data: { action: action })
+      step: WorkingHour::MINUTE_STEP * 60, value: value_for(name), class: RANGE_FIELD_CLASS, data: { action: action })
   end
+
+  def marked?(weekday) = @schedule ? @schedule.marked?(weekday) : false
+
+  def value_for(name) = @schedule&.public_send(name)
+
+  def errors_for(attribute) = @schedule ? @schedule.errors[attribute] : []
 end
