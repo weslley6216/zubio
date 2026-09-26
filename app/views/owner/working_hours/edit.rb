@@ -9,8 +9,8 @@ class Views::Owner::WorkingHours::Edit < Views::Base
   BACK_ICON = "m15 6-6 6 6 6".freeze
   BACK_CLASS = "inline-flex min-h-11 items-center gap-1 text-sm font-bold text-ink-muted hover:text-ink".freeze
 
-  DAY_CHIP_CLASS = "grid flex-1 cursor-pointer justify-items-center gap-0.5 rounded-xl border border-line bg-surface py-3 text-ink-subtle peer-checked:border-2 peer-checked:border-brand-600 peer-checked:bg-brand-soft peer-checked:font-extrabold peer-checked:text-brand-ink".freeze
-  TOGGLE_LABEL_CLASS = "relative inline-flex h-11 w-[72px] flex-none cursor-pointer items-center justify-start rounded-full bg-line p-1 transition-colors peer-checked:justify-end peer-checked:bg-brand-600".freeze
+  DAY_CHIP_CLASS = "grid flex-1 cursor-pointer justify-items-center gap-0.5 rounded-xl border border-line bg-surface py-3 text-ink group-has-checked:border-2 group-has-checked:border-brand-600 group-has-checked:bg-brand-soft group-has-checked:text-brand-ink".freeze
+  TOGGLE_LABEL_CLASS = "relative inline-flex h-11 w-[72px] flex-none cursor-pointer items-center justify-start rounded-full bg-line p-1 transition-colors group-has-checked:justify-end group-has-checked:bg-brand-600".freeze
   TOGGLE_THUMB_CLASS = "h-9 w-9 rounded-full bg-white shadow-sm".freeze
 
   def initialize(tenant:, branding:, schedule:, current_section:)
@@ -49,7 +49,7 @@ class Views::Owner::WorkingHours::Edit < Views::Base
   end
 
   def render_day(weekday)
-    section(data: { day: weekday }, class: "rounded-2xl border border-line bg-surface p-4") do
+    section(data: { day: weekday }, class: "group rounded-2xl border border-line bg-surface p-4") do
       input(type: "checkbox", id: toggle_id(weekday), name: "working_hours[#{weekday}][active]", value: "1",
         checked: @schedule.marked?(weekday), class: "peer sr-only")
       render_toggle_row(weekday)
