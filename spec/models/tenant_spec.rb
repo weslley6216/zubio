@@ -493,6 +493,34 @@ RSpec.describe Tenant, type: :model do
       end
     end
 
+    it "reports only the missing name, not a repetition, for two services left without a name" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
+      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      nameless = [ { name: "", duration_minutes: 45, price: "90,00" }, { name: "", duration_minutes: 30, price: "50,00" } ]
+
+      ActsAsTenant.with_tenant(tenant) do
+        expect { tenant.complete_onboarding!(professional: professional, **answers.merge(services_attrs: nameless)) }
+          .to raise_error(Tenant::OnboardingRejected) do |rejection|
+            expect(rejection.services.last.errors[:name]).to eq([ Service::NAME_REQUIRED_MESSAGE ])
+          end
+      end
+    end
+
+    it "refuses an inverted lunch break before writing any hour" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
+      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      inverted = { weekdays: [ 2 ], opens_at: "09:00", closes_at: "18:00", break_starts_at: "14:00", break_ends_at: "12:00" }
+
+      ActsAsTenant.with_tenant(tenant) do
+        expect { tenant.complete_onboarding!(professional: professional, **answers.merge(schedule: inverted)) }
+          .to raise_error(Tenant::OnboardingRejected) { |rejection| expect(rejection.schedule.errors[:break_ends_at]).to be_present }
+
+        expect(professional.working_hours.count).to eq(0)
+      end
+    end
+
     it "refuses to finish when no weekday was marked" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")

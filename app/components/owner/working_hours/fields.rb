@@ -94,6 +94,7 @@ class Components::Owner::WorkingHours::Fields < Components::Base
         render_time_field(:break_starts_at, BREAK_STARTS_LABEL, action: BREAK_FIELD_ACTION)
         render_time_field(:break_ends_at, BREAK_ENDS_LABEL, action: BREAK_FIELD_ACTION)
       end
+      render Components::Form::Errors.new(messages: errors_for(:break_starts_at) + errors_for(:break_ends_at))
     end
   end
 

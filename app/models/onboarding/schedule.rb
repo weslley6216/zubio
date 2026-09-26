@@ -2,11 +2,13 @@ class Onboarding::Schedule
   include ActiveModel::Model
 
   NO_WEEKDAY_MESSAGE = "marque ao menos um dia".freeze
+  BREAK_INVERTED_MESSAGE = "o intervalo precisa terminar depois de começar".freeze
 
   attr_accessor :professional, :weekdays, :opens_at, :closes_at, :break_starts_at, :break_ends_at
 
   validate :at_least_one_weekday
   validate :hours_follow_working_hour_rules
+  validate :break_ends_after_it_starts
 
   def marked?(weekday) = Array(weekdays).include?(weekday)
 
@@ -29,5 +31,12 @@ class Onboarding::Schedule
 
       candidate.errors.each { |error| errors.add(error.attribute, error.message) unless errors.added?(error.attribute, error.message) }
     end
+  end
+
+  def break_ends_after_it_starts
+    starts, ends = [ break_starts_at, break_ends_at ].map { |value| ActiveModel::Type::Time.new.cast(value) }
+    return if starts.nil? || ends.nil?
+
+    errors.add(:break_ends_at, BREAK_INVERTED_MESSAGE) if ends <= starts
   end
 end

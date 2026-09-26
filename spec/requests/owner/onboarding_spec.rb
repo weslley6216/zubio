@@ -205,6 +205,20 @@ RSpec.describe "Owner onboarding", type: :request do
       expect(tenant.reload.onboarding_completed?).to be(false)
     end
 
+    it "refuses an inverted lunch break with a re-render instead of a crash" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      post owner_onboarding_path, params: answers.merge(
+        working_hours: { weekdays: %w[2], opens_at: "09:00", closes_at: "18:00", break_starts_at: "14:00", break_ends_at: "12:00" }
+      )
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(%(data-onboarding-open-value="working_hours"))
+      expect(response.body).to include(Onboarding::Schedule::BREAK_INVERTED_MESSAGE)
+      expect(tenant.reload.onboarding_completed?).to be(false)
+    end
+
     it "refuses a marked day without a closing time, flagging the range" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       sign_in(tenant)
