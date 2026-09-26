@@ -20,4 +20,6 @@ class Professional < ApplicationRecord
     segments = WorkingHour.day_segments(opens_at, closes_at, break_starts_at, break_ends_at)
     replace_working_hours!(weekdays.index_with { segments })
   end
+
+  def working_hours_summary = WorkingHour::Summary.new(working_hours.ordered.to_a).line
 end
