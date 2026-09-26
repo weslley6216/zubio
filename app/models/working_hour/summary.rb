@@ -4,8 +4,7 @@ class WorkingHour::Summary
   BAND_JOINER = " a ".freeze
   TIME_FORMAT = "%H:%M".freeze
   NO_HOURS = "Nenhum horário definido".freeze
-  ATTENDANCE_SINGULAR = "1 dia de atendimento".freeze
-  ATTENDANCE_PLURAL = "%<count>d dias de atendimento".freeze
+  ATTENDANCE_COUNT = "%<count>d dias de atendimento".freeze
 
   def initialize(working_hours)
     @working_hours = working_hours
@@ -15,8 +14,7 @@ class WorkingHour::Summary
     return NO_HOURS if @working_hours.empty?
     return "#{weekdays_label}, #{hours_label}" if uniform_hours?
 
-    count = @working_hours.map(&:weekday).uniq.length
-    count == 1 ? ATTENDANCE_SINGULAR : format(ATTENDANCE_PLURAL, count: count)
+    format(ATTENDANCE_COUNT, count: @working_hours.map(&:weekday).uniq.length)
   end
 
   def weekdays_label
