@@ -7,6 +7,7 @@ class ScheduleException < ApplicationRecord
   normalizes :reason, with: ->(reason) { reason.strip.presence }
 
   validates :occurs_on, presence: true
+  validates_uniqueness_to_tenant :occurs_on, scope: :professional_id
   validate :window_matches_closed_state
 
   private
