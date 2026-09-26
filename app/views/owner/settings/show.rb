@@ -14,6 +14,7 @@ class Views::Owner::Settings::Show < Views::Base
   ADDRESS_LABEL = "Endereço do link".freeze
   SERVICES_LABEL = "Serviços".freeze
   NO_SERVICES = "Nenhum cadastrado".freeze
+  WORKING_HOURS_LABEL = "Horários da semana".freeze
   REGISTERED = { one: "cadastrado", other: "cadastrados" }.freeze
   DISABLED = { one: "desativado", other: "desativados" }.freeze
   CHEVRON_PATH = "m9 6 6 6-6 6".freeze
@@ -32,10 +33,11 @@ class Views::Owner::Settings::Show < Views::Base
   CHIPS_CLASS = "flex flex-none gap-1".freeze
   CHEVRON_CLASS = "h-4 w-4 flex-none text-ink-subtle".freeze
 
-  def initialize(tenant:, branding:, service_counts:, current_section:)
+  def initialize(tenant:, branding:, service_counts:, working_hours_summary:, current_section:)
     @tenant = tenant
     @branding = branding
     @service_counts = service_counts
+    @working_hours_summary = working_hours_summary
     @current_section = current_section
   end
 
@@ -67,6 +69,7 @@ class Views::Owner::Settings::Show < Views::Base
   def render_service_group
     render_group("service-group", SERVICE_GROUP) do
       render_link_row("services", SERVICES_LABEL, services_summary, owner_services_path)
+      render_link_row("working_hours", WORKING_HOURS_LABEL, @working_hours_summary, edit_owner_working_hours_path)
     end
   end
 
