@@ -49,9 +49,8 @@ class Owner::OnboardingController < Owner::BaseController
     return "name" if rejection.tenant.errors[:name].present?
     return "logo" if branding_errors[:logo].present?
     return "services" if rejection.services.any? { |service| service.errors.present? }
-    return "working_hours" if rejection.schedule.errors.present?
 
-    "welcome"
+    "working_hours"
   end
 
   def name_param = params.dig(:tenant, :name).to_s
