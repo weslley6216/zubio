@@ -15,6 +15,12 @@ class WorkingHour < ApplicationRecord
   scope :for_weekday, ->(weekday) { where(weekday: weekday) }
   scope :ordered, -> { order(:weekday, :opens_at) }
 
+  def self.day_segments(opens_at, closes_at, break_starts_at, break_ends_at)
+    return [ [ opens_at, closes_at ] ] if break_starts_at.blank? || break_ends_at.blank?
+
+    [ [ opens_at, break_starts_at ], [ break_ends_at, closes_at ] ]
+  end
+
   private
 
   def closes_after_opens
