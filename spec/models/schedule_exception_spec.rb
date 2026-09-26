@@ -33,7 +33,7 @@ RSpec.describe ScheduleException, type: :model do
       professional = create(:professional, tenant: tenant)
 
       exception = ActsAsTenant.with_tenant(tenant) do
-        ScheduleException.create!(tenant: tenant, professional: professional, occurs_on: Date.current.next_occurring(:saturday), closed: false, opens_at: "09:00", closes_at: "12:00")
+        create(:schedule_exception, :with_alternate_hours, tenant: tenant, professional: professional, occurs_on: Date.current.next_occurring(:saturday))
       end
 
       expect(exception).not_to be_closed
