@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_21_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_26_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -62,6 +62,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_21_120000) do
     t.bigint "user_id"
     t.index ["tenant_id"], name: "index_professionals_on_tenant_id"
     t.index ["user_id"], name: "index_professionals_on_user_id", unique: true
+  end
+
+  create_table "schedule_exceptions", force: :cascade do |t|
+    t.boolean "closed", default: true, null: false
+    t.time "closes_at"
+    t.datetime "created_at", null: false
+    t.date "occurs_on", null: false
+    t.time "opens_at"
+    t.bigint "professional_id", null: false
+    t.string "reason"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["professional_id"], name: "index_schedule_exceptions_on_professional_id"
+    t.index ["tenant_id", "professional_id", "occurs_on"], name: "idx_on_tenant_id_professional_id_occurs_on_e12d84bfc2", unique: true
+    t.index ["tenant_id"], name: "index_schedule_exceptions_on_tenant_id"
   end
 
   create_table "services", force: :cascade do |t|
@@ -121,6 +136,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_21_120000) do
   add_foreign_key "brandings", "tenants"
   add_foreign_key "professionals", "tenants"
   add_foreign_key "professionals", "users"
+  add_foreign_key "schedule_exceptions", "professionals"
+  add_foreign_key "schedule_exceptions", "tenants"
   add_foreign_key "services", "tenants"
   add_foreign_key "users", "tenants"
   add_foreign_key "working_hours", "professionals"

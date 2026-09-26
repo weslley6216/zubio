@@ -3,10 +3,12 @@ pt-BR:
     format: "%{message}"
   activerecord:
     errors:
+      messages:
+        off_step: "use múltiplos de 5 minutos"
+        on_or_before_opening: "o fechamento precisa ser depois da abertura"
       models:
         working_hour:
-          off_step: "use múltiplos de 5 minutos"
           overlaps: "as faixas deste dia se sobrepõem"
-          attributes:
-            closes_at:
-              on_or_before_opening: "o fechamento precisa ser depois da abertura"
+        schedule_exception:
+          window_on_closed_day: "um dia fechado não tem horário de atendimento"
+          window_required: "informe o horário de atendimento"
