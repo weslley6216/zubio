@@ -172,10 +172,16 @@ class Tenant < ApplicationRecord
   private
 
   def reject_incomplete_onboarding(new_branding, new_services, new_schedule)
-    records = [ self, new_branding, *new_services, new_schedule ]
-    return if records.map(&:valid?).all?
+    records_valid = [ self, new_branding, *new_services, new_schedule ].map(&:valid?).all?
+    repeated_names = flag_repeated_service_names(new_services)
+    return if records_valid && repeated_names.empty?
 
     raise OnboardingRejected.new(tenant: self, branding: new_branding, services: new_services, schedule: new_schedule)
+  end
+
+  def flag_repeated_service_names(new_services)
+    repeated = new_services.group_by(&:name).values.flat_map { |same_name| same_name.drop(1) }
+    repeated.each { |service| service.errors.add(:name, Service::NAME_TAKEN_MESSAGE) }
   end
 
   def custom_domain_is_not_platform_host

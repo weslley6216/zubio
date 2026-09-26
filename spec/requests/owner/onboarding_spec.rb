@@ -118,6 +118,20 @@ RSpec.describe "Owner onboarding", type: :request do
   end
 
   describe "POST /owner/onboarding" do
+    it "refuses two services with the same name in one submit and reopens services" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      post owner_onboarding_path, params: answers.merge(
+        services: [ { name: "Corte", duration_minutes: "45", price: "90,00" }, { name: "Corte", duration_minutes: "30", price: "50,00" } ]
+      )
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(%(data-onboarding-open-value="services"))
+      expect(response.body).to include(Service::NAME_TAKEN_MESSAGE)
+      ActsAsTenant.with_tenant(tenant) { expect(Service.count).to eq(0) }
+    end
+
     it "carries the uploaded logo back on refill: fills the signed id, shows the preview and drops the no-logo card" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       sign_in(tenant)

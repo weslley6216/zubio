@@ -477,6 +477,22 @@ RSpec.describe Tenant, type: :model do
       end
     end
 
+    it "flags a repeated service name even when another answer is also refused" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
+      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      repeated = [ { name: "Corte", duration_minutes: 45, price: "90,00" }, { name: "Corte", duration_minutes: 30, price: "50,00" } ]
+
+      ActsAsTenant.with_tenant(tenant) do
+        expect { tenant.complete_onboarding!(professional: professional, **answers(name: "").merge(services_attrs: repeated)) }
+          .to raise_error(Tenant::OnboardingRejected) do |rejection|
+            expect(rejection.tenant.errors[:name]).to be_present
+            expect(rejection.services.last.errors[:name]).to include(Service::NAME_TAKEN_MESSAGE)
+            expect(rejection.services.first.errors[:name]).to be_empty
+          end
+      end
+    end
+
     it "refuses to finish when no weekday was marked" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
