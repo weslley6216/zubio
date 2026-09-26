@@ -451,11 +451,42 @@ RSpec.describe Tenant, type: :model do
 
       ActsAsTenant.with_tenant(tenant) do
         expect { tenant.complete_onboarding!(professional: professional, **answers(price: "abc")) }
-          .to raise_error(ActiveRecord::RecordInvalid)
+          .to raise_error(Tenant::OnboardingRejected)
 
         expect(tenant.reload).to have_attributes(name: nil)
         expect(tenant.onboarding_completed?).to be(false)
         expect(Service.count).to eq(0)
+        expect(professional.working_hours.count).to eq(0)
+      end
+    end
+
+    it "exposes every invalid record at once and writes nothing" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
+      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+
+      ActsAsTenant.with_tenant(tenant) do
+        expect { tenant.complete_onboarding!(professional: professional, **answers(price: "abc").merge(branding_attrs: { brand_600: "not-a-hex" })) }
+          .to raise_error(Tenant::OnboardingRejected) do |rejection|
+            expect(rejection.branding.errors[:brand_600]).to be_present
+            expect(rejection.services.first.errors[:price_cents]).to be_present
+          end
+
+        expect(Service.count).to eq(0)
+        expect(tenant.reload.onboarding_completed?).to be(false)
+      end
+    end
+
+    it "refuses to finish when no weekday was marked" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
+      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+
+      ActsAsTenant.with_tenant(tenant) do
+        expect { tenant.complete_onboarding!(professional: professional, **answers.merge(schedule: { weekdays: [], opens_at: "09:00", closes_at: "18:00", break_starts_at: nil, break_ends_at: nil })) }
+          .to raise_error(Tenant::OnboardingRejected) { |rejection| expect(rejection.schedule.errors[:weekdays]).to be_present }
+
+        expect(tenant.reload.onboarding_completed?).to be(false)
         expect(professional.working_hours.count).to eq(0)
       end
     end

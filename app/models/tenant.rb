@@ -1,4 +1,16 @@
 class Tenant < ApplicationRecord
+  class OnboardingRejected < StandardError
+    attr_reader :tenant, :branding, :services, :schedule
+
+    def initialize(tenant:, branding:, services:, schedule:)
+      @tenant = tenant
+      @branding = branding
+      @services = services
+      @schedule = schedule
+      super("onboarding rejected")
+    end
+  end
+
   RESERVED = %w[www api admin app assets cdn mail status help blog].freeze
   PLATFORM_HOST = Zubio::PLATFORM_HOST
   SUBDOMAIN_LENGTH = (3..63).freeze
@@ -125,11 +137,19 @@ class Tenant < ApplicationRecord
   def onboarding_completed? = onboarding_completed_at.present?
 
   def complete_onboarding!(name:, branding_attrs:, services_attrs:, schedule:, professional:)
+    assign_attributes(name: name, subdomain: self.class.derive_subdomain(name))
+    new_branding = branding || build_branding(brand_600: Branding::DEFAULT_BRAND_600)
+    new_branding.assign_attributes(branding_attrs) if branding_attrs.present?
+    new_services = services_attrs.map { |service_attrs| Service.new(service_attrs) }
+    new_schedule = Onboarding::Schedule.new(professional: professional, **schedule)
+
+    reject_incomplete_onboarding(new_branding, new_services, new_schedule)
+
     transaction do
-      update!(name: name, subdomain: self.class.derive_subdomain(name))
-      (branding || build_branding(brand_600: Branding::DEFAULT_BRAND_600)).update!(branding_attrs) if branding_attrs.present?
-      services_attrs.each { |service_attrs| services.create!(service_attrs) }
-      professional.replace_weekly_hours!(**schedule) if schedule[:weekdays].present?
+      save!
+      new_branding.save!
+      new_services.each(&:save!)
+      professional.replace_weekly_hours!(**new_schedule.schedule_attributes)
       update!(onboarding_completed_at: Time.current)
     end
   end
@@ -150,6 +170,13 @@ class Tenant < ApplicationRecord
   end
 
   private
+
+  def reject_incomplete_onboarding(new_branding, new_services, new_schedule)
+    records = [ self, new_branding, *new_services, new_schedule ]
+    return if records.map(&:valid?).all?
+
+    raise OnboardingRejected.new(tenant: self, branding: new_branding, services: new_services, schedule: new_schedule)
+  end
 
   def custom_domain_is_not_platform_host
     return if custom_domain.blank?
