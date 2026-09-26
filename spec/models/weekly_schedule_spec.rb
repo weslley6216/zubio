@@ -146,7 +146,9 @@ RSpec.describe WeeklySchedule do
         described_class.new(professional: professional, days: { "3" => day(opens_at_0: "10:00", closes_at_0: "16:00") }).save
       end
 
+      weekdays = ActsAsTenant.with_tenant(tenant) { professional.working_hours.ordered.map(&:weekday) }
       other_weekdays = ActsAsTenant.with_tenant(other_tenant) { other_professional.working_hours.ordered.map(&:weekday) }
+      expect(weekdays).to eq([ 3 ])
       expect(other_weekdays).to eq([ 2 ])
     end
   end
