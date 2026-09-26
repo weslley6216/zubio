@@ -30,6 +30,7 @@ Rails.application.routes.draw do
     resource :brand_name, only: %i[edit update]
     resource :brand_logo, only: %i[edit update]
     resource :settings, only: :show
+    resource :working_hours, only: %i[edit update]
   end
 
   root "pages#home"
