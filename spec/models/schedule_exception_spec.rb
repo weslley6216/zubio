@@ -144,4 +144,76 @@ RSpec.describe ScheduleException, type: :model do
       expect(valid).to be true
     end
   end
+
+  describe "scopes" do
+    it "returns upcoming exceptions ordered by date and excludes past ones" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      later = nil
+      sooner = nil
+      ActsAsTenant.with_tenant(tenant) do
+        create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current - 1)
+        later = create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current + 14)
+        sooner = create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current + 3)
+      end
+
+      results = ActsAsTenant.with_tenant(tenant) { ScheduleException.upcoming.to_a }
+
+      expect(results).to eq([ sooner, later ])
+    end
+
+    it "includes an exception dated today in upcoming" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      today = ActsAsTenant.with_tenant(tenant) { create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current) }
+
+      results = ActsAsTenant.with_tenant(tenant) { ScheduleException.upcoming.to_a }
+
+      expect(results).to include(today)
+    end
+
+    it "returns only the exceptions inside the requested range through within" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      inside = nil
+      ActsAsTenant.with_tenant(tenant) do
+        inside = create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current + 2)
+        create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current + 30)
+      end
+
+      results = ActsAsTenant.with_tenant(tenant) { ScheduleException.within(Date.current..(Date.current + 7)).to_a }
+
+      expect(results).to eq([ inside ])
+    end
+
+    it "includes exceptions on the range boundaries through within" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      first_day = nil
+      last_day = nil
+      ActsAsTenant.with_tenant(tenant) do
+        first_day = create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current)
+        last_day = create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current + 7)
+      end
+
+      results = ActsAsTenant.with_tenant(tenant) { ScheduleException.within(Date.current..(Date.current + 7)).to_a }
+
+      expect(results).to contain_exactly(first_day, last_day)
+    end
+  end
+
+  describe "tenant isolation" do
+    it "brings the current tenant's exception and not another tenant's" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      own = ActsAsTenant.with_tenant(tenant) { create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current + 5) }
+      other_tenant = create(:tenant)
+      other_professional = create(:professional, tenant: other_tenant)
+      ActsAsTenant.with_tenant(other_tenant) { create(:schedule_exception, tenant: other_tenant, professional: other_professional, occurs_on: Date.current + 5) }
+
+      results = ActsAsTenant.with_tenant(tenant) { ScheduleException.upcoming.to_a }
+
+      expect(results).to contain_exactly(own)
+    end
+  end
 end
