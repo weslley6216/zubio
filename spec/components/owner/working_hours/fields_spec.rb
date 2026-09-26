@@ -66,6 +66,15 @@ RSpec.describe Components::Owner::WorkingHours::Fields, type: :component do
     expect(html).to include("não pode ficar em branco")
   end
 
+  it "renders the lunch error next to the break fields on refill" do
+    schedule = Onboarding::Schedule.new(weekdays: [ 2 ], opens_at: "09:00", closes_at: "18:00", break_starts_at: "14:00", break_ends_at: "12:00")
+    schedule.errors.add(:break_ends_at, Onboarding::Schedule::BREAK_INVERTED_MESSAGE)
+
+    document = Nokogiri::HTML5.fragment(described_class.new(schedule: schedule).call)
+
+    expect(document.at_css("[data-onboarding-target='break']").parent.text).to include(Onboarding::Schedule::BREAK_INVERTED_MESSAGE)
+  end
+
   it "renders no day marked and no values without a schedule" do
     document = Nokogiri::HTML5.fragment(described_class.new.call)
 

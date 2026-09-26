@@ -180,7 +180,7 @@ class Tenant < ApplicationRecord
   end
 
   def flag_repeated_service_names(new_services)
-    repeated = new_services.group_by(&:name).values.flat_map { |same_name| same_name.drop(1) }
+    repeated = new_services.reject { |service| service.name.blank? }.group_by(&:name).values.flat_map { |same_name| same_name.drop(1) }
     repeated.each { |service| service.errors.add(:name, Service::NAME_TAKEN_MESSAGE) }
   end
 

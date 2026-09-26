@@ -43,6 +43,30 @@ RSpec.describe Onboarding::Schedule, type: :model do
     expect(schedule.errors[:closes_at]).to be_present
   end
 
+  it "flags the lunch end when the break ends before it starts inside the working range" do
+    tenant = create(:tenant)
+    professional = create(:professional, :without_user, tenant: tenant)
+
+    schedule = ActsAsTenant.with_tenant(tenant) do
+      described_class.new(professional: professional, weekdays: [ 2 ], opens_at: "09:00", closes_at: "18:00",
+        break_starts_at: "14:00", break_ends_at: "12:00").tap(&:valid?)
+    end
+
+    expect(schedule.errors[:break_ends_at]).to include(Onboarding::Schedule::BREAK_INVERTED_MESSAGE)
+  end
+
+  it "accepts a lunch break that ends after it starts" do
+    tenant = create(:tenant)
+    professional = create(:professional, :without_user, tenant: tenant)
+
+    is_valid = ActsAsTenant.with_tenant(tenant) do
+      described_class.new(professional: professional, weekdays: [ 2 ], opens_at: "09:00", closes_at: "18:00",
+        break_starts_at: "12:00", break_ends_at: "14:00").valid?
+    end
+
+    expect(is_valid).to be(true)
+  end
+
   it "hands the raw answers to replace_weekly_hours!" do
     schedule = described_class.new(weekdays: [ 2, 3 ], opens_at: "09:00", closes_at: "18:00", break_starts_at: "12:00", break_ends_at: "14:00")
 
