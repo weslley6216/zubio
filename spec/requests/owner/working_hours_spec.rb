@@ -65,6 +65,17 @@ RSpec.describe "Owner working hours", type: :request do
       expect(document.at_css("nav a[aria-current='page']").text).to eq(Components::Owner::Header::SETTINGS_LABEL)
     end
 
+    it "names every time field and flags the second range as optional" do
+      professional_for(owner)
+      sign_in
+
+      get edit_owner_working_hours_path
+
+      labels = document.css("[data-day='2'] input[type='time']").map { |field| field["aria-label"] }
+      expect(labels).to eq(%w[Abre Fecha Abre Fecha])
+      expect(document.at_css("[data-day='2']").text).to include(Views::Owner::WorkingHours::Edit::SECOND_RANGE_HINT)
+    end
+
     it "paints the day chips with brand tokens, never the landing demo tokens" do
       professional_for(owner)
       sign_in
