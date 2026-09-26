@@ -26,9 +26,10 @@ class Service < ApplicationRecord
     length: { maximum: NAME_MAX_LENGTH, message: NAME_TOO_LONG_MESSAGE }
   validates_uniqueness_to_tenant :name, message: NAME_TAKEN_MESSAGE
   validates :description, length: { maximum: DESCRIPTION_MAX_LENGTH, message: DESCRIPTION_TOO_LONG_MESSAGE }
+  validates :duration_minutes, numericality: { only_integer: true, message: DURATION_NOT_WHOLE_MESSAGE }
   validates :duration_minutes,
-    numericality: { only_integer: true, message: DURATION_NOT_WHOLE_MESSAGE },
-    inclusion: { in: DURATION_CHOICES, message: DURATION_OUT_OF_STEP_MESSAGE }
+    inclusion: { in: DURATION_CHOICES, message: DURATION_OUT_OF_STEP_MESSAGE },
+    if: -> { duration_minutes.present? }
   validates :price_cents,
     numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_PRICE_CENTS, message: PRICE_OUT_OF_RANGE_MESSAGE },
     allow_nil: true

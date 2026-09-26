@@ -110,6 +110,14 @@ RSpec.describe Service, type: :model do
   end
 
   describe "duration_minutes" do
+    it "reports only the whole-minutes rule when the duration is blank" do
+      service = build(:service, duration_minutes: "")
+
+      service.valid?
+
+      expect(service.errors[:duration_minutes]).to eq([ Service::DURATION_NOT_WHOLE_MESSAGE ])
+    end
+
     it "is invalid when the duration is zero" do
       service = build(:service, duration_minutes: 0)
 
