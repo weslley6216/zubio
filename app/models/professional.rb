@@ -11,18 +11,10 @@ class Professional < ApplicationRecord
     transaction do
       working_hours.destroy_all
       weekdays.each do |weekday|
-        day_segments(opens_at, closes_at, break_starts_at, break_ends_at).each do |from, to|
+        WorkingHour.day_segments(opens_at, closes_at, break_starts_at, break_ends_at).each do |from, to|
           working_hours.create!(weekday: weekday, opens_at: from, closes_at: to)
         end
       end
     end
-  end
-
-  private
-
-  def day_segments(opens_at, closes_at, break_starts_at, break_ends_at)
-    return [ [ opens_at, closes_at ] ] if break_starts_at.blank? || break_ends_at.blank?
-
-    [ [ opens_at, break_starts_at ], [ break_ends_at, closes_at ] ]
   end
 end
