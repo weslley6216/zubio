@@ -1,3 +1,12 @@
 pt-BR:
   errors:
     format: "%{message}"
+  activerecord:
+    errors:
+      models:
+        working_hour:
+          off_step: "use múltiplos de 5 minutos"
+          overlaps: "as faixas deste dia se sobrepõem"
+          attributes:
+            closes_at:
+              on_or_before_opening: "o fechamento precisa ser depois da abertura"

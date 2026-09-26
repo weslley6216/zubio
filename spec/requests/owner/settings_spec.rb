@@ -105,8 +105,8 @@ RSpec.describe "Owner settings", type: :request do
 
       get owner_settings_path
 
-      expect(%w[name logo colors address services sign-out].map { |key| row(key) }).to all(be_present)
-      [ "Minha agenda", "Meu link", "Ajuda", "Horários da semana", "Folgas e feriados",
+      expect(%w[name logo colors address services working_hours sign-out].map { |key| row(key) }).to all(be_present)
+      [ "Minha agenda", "Meu link", "Ajuda", "Folgas e feriados",
         "Antecedência mínima", "Meus dados", "Refazer a configuração inicial" ].each do |label|
         expect(response.body).not_to include(label)
       end
@@ -120,7 +120,36 @@ RSpec.describe "Owner settings", type: :request do
 
       expect(%w[name logo colors].map { |key| destination(key) }).to eq([ edit_owner_brand_name_path, edit_owner_brand_logo_path, edit_owner_brand_colors_path ])
       expect(destination("services")).to eq(owner_services_path)
+      expect(destination("working_hours")).to eq(edit_owner_working_hours_path)
       expect(destination("address")).to be_nil
+    end
+
+    it "summarizes the weekly schedule on the working-hours row" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!((2..6).index_with { [ [ "09:00", "18:00" ] ] }) }
+      sign_in
+
+      get owner_settings_path
+
+      expect(summary("working_hours")).to eq("Ter a Sáb, 09:00–18:00")
+      expect(destination("working_hours")).to eq(edit_owner_working_hours_path)
+    end
+
+    it "reads nothing defined when the owner has a professional but no hours" do
+      create(:professional, tenant: tenant, user: owner)
+      sign_in
+
+      get owner_settings_path
+
+      expect(summary("working_hours")).to eq(WorkingHour::Summary::NO_HOURS)
+    end
+
+    it "still reads nothing defined for an owner without a professional" do
+      sign_in
+
+      get owner_settings_path
+
+      expect(summary("working_hours")).to eq(WorkingHour::Summary::NO_HOURS)
     end
 
     it "sends an anonymous visitor to the login without naming the establishment" do
@@ -139,10 +168,13 @@ RSpec.describe "Owner settings", type: :request do
     it "summarizes the name, the colors and the service count of the establishment in the host and nothing of another one" do
       create(:branding, tenant: tenant, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C")
       create_list(:service, 3, tenant: tenant)
+      host_professional = create(:professional, tenant: tenant, user: owner)
+      ActsAsTenant.with_tenant(tenant) { host_professional.replace_working_hours!(2 => [ [ "07:00", "13:00" ] ]) }
       aurora = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
       aurora_owner = create(:user, tenant: aurora, email: "ana@example.com", password: "s3cr3t123")
       create(:branding, tenant: aurora, brand_600: "#7E22CE")
       create(:service, tenant: aurora)
+      ActsAsTenant.with_tenant(aurora) { create(:professional, tenant: aurora, user: aurora_owner) }
       sign_in(aurora, aurora_owner)
 
       get owner_settings_path
@@ -150,6 +182,7 @@ RSpec.describe "Owner settings", type: :request do
       expect(summary("name")).to eq("Estúdio Aurora")
       expect(summary("colors")).to eq("#7E22CE")
       expect(summary("services")).to eq("1 cadastrado")
+      expect(summary("working_hours")).to eq(WorkingHour::Summary::NO_HOURS)
       expect(response.body).not_to include("Barbearia do Zé")
       expect(response.body).not_to include("#2C6CB0")
       expect(response.body).not_to include("#E8493C")

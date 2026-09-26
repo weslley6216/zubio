@@ -141,6 +141,81 @@ RSpec.describe Professional, type: :model do
     end
   end
 
+  describe "#replace_working_hours!" do
+    it "creates the given ranges per weekday through the professional's association" do
+      tenant = create(:tenant)
+      professional = create(:professional, :without_user, tenant: tenant)
+
+      ActsAsTenant.with_tenant(tenant) do
+        professional.replace_working_hours!(2 => [ [ "09:00", "12:00" ], [ "14:00", "18:00" ] ], 4 => [ [ "09:00", "18:00" ] ])
+      end
+
+      hours = ActsAsTenant.with_tenant(tenant) { professional.working_hours.ordered.to_a }
+      ranges = hours.map { |working_hour| [ working_hour.weekday, working_hour.opens_at.strftime("%H:%M"), working_hour.closes_at.strftime("%H:%M") ] }
+      expect(ranges).to eq([ [ 2, "09:00", "12:00" ], [ 2, "14:00", "18:00" ], [ 4, "09:00", "18:00" ] ])
+    end
+
+    it "replaces the whole set, dropping weekdays absent from the declaration" do
+      tenant = create(:tenant)
+      professional = create(:professional, :without_user, tenant: tenant)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(2 => [ [ "09:00", "18:00" ] ], 3 => [ [ "09:00", "18:00" ] ]) }
+
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(2 => [ [ "10:00", "16:00" ] ]) }
+
+      hours = ActsAsTenant.with_tenant(tenant) { professional.working_hours.ordered.to_a }
+      expect(hours.map(&:weekday)).to eq([ 2 ])
+    end
+
+    it "rolls back leaving the previous set intact when a range is invalid" do
+      tenant = create(:tenant)
+      professional = create(:professional, :without_user, tenant: tenant)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(2 => [ [ "09:00", "18:00" ] ]) }
+
+      expect do
+        ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(3 => [ [ "18:00", "09:00" ] ]) }
+      end.to raise_error(ActiveRecord::RecordInvalid)
+
+      hours = ActsAsTenant.with_tenant(tenant) { professional.reload.working_hours.ordered.to_a }
+      expect(hours.map(&:weekday)).to eq([ 2 ])
+    end
+
+    it "writes only to the target professional and tenant" do
+      tenant = create(:tenant)
+      professional = create(:professional, :without_user, tenant: tenant)
+      other_tenant = create(:tenant)
+      other_professional = create(:professional, :without_user, tenant: other_tenant)
+      ActsAsTenant.with_tenant(other_tenant) { other_professional.replace_working_hours!(2 => [ [ "09:00", "18:00" ] ]) }
+
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(3 => [ [ "10:00", "16:00" ] ]) }
+
+      hours = ActsAsTenant.with_tenant(tenant) { professional.working_hours.ordered.to_a }
+      other_hours = ActsAsTenant.with_tenant(other_tenant) { other_professional.working_hours.ordered.to_a }
+      expect(hours.map(&:weekday)).to eq([ 3 ])
+      expect(other_hours.map(&:weekday)).to eq([ 2 ])
+    end
+  end
+
+  describe "#working_hours_summary" do
+    it "reads the saved week as a single summary line" do
+      tenant = create(:tenant)
+      professional = create(:professional, :without_user, tenant: tenant)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!((2..6).index_with { [ [ "09:00", "18:00" ] ] }) }
+
+      summary = ActsAsTenant.with_tenant(tenant) { professional.working_hours_summary }
+
+      expect(summary).to eq("Ter a Sáb, 09:00–18:00")
+    end
+
+    it "reads an empty week as nothing defined" do
+      tenant = create(:tenant)
+      professional = create(:professional, :without_user, tenant: tenant)
+
+      summary = ActsAsTenant.with_tenant(tenant) { professional.working_hours_summary }
+
+      expect(summary).to eq(WorkingHour::Summary::NO_HOURS)
+    end
+  end
+
   describe "tenant isolation" do
     it "does not include professionals from another tenant" do
       tenant_a = create(:tenant)

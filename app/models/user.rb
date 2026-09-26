@@ -1,6 +1,7 @@
 class User < ApplicationRecord
   acts_as_tenant(:tenant)
   has_secure_password
+  has_one :professional, dependent: nil
 
   HANDOFF_PURPOSE = :owner_handoff
   HANDOFF_WINDOW = 2.minutes

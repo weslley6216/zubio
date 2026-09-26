@@ -106,6 +106,27 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe "professional association" do
+    it "reaches the professional created for the owner" do
+      tenant = create(:tenant)
+      user = create(:user, tenant: tenant)
+      professional = create(:professional, :without_user, tenant: tenant, user: user)
+
+      result = ActsAsTenant.with_tenant(tenant) { user.reload.professional }
+
+      expect(result).to eq(professional)
+    end
+
+    it "has no professional when none is linked" do
+      tenant = create(:tenant)
+      user = create(:user, tenant: tenant)
+
+      result = ActsAsTenant.with_tenant(tenant) { user.reload.professional }
+
+      expect(result).to be_nil
+    end
+  end
+
   describe "tenant isolation" do
     it "does not include users from another tenant" do
       tenant_a = create(:tenant)
