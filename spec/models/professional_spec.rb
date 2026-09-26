@@ -23,6 +23,19 @@ RSpec.describe Professional, type: :model do
         expect(described_class.new).to belong_to(:user).optional
       end
     end
+
+    it "removes its own schedule exceptions when destroyed, keeping another professional's" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      colleague = create(:professional, tenant: tenant)
+      colleague_exception = create(:schedule_exception, tenant: tenant, professional: colleague)
+      create(:schedule_exception, tenant: tenant, professional: professional)
+
+      ActsAsTenant.with_tenant(tenant) { professional.destroy! }
+
+      remaining = ActsAsTenant.with_tenant(tenant) { ScheduleException.all.to_a }
+      expect(remaining).to contain_exactly(colleague_exception)
+    end
   end
 
   describe "user association" do
