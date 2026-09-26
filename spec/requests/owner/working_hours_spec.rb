@@ -65,6 +65,15 @@ RSpec.describe "Owner working hours", type: :request do
       expect(document.at_css("nav a[aria-current='page']").text).to eq(Components::Owner::Header::SETTINGS_LABEL)
     end
 
+    it "paints the day chips with brand tokens, never the landing demo tokens" do
+      professional_for(owner)
+      sign_in
+
+      get edit_owner_working_hours_path
+
+      expect(response.body).not_to include("demo-")
+    end
+
     it "sends an anonymous visitor to the login with no hours in the response" do
       professional = professional_for(owner)
       ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(2 => [ [ "09:00", "18:00" ] ]) }
