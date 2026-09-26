@@ -109,6 +109,16 @@ RSpec.describe WorkingHour, type: :model do
       expect(with_seconds.errors[:opens_at]).to be_present
     end
 
+    it "accepts a range aligned to the five-minute step" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      aligned = build(:working_hour, tenant: tenant, professional: professional, opens_at: "09:05", closes_at: "18:00")
+
+      valid = ActsAsTenant.with_tenant(tenant) { aligned.valid? }
+
+      expect(valid).to be true
+    end
+
     it "rejects a weekday outside 0..6" do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
