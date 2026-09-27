@@ -44,8 +44,10 @@ class Views::Signups::New < Views::Base
   def render_password_field(form)
     div(data: { controller: "password-visibility" }) do
       form.label :user_password, "Senha", class: LABEL
-      form.password_field :user_password, name: "user[password]", required: true, class: CONTROL,
+      form.password_field :user_password, name: "user[password]", required: true,
+        minlength: User::MINIMUM_PASSWORD_LENGTH, class: CONTROL,
         data: { "password-visibility-target": "input" }
+      p(class: HINT) { "Mínimo de #{User::MINIMUM_PASSWORD_LENGTH} caracteres" }
       button(type: "button", class: TOGGLE_CLASS, data: { action: "password-visibility#toggle" }) do
         span(data: { "password-visibility-target": "hidden" }) { "Mostrar senha" }
         span(data: { "password-visibility-target": "shown" }, hidden: true) { "Ocultar senha" }
