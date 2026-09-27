@@ -3,6 +3,8 @@ class User < ApplicationRecord
   has_secure_password
   has_one :professional, dependent: nil
 
+  MINIMUM_PASSWORD_LENGTH = 8
+
   HANDOFF_PURPOSE = :owner_handoff
   HANDOFF_WINDOW = 2.minutes
 
@@ -22,4 +24,5 @@ class User < ApplicationRecord
   validates_uniqueness_to_tenant :email
   validates :name, presence: true
   validates :role, presence: true
+  validates :password, length: { minimum: MINIMUM_PASSWORD_LENGTH }, allow_nil: true
 end
