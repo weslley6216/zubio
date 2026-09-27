@@ -15,10 +15,10 @@ RSpec.describe "Owner session", type: :request do
 
     it "renders the alert message outlined in the danger color after an invalid login attempt" do
       create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
+
       post owner_session_path, params: { email: "owner@example.com", password: "wrong" }
 
-      get new_owner_session_path
-
+      expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include("E-mail ou senha inválidos.")
       expect(response.body).to include(%(class="#{Components::Alert::FRAME_CLASS} border-danger"))
       expect(response.body).to include("text-danger")
@@ -61,7 +61,7 @@ RSpec.describe "Owner session", type: :request do
 
       post owner_session_path, params: { email: "owner@example.com", password: "wrong" }
 
-      expect(response).to redirect_to(new_owner_session_path)
+      expect(response).to have_http_status(:unprocessable_entity)
       expect(session[:user_id]).to be_nil
     end
 
@@ -71,8 +71,31 @@ RSpec.describe "Owner session", type: :request do
 
       post owner_session_path, params: { email: "owner@example.com", password: "s3cr3t123" }
 
-      expect(response).to redirect_to(new_owner_session_path)
+      expect(response).to have_http_status(:unprocessable_entity)
       expect(session[:user_id]).to be_nil
+    end
+
+    it "re-renders the login form with the typed email kept and the password cleared after a wrong password" do
+      create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
+
+      post owner_session_path, params: { email: "owner@example.com", password: "wrong" }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("E-mail ou senha inválidos.")
+      expect(response.body).to include(%(value="owner@example.com"))
+      expect(response.body).not_to include(%(value="wrong"))
+    end
+
+    it "does not leak another tenant's data when the same email fails on this host" do
+      other_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+      create(:user, tenant: other_tenant, email: "owner@example.com", password: "s3cr3t123")
+      create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
+
+      post owner_session_path, params: { email: "owner@example.com", password: "wrong" }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(%(value="owner@example.com"))
+      expect(response.body).not_to include("Estúdio Aurora")
     end
 
     it "blocks further attempts after the rate limit is exceeded" do
