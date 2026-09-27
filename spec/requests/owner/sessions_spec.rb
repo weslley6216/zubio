@@ -88,14 +88,16 @@ RSpec.describe "Owner session", type: :request do
 
     it "does not leak another tenant's data when the same email fails on this host" do
       other_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+      branding = create(:branding, tenant: tenant, brand_600: "#4F46E5")
+      other_branding = create(:branding, tenant: other_tenant, brand_600: "#DC2626")
       create(:user, tenant: other_tenant, email: "owner@example.com", password: "s3cr3t123")
       create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
 
       post owner_session_path, params: { email: "owner@example.com", password: "wrong" }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include(%(value="owner@example.com"))
-      expect(response.body).not_to include("Estúdio Aurora")
+      expect(response.body).to include(branding.stylesheet_digest)
+      expect(response.body).not_to include(other_branding.stylesheet_digest)
     end
 
     it "blocks further attempts after the rate limit is exceeded" do
