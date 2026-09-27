@@ -14,7 +14,9 @@ class Owner::SessionsController < ApplicationController
     if user&.owner?
       start_owner_session(user)
     else
-      redirect_to new_owner_session_path, alert: "E-mail ou senha inválidos."
+      flash.now[:alert] = "E-mail ou senha inválidos."
+      render Views::Owner::Sessions::New.new(branding: current_branding, email: params[:email]),
+        status: :unprocessable_entity
     end
   end
 

@@ -49,6 +49,31 @@ RSpec.describe User, type: :model do
     it "rejects a role outside the enum" do
       expect { build(:user, role: "superadmin") }.to raise_error(ArgumentError)
     end
+
+    it "rejects a password shorter than the minimum length" do
+      user = build(:user, password: "1234567")
+
+      user.valid?
+
+      expect(user.errors[:password]).to include("é muito curto (mínimo: 8 caracteres)")
+    end
+
+    it "accepts a password of the minimum length" do
+      user = build(:user, password: "12345678")
+
+      expect(user).to be_valid
+    end
+
+    it "stays valid when the name changes without a new password" do
+      user = create(:user)
+
+      ActsAsTenant.with_tenant(user.tenant) do
+        user.reload
+        user.name = "Renamed Owner"
+
+        expect(user).to be_valid
+      end
+    end
   end
 
   describe "authentication" do

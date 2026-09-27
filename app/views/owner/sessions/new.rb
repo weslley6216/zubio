@@ -1,8 +1,9 @@
 class Views::Owner::Sessions::New < Views::Base
   include Components::Form::Styles
 
-  def initialize(branding:)
+  def initialize(branding:, email: nil)
     @branding = branding
+    @email = email
   end
 
   def view_template
@@ -11,7 +12,7 @@ class Views::Owner::Sessions::New < Views::Base
         form_with(url: owner_session_path, method: :post, class: "space-y-4") do |form|
           div do
             form.label :email, "E-mail", class: LABEL
-            form.email_field :email, required: true, class: CONTROL
+            form.email_field :email, value: @email, required: true, class: CONTROL
           end
           div do
             form.label :password, "Senha", class: LABEL

@@ -64,6 +64,13 @@ RSpec.describe "Signup", type: :request do
       expect(response.body).to include("E-mail")
       expect(response.body).to include("Senha")
     end
+
+    it "states the minimum password length on the form before any error" do
+      get new_signup_path
+
+      expect(response.body).to include("Mínimo de 8 caracteres")
+      expect(response.body).to include(%(minlength="8"))
+    end
   end
 
   describe "POST /signup" do
@@ -101,6 +108,24 @@ RSpec.describe "Signup", type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include(%(value="Ana Lima"))
       expect(User.unscoped.count).to eq(0)
+    end
+
+    it "rejects a short password, keeps the account uncreated, and states the minimum by the password field" do
+      post signup_path, params: signup_params(password: "123")
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("é muito curto (mínimo: 8 caracteres)")
+      expect(User.unscoped.count).to eq(0)
+      expect(Tenant.count).to eq(0)
+    end
+
+    it "accepts a password of the minimum length and hands the owner to onboarding" do
+      post signup_path, params: signup_params(password: "12345678")
+
+      owner = User.unscoped.sole
+
+      expect(owner.authenticate("12345678")).to eq(owner)
+      expect(response.location).to start_with(owner_handoff_url(subdomain: owner.tenant.subdomain))
     end
 
     it "names blank fields in Portuguese, without the default English" do
