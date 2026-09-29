@@ -1,6 +1,4 @@
 class Branding::PreviewSheet
-  include StylesheetProducer
-
   def initialize(brand:, secondary:)
     @brand = brand
     @secondary = secondary
