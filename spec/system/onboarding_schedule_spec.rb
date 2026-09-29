@@ -32,35 +32,43 @@ RSpec.describe "Onboarding weekday chips and lunch break", type: :system, js: tr
     expect(page).to have_content("7 dias selecionados")
   end
 
-  it "reveals the lunch fields only while the toggle is on, and records nothing while it is off" do
+  it "fills 12:00 às 14:00 and shows only the summary when the toggle turns on" do
     sign_up_and_reach_working_hours
 
-    expect(page).to have_css("#working_hours_break_starts_at", visible: false)
     expect(page).not_to have_css("#working_hours_break_starts_at", visible: true)
 
     find("label:has([data-onboarding-target='breakToggle'])").click
+
+    expect(page).to have_content("12:00 às 14:00")
+    expect(page).not_to have_css("#working_hours_break_starts_at", visible: true)
+  end
+
+  it "reveals the two lunch fields when the summary is tapped" do
+    sign_up_and_reach_working_hours
+    find("label:has([data-onboarding-target='breakToggle'])").click
+
+    find("[data-onboarding-target='breakSummary']").click
 
     expect(page).to have_css("#working_hours_break_starts_at", visible: true)
+    expect(page).to have_css("#working_hours_break_ends_at", visible: true)
+  end
 
-    page.execute_script(%(document.getElementById('working_hours_break_starts_at').value = '12:00'))
-    page.execute_script(%(document.getElementById('working_hours_break_ends_at').value = '14:00'))
+  it "clears the lunch and hides the summary when the toggle turns off" do
+    sign_up_and_reach_working_hours
     find("label:has([data-onboarding-target='breakToggle'])").click
 
-    expect(page).not_to have_css("#working_hours_break_starts_at", visible: true)
+    expect(page).to have_content("12:00 às 14:00")
+
+    find("label:has([data-onboarding-target='breakToggle'])").click
+
+    expect(page).not_to have_content("12:00 às 14:00")
     expect(find("#working_hours_break_starts_at", visible: :all).value).to eq("")
     expect(find("#working_hours_break_ends_at", visible: :all).value).to eq("")
   end
 
-  it "summarizes the lunch break and keeps it on after resuming the draft" do
+  it "keeps the lunch collapsed to its summary after resuming the draft" do
     sign_up_and_reach_working_hours
     find("label:has([data-onboarding-target='breakToggle'])").click
-    page.execute_script(<<~JS)
-      ["working_hours_break_starts_at", "working_hours_break_ends_at"].forEach((id, index) => {
-        const field = document.getElementById(id)
-        field.value = index === 0 ? "12:00" : "14:00"
-        field.dispatchEvent(new Event("input", { bubbles: true }))
-      })
-    JS
 
     expect(page).to have_content("12:00 às 14:00")
 
@@ -68,6 +76,6 @@ RSpec.describe "Onboarding weekday chips and lunch break", type: :system, js: tr
 
     expect(page).to have_content("12:00 às 14:00")
     expect(find("[data-onboarding-target='breakToggle']", visible: :all)).to be_checked
-    expect(page).to have_css("#working_hours_break_starts_at", visible: true)
+    expect(page).not_to have_css("#working_hours_break_starts_at", visible: true)
   end
 end

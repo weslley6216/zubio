@@ -25,7 +25,7 @@ class Components::Owner::WorkingHours::Fields < Components::Base
 
   BREAK_ROW_CLASS = "flex items-center justify-between gap-3 rounded-[10px] border border-line bg-surface-2 px-3.5 py-3".freeze
   BREAK_TEXT_CLASS = "block text-sm font-bold text-ink".freeze
-  BREAK_SUMMARY_CLASS = "block text-xs text-ink-muted empty:hidden".freeze
+  BREAK_SUMMARY_CLASS = "block cursor-pointer text-left text-xs text-ink-muted empty:hidden".freeze
   BREAK_CLASS = "grid gap-3".freeze
   BREAK_FIELDS_CLASS = "grid grid-cols-2 gap-3".freeze
   TOGGLE_CLASS = "relative inline-flex h-[26px] w-[46px] flex-none cursor-pointer items-center rounded-full bg-line p-[3px] has-checked:bg-brand-600".freeze
@@ -83,7 +83,7 @@ class Components::Owner::WorkingHours::Fields < Components::Base
       div(class: BREAK_ROW_CLASS) do
         div do
           span(class: BREAK_TEXT_CLASS) { BREAK_TOGGLE_LABEL }
-          span(class: BREAK_SUMMARY_CLASS, data: { onboarding_target: "breakSummary" })
+          button(type: "button", class: BREAK_SUMMARY_CLASS, data: { action: "onboarding#revealBreak", onboarding_target: "breakSummary" })
         end
         label(class: TOGGLE_CLASS) do
           input(type: "checkbox", class: "peer sr-only", data: { action: "change->onboarding#toggleBreak", onboarding_target: "breakToggle" })

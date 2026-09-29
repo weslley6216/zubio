@@ -37,11 +37,18 @@ export default class extends Controller {
   }
 
   toggleBreak() {
-    const shown = this.breakToggleTarget.checked
-    this.breakTarget.classList.toggle("hidden", !shown)
-    if (!shown) this.#breakFields().forEach((field) => { field.value = "" })
+    if (this.breakToggleTarget.checked) {
+      this.#fillBreakDefaults()
+    } else {
+      this.breakTarget.classList.add("hidden")
+      this.#breakFields().forEach((field) => { field.value = "" })
+    }
     this.summarizeBreak()
     this.#save()
+  }
+
+  revealBreak() {
+    this.breakTarget.classList.remove("hidden")
   }
 
   paintInitials() {
@@ -173,10 +180,16 @@ export default class extends Controller {
   }
 
   #syncBreak() {
-    const shown = this.#breakFields().some((field) => field.value)
-    this.breakToggleTarget.checked = shown
-    this.breakTarget.classList.toggle("hidden", !shown)
+    const filled = this.#breakFields().some((field) => field.value)
+    this.breakToggleTarget.checked = filled
+    this.breakTarget.classList.add("hidden")
     this.summarizeBreak()
+  }
+
+  #fillBreakDefaults() {
+    const [ starts, ends ] = this.#breakFields()
+    if (!starts.value) starts.value = "12:00"
+    if (!ends.value) ends.value = "14:00"
   }
 
   #serializeFields() {
