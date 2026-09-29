@@ -15,7 +15,9 @@ export default class extends Controller {
   }
 
   choose(event) {
-    this.#applyRadio(event.target)
+    const radio = event.target
+    this.#applyRadio(radio)
+    if (event.isTrusted && radio.checked && radio.value === "custom") radio.closest("fieldset").querySelector("[data-color]").showPicker()
   }
 
   syncFromSwatch(event) {
