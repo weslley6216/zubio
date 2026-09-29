@@ -25,4 +25,11 @@ RSpec.describe Components::Owner::Emblem, type: :component do
   it "refuses a size it does not draw" do
     expect { described_class.new(tenant: tenant, branding: branding, size: :huge).call }.to raise_error(KeyError)
   end
+
+  it "gives the large size the canvas radius and initial" do
+    large = described_class.new(tenant: tenant, branding: branding, size: :large).call
+
+    expect(large).to include("rounded-[14px]")
+    expect(large).to include("text-[21px]")
+  end
 end
