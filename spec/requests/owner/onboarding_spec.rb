@@ -126,6 +126,17 @@ RSpec.describe "Owner onboarding", type: :request do
       expect(root["data-preview-brand"]).to eq(Branding::DEFAULT_BRAND_600)
       expect(root["data-preview-secondary"]).to eq("none")
     end
+
+    it "fills the schedule with the 09:00 to 18:00 starting point on the first visit" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      get owner_onboarding_path
+      document = Nokogiri::HTML5(response.body)
+
+      expect(document.at_css("#working_hours_opens_at")["value"]).to eq("09:00")
+      expect(document.at_css("#working_hours_closes_at")["value"]).to eq("18:00")
+    end
   end
 
   describe "POST /owner/onboarding" do

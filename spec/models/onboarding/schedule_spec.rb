@@ -95,4 +95,12 @@ RSpec.describe Onboarding::Schedule, type: :model do
 
     expect(is_valid).to be(true)
   end
+
+  it "offers a 09:00 to 18:00 starting point with no weekday marked" do
+    schedule = described_class.starting_point
+
+    expect(schedule.opens_at).to eq(described_class::DEFAULT_OPENS_AT)
+    expect(schedule.closes_at).to eq(described_class::DEFAULT_CLOSES_AT)
+    expect(schedule.weekdays).to be_nil
+  end
 end
