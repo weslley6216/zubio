@@ -106,7 +106,7 @@ class Components::Form::ColorSwatches < Components::Base
         data: { color: true, action: "input->color-swatch#syncFromSwatch" })
       div(class: "flex-1") do
         input(type: "text", name: custom_field_name, value: resolved, class: CONTROL, aria_label: CODE_LABEL,
-          aria_describedby: error_id, data: { code: true, action: "input->color-swatch#syncFromText" })
+          data: { code: true, action: "input->color-swatch#syncFromText" })
         p(id: error_id, class: ERROR_CLASS, hidden: true, role: "alert", data: { color_error: true }) { INVALID_HEX_MESSAGE }
       end
     end
