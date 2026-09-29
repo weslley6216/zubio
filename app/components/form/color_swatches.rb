@@ -17,6 +17,8 @@ class Components::Form::ColorSwatches < Components::Base
   NONE_CLASS = "flex aspect-square w-full items-center justify-center rounded-xl border border-line-strong bg-surface text-[10px] font-extrabold text-ink-muted peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-offset-canvas peer-checked:ring-ink".freeze
   CUSTOM_CLASS = "grid aspect-square w-full place-items-center rounded-xl border border-dashed border-line-strong bg-surface".freeze
   CUSTOM_ICON_CLASS = "h-4.5 w-4.5 text-ink-muted".freeze
+  CUSTOMIZE_OPTION_CLASS = "col-span-2 block".freeze
+  CUSTOMIZE_CLASS = "flex h-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-line-strong bg-surface px-2 text-xs font-bold text-ink-muted peer-checked:border-solid peer-checked:text-ink peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-offset-canvas peer-checked:ring-ink".freeze
   PICKER_CLASS = "h-11 w-11 flex-none cursor-pointer rounded-lg border border-line".freeze
   DISCLOSURE_CLASS = "hidden group-has-[[data-more-toggle]:checked]:block group-has-[input[value='custom']:checked]:block".freeze
   DISCLOSURE_GRID_CLASS = "mt-2 grid w-full grid-cols-6 gap-2".freeze
@@ -82,13 +84,12 @@ class Components::Form::ColorSwatches < Components::Base
   end
 
   def render_customize_option
-    label(class: ROW_OPTION_CLASS, data: { row_option: true }) do
+    label(class: CUSTOMIZE_OPTION_CLASS, data: { row_option: true }) do
       input(type: "radio", name: field_name, value: Branding::CUSTOM_COLOR_CHOICE, checked: custom?, class: "peer sr-only",
         aria_label: "#{@label}: #{CUSTOMIZE_LABEL}")
-      if custom?
-        render Components::ColorChip.new(attribute: @attribute, size: :row)
-      else
-        span(class: CUSTOM_CLASS) { CUSTOMIZE_LABEL }
+      span(class: CUSTOMIZE_CLASS) do
+        render Components::ColorChip.new(attribute: @attribute, size: :small) if custom?
+        span { CUSTOMIZE_LABEL }
       end
     end
   end

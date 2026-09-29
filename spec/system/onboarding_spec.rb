@@ -83,6 +83,13 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     page.evaluate_async_script("setTimeout(arguments[0], 0)")
   end
 
+  def count_picker_openings
+    page.execute_script(<<~JS)
+      window.pickerOpenings = 0
+      HTMLInputElement.prototype.showPicker = function () { window.pickerOpenings += 1 }
+    JS
+  end
+
   def open_customize(fieldset_label)
     within(%(fieldset[aria-label="#{fieldset_label}"])) do
       find("label:has([data-more-toggle])").click
@@ -525,6 +532,31 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     wait_for_preview_sheet("failed", "#2C6CB0")
 
     expect(root_brand).to eq(Branding::DEFAULT_BRAND_600)
+  end
+
+  it "opens the native color picker the moment the customize card is tapped" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    count_picker_openings
+
+    open_customize(Components::Owner::BrandQuestion::Colors::BRAND_LABEL)
+
+    expect(page.evaluate_script("window.pickerOpenings")).to eq(1)
+  end
+
+  it "keeps the native color picker closed when the customize choice comes from script" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    count_picker_openings
+
+    page.execute_script(<<~JS)
+      const radio = document.querySelector('input[name="branding[brand_600]"][value="custom"]')
+      radio.checked = true
+      radio.dispatchEvent(new Event("change", { bubbles: true }))
+    JS
+
+    expect(find(%(input[name="branding[brand_600]"][value="custom"]), visible: :all)).to be_checked
+    expect(page.evaluate_script("window.pickerOpenings")).to eq(0)
   end
 
   it "fetches a typed color's sheet again after a failed load and repaints" do

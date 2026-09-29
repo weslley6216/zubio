@@ -113,4 +113,20 @@ RSpec.describe Components::Form::ColorSwatches, type: :component do
     expect(message["id"]).to eq("brand_600-color-error")
     expect(field.key?("aria-describedby")).to be(false)
   end
+
+  it "spreads the customize card over two cells so its label fits" do
+    document = Nokogiri::HTML5.fragment(brand_swatches("#4F46E5"))
+    card = document.at_css(%(input[value="custom"])).parent
+
+    expect(card["class"]).to include("col-span-2")
+    expect(card.text).to include(described_class::CUSTOMIZE_LABEL)
+  end
+
+  it "shows the stored off-palette color beside the customize label" do
+    custom = Nokogiri::HTML5.fragment(brand_swatches("#123456")).at_css(%(input[value="custom"])).parent
+    suggested = Nokogiri::HTML5.fragment(brand_swatches("#4F46E5")).at_css(%(input[value="custom"])).parent
+
+    expect(custom.at_css(".bg-brand-600")).to be_present
+    expect(suggested.at_css(".bg-brand-600")).to be_nil
+  end
 end
