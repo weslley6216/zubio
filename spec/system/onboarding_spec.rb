@@ -56,6 +56,19 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     click_on "Continuar"
   end
 
+  def computed_bg(node)
+    node.evaluate_script("getComputedStyle(this).backgroundColor")
+  end
+
+  def colors_continue = within("[data-onboarding-section='colors']", visible: :all) { find_button("Continuar", visible: :all) }
+
+  def open_customize(fieldset_label)
+    within(%(fieldset[aria-label="#{fieldset_label}"])) do
+      find("label:has([data-more-toggle])").click
+      choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
+    end
+  end
+
   it "crosses the five questions with no request between them and one at the end" do
     sign_up_and_reach_onboarding
     click_on "Começar"
@@ -349,5 +362,66 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
 
     expect(page).to have_content("não foi aceita")
     expect(direct_upload_requests).to eq(0)
+  end
+
+  it "paints the current screen the moment a swatch is chosen (AC1)" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    chosen = Branding::Palette::SUGGESTIONS.fetch(:brand_600)[1]
+    button = colors_continue
+    before = computed_bg(button)
+
+    find("[data-swatch-row] [data-swatch='#{chosen}']").click
+
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#{chosen}']", visible: :all)
+    expect(computed_bg(button)).not_to eq(before)
+    expect(computed_bg(first("[data-progress-bar] .bg-brand-600", visible: :all))).to eq(computed_bg(button))
+  end
+
+  it "carries the chosen color into the next questions (AC2)" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    chosen = Branding::Palette::SUGGESTIONS.fetch(:brand_600)[1]
+    find("[data-swatch-row] [data-swatch='#{chosen}']").click
+    click_on "Continuar"
+
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#{chosen}']", visible: :all)
+    name_button = within("[data-onboarding-section='name']") { find_button("Continuar") }
+    expect(computed_bg(name_button)).to eq(computed_bg(colors_continue))
+  end
+
+  it "repaints the screen from a code typed behind the plus (AC3)" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    open_customize(Components::Owner::BrandQuestion::Colors::BRAND_LABEL)
+
+    fill_in "branding[brand_600_custom]", with: "#2C6CB0"
+
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
+    expect(computed_bg(colors_continue)).to eq("rgb(44, 108, 176)")
+  end
+
+  it "uses the typed support color for the preview today badge (AC4)" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    open_customize(Components::Owner::BrandQuestion::Colors::SECONDARY_LABEL)
+
+    fill_in "branding[brand_secondary_600_custom]", with: "#E8493C"
+
+    expect(page).to have_css("[data-color-swatch-target='preview'][data-preview-secondary='#E8493C']", visible: :all)
+  end
+
+  it "flags an invalid code and keeps the last valid color (AC5)" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    open_customize(Components::Owner::BrandQuestion::Colors::BRAND_LABEL)
+    fill_in "branding[brand_600_custom]", with: "#2C6CB0"
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
+
+    fill_in "branding[brand_600_custom]", with: "#ZZZ123"
+
+    expect(find(%(input[name="branding[brand_600_custom]"]))["aria-invalid"]).to eq("true")
+    expect(find("#brand_600-color-error")).to be_visible
+    expect(find("[data-controller='onboarding']", visible: :all)["data-preview-brand"]).to eq("#2C6CB0")
   end
 end
