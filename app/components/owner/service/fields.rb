@@ -11,6 +11,11 @@ class Components::Owner::Service::Fields < Components::Base
   PRICE_HINT_ID = "service-price-hint".freeze
   DESCRIPTION_ROWS = 3
   ROW_CLASS = "flex gap-2.5".freeze
+  NAME_PLACEHOLDER = "Nome do serviço".freeze
+  DURATION_PLACEHOLDER = "30 min".freeze
+  PRICE_PLACEHOLDER = "R$ —".freeze
+  ONBOARDING_CONTROL = "h-12 w-full rounded-[10px] border border-line-strong bg-surface px-3.5 text-base font-bold text-ink placeholder:font-normal placeholder:text-ink-subtle".freeze
+  ONBOARDING_ROW_CONTROL = "h-12 w-full rounded-[10px] border border-line-strong bg-surface px-3.5 text-[15px] font-bold text-ink placeholder:font-normal placeholder:text-ink-subtle".freeze
 
   def initialize(service:, onboarding: false)
     @service = service
@@ -36,7 +41,7 @@ class Components::Owner::Service::Fields < Components::Base
   def render_name_field
     render_field(:name, NAME_LABEL) do |id, described_by|
       input(type: "text", id: id, name: field_name(:name), value: @service.name, required: !@onboarding,
-        maxlength: Service::NAME_MAX_LENGTH, **described_by_attrs(described_by), **target_attrs("serviceName"), class: CONTROL)
+        maxlength: Service::NAME_MAX_LENGTH, placeholder: name_placeholder, **described_by_attrs(described_by), **target_attrs("serviceName"), class: name_control)
     end
   end
 
@@ -51,20 +56,28 @@ class Components::Owner::Service::Fields < Components::Base
     render_field(:duration_minutes, DURATION_LABEL, hint: duration_hint, hint_id: DURATION_HINT_ID, wrapper_class: row_field_class) do |id, described_by|
       input(type: "number", id: id, name: field_name(:duration_minutes), value: @service.duration_minutes,
         required: !@onboarding, min: Service::MIN_DURATION_MINUTES, max: Service::MAX_DURATION_MINUTES, step: Service::DURATION_STEP_MINUTES,
-        **described_by_attrs(described_by), **target_attrs("serviceDuration"), class: CONTROL)
+        placeholder: duration_placeholder, **described_by_attrs(described_by), **target_attrs("serviceDuration"), class: row_control)
     end
   end
 
   def render_price_field
     render_field(:price, PRICE_LABEL, hint: price_hint, hint_id: PRICE_HINT_ID, error_attribute: :price_cents, wrapper_class: row_field_class) do |id, described_by|
       input(type: "text", id: id, name: field_name(:price), value: @service.price,
-        inputmode: "decimal", **described_by_attrs(described_by), **target_attrs("servicePrice"), class: CONTROL)
+        inputmode: "decimal", placeholder: price_placeholder, **described_by_attrs(described_by), **target_attrs("servicePrice"), class: row_control)
     end
   end
 
   def row_field_class
     "flex-1" if @onboarding
   end
+
+  def label_class = @onboarding ? "sr-only" : LABEL
+
+  def name_control = @onboarding ? ONBOARDING_CONTROL : CONTROL
+  def row_control = @onboarding ? ONBOARDING_ROW_CONTROL : CONTROL
+  def name_placeholder = @onboarding ? NAME_PLACEHOLDER : nil
+  def duration_placeholder = @onboarding ? DURATION_PLACEHOLDER : nil
+  def price_placeholder = @onboarding ? PRICE_PLACEHOLDER : nil
 
   def duration_hint
     DURATION_HINT unless @onboarding
@@ -77,7 +90,7 @@ class Components::Owner::Service::Fields < Components::Base
   def render_field(attribute, label_text, hint: nil, hint_id: nil, error_attribute: attribute, wrapper_class: nil)
     div(class: wrapper_class, data: { field: attribute.to_s }) do
       field_id = "service_#{attribute}"
-      label(for: field_id, class: LABEL) { label_text }
+      label(for: field_id, class: label_class) { label_text }
       yield(field_id, hint ? hint_id : nil)
       p(id: hint_id, class: HINT) { hint } if hint
       render Components::Form::Errors.new(messages: @service.errors[error_attribute])
