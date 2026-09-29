@@ -526,4 +526,21 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
 
     expect(root_brand).to eq(Branding::DEFAULT_BRAND_600)
   end
+
+  it "fetches a typed color's sheet again after a failed load and repaints" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    open_customize(Components::Owner::BrandQuestion::Colors::BRAND_LABEL)
+    attempts = 0
+    page.driver.browser.network.intercept(pattern: "*preview.css*")
+    page.driver.browser.on(:request) { |request| (attempts += 1) == 1 ? request.abort : request.continue }
+    watch_preview_sheets
+    fill_in "branding[brand_600_custom]", with: "#2C6CB0"
+    wait_for_preview_sheet("failed", "#2C6CB0")
+
+    fill_in "branding[brand_600_custom]", with: "#2C6CB0"
+
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
+    expect(computed_bg(colors_continue)).to eq("rgb(44, 108, 176)")
+  end
 end
