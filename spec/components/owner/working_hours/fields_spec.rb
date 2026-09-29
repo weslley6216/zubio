@@ -81,4 +81,11 @@ RSpec.describe Components::Owner::WorkingHours::Fields, type: :component do
     expect(document.css(%(input[name="working_hours[weekdays][]"][checked]))).to be_empty
     expect(document.at_css("#working_hours_opens_at")["value"]).to be_nil
   end
+
+  it "centers the schedule time text and styles the range label as an eyebrow" do
+    document = Nokogiri::HTML5.fragment(body)
+
+    expect(document.at_css("#working_hours_opens_at")["class"]).to include("text-center")
+    expect(document.css("span").find { |node| node.text == described_class::RANGE_LABEL }["class"]).to include(Components::Form::Styles::SECTION_LABEL)
+  end
 end
