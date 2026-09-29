@@ -34,7 +34,7 @@ class Owner::OnboardingController < Owner::BaseController
       tenant: rejection&.tenant || ActsAsTenant.current_tenant,
       branding: rejection&.branding || current_branding,
       services: rejection&.services || [],
-      schedule: rejection&.schedule,
+      schedule: rejection&.schedule || Onboarding::Schedule.starting_point,
       open_section: open_section(rejection),
       page_stylesheet: palette_stylesheet_path(v: Branding::Palette.stylesheet_digest),
       direct_upload_url: rails_direct_uploads_path
