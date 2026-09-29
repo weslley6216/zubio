@@ -16,18 +16,19 @@ class Components::Owner::BrandQuestion::Colors < Components::Base
   PREVIEW_BOOK = "Agendar".freeze
   PREVIEW_SERVICES = "Serviços".freeze
 
-  TITLE_CLASS = "text-xl font-extrabold tracking-tight text-ink".freeze
+  TITLE_CLASS = "text-[26px] leading-[1.2] font-extrabold tracking-tight text-ink".freeze
   SUBTITLE_CLASS = "mt-1 text-sm text-ink-muted".freeze
   GROUP_CLASS = "mt-4 grid gap-4".freeze
-  HELP_CLASS = "mt-1.5 text-xs leading-snug text-ink-muted".freeze
-  PREVIEW_LABEL_CLASS = "text-xs font-medium uppercase tracking-wide text-ink-subtle".freeze
-  PREVIEW_CARD_CLASS = "mt-1.5 grid gap-3 rounded-xl border border-line bg-surface-2 p-3".freeze
-  PREVIEW_HEADER_CLASS = "flex items-center justify-between rounded-lg bg-brand-accent px-3 py-2 text-on-brand-accent".freeze
+  HELP_CLASS = "mt-1.5 text-xs leading-snug text-ink-subtle".freeze
+  PREVIEW_CARD_CLASS = "mt-4 overflow-hidden rounded-2xl border border-line bg-surface".freeze
+  PREVIEW_STRIP_CLASS = "#{SECTION_LABEL} border-b border-line bg-surface-2 px-3.5 py-[9px] text-ink-subtle".freeze
+  PREVIEW_HEADER_CLASS = "flex items-center gap-3 bg-brand-accent px-3.5 py-3.5 text-on-brand-accent".freeze
   PREVIEW_EMBLEM_CLASS = "grid h-9 w-9 place-items-center rounded-[11px] bg-white/22 text-base font-extrabold".freeze
-  PREVIEW_TODAY_CLASS = "rounded-full bg-secondary-soft px-2 py-0.5 text-xs font-bold text-secondary-soft-ink".freeze
-  PREVIEW_ACTIONS_CLASS = "grid grid-cols-2 gap-2".freeze
-  PREVIEW_PRIMARY_CLASS = "h-9 rounded-lg bg-brand-600 text-sm font-bold text-on-brand".freeze
-  PREVIEW_SECONDARY_CLASS = "h-9 rounded-lg border border-brand-600 text-sm font-bold text-brand-ink".freeze
+  PREVIEW_PAGE_CLASS = "flex-grow text-[15px] font-extrabold tracking-[-0.01em]".freeze
+  PREVIEW_TODAY_CLASS = "rounded-full bg-secondary-soft px-2.5 py-[5px] text-[11px] font-extrabold text-secondary-soft-ink".freeze
+  PREVIEW_ACTIONS_CLASS = "flex gap-2.5 px-3.5 py-3".freeze
+  PREVIEW_PRIMARY_CLASS = "grid h-11 flex-grow place-items-center rounded-[10px] bg-brand-600 text-sm font-bold text-on-brand".freeze
+  PREVIEW_SECONDARY_CLASS = "grid h-11 place-items-center rounded-[10px] border border-brand-600 px-4 text-sm font-bold text-brand-ink".freeze
 
   def initialize(tenant:, branding:)
     @tenant = tenant
@@ -57,20 +58,16 @@ class Components::Owner::BrandQuestion::Colors < Components::Base
   end
 
   def render_preview
-    div(class: "mt-4") do
-      span(class: PREVIEW_LABEL_CLASS) { PREVIEW_LABEL }
-      div(class: PREVIEW_CARD_CLASS, data: { "color-swatch-target": "preview", preview_brand: @branding.brand_600, preview_secondary: preview_secondary }) do
-        div(class: PREVIEW_HEADER_CLASS) do
-          div(class: "flex items-center gap-3") do
-            span(class: PREVIEW_EMBLEM_CLASS) { "z" }
-            span(class: "text-sm font-bold") { PREVIEW_PAGE }
-          end
-          span(class: PREVIEW_TODAY_CLASS) { PREVIEW_TODAY }
-        end
-        div(class: PREVIEW_ACTIONS_CLASS) do
-          span(class: PREVIEW_PRIMARY_CLASS + " grid place-items-center") { PREVIEW_BOOK }
-          span(class: PREVIEW_SECONDARY_CLASS + " grid place-items-center") { PREVIEW_SERVICES }
-        end
+    div(class: PREVIEW_CARD_CLASS, data: { "color-swatch-target": "preview", preview_brand: @branding.brand_600, preview_secondary: preview_secondary }) do
+      div(class: PREVIEW_STRIP_CLASS) { PREVIEW_LABEL }
+      div(class: PREVIEW_HEADER_CLASS) do
+        span(class: PREVIEW_EMBLEM_CLASS) { "z" }
+        span(class: PREVIEW_PAGE_CLASS) { PREVIEW_PAGE }
+        span(class: PREVIEW_TODAY_CLASS) { PREVIEW_TODAY }
+      end
+      div(class: PREVIEW_ACTIONS_CLASS) do
+        span(class: PREVIEW_PRIMARY_CLASS) { PREVIEW_BOOK }
+        span(class: PREVIEW_SECONDARY_CLASS) { PREVIEW_SERVICES }
       end
     end
   end

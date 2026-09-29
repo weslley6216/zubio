@@ -58,4 +58,34 @@ RSpec.describe Components::Owner::BrandQuestion::Colors, type: :component do
 
     expect(body(branding)).to include("text-danger")
   end
+
+  it "sizes the question title to the canvas 26px" do
+    document = Nokogiri::HTML5.fragment(body(build(:branding, tenant: tenant, brand_600: "#2C6CB0")))
+
+    expect(document.at_css("h1")["class"]).to include("text-[26px]")
+  end
+
+  it "wraps the preview label as the top strip of a white rounded card" do
+    document = Nokogiri::HTML5.fragment(body(build(:branding, tenant: tenant, brand_600: "#2C6CB0")))
+    card = document.at_css("[data-color-swatch-target='preview']")
+    strip = card.children.first
+
+    expect(card["class"]).to include("rounded-2xl")
+    expect(card["class"]).to include("bg-surface")
+    expect(strip.text).to eq(described_class::PREVIEW_LABEL)
+    expect(strip["class"]).to include("border-b")
+  end
+
+  it "runs the color header edge to edge and lets the book action grow" do
+    document = Nokogiri::HTML5.fragment(body(build(:branding, tenant: tenant, brand_600: "#2C6CB0")))
+    header = document.at_css(".bg-brand-accent")
+    book = document.css("span").find { |node| node.text == described_class::PREVIEW_BOOK }
+    services = document.css("span").find { |node| node.text == described_class::PREVIEW_SERVICES }
+
+    expect(header["class"]).not_to include("rounded")
+    expect(book["class"]).to include("flex-grow")
+    expect(book["class"]).to include("h-11")
+    expect(services["class"]).not_to include("flex-grow")
+    expect(services["class"]).to include("h-11")
+  end
 end
