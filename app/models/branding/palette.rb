@@ -15,6 +15,10 @@ class Branding::Palette
     @swatches ||= FAMILIES.flat_map { |hex| [ hex, Branding::ColorScale.new(hex).deepened_hex.upcase ] }.freeze
   end
 
+  def self.extras(attribute)
+    swatches - SUGGESTIONS.fetch(attribute)
+  end
+
   def self.stylesheet
     @stylesheet ||= swatches.map { |hex| %([data-swatch="#{hex}"]{background:#{hex};color:#{hex}}) }.join + preview_rules
   end

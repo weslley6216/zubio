@@ -218,7 +218,7 @@ export default class extends Controller {
       } else {
         field.value = value
       }
-      field.dispatchEvent(new Event("input", { bubbles: true }))
+      field.dispatchEvent(new CustomEvent("input", { bubbles: true, detail: { restored: true } }))
       field.dispatchEvent(new Event("change", { bubbles: true }))
     })
   }

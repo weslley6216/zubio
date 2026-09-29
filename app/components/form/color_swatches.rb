@@ -1,11 +1,13 @@
 class Components::Form::ColorSwatches < Components::Base
   include Components::Form::Styles
 
-  CUSTOM_SUMMARY = "+".freeze
   PICKER_LABEL = "Escolher a cor em um seletor".freeze
   CODE_LABEL = "Código hexadecimal da cor".freeze
   NONE_LABEL = "Sem".freeze
-  ROW_SIZE = 5
+  CUSTOM_SUMMARY = "+".freeze
+  MORE_LABEL = "Mais cores".freeze
+  CUSTOMIZE_LABEL = "Personalizar".freeze
+  INVALID_HEX_MESSAGE = "não é uma cor válida".freeze
 
   LEGEND_CLASS = "flex w-full items-baseline gap-1.5 text-xs font-medium uppercase tracking-wide text-ink-subtle".freeze
   TAG_CLASS = "ml-auto normal-case".freeze
@@ -15,8 +17,11 @@ class Components::Form::ColorSwatches < Components::Base
   NONE_CLASS = "flex aspect-square w-full items-center justify-center rounded-xl border border-line-strong bg-surface text-[10px] font-extrabold text-ink-muted peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-offset-canvas peer-checked:ring-ink".freeze
   CUSTOM_CLASS = "grid aspect-square w-full place-items-center rounded-xl border border-dashed border-line-strong bg-surface".freeze
   CUSTOM_ICON_CLASS = "h-4.5 w-4.5 text-ink-muted".freeze
-  PANEL_CLASS = "mt-2 hidden w-full items-end gap-2 group-has-[input[value='custom']:checked]:flex".freeze
   PICKER_CLASS = "h-11 w-11 flex-none cursor-pointer rounded-lg border border-line".freeze
+  DISCLOSURE_CLASS = "hidden group-has-[[data-more-toggle]:checked]:block group-has-[input[value='custom']:checked]:block".freeze
+  DISCLOSURE_GRID_CLASS = "mt-2 grid w-full grid-cols-6 gap-2".freeze
+  PANEL_CLASS = "mt-2 hidden w-full items-end gap-2 group-has-[input[value='custom']:checked]:flex".freeze
+  ERROR_CLASS = "mt-1 text-sm text-danger".freeze
 
   def initialize(label:, hint:, attribute:, selected:, fallback: Branding::DEFAULT_BRAND_600, tag: nil)
     @label = label
@@ -37,10 +42,10 @@ class Components::Form::ColorSwatches < Components::Base
       end
       div(class: "group contents") do
         div(class: GRID_CLASS, data: { swatch_row: true }) do
-          row_options.each { |hex| render_row_option(hex) }
-          render_custom_option
+          suggestions.each { |hex| render_row_option(hex) }
+          render_more_toggle
         end
-        render_custom_panel
+        render_disclosure
       end
     end
   end
@@ -52,19 +57,39 @@ class Components::Form::ColorSwatches < Components::Base
       input(type: "radio", name: field_name, value: hex, checked: !custom? && hex == selected, class: "peer sr-only", aria_label: option_label(hex))
       if hex.empty?
         span(class: NONE_CLASS) { NONE_LABEL }
-      elsif Branding::Palette.swatches.include?(hex)
-        span(class: SWATCH_CLASS, data: { swatch: hex })
       else
-        render Components::ColorChip.new(attribute: @attribute, size: :row)
+        span(class: SWATCH_CLASS, data: { swatch: hex })
       end
     end
   end
 
-  def render_custom_option
+  def render_more_toggle
+    label(class: ROW_OPTION_CLASS, data: { row_option: true }) do
+      input(type: "checkbox", checked: !suggestion?, class: "peer sr-only", aria_label: "#{MORE_LABEL} (#{CUSTOM_SUMMARY})",
+        data: { more_toggle: true })
+      span(class: CUSTOM_CLASS) { render_custom_icon }
+    end
+  end
+
+  def render_disclosure
+    div(class: DISCLOSURE_CLASS) do
+      div(class: DISCLOSURE_GRID_CLASS) do
+        extras.each { |hex| render_row_option(hex) }
+        render_customize_option
+      end
+      render_custom_panel
+    end
+  end
+
+  def render_customize_option
     label(class: ROW_OPTION_CLASS, data: { row_option: true }) do
       input(type: "radio", name: field_name, value: Branding::CUSTOM_COLOR_CHOICE, checked: custom?, class: "peer sr-only",
-        aria_label: "#{@label}: #{CUSTOM_SUMMARY}")
-      span(class: CUSTOM_CLASS) { render_custom_icon }
+        aria_label: "#{@label}: #{CUSTOMIZE_LABEL}")
+      if custom?
+        render Components::ColorChip.new(attribute: @attribute, size: :row)
+      else
+        span(class: CUSTOM_CLASS) { CUSTOMIZE_LABEL }
+      end
     end
   end
 
@@ -79,18 +104,21 @@ class Components::Form::ColorSwatches < Components::Base
     div(class: PANEL_CLASS, data: { custom: true }) do
       input(type: "color", value: resolved, class: PICKER_CLASS, aria_label: PICKER_LABEL,
         data: { color: true, action: "input->color-swatch#syncFromSwatch" })
-      input(type: "text", name: custom_field_name, value: resolved, class: CONTROL, aria_label: CODE_LABEL,
-        data: { code: true, action: "input->color-swatch#syncFromText" })
+      div(class: "flex-1") do
+        input(type: "text", name: custom_field_name, value: resolved, class: CONTROL, aria_label: CODE_LABEL,
+          data: { code: true, action: "input->color-swatch#syncFromText" })
+        p(id: error_id, class: ERROR_CLASS, hidden: true, role: "alert", data: { color_error: true }) { INVALID_HEX_MESSAGE }
+      end
     end
   end
 
+  def error_id = "#{@attribute}-color-error"
+
   def suggestions = Branding::Palette::SUGGESTIONS.fetch(@attribute)
 
-  def row_options
-    return suggestions if suggestions.include?(selected)
+  def extras = Branding::Palette.extras(@attribute)
 
-    [ selected ] + suggestions.first(ROW_SIZE - 1)
-  end
+  def suggestion? = suggestions.include?(selected)
 
   def option_label(hex) = hex.empty? ? NONE_LABEL : hex
 
