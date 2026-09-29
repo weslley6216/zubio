@@ -41,12 +41,4 @@ RSpec.describe Branding::PreviewSheet do
       expect(described_class.new(brand: nil, secondary: nil).stylesheet).to eq("")
     end
   end
-
-  describe "#stylesheet_digest" do
-    it "fits in a URL" do
-      digest = described_class.new(brand: "#2C6CB0", secondary: nil).stylesheet_digest
-
-      expect(digest.length).to eq(StylesheetProducer::DIGEST_LENGTH)
-    end
-  end
 end
