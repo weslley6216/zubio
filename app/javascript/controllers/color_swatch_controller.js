@@ -77,7 +77,7 @@ export default class extends Controller {
         document.head.appendChild(link)
       }
       link.addEventListener("load", () => { link.dataset.state = "loaded"; resolve(true) }, { once: true })
-      link.addEventListener("error", () => { link.dataset.state = "failed"; resolve(false) }, { once: true })
+      link.addEventListener("error", () => { link.remove(); resolve(false) }, { once: true })
       if (link.getAttribute("href") !== href) {
         delete link.dataset.state
         link.setAttribute("href", href)
