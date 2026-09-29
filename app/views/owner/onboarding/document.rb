@@ -32,8 +32,9 @@ class Views::Owner::Onboarding::Document < Views::Base
   CONTROLLER_CLASS = "flex min-h-0 flex-grow flex-col".freeze
 
   WELCOME_CLASS = "flex flex-grow flex-col justify-between px-6 pt-8 pb-6".freeze
-  WELCOME_HEADING_CLASS = "mt-5 text-[26px] leading-[1.15] font-extrabold tracking-tight text-balance text-ink".freeze
-  WELCOME_SUBTITLE_CLASS = "mt-2 text-[15px] leading-relaxed text-ink-muted".freeze
+  WELCOME_STACK_CLASS = "flex flex-col gap-3.5".freeze
+  WELCOME_HEADING_CLASS = "text-[26px] leading-[1.15] font-extrabold tracking-tight text-balance text-ink".freeze
+  WELCOME_SUBTITLE_CLASS = "text-[15px] leading-relaxed text-ink-muted".freeze
   WELCOME_GROUPS_CLASS = "mt-0.5 flex flex-col gap-2".freeze
   WELCOME_GROUP_ROW_CLASS = "flex items-center gap-2.5 text-sm text-ink-muted".freeze
   WELCOME_MARKER_CLASS = "grid h-5.5 w-5.5 flex-none place-items-center rounded-full bg-[#E6E1FD] text-[11px] font-extrabold text-[#4830C4]".freeze
@@ -41,7 +42,7 @@ class Views::Owner::Onboarding::Document < Views::Base
   WELCOME_BUTTON_CLASS = "min-h-13 w-full rounded-xl bg-brand-600 text-base font-extrabold text-on-brand".freeze
   WELCOME_NOTE_CLASS = "text-center text-xs text-ink-subtle".freeze
 
-  SERVICES_TITLE_CLASS = "text-2xl leading-tight font-extrabold tracking-tight text-balance text-ink".freeze
+  SERVICES_TITLE_CLASS = "text-[26px] leading-tight font-extrabold tracking-tight text-balance text-ink".freeze
   SERVICES_SUBTITLE_CLASS = "text-sm leading-relaxed text-ink-muted".freeze
   SERVICES_LIST_CLASS = "flex flex-col gap-2".freeze
   SERVICE_ROW_CLASS = "flex items-center gap-3 rounded-xl border border-line bg-surface px-3.5 py-3".freeze
@@ -110,7 +111,7 @@ class Views::Owner::Onboarding::Document < Views::Base
 
   def render_welcome
     section(class: WELCOME_CLASS, hidden: @open_section != "welcome", data: { onboarding_target: "section", onboarding_section: "welcome" }) do
-      div do
+      div(class: WELCOME_STACK_CLASS) do
         render Components::Platform::Emblem.new(size: :onboarding)
         h1(class: WELCOME_HEADING_CLASS) { WELCOME_TITLE }
         p(class: WELCOME_SUBTITLE_CLASS) { WELCOME_SUBTITLE }

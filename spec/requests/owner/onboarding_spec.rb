@@ -137,6 +137,21 @@ RSpec.describe "Owner onboarding", type: :request do
       expect(document.at_css("#working_hours_opens_at")["value"]).to eq("09:00")
       expect(document.at_css("#working_hours_closes_at")["value"]).to eq("18:00")
     end
+
+    it "sizes the services and days titles and paces the welcome by 14px" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      get owner_onboarding_path
+      document = Nokogiri::HTML5(response.body)
+      services_title = document.css("h1").find { |node| node.text.include?(Views::Owner::Onboarding::Document::SERVICES_TITLE) }
+      hours_title = document.css("h1").find { |node| node.text.include?(Views::Owner::Onboarding::Document::HOURS_TITLE) }
+      welcome_stack = document.at_css("section[data-onboarding-section='welcome'] > div")
+
+      expect(services_title["class"]).to include("text-[26px]")
+      expect(hours_title["class"]).to include("text-[28px]")
+      expect(welcome_stack["class"]).to include("gap-3.5")
+    end
   end
 
   describe "POST /owner/onboarding" do
