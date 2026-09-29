@@ -50,13 +50,12 @@ RSpec.describe Components::Form::ColorSwatches, type: :component do
     expect(html.scan(%(value="#{stored}" checked)).size).to eq(1)
   end
 
-  it "injects a stored color that is not a suggestion at the head of the row, keeping five suggestions plus the plus" do
-    off_suggestion = "#7E22CE"
+  it "keeps the row at the five suggestions plus the plus, never the off-palette color" do
+    document = Nokogiri::HTML5.fragment(brand_swatches("#7E22CE"))
+    row_radios = document.css("[data-swatch-row] [data-row-option] input[type=radio]")
 
-    document = Nokogiri::HTML5.fragment(brand_swatches(off_suggestion))
-    row_radios = document.css("[data-row-option] input[type=radio]")
-
-    expect(row_radios.map { |radio| radio["value"] }).to eq([ off_suggestion, *Branding::Palette::SUGGESTIONS.fetch(:brand_600).first(4), "custom" ])
+    expect(row_radios.map { |radio| radio["value"] }).to eq(Branding::Palette::SUGGESTIONS.fetch(:brand_600))
+    expect(document.at_css("[data-swatch-row] [data-more-toggle]")).to be_present
   end
 
   it "paints an off-palette stored color through the tenant sheet, never through the palette sheet" do
@@ -66,10 +65,11 @@ RSpec.describe Components::Form::ColorSwatches, type: :component do
     expect(html).not_to include(%(data-swatch="#123456"))
   end
 
-  it "reveals the custom panel without a details element when the stored color is off the palette" do
+  it "opens the disclosure with the customize card selected when the stored color is off the palette" do
     document = Nokogiri::HTML5.fragment(brand_swatches("#123456"))
 
     expect(document.at_css("details")).to be_nil
+    expect(document.at_css("[data-more-toggle]").key?("checked")).to be(true)
     expect(document.at_css(%(input[value="custom"])).key?("checked")).to be(true)
     expect(document.at_css(%(input[name="branding[brand_600_custom]"]))["value"]).to eq("#123456")
   end
@@ -92,5 +92,25 @@ RSpec.describe Components::Form::ColorSwatches, type: :component do
 
     expect(html).to include(%(data-swatch="#{Branding::Palette.swatches.first}"))
     expect(html).not_to include("style=")
+  end
+
+  it "reveals the rest of the palette and a customize card behind the plus" do
+    document = Nokogiri::HTML5.fragment(brand_swatches(Branding::Palette::SUGGESTIONS.fetch(:brand_600).first))
+
+    Branding::Palette.extras(:brand_600).each do |hex|
+      expect(document.at_css(%([data-swatch="#{hex}"]))).to be_present
+    end
+    expect(document.to_html).to include(described_class::CUSTOMIZE_LABEL)
+  end
+
+  it "warns beside the code field, hidden until the controller flags it" do
+    document = Nokogiri::HTML5.fragment(brand_swatches("#4F46E5"))
+    field = document.at_css("[data-code]")
+    message = document.at_css("[data-color-error]")
+
+    expect(message.text).to include(described_class::INVALID_HEX_MESSAGE)
+    expect(message.key?("hidden")).to be(true)
+    expect(message["id"]).to eq("brand_600-color-error")
+    expect(field.key?("aria-describedby")).to be(false)
   end
 end

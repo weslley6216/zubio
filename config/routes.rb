@@ -13,6 +13,7 @@ Rails.application.routes.draw do
   get "branding.css" => "stylesheets#branding", as: :branding_stylesheet
   get "showcase.css" => "stylesheets#showcase", as: :showcase_stylesheet
   get "palette.css" => "stylesheets#palette", as: :palette_stylesheet
+  get "preview.css" => "stylesheets#preview", as: :preview_stylesheet
 
   resource :signup, only: %i[new create]
 

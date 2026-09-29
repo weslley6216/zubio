@@ -39,6 +39,19 @@ RSpec.describe "Owner brand colors", type: :request do
 
       expect(response).to redirect_to(new_owner_session_path)
     end
+
+    it "paints an off-palette stored color, keeping the five suggestions, the plus and the current color selected" do
+      create(:branding, tenant: tenant, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C")
+      sign_in
+
+      get edit_owner_brand_colors_path
+
+      Branding::Palette::SUGGESTIONS.fetch(:brand_600).each { |hex| expect(response.body).to include(%(data-swatch="#{hex}")) }
+      expect(response.body).to include(Components::Form::ColorSwatches::CUSTOM_SUMMARY)
+      expect(response.body).to include("bg-brand-600")
+      expect(response.body).not_to include(%(data-swatch="#2C6CB0"))
+      expect(response.body).to include(%(value="custom" checked))
+    end
   end
 
   describe "PATCH /owner/brand_colors" do

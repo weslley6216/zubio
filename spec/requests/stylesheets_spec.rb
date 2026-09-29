@@ -127,4 +127,62 @@ RSpec.describe "Generated stylesheets", type: :request do
       expect(response.headers["Cache-Control"]).to include("max-age=31536000")
     end
   end
+
+  describe "GET /preview.css" do
+    it "serves the brand ramp for a valid hex, public and cacheable" do
+      host! "zubio.com.br"
+      get "/preview.css", params: { brand: "#2C6CB0" }
+
+      expect(response.media_type).to eq("text/css")
+      expect(response.body).to include(%([data-preview-brand="#2C6CB0"]{))
+      expect(response.headers["Cache-Control"]).to include("public")
+      expect(response.headers["Cache-Control"]).to include("max-age=31536000")
+    end
+
+    it "serves the support ramp for a valid hex" do
+      host! "zubio.com.br"
+      get "/preview.css", params: { secondary: "#E8493C" }
+
+      expect(response.body).to include(%([data-preview-secondary="#E8493C"]{))
+    end
+
+    it "answers not found when the code is not a color" do
+      host! "zubio.com.br"
+      get "/preview.css", params: { brand: "#ZZZ123" }
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "answers not found and never echoes an injection payload" do
+      host! "zubio.com.br"
+      get "/preview.css", params: { brand: "#fff;}body{background:red" }
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.body).not_to include("body{")
+    end
+
+    it "answers not found when no valid role is given" do
+      host! "zubio.com.br"
+      get "/preview.css"
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "carries no establishment data and is identical on any host" do
+      tenant = create(:tenant, subdomain: "estudio-aurora")
+      create(:branding, tenant: tenant, brand_600: "#123456")
+
+      host! "estudio-aurora.zubio.com.br"
+      get "/preview.css", params: { brand: "#2C6CB0" }
+      on_tenant = response.body
+
+      host! "zubio.com.br"
+      get "/preview.css", params: { brand: "#2C6CB0" }
+      on_platform = response.body
+
+      expect(on_tenant).to eq(on_platform)
+      expect(on_tenant).to include(%([data-preview-brand="#2C6CB0"]{))
+      expect(on_tenant).not_to include("#123456")
+    end
+  end
 end

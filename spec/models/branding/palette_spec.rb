@@ -76,4 +76,26 @@ RSpec.describe Branding::Palette do
       expect(described_class.stylesheet_digest.length).to eq(StylesheetProducer::DIGEST_LENGTH)
     end
   end
+
+  describe ".extras" do
+    it "offers every curated swatch that is not already a brand suggestion" do
+      extras = described_class.extras(:brand_600)
+
+      expect(extras).to match_array(described_class.swatches - described_class::SUGGESTIONS.fetch(:brand_600))
+      expect(extras).not_to be_empty
+    end
+
+    it "never repeats a suggestion in the brand extras" do
+      overlap = described_class.extras(:brand_600) & described_class::SUGGESTIONS.fetch(:brand_600)
+
+      expect(overlap).to be_empty
+    end
+
+    it "keeps the support extras off the support suggestions and off the none option" do
+      extras = described_class.extras(:brand_secondary_600)
+
+      expect(extras & described_class::SUGGESTIONS.fetch(:brand_secondary_600)).to be_empty
+      expect(extras).not_to include("")
+    end
+  end
 end

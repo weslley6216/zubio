@@ -99,7 +99,13 @@ class Views::Owner::Onboarding::Document < Views::Base
   private
 
   def root_data
-    { controller: "onboarding", onboarding_tenant_value: @tenant.id, onboarding_open_value: @open_section }
+    {
+      controller: "onboarding",
+      onboarding_tenant_value: @tenant.id,
+      onboarding_open_value: @open_section,
+      preview_brand: @branding.brand_600,
+      preview_secondary: @branding.brand_secondary_600.presence || "none"
+    }
   end
 
   def render_welcome

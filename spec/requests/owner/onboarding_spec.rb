@@ -115,6 +115,17 @@ RSpec.describe "Owner onboarding", type: :request do
 
       expect(response.body).to include("sob consulta")
     end
+
+    it "renders the onboarding root as the repaint scope in the default brand color" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      get owner_onboarding_path
+      root = Nokogiri::HTML5(response.body).at_css(%([data-controller="onboarding"]))
+
+      expect(root["data-preview-brand"]).to eq(Branding::DEFAULT_BRAND_600)
+      expect(root["data-preview-secondary"]).to eq("none")
+    end
   end
 
   describe "POST /owner/onboarding" do
