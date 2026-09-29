@@ -103,4 +103,20 @@ RSpec.describe Components::Owner::BrandQuestion::Logo, type: :component do
 
     expect(html).not_to include(%(name="branding[remove_logo]"))
   end
+
+  it "sizes the onboarding title to 26px" do
+    document = Nokogiri::HTML5.fragment(described_class.new(tenant: tenant, branding: build(:branding, tenant: tenant), onboarding: true).call)
+
+    expect(document.at_css("h1")["class"]).to include("text-[26px]")
+  end
+
+  it "gives the onboarding gallery and camera buttons their own centered width" do
+    document = Nokogiri::HTML5.fragment(described_class.new(tenant: tenant, branding: build(:branding, tenant: tenant), onboarding: true).call)
+    gallery = document.css("label").find { |node| node.text.include?(described_class::GALLERY_LABEL) }
+
+    expect(gallery["class"]).not_to include("w-full")
+    expect(gallery["class"]).to include("px-4")
+    expect(gallery["class"]).to include("rounded-[10px]")
+    expect(gallery.parent["class"]).not_to include("w-full")
+  end
 end
