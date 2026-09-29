@@ -21,24 +21,25 @@ export default class extends Controller {
   syncFromSwatch(event) {
     const panel = event.target.closest("[data-custom]")
     panel.querySelector("[data-code]").value = event.target.value
-    this.#chooseCustom(event.target)
+    this.#syncCustom(event)
   }
 
   syncFromText(event) {
     const panel = event.target.closest("[data-custom]")
     if (HEX.test(event.target.value)) panel.querySelector("[data-color]").value = event.target.value
-    this.#chooseCustom(event.target)
+    this.#syncCustom(event)
   }
 
-  #chooseCustom(node) {
-    const fieldset = node.closest("fieldset")
-    fieldset.querySelector('input[value="custom"]').checked = true
-    this.#applyCustom(fieldset)
+  #syncCustom(event) {
+    const fieldset = event.target.closest("fieldset")
+    const custom = fieldset.querySelector('input[value="custom"]')
+    if (!event.detail?.restored) custom.checked = true
+    if (custom.checked) this.#applyCustom(fieldset)
   }
 
   #applyRadio(radio) {
     const role = ROLE[radio.name]
-    if (!role) return
+    if (!role || !radio.checked) return
 
     if (radio.value === "custom") this.#applyCustom(radio.closest("fieldset"))
     else if (radio.value === "") this.#paint("previewSecondary", "none")
@@ -54,7 +55,9 @@ export default class extends Controller {
     if (HEX.test(code.value)) {
       this.#flag(code, message, false)
       const hex = code.value.toUpperCase()
-      this.#ensureSheet(role, hex).then(() => this.#paint(role, hex))
+      this.#ensureSheet(role, hex).then((loaded) => {
+        if (loaded && radio.checked && code.value.toUpperCase() === hex) this.#paint(role, hex)
+      })
     } else {
       this.#flag(code, message, true)
     }
@@ -66,16 +69,19 @@ export default class extends Controller {
     const href = `/preview.css?${param}=${encodeURIComponent(hex)}`
     return new Promise((resolve) => {
       let link = document.getElementById(id)
-      if (link && link.getAttribute("href") === href) { resolve(); return }
+      if (link && link.getAttribute("href") === href && link.dataset.state) { resolve(link.dataset.state === "loaded"); return }
       if (!link) {
         link = document.createElement("link")
         link.id = id
         link.rel = "stylesheet"
         document.head.appendChild(link)
       }
-      link.addEventListener("load", resolve, { once: true })
-      link.addEventListener("error", resolve, { once: true })
-      link.setAttribute("href", href)
+      link.addEventListener("load", () => { link.dataset.state = "loaded"; resolve(true) }, { once: true })
+      link.addEventListener("error", () => { link.dataset.state = "failed"; resolve(false) }, { once: true })
+      if (link.getAttribute("href") !== href) {
+        delete link.dataset.state
+        link.setAttribute("href", href)
+      }
     })
   }
 
@@ -86,8 +92,13 @@ export default class extends Controller {
   }
 
   #flag(code, message, invalid) {
-    if (invalid) code.setAttribute("aria-invalid", "true")
-    else code.removeAttribute("aria-invalid")
-    if (message) message.hidden = !invalid
+    if (invalid) {
+      code.setAttribute("aria-invalid", "true")
+      code.setAttribute("aria-describedby", message.id)
+    } else {
+      code.removeAttribute("aria-invalid")
+      code.removeAttribute("aria-describedby")
+    }
+    message.hidden = !invalid
   }
 }

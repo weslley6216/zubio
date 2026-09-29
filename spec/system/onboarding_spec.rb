@@ -62,6 +62,27 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
 
   def colors_continue = within("[data-onboarding-section='colors']", visible: :all) { find_button("Continuar", visible: :all) }
 
+  def root_brand = find("[data-controller='onboarding']", visible: :all)["data-preview-brand"]
+
+  def brand_fieldset = %(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::BRAND_LABEL}"])
+
+  def watch_preview_sheets
+    page.execute_script(<<~JS)
+      window.previewSheets = []
+      const record = (state) => (event) => {
+        if (event.target.id?.startsWith("preview-sheet")) window.previewSheets.push(`${state} ${event.target.href}`)
+      }
+      document.addEventListener("load", record("loaded"), true)
+      document.addEventListener("error", record("failed"), true)
+    JS
+  end
+
+  def wait_for_preview_sheet(state, hex)
+    encoded = ERB::Util.url_encode(hex)
+    wait_until { page.evaluate_script("window.previewSheets").any? { |entry| entry.start_with?(state) && entry.include?(encoded) } }
+    page.evaluate_async_script("setTimeout(arguments[0], 0)")
+  end
+
   def open_customize(fieldset_label)
     within(%(fieldset[aria-label="#{fieldset_label}"])) do
       find("label:has([data-more-toggle])").click
@@ -421,7 +442,88 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     fill_in "branding[brand_600_custom]", with: "#ZZZ123"
 
     expect(find(%(input[name="branding[brand_600_custom]"]))["aria-invalid"]).to eq("true")
+    expect(find(%(input[name="branding[brand_600_custom]"]))["aria-describedby"]).to eq("brand_600-color-error")
     expect(find("#brand_600-color-error")).to be_visible
     expect(find("[data-controller='onboarding']", visible: :all)["data-preview-brand"]).to eq("#2C6CB0")
+  end
+
+  it "repaints the screen from a restored swatch after a reload" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    find("[data-swatch-row] [data-swatch='#1E60C4']").click
+    click_on "Continuar"
+
+    page.refresh
+
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#1E60C4']", visible: :all)
+    expect(computed_bg(colors_continue)).to eq("rgb(30, 96, 196)")
+  end
+
+  it "repaints the screen from a restored typed color after a reload" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    open_customize(Components::Owner::BrandQuestion::Colors::BRAND_LABEL)
+    fill_in "branding[brand_600_custom]", with: "#2C6CB0"
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
+    click_on "Continuar"
+
+    page.refresh
+
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
+    expect(computed_bg(colors_continue)).to eq("rgb(44, 108, 176)")
+  end
+
+  it "opens the plus without repainting the screen" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+
+    within(brand_fieldset) { find("label:has([data-more-toggle])").click }
+
+    expect(page).to have_css("#{brand_fieldset} [data-swatch='#{Branding::Palette.extras(:brand_600).first}']")
+    expect(root_brand).to eq(Branding::DEFAULT_BRAND_600)
+  end
+
+  it "repaints the screen from a swatch revealed behind the plus" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    extra = Branding::Palette.extras(:brand_600).first
+    within(brand_fieldset) { find("label:has([data-more-toggle])").click }
+
+    find("#{brand_fieldset} [data-swatch='#{extra}']").click
+
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#{extra}']", visible: :all)
+  end
+
+  it "keeps a swatch chosen while a typed color's sheet was still loading" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    open_customize(Components::Owner::BrandQuestion::Colors::BRAND_LABEL)
+    held = []
+    page.driver.browser.network.intercept(pattern: "*preview.css*")
+    page.driver.browser.on(:request) { |request| held << request }
+    watch_preview_sheets
+    fill_in "branding[brand_600_custom]", with: "#2C6CB0"
+    wait_until { held.any? { |request| request.url.include?("2C6CB0") } }
+    find("[data-swatch-row] [data-swatch='#1E60C4']").click
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#1E60C4']", visible: :all)
+
+    held.each(&:continue)
+    wait_for_preview_sheet("loaded", "#2C6CB0")
+
+    expect(root_brand).to eq("#1E60C4")
+  end
+
+  it "keeps the last painted color when a typed color's sheet fails to load" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    open_customize(Components::Owner::BrandQuestion::Colors::BRAND_LABEL)
+    page.driver.browser.network.intercept(pattern: "*preview.css*")
+    page.driver.browser.on(:request) { |request| request.url.include?("2C6CB0") ? request.abort : request.continue }
+    watch_preview_sheets
+
+    fill_in "branding[brand_600_custom]", with: "#2C6CB0"
+    wait_for_preview_sheet("failed", "#2C6CB0")
+
+    expect(root_brand).to eq(Branding::DEFAULT_BRAND_600)
   end
 end

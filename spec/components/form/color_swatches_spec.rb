@@ -110,6 +110,7 @@ RSpec.describe Components::Form::ColorSwatches, type: :component do
 
     expect(message.text).to include(described_class::INVALID_HEX_MESSAGE)
     expect(message.key?("hidden")).to be(true)
-    expect(field["aria-describedby"]).to eq(message["id"])
+    expect(message["id"]).to eq("brand_600-color-error")
+    expect(field.key?("aria-describedby")).to be(false)
   end
 end
