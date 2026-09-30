@@ -14,7 +14,7 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
   MEGABYTE = 1.megabyte
   PREVIEW_ALT = "Prévia da logo escolhida".freeze
 
-  TITLE_CLASS = "text-xl font-extrabold tracking-tight text-ink".freeze
+  TITLE_CLASS = "text-[26px] leading-[1.2] font-extrabold tracking-tight text-ink".freeze
   SUBTITLE_CLASS = "mt-1 text-sm text-ink-muted".freeze
   PREVIEW_CLASS = "mt-4 grid justify-items-center gap-2 rounded-xl border border-dashed border-line-strong bg-surface-2 p-6".freeze
   HINT_CLASS = "text-center text-xs leading-snug text-ink-muted".freeze
@@ -27,11 +27,11 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
   UPLOAD_ICON_CLASS = "h-6.5 w-6.5 text-brand-600".freeze
   UPLOAD_TITLE_CLASS = "text-base font-extrabold text-ink".freeze
   UPLOAD_SUBTITLE_CLASS = "text-center text-[13px] leading-normal text-ink-muted".freeze
-  ONBOARDING_ACTIONS_CLASS = "mt-0.5 flex w-full gap-2".freeze
-  PRIMARY_PICKER_CLASS = "inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-on-brand focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-accent".freeze
-  SECONDARY_PICKER_CLASS = "inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-lg border border-line-strong text-sm font-bold text-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-accent".freeze
+  ONBOARDING_ACTIONS_CLASS = "mt-0.5 flex gap-2".freeze
+  PRIMARY_PICKER_CLASS = "inline-flex h-11 cursor-pointer items-center justify-center rounded-[10px] bg-brand-600 px-4 text-sm font-bold text-on-brand focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-accent".freeze
+  SECONDARY_PICKER_CLASS = "inline-flex h-11 cursor-pointer items-center justify-center rounded-[10px] border border-line-strong px-4 text-sm font-bold text-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-accent".freeze
   NO_LOGO_CARD_CLASS = "mt-4 grid gap-3 rounded-2xl border border-line bg-surface p-4".freeze
-  NO_LOGO_LABEL_CLASS = "text-xs font-medium uppercase tracking-wide text-ink-subtle".freeze
+  NO_LOGO_LABEL_CLASS = "#{SECTION_LABEL} text-ink-subtle".freeze
   NO_LOGO_ROW_CLASS = "flex items-center gap-3".freeze
   NO_LOGO_TEXT_CLASS = "text-[13px] leading-normal text-ink-muted".freeze
 

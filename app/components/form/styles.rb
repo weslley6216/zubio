@@ -5,4 +5,5 @@ module Components::Form::Styles
   HINT = "mt-1 text-xs leading-snug text-ink-muted".freeze
   CHECKBOX = "rounded border-line".freeze
   SUBMIT = "h-12 w-full cursor-pointer rounded-md bg-brand-600 px-4 font-medium text-on-brand".freeze
+  SECTION_LABEL = "text-[11px] font-bold uppercase tracking-[0.08em]".freeze
 end

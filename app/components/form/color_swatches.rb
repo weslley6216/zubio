@@ -9,8 +9,8 @@ class Components::Form::ColorSwatches < Components::Base
   CUSTOMIZE_LABEL = "Personalizar".freeze
   INVALID_HEX_MESSAGE = "não é uma cor válida".freeze
 
-  LEGEND_CLASS = "flex w-full items-baseline gap-1.5 text-xs font-medium uppercase tracking-wide text-ink-subtle".freeze
-  TAG_CLASS = "ml-auto normal-case".freeze
+  LEGEND_CLASS = "flex w-full items-baseline gap-1.5 #{SECTION_LABEL} text-ink-subtle".freeze
+  TAG_CLASS = "ml-auto rounded-full bg-surface-3 px-2 py-[3px] text-[10px] font-extrabold uppercase tracking-[0.08em] text-ink-muted".freeze
   GRID_CLASS = "mt-1.5 grid w-full grid-cols-6 gap-2".freeze
   ROW_OPTION_CLASS = "block".freeze
   SWATCH_CLASS = "block aspect-square rounded-xl ring-1 ring-line peer-checked:shadow-[0_0_0_3px_var(--color-canvas),0_0_0_5px_currentColor]".freeze

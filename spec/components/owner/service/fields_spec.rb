@@ -45,4 +45,35 @@ RSpec.describe Components::Owner::Service::Fields, type: :component do
 
     expect(document.at_css("[data-fields-row]")).to be_nil
   end
+
+  it "hides the field labels visually but keeps them as accessible names in the onboarding variant" do
+    document = Nokogiri::HTML5.fragment(described_class.new(service: service, onboarding: true).call)
+    name_label = document.at_css(%(label[for="service_name"]))
+
+    expect(name_label["class"]).to include("sr-only")
+    expect(name_label.text).to eq(described_class::NAME_LABEL)
+  end
+
+  it "shows the canvas placeholders on the onboarding fields" do
+    document = Nokogiri::HTML5.fragment(described_class.new(service: service, onboarding: true).call)
+
+    expect(document.at_css("#service_name")["placeholder"]).to eq(described_class::NAME_PLACEHOLDER)
+    expect(document.at_css("#service_duration_minutes")["placeholder"]).to eq(described_class::DURATION_PLACEHOLDER)
+    expect(document.at_css("#service_price")["placeholder"]).to eq(described_class::PRICE_PLACEHOLDER)
+  end
+
+  it "sizes the onboarding fields to 48px with a 10px radius" do
+    document = Nokogiri::HTML5.fragment(described_class.new(service: service, onboarding: true).call)
+
+    expect(document.at_css("#service_name")["class"]).to include("h-12")
+    expect(document.at_css("#service_name")["class"]).to include("rounded-[10px]")
+  end
+
+  it "keeps visible labels and no placeholders in the catalog variant" do
+    document = Nokogiri::HTML5.fragment(described_class.new(service: service).call)
+    name_label = document.at_css(%(label[for="service_name"]))
+
+    expect(name_label["class"]).not_to include("sr-only")
+    expect(document.at_css("#service_name")["placeholder"]).to be_nil
+  end
 end
