@@ -21,4 +21,22 @@ RSpec.describe "Owner branding repaint", type: :system, js: true do
     expect(page).to have_content(Owner::BrandQuestionsController::NOTICE)
     expect(computed("span.bg-brand-accent", "backgroundColor")).to eq("rgb(190, 18, 60)")
   end
+
+  it "repaints the save button as soon as a color is picked, before saving" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
+    create(:branding, tenant: tenant, brand_600: "#4F46E5")
+    emulate_color_scheme("light")
+    sign_in_owner(tenant, owner)
+    visit "http://#{tenant.subdomain}.zubio.com.br#{edit_owner_brand_colors_path}"
+    submit = %(input[type="submit"][value="#{Views::Owner::BrandQuestions::Edit::SUBMIT_LABEL}"])
+    expect(computed(submit, "backgroundColor")).to eq("rgb(79, 70, 229)")
+
+    within(%(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::BRAND_LABEL}"])) do
+      find(%([data-row-option] [data-swatch="#BE123C"])).click
+    end
+
+    expect(page).to have_css(%([data-preview-brand="#BE123C"] #{submit}))
+    expect(computed(submit, "backgroundColor")).to eq("rgb(190, 18, 60)")
+  end
 end

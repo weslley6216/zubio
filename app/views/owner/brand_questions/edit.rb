@@ -20,7 +20,7 @@ class Views::Owner::BrandQuestions::Edit < Views::Base
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
       main(class: Components::Owner::FormCard::PAGE_CLASS) do
         render_back
-        section(aria_labelledby: @body::HEADING_ID, data: { panel: true }, class: Components::Owner::FormCard::CARD_CLASS) do
+        section(aria_labelledby: @body::HEADING_ID, data: preview_data, class: Components::Owner::FormCard::CARD_CLASS) do
           form_with(url: @url, method: :patch, multipart: true, class: Components::Owner::FormCard::FORM_CLASS) do |form|
             render @body.new(tenant: @tenant, branding: @branding)
             form.submit(SUBMIT_LABEL, class: SUBMIT)
@@ -31,6 +31,10 @@ class Views::Owner::BrandQuestions::Edit < Views::Base
   end
 
   private
+
+  def preview_data
+    { panel: true, preview_brand: @branding.brand_600, preview_secondary: @branding.brand_secondary_600.presence || "none" }
+  end
 
   def render_back
     a(href: owner_settings_path, class: BACK_CLASS) do
