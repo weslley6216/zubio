@@ -3,8 +3,14 @@ class Onboarding::Schedule
 
   NO_WEEKDAY_MESSAGE = "marque ao menos um dia".freeze
   BREAK_INVERTED_MESSAGE = "o intervalo precisa terminar depois de começar".freeze
+  DEFAULT_OPENS_AT = "09:00".freeze
+  DEFAULT_CLOSES_AT = "18:00".freeze
 
   attr_accessor :professional, :weekdays, :opens_at, :closes_at, :break_starts_at, :break_ends_at
+
+  def self.starting_point
+    new(opens_at: DEFAULT_OPENS_AT, closes_at: DEFAULT_CLOSES_AT)
+  end
 
   validate :at_least_one_weekday
   validate :hours_follow_working_hour_rules

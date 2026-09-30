@@ -126,6 +126,43 @@ RSpec.describe "Owner onboarding", type: :request do
       expect(root["data-preview-brand"]).to eq(Branding::DEFAULT_BRAND_600)
       expect(root["data-preview-secondary"]).to eq("none")
     end
+
+    it "fills the schedule with the 09:00 to 18:00 starting point on the first visit" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      get owner_onboarding_path
+      document = Nokogiri::HTML5(response.body)
+
+      expect(document.at_css("#working_hours_opens_at")["value"]).to eq("09:00")
+      expect(document.at_css("#working_hours_closes_at")["value"]).to eq("18:00")
+    end
+
+    it "sizes the services and days titles and paces the welcome by 14px" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      get owner_onboarding_path
+      document = Nokogiri::HTML5(response.body)
+      services_title = document.css("h1").find { |node| node.text.include?(Views::Owner::Onboarding::Document::SERVICES_TITLE) }
+      hours_title = document.css("h1").find { |node| node.text.include?(Views::Owner::Onboarding::Document::HOURS_TITLE) }
+      welcome_stack = document.at_css("section[data-onboarding-section='welcome'] > div")
+
+      expect(services_title["class"]).to include("text-[26px]")
+      expect(hours_title["class"]).to include("text-[28px]")
+      expect(welcome_stack["class"]).to include("gap-3.5")
+    end
+
+    it "styles the new service label with the shared section-label token in the brand ink" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      get owner_onboarding_path
+      label = Nokogiri::HTML5(response.body).css("span").find { |node| node.text == Views::Owner::Onboarding::Document::NEW_SERVICE_LABEL }
+
+      expect(label["class"]).to include(Components::Form::Styles::SECTION_LABEL)
+      expect(label["class"]).to include("text-brand-ink")
+    end
   end
 
   describe "POST /owner/onboarding" do

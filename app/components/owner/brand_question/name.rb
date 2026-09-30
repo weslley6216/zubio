@@ -8,15 +8,16 @@ class Components::Owner::BrandQuestion::Name < Components::Base
   COUNTER_SUFFIX = "de #{Tenant::NAME_MAX_LENGTH} caracteres".freeze
   ADDRESS_LABEL = "Seu endereço fica assim".freeze
 
-  TITLE_CLASS = "text-xl font-extrabold tracking-tight text-ink".freeze
+  TITLE_CLASS = "text-[26px] leading-[1.2] font-extrabold tracking-tight text-ink".freeze
   SUBTITLE_CLASS = "mt-1 text-sm text-ink-muted".freeze
   FIELD_CLASS = "mt-4".freeze
-  COUNTER_CLASS = "mt-1 text-xs text-ink-muted".freeze
-  ADDRESS_CARD_CLASS = "mt-4 grid gap-2 rounded-xl border border-line bg-surface-2 p-3".freeze
-  ADDRESS_LABEL_CLASS = "text-xs font-medium uppercase tracking-wide text-ink-subtle".freeze
+  COUNTER_CLASS = "mt-4 text-xs text-ink-subtle".freeze
+  NAME_FIELD_CLASS = "h-[58px] w-full rounded-[14px] border-2 border-brand-600 bg-surface px-4 text-[20px] font-bold tracking-[-0.01em] text-ink shadow-[0_2px_8px_rgba(44,108,176,0.12)]".freeze
+  ADDRESS_CARD_CLASS = "mt-2 grid gap-2 rounded-[14px] border border-line bg-surface p-3".freeze
+  ADDRESS_LABEL_CLASS = "#{SECTION_LABEL} text-ink-subtle".freeze
   ADDRESS_ROW_CLASS = "flex items-center gap-3".freeze
   ADDRESS_TEXT_CLASS = "grid min-w-0".freeze
-  ADDRESS_NAME_CLASS = "truncate text-sm font-bold text-ink".freeze
+  ADDRESS_NAME_CLASS = "truncate text-[15px] font-extrabold text-ink".freeze
   ADDRESS_HOST_CLASS = "truncate text-xs text-ink-muted".freeze
 
   def initialize(tenant:, branding:, deriving: false)
@@ -47,7 +48,7 @@ class Components::Owner::BrandQuestion::Name < Components::Base
     div(class: FIELD_CLASS) do
       label(for: "tenant_name", class: "sr-only") { NAME_LABEL }
       input(type: "text", id: "tenant_name", name: "tenant[name]", value: @tenant.name, required: true,
-        maxlength: Tenant::NAME_MAX_LENGTH, class: CONTROL, data: field_data)
+        maxlength: Tenant::NAME_MAX_LENGTH, class: NAME_FIELD_CLASS, data: field_data)
       p(class: COUNTER_CLASS, data: { "name-counter-target": "readout", max: Tenant::NAME_MAX_LENGTH }) { counter_text }
       render Components::Form::Errors.new(messages: @tenant.errors[:name])
     end

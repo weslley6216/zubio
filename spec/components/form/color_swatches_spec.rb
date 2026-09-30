@@ -129,4 +129,20 @@ RSpec.describe Components::Form::ColorSwatches, type: :component do
     expect(custom.at_css(".bg-brand-600")).to be_present
     expect(suggested.at_css(".bg-brand-600")).to be_nil
   end
+
+  it "renders the optional tag as a rounded neutral badge, not loose text" do
+    document = Nokogiri::HTML5.fragment(secondary_swatches(nil))
+    tag = document.css("legend span").last
+
+    expect(tag.text).to eq("Opcional")
+    expect(tag["class"]).to include("rounded-full")
+    expect(tag["class"]).to include("bg-surface-3")
+    expect(tag["class"]).to include("text-[10px]")
+  end
+
+  it "styles the group legend with the shared section-label token" do
+    document = Nokogiri::HTML5.fragment(brand_swatches("#4F46E5"))
+
+    expect(document.at_css("legend")["class"]).to include(Components::Form::Styles::SECTION_LABEL)
+  end
 end
