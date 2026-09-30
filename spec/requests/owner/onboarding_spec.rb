@@ -152,6 +152,17 @@ RSpec.describe "Owner onboarding", type: :request do
       expect(hours_title["class"]).to include("text-[28px]")
       expect(welcome_stack["class"]).to include("gap-3.5")
     end
+
+    it "styles the new service label with the shared section-label token in the brand ink" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+
+      get owner_onboarding_path
+      label = Nokogiri::HTML5(response.body).css("span").find { |node| node.text == Views::Owner::Onboarding::Document::NEW_SERVICE_LABEL }
+
+      expect(label["class"]).to include(Components::Form::Styles::SECTION_LABEL)
+      expect(label["class"]).to include("text-brand-ink")
+    end
   end
 
   describe "POST /owner/onboarding" do

@@ -52,7 +52,7 @@ class Views::Owner::Onboarding::Document < Views::Base
   SERVICE_ACTION_CLASS = "grid h-9 w-9 flex-none place-items-center rounded-lg border border-line bg-surface".freeze
   SERVICE_ICON_CLASS = "h-4 w-4".freeze
   NEW_SERVICE_CARD_CLASS = "grid gap-3 rounded-2xl border-2 border-brand-600 bg-surface p-4 shadow-[0_2px_8px_rgba(44,108,176,0.12)]".freeze
-  NEW_SERVICE_LABEL_CLASS = "text-xs font-medium uppercase tracking-wide text-brand-ink".freeze
+  NEW_SERVICE_LABEL_CLASS = "#{SECTION_LABEL} text-brand-ink".freeze
   ADD_SERVICE_BUTTON_CLASS = "flex min-h-11.5 items-center justify-center gap-2 rounded-lg bg-brand-600 text-[15px] font-bold text-on-brand".freeze
   SERVICES_HELP_CLASS = "text-xs leading-snug text-ink-subtle".freeze
 
