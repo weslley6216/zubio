@@ -18,6 +18,12 @@ class User < ApplicationRecord
 
   def consume_handoff_token! = increment!(:handoff_generation)
 
+  def self.login_targets_for(email)
+    ActsAsTenant.without_tenant do
+      owner.where(email: email).joins(:tenant).merge(Tenant.active).preload(:tenant).to_a
+    end
+  end
+
   enum :role, { owner: "owner", admin: "admin", professional: "professional" }
 
   validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
