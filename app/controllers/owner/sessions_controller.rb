@@ -5,7 +5,7 @@ class Owner::SessionsController < ApplicationController
     with: -> { redirect_to new_owner_session_path, alert: "Muitas tentativas. Tente de novo em alguns minutos." }
 
   def new
-    render Views::Owner::Sessions::New.new(branding: current_branding)
+    render Views::Owner::Sessions::New.new(branding: current_branding, email: params[:email])
   end
 
   def create
