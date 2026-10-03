@@ -6,8 +6,7 @@ class Owner::SettingsController < Owner::BaseController
       tenant: ActsAsTenant.current_tenant,
       branding: current_branding,
       service_counts: Service.count_by_state,
-      working_hours_summary: working_hours_summary,
-      current_section: panel_section
+      working_hours_summary: working_hours_summary
     )
   end
 
