@@ -26,6 +26,16 @@ RSpec.describe "Owner services catalog", type: :request do
   end
 
   describe "GET /owner/services" do
+    it "offers the way back to settings above the heading, as the brand screens do" do
+      sign_in
+
+      get owner_services_path
+
+      back = Nokogiri::HTML5(response.body).at_css("main a[href='#{owner_settings_path}']")
+      expect(back).to be_present
+      expect(back.text).to include(Components::Owner::SettingsBackLink::LABEL)
+    end
+
     it "lists every service of the establishment with its duration and its price" do
       create(:service, tenant: tenant, name: "Corte feminino", duration_minutes: 45, price_cents: 9_000)
       create(:service, tenant: tenant, name: "Coloração completa", duration_minutes: 120, price_cents: 25_000)

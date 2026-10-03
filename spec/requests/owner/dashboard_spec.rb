@@ -10,6 +10,17 @@ RSpec.describe "Owner dashboard", type: :request do
   end
 
   describe "GET /owner/dashboard" do
+    it "stacks the panel subtitle under the establishment name in the identity" do
+      create(:branding, tenant: tenant)
+      sign_in
+
+      get owner_dashboard_path
+
+      subtitle = Nokogiri::HTML5(response.body).at_css("[data-panel-subtitle]")
+      expect(subtitle.text).to eq(Components::Owner::Header::PANEL_SUBTITLE)
+      expect(subtitle["class"]).to include("text-[11px]", "text-ink-muted")
+    end
+
     it "greets the owner by first name and names the establishment" do
       create(:branding, tenant: tenant)
       sign_in

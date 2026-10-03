@@ -34,6 +34,7 @@ class Views::Owner::Services::Index < Views::Base
     render Views::Layouts::Application.new(title: "#{TITLE} · #{@tenant.name}", branding: @branding) do
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
       main(class: PAGE_CLASS) do
+        render Components::Owner::SettingsBackLink.new
         render_heading
         @services.empty? ? render_empty_state : render_catalog
       end
