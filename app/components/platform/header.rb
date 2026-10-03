@@ -1,7 +1,8 @@
 class Components::Platform::Header < Components::Base
-  def initialize(links: [], cta: nil)
+  def initialize(links: [], cta: nil, secondary: nil)
     @links = links
     @cta = cta
+    @secondary = secondary
   end
 
   def view_template
@@ -35,8 +36,15 @@ class Components::Platform::Header < Components::Base
   def render_actions
     div(class: "ml-auto flex items-center gap-3 sm:ml-0") do
       render Components::ThemeToggle.new(hidden_on_phone: mobile_menu?)
+      render_secondary if @secondary
       render_cta if @cta
     end
+  end
+
+  def render_secondary
+    text, href = @secondary
+
+    a(href: href, class: "inline-flex min-h-11 items-center text-sm font-semibold text-ink-muted hover:text-ink") { text }
   end
 
   def render_cta
