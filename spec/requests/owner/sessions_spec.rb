@@ -13,6 +13,12 @@ RSpec.describe "Owner session", type: :request do
       expect(response.body).to include("Entrar")
     end
 
+    it "prefills the email that arrived from the login link" do
+      get new_owner_session_path(email: "ze@example.com")
+
+      expect(response.body).to include(%(value="ze@example.com"))
+    end
+
     it "renders the alert message outlined in the danger color after an invalid login attempt" do
       create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
 

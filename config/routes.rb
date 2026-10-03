@@ -16,6 +16,7 @@ Rails.application.routes.draw do
   get "preview.css" => "stylesheets#preview", as: :preview_stylesheet
 
   resource :signup, only: %i[new create]
+  resource :login_link, only: %i[new create]
 
   namespace :owner do
     resource :onboarding, only: %i[show create], controller: "onboarding"
