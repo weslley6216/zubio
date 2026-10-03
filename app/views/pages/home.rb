@@ -14,7 +14,7 @@ class Views::Pages::Home < Views::Base
   def view_template
     render layout do
       div(class: "min-h-dvh font-sans", data: { landing_root: true }) do
-        render Components::Platform::Header.new(links: LINKS, cta: [ "Criar conta grátis", new_signup_path ])
+        render Components::Platform::Header.new(links: LINKS, cta: [ "Criar conta grátis", new_signup_path ], secondary: [ "Entrar", new_login_link_path ])
         div(data: { controller: "showcase-brand" }) do
           render Views::Pages::Home::Hero.new do
             div(class: "grid justify-items-center gap-5") do

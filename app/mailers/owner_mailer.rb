@@ -29,7 +29,38 @@ class OwnerMailer < ApplicationMailer
     end
   end
 
+  def login_links(email)
+    targets = User.login_targets_for(email)
+    return if targets.empty?
+
+    mail(
+      to: email,
+      subject: "Seus acessos no Zubio",
+      body: login_links_body(targets),
+      content_type: "text/plain"
+    )
+  end
+
   private
+
+  def login_links_body(targets)
+    links = targets.map { |target| login_link_line(target) }.join("\n")
+
+    <<~TEXT
+      Olá!
+
+      Encontramos estas contas para o seu e-mail. Entre pelo link do seu estabelecimento:
+
+      #{links}
+    TEXT
+  end
+
+  def login_link_line(target)
+    tenant = target.tenant
+    label = tenant.name.presence || tenant.canonical_host
+
+    "- #{label}: #{new_owner_session_url(host: tenant.canonical_host, email: target.email)}"
+  end
 
   def welcome_body(tenant, owner)
     <<~TEXT
