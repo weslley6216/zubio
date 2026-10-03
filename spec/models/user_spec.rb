@@ -172,4 +172,46 @@ RSpec.describe User, type: :model do
       expect(result).to include(user)
     end
   end
+
+  describe ".login_targets_for" do
+    it "returns the owners of active tenants whose email matches, each with its tenant loaded" do
+      first_tenant = create(:tenant, subdomain: "barbearia-do-ze")
+      second_tenant = create(:tenant, subdomain: "estudio-aurora")
+      create(:user, tenant: first_tenant, email: "ze@example.com", role: "owner")
+      create(:user, tenant: second_tenant, email: "ze@example.com", role: "owner")
+
+      targets = User.login_targets_for("ze@example.com")
+
+      expect(targets.map { |owner| owner.tenant.subdomain }).to contain_exactly("barbearia-do-ze", "estudio-aurora")
+    end
+
+    it "returns only the queried address, not an owner of a different email" do
+      create(:user, email: "ze@example.com", role: "owner")
+      other = create(:user, email: "ana@example.com", role: "owner")
+
+      targets = User.login_targets_for("ze@example.com")
+
+      expect(targets).not_to include(other)
+    end
+
+    it "excludes a user who is not an owner even with the same email" do
+      tenant = create(:tenant)
+      create(:user, tenant: tenant, email: "ze@example.com", role: "professional")
+
+      expect(User.login_targets_for("ze@example.com")).to be_empty
+    end
+
+    it "excludes an owner whose tenant is suspended" do
+      suspended = create(:tenant, subdomain: "fechada", status: "suspended")
+      create(:user, tenant: suspended, email: "ze@example.com", role: "owner")
+
+      expect(User.login_targets_for("ze@example.com")).to be_empty
+    end
+
+    it "matches the email ignoring case, since the column is citext" do
+      create(:user, email: "ze@example.com", role: "owner")
+
+      expect(User.login_targets_for("ZE@example.com")).not_to be_empty
+    end
+  end
 end
