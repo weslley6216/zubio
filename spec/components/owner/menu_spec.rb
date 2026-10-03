@@ -7,12 +7,10 @@ RSpec.describe Components::Owner::Menu, type: :component do
     render_phlex(described_class.new(items: items))
   end
 
-  GEAR_PATH = "circle cx=\"12\" cy=\"12\" r=\"3\"".freeze
-
   it "renders every item with a leading icon and divides them with a hairline" do
     html = body(items)
 
-    expect(html).to include(GEAR_PATH)
+    expect(html).to include(%(circle cx="12" cy="12" r="3"))
     expect(html).to include("divide-y", "divide-line")
   end
 
