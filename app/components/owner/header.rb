@@ -3,6 +3,7 @@ class Components::Owner::Header < Components::Base
 
   SETTINGS_LABEL = "Configurações".freeze
   SIGN_OUT_LABEL = "Sair".freeze
+  PANEL_SUBTITLE = "Painel".freeze
   ITEM_CLASS = "inline-flex min-h-11 items-center border-b-2 px-4 text-sm font-bold".freeze
   CURRENT_CLASS = "border-secondary-mark text-brand-ink".freeze
   RESTING_CLASS = "border-transparent text-ink-muted hover:text-ink".freeze
@@ -36,7 +37,10 @@ class Components::Owner::Header < Components::Base
     a(href: owner_dashboard_path, aria_current: @current_section == :dashboard ? "page" : nil,
       class: "flex min-h-11 min-w-0 items-center gap-2 font-extrabold tracking-tight text-ink") do
       render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :medium)
-      span(class: "truncate") { @tenant.name }
+      span(class: "grid min-w-0") do
+        span(class: "truncate") { @tenant.name }
+        span(class: "text-[11px] font-normal text-ink-muted", data: { panel_subtitle: true }) { PANEL_SUBTITLE }
+      end
     end
   end
 
@@ -65,6 +69,6 @@ class Components::Owner::Header < Components::Base
   end
 
   def render_menu
-    render Components::Menu.new(items: items) { render_sign_out }
+    render Components::Owner::Menu.new(items: items)
   end
 end

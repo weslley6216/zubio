@@ -18,11 +18,11 @@ RSpec.describe "Owner panel navigation", type: :request do
   end
 
   def menu_item(href)
-    %(<a href="#{href}" class="#{Components::Menu::ITEM_CLASS} #{Components::Menu::RESTING_CLASS}">)
+    %(<a href="#{href}" class="#{Components::Owner::Menu::ITEM_CLASS} #{Components::Owner::Menu::RESTING_CLASS}">)
   end
 
   def current_menu_item(href)
-    %(<a href="#{href}" aria-current="page" class="#{Components::Menu::ITEM_CLASS} #{Components::Menu::CURRENT_CLASS}">)
+    %(<a href="#{href}" aria-current="page" class="#{Components::Owner::Menu::ITEM_CLASS} #{Components::Owner::Menu::CURRENT_CLASS}">)
   end
 
   def current_identity = %(<a href="#{owner_dashboard_path}" aria-current="page")
@@ -38,15 +38,15 @@ RSpec.describe "Owner panel navigation", type: :request do
     expect(response.body).to include(menu_item(owner_settings_path))
   end
 
-  it "marks settings as current on the settings screen, in the band and in the menu, and the identity no longer" do
+  it "drops the band and the menu on the settings hub for a bar back to the panel" do
     create(:branding, tenant: tenant)
     sign_in
 
     get owner_settings_path
 
-    expect(response.body).to include(current_band_item(owner_settings_path))
-    expect(response.body).to include(current_menu_item(owner_settings_path))
-    expect(response.body).not_to include(current_identity)
+    expect(response.body).to include(%(<a href="#{owner_dashboard_path}"))
+    expect(response.body).not_to include(Components::Owner::Menu::LABEL)
+    expect(response.body).not_to include(current_band_item(owner_settings_path))
   end
 
   it "keeps settings current on the catalog, the service form and the three brand screens, which settings leads to" do
@@ -82,7 +82,7 @@ RSpec.describe "Owner panel navigation", type: :request do
 
     get owner_dashboard_path
 
-    expect(response.body).to include(Components::Menu::LABEL)
+    expect(response.body).to include(Components::Owner::Menu::LABEL)
     expect(response.body.scan(%(data-action="theme#toggle")).size).to eq(2)
     expect(response.body.scan(%(action="#{owner_session_path}")).size).to eq(2)
   end
@@ -100,7 +100,7 @@ RSpec.describe "Owner panel navigation", type: :request do
 
     expect(signed_in_body).to include(Components::Owner::Header::SETTINGS_LABEL)
     expect(response.body).not_to include(Components::Owner::Header::SETTINGS_LABEL)
-    expect(response.body).not_to include(Components::Menu::LABEL)
+    expect(response.body).not_to include(Components::Owner::Menu::LABEL)
     expect(response.body).not_to include(%(aria-current="page"))
   end
 

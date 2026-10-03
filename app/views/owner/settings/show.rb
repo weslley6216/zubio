@@ -20,7 +20,11 @@ class Views::Owner::Settings::Show < Views::Base
   CHEVRON_PATH = "m9 6 6 6-6 6".freeze
 
   PAGE_CLASS = "mx-auto grid w-full max-w-6xl gap-6 px-6 py-10".freeze
-  HEADING_CLASS = "text-3xl font-extrabold tracking-tight text-ink".freeze
+  BACK_LABEL = "Voltar".freeze
+  BACK_ICON = "m15 6-6 6 6 6".freeze
+  TOP_BAR_CLASS = "flex items-center gap-3.5 border-b border-line bg-surface px-6 py-4".freeze
+  BACK_CLASS = "grid h-11 w-11 flex-none place-items-center rounded-full border border-line bg-surface".freeze
+  TITLE_CLASS = "text-base font-extrabold tracking-tight text-ink".freeze
   GROUP_CLASS = "grid max-w-2xl gap-2".freeze
   GROUP_LABEL_CLASS = "text-xs font-bold uppercase tracking-widest text-ink-muted".freeze
   LIST_CLASS = "divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface".freeze
@@ -33,19 +37,17 @@ class Views::Owner::Settings::Show < Views::Base
   CHIPS_CLASS = "flex flex-none gap-1".freeze
   CHEVRON_CLASS = "h-4 w-4 flex-none text-ink-subtle".freeze
 
-  def initialize(tenant:, branding:, service_counts:, working_hours_summary:, current_section:)
+  def initialize(tenant:, branding:, service_counts:, working_hours_summary:)
     @tenant = tenant
     @branding = branding
     @service_counts = service_counts
     @working_hours_summary = working_hours_summary
-    @current_section = current_section
   end
 
   def view_template
     render Views::Layouts::Application.new(title: "#{TITLE} · #{@tenant.name}", branding: @branding) do
-      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
+      render_top_bar
       main(class: PAGE_CLASS) do
-        h1(class: HEADING_CLASS) { TITLE }
         render_brand_group
         render_service_group
         render_account_group
@@ -54,6 +56,16 @@ class Views::Owner::Settings::Show < Views::Base
   end
 
   private
+
+  def render_top_bar
+    header(class: TOP_BAR_CLASS, data: { top_bar: true }) do
+      a(href: owner_dashboard_path, class: BACK_CLASS, aria_label: BACK_LABEL) do
+        svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.2", stroke_linecap: "round",
+          stroke_linejoin: "round", aria_hidden: "true", class: "h-5 w-5 text-ink") { |icon| icon.path(d: BACK_ICON) }
+      end
+      span(class: TITLE_CLASS, data: { top_title: true }) { TITLE }
+    end
+  end
 
   def render_brand_group
     render_group("brand-group", BRAND_GROUP) do
