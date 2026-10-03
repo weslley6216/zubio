@@ -40,14 +40,14 @@ RSpec.describe Components::Owner::Menu, type: :component do
 
   it "closes the list with sign out as an item below the theme switch, keeping the delete" do
     html = body(items)
+    document = Nokogiri::HTML5.fragment(html)
 
-    expect(html).to include(Components::ThemeToggle::LABEL)
-    expect(html).to include(Components::Owner::Header::SIGN_OUT_LABEL)
-    expect(html).to include(%(value="delete"))
     expect(html.index(Components::Owner::Header::SIGN_OUT_LABEL)).to be > html.index(Components::ThemeToggle::LABEL)
+    expect(document.at_css("form input[name='_method']")["value"]).to eq("delete")
 
-    sign_out_button = html[html.index("<form"), html.index(Components::Owner::Header::SIGN_OUT_LABEL) + Components::Owner::Header::SIGN_OUT_LABEL.length - html.index("<form")]
-    expect(sign_out_button).to include(described_class::ITEM_CLASS)
-    expect(sign_out_button).not_to include("border border-line")
+    sign_out_button = document.at_css("form button")
+    expect(sign_out_button.text).to eq(Components::Owner::Header::SIGN_OUT_LABEL)
+    expect(sign_out_button["class"]).to include(described_class::ITEM_CLASS)
+    expect(sign_out_button["class"]).not_to include("border-line")
   end
 end
