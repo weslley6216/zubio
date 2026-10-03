@@ -106,10 +106,19 @@ RSpec.describe "Landing page", type: :request do
       expect(response.body).to include("nome da sua marca")
     end
 
-    it "offers no path to the sign in screen" do
+    it "offers both sign in and sign up in the header" do
       get root_path
 
-      expect(response.body).to include(new_signup_path)
+      expect(response.body).to include("Entrar")
+      expect(response.body).to include(%(href="#{new_login_link_path}"))
+      expect(response.body).to include("Criar conta grátis")
+      expect(response.body).to include(%(href="#{new_signup_path}"))
+    end
+
+    it "routes sign in through the login-link form, never a tenant's session screen" do
+      get root_path
+
+      expect(response.body).to include(%(href="#{new_login_link_path}"))
       expect(response.body).not_to include(new_owner_session_path)
     end
   end
