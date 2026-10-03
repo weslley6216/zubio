@@ -18,6 +18,30 @@ RSpec.describe "Owner settings", type: :request do
   def destination(key) = row(key).at_css("a")&.[]("href")
 
   describe "GET /owner/settings" do
+    it "tops the hub with a bar back to the panel instead of the panel navigation" do
+      create(:branding, tenant: tenant)
+      sign_in
+
+      get owner_settings_path
+
+      bar = document.at_css("[data-top-bar]")
+      expect(bar.at_css("a")["href"]).to eq(owner_dashboard_path)
+      title = bar.at_css("[data-top-title]")
+      expect(title.text).to eq(Views::Owner::Settings::Show::TITLE)
+      expect(title["class"]).to include("text-base", "font-extrabold")
+      expect(response.body).not_to include(Components::Owner::Menu::LABEL)
+    end
+
+    it "points the rows that lead to a screen with a chevron and leaves the address reading only" do
+      create(:branding, tenant: tenant)
+      sign_in
+
+      get owner_settings_path
+
+      expect(row("name").to_html).to include(Views::Owner::Settings::Show::CHEVRON_PATH)
+      expect(row("address").to_html).not_to include(Views::Owner::Settings::Show::CHEVRON_PATH)
+    end
+
     it "gathers the brand, the service and the account groups, each row with its current value" do
       create(:branding, tenant: tenant, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C")
       create(:service, tenant: tenant)

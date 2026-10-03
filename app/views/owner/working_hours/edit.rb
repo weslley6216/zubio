@@ -8,9 +8,6 @@ class Views::Owner::WorkingHours::Edit < Views::Base
   OPENS_LABEL = Components::Owner::WorkingHours::Fields::OPENS_LABEL
   CLOSES_LABEL = Components::Owner::WorkingHours::Fields::CLOSES_LABEL
   SECOND_RANGE_HINT = "Após o intervalo (opcional)".freeze
-  BACK_LABEL = Components::Owner::Header::SETTINGS_LABEL
-  BACK_ICON = "m15 6-6 6 6 6".freeze
-  BACK_CLASS = "inline-flex min-h-11 items-center gap-1 text-sm font-bold text-ink-muted hover:text-ink".freeze
 
   DAY_CHIP_CLASS = "grid flex-1 cursor-pointer justify-items-center gap-0.5 rounded-xl border border-line bg-surface py-3 text-ink group-has-checked:border-2 group-has-checked:border-brand-600 group-has-checked:bg-brand-soft group-has-checked:text-brand-ink".freeze
   TOGGLE_LABEL_CLASS = "relative inline-flex h-11 w-[72px] flex-none cursor-pointer items-center justify-start rounded-full bg-line p-1 transition-colors group-has-checked:justify-end group-has-checked:bg-brand-600".freeze
@@ -42,11 +39,7 @@ class Views::Owner::WorkingHours::Edit < Views::Base
   def toggle_id(weekday) = "working_hours_active_#{weekday}"
 
   def render_heading
-    a(href: owner_settings_path, class: BACK_CLASS) do
-      svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.5", stroke_linecap: "round",
-        stroke_linejoin: "round", aria_hidden: "true", class: "h-4 w-4") { |icon| icon.path(d: BACK_ICON) }
-      plain BACK_LABEL
-    end
+    render Components::Owner::SettingsBackLink.new
     h1(class: "mt-2 text-xl font-extrabold tracking-tight text-ink") { TITLE }
     p(class: "text-sm text-ink-muted") { SUBTITLE }
   end
