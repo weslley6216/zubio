@@ -76,4 +76,27 @@ RSpec.describe Components::Owner::Service::Fields, type: :component do
     expect(name_label["class"]).not_to include("sr-only")
     expect(document.at_css("#service_name")["placeholder"]).to be_nil
   end
+
+  it "brings the show-price toggle checked by default in the catalog variant" do
+    html = described_class.new(service: service).call
+
+    expect(html).to include(described_class::SHOW_PRICE_LABEL)
+    expect(html).to include(%(name="service[show_price]"))
+    expect(html).to include(%(type="checkbox" name="service[show_price]" value="1" checked))
+  end
+
+  it "leaves the toggle unchecked for a service whose price is hidden" do
+    hidden = ActsAsTenant.with_tenant(Tenant.new) { Service.new(show_price: false) }
+
+    html = described_class.new(service: hidden).call
+
+    expect(html).not_to include(%(value="1" checked))
+  end
+
+  it "drops the show-price toggle in the onboarding variant" do
+    html = described_class.new(service: service, onboarding: true).call
+
+    expect(html).not_to include(described_class::SHOW_PRICE_LABEL)
+    expect(html).not_to include(%(name="service[show_price]"))
+  end
 end
