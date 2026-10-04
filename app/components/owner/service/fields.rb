@@ -17,6 +17,8 @@ class Components::Owner::Service::Fields < Components::Base
   ONBOARDING_CONTROL = "h-12 w-full rounded-[10px] border border-line-strong bg-surface px-3.5 text-base font-bold text-ink placeholder:font-normal placeholder:text-ink-subtle".freeze
   ONBOARDING_ROW_CONTROL = "h-12 w-full rounded-[10px] border border-line-strong bg-surface px-3.5 text-[15px] font-bold text-ink placeholder:font-normal placeholder:text-ink-subtle".freeze
   NAME_ERROR_ID = "service_name-error".freeze
+  SHOW_PRICE_LABEL = "Exibir o preço na página".freeze
+  SHOW_PRICE_ROW_CLASS = "flex items-center gap-2 text-sm font-medium text-ink".freeze
 
   def initialize(service:, onboarding: false)
     @service = service
@@ -34,6 +36,7 @@ class Components::Owner::Service::Fields < Components::Base
     else
       render_duration_field
       render_price_field
+      render_show_price_field
     end
   end
 
@@ -71,6 +74,16 @@ class Components::Owner::Service::Fields < Components::Base
     render_field(:price, PRICE_LABEL, hint: price_hint, hint_id: PRICE_HINT_ID, error_attribute: :price_cents, wrapper_class: row_field_class) do |id, described_by|
       input(type: "text", id: id, name: field_name(:price), value: @service.price,
         inputmode: "decimal", placeholder: price_placeholder, **described_by_attrs(described_by), **target_attrs("servicePrice"), class: row_control)
+    end
+  end
+
+  def render_show_price_field
+    div(data: { field: "show_price" }) do
+      label(class: SHOW_PRICE_ROW_CLASS) do
+        input(type: "hidden", name: field_name(:show_price), value: "0")
+        input(type: "checkbox", name: field_name(:show_price), value: "1", checked: @service.show_price?, class: CHECKBOX)
+        plain SHOW_PRICE_LABEL
+      end
     end
   end
 
