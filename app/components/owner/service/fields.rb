@@ -4,7 +4,7 @@ class Components::Owner::Service::Fields < Components::Base
   NAME_LABEL = "Nome".freeze
   DESCRIPTION_LABEL = "Descrição (opcional)".freeze
   DURATION_LABEL = "Duração (minutos)".freeze
-  DURATION_HINT = "Múltiplos de #{Service::DURATION_STEP_MINUTES} minutos, até #{Service::MAX_DURATION_MINUTES.minutes.in_hours.to_i} horas.".freeze
+  DURATION_HINT = "Múltiplos de #{::Service::DURATION_STEP_MINUTES} minutos, até #{::Service::MAX_DURATION_MINUTES.minutes.in_hours.to_i} horas.".freeze
   PRICE_LABEL = "Preço (R$, opcional)".freeze
   PRICE_HINT = "Em reais, com vírgula nos centavos: 90,00. Sem preço fixo? Deixe em branco: o cliente vê \"sob consulta\".".freeze
   DURATION_HINT_ID = "service-duration-hint".freeze
@@ -42,27 +42,27 @@ class Components::Owner::Service::Fields < Components::Base
   def render_name_field
     render_field(:name, NAME_LABEL) do |id, described_by|
       input(type: "text", id: id, name: field_name(:name), value: @service.name, required: !@onboarding,
-        maxlength: Service::NAME_MAX_LENGTH, placeholder: name_placeholder, **described_by_attrs(described_by), **target_attrs("serviceName"), class: name_control)
+        maxlength: ::Service::NAME_MAX_LENGTH, placeholder: name_placeholder, **described_by_attrs(described_by), **target_attrs("serviceName"), class: name_control)
       render_onboarding_name_error if @onboarding
     end
   end
 
   def render_onboarding_name_error
     p(id: NAME_ERROR_ID, class: "mt-1 text-sm text-danger", hidden: true, role: "alert",
-      data: { onboarding_target: "serviceNameError" }) { Service::NAME_REQUIRED_MESSAGE }
+      data: { onboarding_target: "serviceNameError" }) { ::Service::NAME_REQUIRED_MESSAGE }
   end
 
   def render_description_field
     render_field(:description, DESCRIPTION_LABEL) do |id|
       textarea(id: id, name: field_name(:description), rows: DESCRIPTION_ROWS,
-        maxlength: Service::DESCRIPTION_MAX_LENGTH, class: TEXTAREA) { @service.description }
+        maxlength: ::Service::DESCRIPTION_MAX_LENGTH, class: TEXTAREA) { @service.description }
     end
   end
 
   def render_duration_field
     render_field(:duration_minutes, DURATION_LABEL, hint: duration_hint, hint_id: DURATION_HINT_ID, wrapper_class: row_field_class) do |id, described_by|
       input(type: "number", id: id, name: field_name(:duration_minutes), value: @service.duration_minutes,
-        required: !@onboarding, min: Service::MIN_DURATION_MINUTES, max: Service::MAX_DURATION_MINUTES, step: Service::DURATION_STEP_MINUTES,
+        required: !@onboarding, min: ::Service::MIN_DURATION_MINUTES, max: ::Service::MAX_DURATION_MINUTES, step: ::Service::DURATION_STEP_MINUTES,
         placeholder: duration_placeholder, **described_by_attrs(described_by), **target_attrs("serviceDuration"), class: row_control)
     end
   end
