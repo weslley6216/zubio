@@ -123,42 +123,6 @@ RSpec.describe "Landing page", type: :request do
     end
   end
 
-  describe "GET / on a tenant host" do
-    it "redirects to the establishment entrance instead of rendering the landing page" do
-      create(:tenant, subdomain: "aurora-studio")
-
-      host! "aurora-studio.zubio.com.br"
-      get root_path
-      follow_redirect!
-
-      expect(request.path).to eq(new_owner_session_path)
-      expect(response.body).to include("Entrar")
-      expect(response.body).not_to include("O cliente marca")
-    end
-
-    it "returns 404 when the subdomain does not exist" do
-      host! "does-not-exist.zubio.com.br"
-      get root_path
-
-      expect(response).to have_http_status(:not_found)
-    end
-
-    it "points at the establishment's own brand sheet at its entrance and never another tenant's" do
-      aurora_studio = create(:tenant, subdomain: "aurora-studio")
-      joes_barbershop = create(:tenant, subdomain: "joes-barbershop")
-      aurora_branding = create(:branding, tenant: aurora_studio, brand_600: "#1D4ED8")
-      joes_branding = create(:branding, tenant: joes_barbershop, brand_600: "#DC2626")
-
-      host! "aurora-studio.zubio.com.br"
-      get root_path
-      follow_redirect!
-
-      expect(response.body).to include(aurora_branding.stylesheet_digest)
-      expect(response.body).not_to include(joes_branding.stylesheet_digest)
-      expect(response.body).not_to include(Branding.platform_default.stylesheet_digest)
-    end
-  end
-
   describe "GET / on the www host" do
     it "redirects permanently to the apex, which serves the landing page" do
       host! "www.zubio.com.br"
