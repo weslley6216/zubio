@@ -102,6 +102,37 @@ RSpec.describe "Owner dashboard", type: :request do
       follow_redirect!
 
       expect(response.body).not_to include("Estúdio Aurora")
+      expect(response.body).not_to include("wa.me")
+    end
+
+    it "shows the establishment public address in full" do
+      create(:branding, tenant: tenant)
+      sign_in
+
+      get owner_dashboard_path
+
+      expect(response.body).to include("estudio-aurora.zubio.com.br")
+    end
+
+    it "writes a WhatsApp message carrying the establishment address" do
+      create(:branding, tenant: tenant)
+      sign_in
+
+      get owner_dashboard_path
+
+      href = Nokogiri::HTML5(response.body).at_css("a[href*='wa.me']")["href"]
+      expect(href).to include("estudio-aurora.zubio.com.br")
+    end
+
+    it "shows its own host and no other tenant's host" do
+      other_tenant = create(:tenant, subdomain: "salon-b", name: "Barbearia do Zé")
+      create(:branding, tenant: tenant)
+      sign_in
+
+      get owner_dashboard_path
+
+      expect(response.body).to include("estudio-aurora.zubio.com.br")
+      expect(response.body).not_to include("#{other_tenant.subdomain}.zubio.com.br")
     end
 
     it "shows the identity of the tenant in the host and nothing of another tenant" do
