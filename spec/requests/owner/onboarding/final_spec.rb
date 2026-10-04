@@ -22,7 +22,7 @@ RSpec.describe "Owner onboarding final", type: :request do
       expect(response.body).to include("barbearia-do-ze.zubio.com.br")
       expect(response.body).to include("Barbearia do Zé")
       expect(response.body).to include("1 serviço")
-      expect(response.body).to include("30 min")
+      expect(response.body).to include("30min")
       expect(response.body).to include("wa.me")
     end
 
@@ -49,7 +49,7 @@ RSpec.describe "Owner onboarding final", type: :request do
 
       document = Nokogiri::HTML5(response.body)
       expect(document.at_xpath("//*[@data-summary-value][text()='09:00–18:00']/..").text).to include("Ter a Sáb")
-      expect(document.at_xpath("//*[@data-summary-value][text()='30 min']/..").text).to include("1 serviço")
+      expect(document.at_xpath("//*[@data-summary-value][text()='30min']/..").text).to include("1 serviço")
     end
 
     it "names the missing service and leads back to registering one" do

@@ -44,11 +44,21 @@ RSpec.describe "Owner services catalog", type: :request do
       get owner_services_path
 
       expect(response.body).to include("Corte feminino")
-      expect(response.body).to include("45 min")
+      expect(response.body).to include("45min")
       expect(response.body).to include("R$ 90,00")
       expect(response.body).to include("Coloração completa")
-      expect(response.body).to include("120 min")
+      expect(response.body).to include("2h")
       expect(response.body).to include("R$ 250,00")
+    end
+
+    it "renders a sixty-minute service as 1h and its price in full" do
+      create(:service, tenant: tenant, name: "Corte", duration_minutes: 60, price_cents: 8_000)
+      sign_in
+
+      get owner_services_path
+
+      expect(response.body).to include("1h")
+      expect(response.body).to include("R$ 80,00")
     end
 
     it "shows the description of a service that has one" do
