@@ -16,6 +16,7 @@ class Components::Owner::Service::Fields < Components::Base
   PRICE_PLACEHOLDER = "R$ —".freeze
   ONBOARDING_CONTROL = "h-12 w-full rounded-[10px] border border-line-strong bg-surface px-3.5 text-base font-bold text-ink placeholder:font-normal placeholder:text-ink-subtle".freeze
   ONBOARDING_ROW_CONTROL = "h-12 w-full rounded-[10px] border border-line-strong bg-surface px-3.5 text-[15px] font-bold text-ink placeholder:font-normal placeholder:text-ink-subtle".freeze
+  NAME_ERROR_ID = "service_name-error".freeze
 
   def initialize(service:, onboarding: false)
     @service = service
@@ -42,7 +43,13 @@ class Components::Owner::Service::Fields < Components::Base
     render_field(:name, NAME_LABEL) do |id, described_by|
       input(type: "text", id: id, name: field_name(:name), value: @service.name, required: !@onboarding,
         maxlength: Service::NAME_MAX_LENGTH, placeholder: name_placeholder, **described_by_attrs(described_by), **target_attrs("serviceName"), class: name_control)
+      render_onboarding_name_error if @onboarding
     end
+  end
+
+  def render_onboarding_name_error
+    p(id: NAME_ERROR_ID, class: "mt-1 text-sm text-danger", hidden: true, role: "alert",
+      data: { onboarding_target: "serviceNameError" }) { Service::NAME_REQUIRED_MESSAGE }
   end
 
   def render_description_field

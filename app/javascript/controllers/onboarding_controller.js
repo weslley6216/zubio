@@ -4,11 +4,17 @@ export default class extends Controller {
   static targets = [
     "section", "back", "servicesList", "serviceRowTemplate", "count",
     "dayCount", "breakToggle", "break", "breakSummary",
-    "serviceName", "serviceDuration", "servicePrice"
+    "serviceName", "serviceDuration", "servicePrice",
+    "cardLabel", "commitLabel", "serviceNameError"
   ]
-  static values = { tenant: String, open: String }
+  static values = {
+    tenant: String, open: String,
+    newServiceLabel: String, editingLabel: String,
+    addServiceLabel: String, saveServiceLabel: String
+  }
 
   connect() {
+    this.editingRow = null
     this.draft = this.#readDraft()
     if (!this.#servicesPrefilled()) this.#restoreServices()
     this.#restoreFields()
@@ -63,31 +69,41 @@ export default class extends Controller {
 
   addService() {
     const name = this.serviceNameTarget.value.trim()
-    if (!name) return
+    if (!name) { this.#showNameError(); return }
+    this.#clearNameError()
 
-    const fragment = this.serviceRowTemplateTarget.content.cloneNode(true)
-    this.#fillRow(fragment.querySelector("[data-service-row]"), {
+    const service = {
       name, duration_minutes: this.serviceDurationTarget.value, price: this.servicePriceTarget.value
-    })
-    this.servicesListTarget.appendChild(fragment)
-    this.#clearDraft()
+    }
+
+    if (this.editingRow) {
+      this.#fillRow(this.editingRow, service)
+      this.#exitEdit()
+    } else {
+      const fragment = this.serviceRowTemplateTarget.content.cloneNode(true)
+      this.#fillRow(fragment.querySelector("[data-service-row]"), service)
+      this.servicesListTarget.appendChild(fragment)
+      this.#clearDraft()
+    }
+
     this.#updateServiceCount()
     this.#save()
   }
 
   editService(event) {
     const row = event.target.closest("[data-service-row]")
+    this.#enterEdit(row)
 
     this.serviceNameTarget.value = this.#rowField(row, "name")
     this.serviceDurationTarget.value = this.#rowField(row, "duration_minutes")
     this.servicePriceTarget.value = this.#rowField(row, "price")
-    row.remove()
-    this.#updateServiceCount()
-    this.#save()
+    this.serviceNameTarget.focus()
   }
 
   removeService(event) {
-    event.target.closest("[data-service-row]").remove()
+    const row = event.target.closest("[data-service-row]")
+    if (row === this.editingRow) this.#exitEdit()
+    row.remove()
     this.#updateServiceCount()
     this.#save()
   }
@@ -124,7 +140,7 @@ export default class extends Controller {
 
   #go(target) {
     const clamped = Math.max(0, Math.min(target, this.sectionTargets.length - 1))
-    const paint = () => { this.index = clamped; this.#render(); this.#save() }
+    const paint = () => { this.#exitEdit(); this.index = clamped; this.#render(); this.#save() }
     if (document.startViewTransition) document.startViewTransition(paint)
     else paint()
   }
@@ -308,6 +324,41 @@ export default class extends Controller {
     this.serviceNameTarget.value = ""
     this.serviceDurationTarget.value = ""
     this.servicePriceTarget.value = ""
+  }
+
+  #enterEdit(row) {
+    this.#exitEdit()
+    this.editingRow = row
+    row.dataset.editing = "true"
+    row.classList.remove("border-line")
+    row.classList.add("border-brand-600", "border-2")
+    this.cardLabelTarget.textContent = this.editingLabelValue
+    this.commitLabelTarget.textContent = this.saveServiceLabelValue
+  }
+
+  #exitEdit() {
+    if (!this.editingRow) return
+    delete this.editingRow.dataset.editing
+    this.editingRow.classList.remove("border-brand-600", "border-2")
+    this.editingRow.classList.add("border-line")
+    this.editingRow = null
+    this.cardLabelTarget.textContent = this.newServiceLabelValue
+    this.commitLabelTarget.textContent = this.addServiceLabelValue
+    this.#clearNameError()
+    this.#clearDraft()
+  }
+
+  #showNameError() {
+    this.serviceNameTarget.setAttribute("aria-invalid", "true")
+    this.serviceNameTarget.setAttribute("aria-describedby", this.serviceNameErrorTarget.id)
+    this.serviceNameErrorTarget.hidden = false
+    this.serviceNameTarget.focus()
+  }
+
+  #clearNameError() {
+    this.serviceNameTarget.removeAttribute("aria-invalid")
+    this.serviceNameTarget.removeAttribute("aria-describedby")
+    this.serviceNameErrorTarget.hidden = true
   }
 
   #updateServiceCount() {
