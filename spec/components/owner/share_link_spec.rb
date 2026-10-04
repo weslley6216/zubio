@@ -59,6 +59,7 @@ RSpec.describe Components::Owner::ShareLink, type: :component do
     document = Nokogiri::HTML5.fragment(bare)
 
     expect(document.text).not_to include("Seu link")
+    expect(document.text).not_to include("Mande esse endereço")
   end
 
   it "dresses the card in theme tokens" do

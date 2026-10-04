@@ -7,7 +7,7 @@ export default class extends Controller {
   static values = { text: String, copied: String }
 
   copy() {
-    navigator.clipboard?.writeText(this.textValue)?.then(() => this.#confirm())
+    navigator.clipboard?.writeText(this.textValue)?.then(() => this.#confirm()).catch(() => {})
   }
 
   #confirm() {
