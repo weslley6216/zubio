@@ -269,12 +269,31 @@ export default class extends Controller {
 
     const hours = Math.floor(value / 60)
     const rest = value % 60
-    return [ hours > 0 ? `${hours} h` : null, rest > 0 ? `${rest} min` : null ].filter(Boolean).join(" ")
+    return [ hours > 0 ? `${hours}h` : null, rest > 0 ? `${rest}min` : null ].filter(Boolean).join(" ")
   }
 
   #priceLabel(price) {
-    const text = price?.trim()
-    return text ? `R$ ${text}` : "Sob consulta"
+    const cents = this.#priceCents(price)
+    if (cents === null) return "Sob consulta"
+
+    const reais = Math.floor(cents / 100)
+    const fraction = String(cents % 100).padStart(2, "0")
+    const grouped = String(reais).replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+    return `R$ ${grouped},${fraction}`
+  }
+
+  #priceCents(price) {
+    const amount = String(price ?? "").replace(/^\s+|\s+$/g, "").replace(/^R\$\s*/, "")
+    if (amount === "") return null
+
+    const brazilian = /^(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d{1,2}))?$/
+    const dotDecimal = /^(\d+)\.(\d{1,2})$/
+    const match = amount.match(brazilian) || amount.match(dotDecimal)
+    if (!match) return null
+
+    const reais = match[1].replaceAll(".", "")
+    const fraction = (match[2] || "").padEnd(2, "0")
+    return parseInt(reais, 10) * 100 + parseInt(fraction, 10)
   }
 
   #rowField(row, attribute) {
