@@ -139,6 +139,42 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(response.body).not_to include("demo")
   end
 
+  it "shows the amount of a service whose price is visible" do
+    create(:service, tenant: tenant, name: "Corte feminino", price_cents: 9_000)
+
+    visit_showcase
+
+    expect(catalog_texts).to include("R$ 90,00")
+  end
+
+  it "hides the amount of a hidden-price service, showing sob consulta with the amount nowhere in the response" do
+    create(:service, :price_hidden, tenant: tenant, name: "Primeira sessão", price_cents: 9_000)
+
+    visit_showcase
+
+    expect(response.body).to include(Service::Price::UNPRICED_LABEL)
+    expect(response.body).not_to include("90,00")
+  end
+
+  it "renders sob consulta in the muted token that follows the light and dark themes" do
+    create(:service, :price_hidden, tenant: tenant, name: "Primeira sessão", price_cents: 9_000)
+
+    visit_showcase
+
+    expect(response.body).to include(Views::Client::Establishments::Show::UNPRICED_CLASS)
+  end
+
+  it "keeps the host's hidden price out of its response even when another establishment shows the same one" do
+    other_tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    create(:service, tenant: other_tenant, name: "Primeira sessão", price_cents: 9_000)
+    create(:service, :price_hidden, tenant: tenant, name: "Primeira sessão", price_cents: 9_000)
+
+    visit_showcase
+
+    expect(response.body).to include(Service::Price::UNPRICED_LABEL)
+    expect(response.body).not_to include("90,00")
+  end
+
   it "asks the database the same number of times for many services as for one" do
     create(:service, tenant: tenant, name: "Corte feminino")
     visit_showcase
