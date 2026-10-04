@@ -7,5 +7,9 @@ FactoryBot.define do
     sequence(:name) { |index| "Service #{index}" }
     duration_minutes { 45 }
     price_cents { 9_000 }
+
+    trait :price_hidden do
+      show_price { false }
+    end
   end
 end
