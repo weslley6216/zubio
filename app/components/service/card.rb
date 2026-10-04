@@ -13,7 +13,7 @@ class Components::Service::Card < Components::Base
     @description = description
   end
 
-  def view_template(&aside)
+  def view_template
     li(class: CARD_CLASS) do
       div(class: IDENTITY_CLASS) do
         div(class: NAME_ROW_CLASS) do
