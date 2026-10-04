@@ -53,6 +53,12 @@ class Service < ApplicationRecord
     self.price_cents = Price.parse(text)&.cents
   end
 
+  def public_price_cents
+    price_cents if show_price?
+  end
+
+  def price_hidden? = price_cents? && !show_price?
+
   private
 
   def unreadable_price? = @typed_price.present? && Price.parse(@typed_price).nil?

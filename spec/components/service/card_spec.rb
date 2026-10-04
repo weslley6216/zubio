@@ -11,15 +11,17 @@ RSpec.describe Components::Service::Card, type: :component do
     expect(html).to include("45min")
   end
 
-  it "renders a badge beside the name when one is given" do
-    badge = Components::Badge.new(text: "Desativado", tone: :muted)
+  it "renders every badge given beside the name" do
+    disabled = Components::Badge.new(text: "Desativado", tone: :muted)
+    hidden_price = Components::Badge.new(text: "Preço oculto", tone: :muted)
 
-    html = described_class.new(service: service, href: "/x", badge: badge).call
+    html = described_class.new(service: service, href: "/x", badges: [ disabled, hidden_price ]).call
 
     expect(html).to include("Desativado")
+    expect(html).to include("Preço oculto")
   end
 
-  it "renders no badge when none is given" do
+  it "renders no badge when the list is empty" do
     html = described_class.new(service: service, href: "/x").call
 
     expect(html).not_to include("Desativado")

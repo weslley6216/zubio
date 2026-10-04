@@ -13,6 +13,8 @@ class Views::Client::Establishments::Show < Views::Base
   EMPTY_BODY_CLASS = "text-sm text-ink-muted".freeze
   FOOTER_CLASS = "mx-auto w-full max-w-2xl px-6 pb-8".freeze
   OWNER_LINK_CLASS = "text-xs text-ink-subtle hover:text-ink-muted".freeze
+  PRICE_CLASS = "ml-auto flex-none text-sm font-bold tabular-nums text-ink".freeze
+  UNPRICED_CLASS = "ml-auto flex-none text-sm font-medium text-ink-muted".freeze
 
   def initialize(tenant:, branding:, services:)
     @tenant = tenant
@@ -44,9 +46,16 @@ class Views::Client::Establishments::Show < Views::Base
   def render_catalog
     ul(class: LIST_CLASS, data: { catalog: true }) do
       @services.each do |service|
-        render Components::Service::Card.new(service: service, href: new_client_service_booking_path(service))
+        render Components::Service::Card.new(service: service, href: new_client_service_booking_path(service)) do
+          render_price(service)
+        end
       end
     end
+  end
+
+  def render_price(service)
+    cents = service.public_price_cents
+    span(class: cents ? PRICE_CLASS : UNPRICED_CLASS) { ::Service::Price.label(cents) }
   end
 
   def render_empty_state

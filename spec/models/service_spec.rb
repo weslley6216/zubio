@@ -374,6 +374,48 @@ RSpec.describe Service, type: :model do
     end
   end
 
+  describe "#show_price" do
+    it "is on by default when the service is created" do
+      service = create(:service)
+
+      expect(service.show_price).to be(true)
+    end
+  end
+
+  describe "#public_price_cents" do
+    it "exposes the stored cents when the price is visible" do
+      service = build(:service, price_cents: 9_000, show_price: true)
+
+      expect(service.public_price_cents).to eq(9_000)
+    end
+
+    it "hides the stored cents when the price is not visible" do
+      service = build(:service, price_cents: 9_000, show_price: false)
+
+      expect(service.public_price_cents).to be_nil
+    end
+  end
+
+  describe "#price_hidden?" do
+    it "is true when a real price is withheld from the public" do
+      service = build(:service, price_cents: 9_000, show_price: false)
+
+      expect(service).to be_price_hidden
+    end
+
+    it "is false when the same price is shown" do
+      service = build(:service, price_cents: 9_000, show_price: true)
+
+      expect(service).not_to be_price_hidden
+    end
+
+    it "is false when there is no price to withhold" do
+      service = build(:service, price_cents: nil, show_price: false)
+
+      expect(service).not_to be_price_hidden
+    end
+  end
+
   describe "tenant isolation" do
     it "does not include services from another tenant" do
       tenant_a = create(:tenant)

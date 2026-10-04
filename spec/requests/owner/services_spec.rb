@@ -191,6 +191,36 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response.body).not_to include(Service::Price::UNPRICED_LABEL)
     end
 
+    it "shows the price of a hidden-price service with a badge saying the client does not see it" do
+      create(:service, :price_hidden, tenant: tenant, name: "Primeira sessão", price_cents: 9_000)
+      sign_in
+
+      get owner_services_path
+
+      expect(catalog_texts).to include("R$ 90,00")
+      expect(response.body).to include(Views::Owner::Services::Index::HIDDEN_PRICE_LABEL)
+    end
+
+    it "leaves a visible-price service without the hidden-price badge" do
+      create(:service, tenant: tenant, name: "Corte feminino", price_cents: 9_000)
+      sign_in
+
+      get owner_services_path
+
+      expect(catalog_texts).to include("R$ 90,00")
+      expect(response.body).not_to include(Views::Owner::Services::Index::HIDDEN_PRICE_LABEL)
+    end
+
+    it "leaves a service without a price free of the hidden-price badge even when hidden" do
+      create(:service, :price_hidden, tenant: tenant, name: "Avaliação", price_cents: nil)
+      sign_in
+
+      get owner_services_path
+
+      expect(response.body).to include("Avaliação")
+      expect(response.body).not_to include(Views::Owner::Services::Index::HIDDEN_PRICE_LABEL)
+    end
+
     it "asks the database the same number of times for many services as for one" do
       create(:service, tenant: tenant, name: "Corte feminino")
       sign_in
@@ -277,6 +307,16 @@ RSpec.describe "Owner services catalog", type: :request do
       get new_owner_service_path
 
       expect(response).to redirect_to(new_owner_session_path)
+    end
+
+    it "offers the show-price toggle checked on a new service" do
+      sign_in
+
+      get new_owner_service_path
+
+      toggle = field("show_price").at_css(%(input[type="checkbox"]))
+      expect(toggle["name"]).to eq("service[show_price]")
+      expect(toggle["checked"]).not_to be_nil
     end
   end
 
@@ -529,6 +569,26 @@ RSpec.describe "Owner services catalog", type: :request do
         expect(other_service.reload.name).to eq("Barba do Zé")
         expect(other_service.price_cents).to eq(5_000)
       end
+    end
+
+    it "turns the price off when the owner unchecks the toggle" do
+      service = create(:service, tenant: tenant, name: "Primeira sessão", price_cents: 9_000)
+      sign_in
+
+      patch owner_service_path(service), params: service_params(name: "Primeira sessão", show_price: "0")
+
+      expect(response).to redirect_to(owner_services_path)
+      ActsAsTenant.with_tenant(tenant) { expect(service.reload.show_price).to be(false) }
+    end
+
+    it "keeps the price on when the toggle comes back checked" do
+      service = create(:service, :price_hidden, tenant: tenant, name: "Primeira sessão", price_cents: 9_000)
+      sign_in
+
+      patch owner_service_path(service), params: service_params(name: "Primeira sessão", show_price: "1")
+
+      expect(response).to redirect_to(owner_services_path)
+      ActsAsTenant.with_tenant(tenant) { expect(service.reload.show_price).to be(true) }
     end
 
     it "sends an anonymous visitor to the login without changing the service" do
