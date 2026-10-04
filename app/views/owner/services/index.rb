@@ -2,6 +2,7 @@ class Views::Owner::Services::Index < Views::Base
   TITLE = "Serviços".freeze
   SUBTITLE = "O que seu estabelecimento oferece.".freeze
   DISABLED_LABEL = "Desativado".freeze
+  HIDDEN_PRICE_LABEL = "Preço oculto".freeze
   EMPTY_TITLE = "Nenhum serviço cadastrado".freeze
   EMPTY_BODY = "Cadastre o primeiro serviço que você oferece para montar seu catálogo.".freeze
   NEW_LABEL = "Novo serviço".freeze
@@ -70,11 +71,18 @@ class Views::Owner::Services::Index < Views::Base
     render Components::Service::Card.new(
       service: service,
       href: edit_owner_service_path(service),
-      badges: [ (Components::Badge.new(text: DISABLED_LABEL, tone: :muted) unless service.active?) ].compact,
+      badges: badges_for(service),
       description: service.description
     ) do
       span(class: PRICE_CLASS) { price(service) }
     end
+  end
+
+  def badges_for(service)
+    [
+      (Components::Badge.new(text: DISABLED_LABEL, tone: :muted) unless service.active?),
+      (Components::Badge.new(text: HIDDEN_PRICE_LABEL, tone: :muted) if service.price_hidden?)
+    ].compact
   end
 
   def price(service) = ::Service::Price.label(service.price_cents)

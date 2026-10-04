@@ -191,6 +191,36 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response.body).not_to include(Service::Price::UNPRICED_LABEL)
     end
 
+    it "shows the price of a hidden-price service with a badge saying the client does not see it" do
+      create(:service, :price_hidden, tenant: tenant, name: "Primeira sessão", price_cents: 9_000)
+      sign_in
+
+      get owner_services_path
+
+      expect(catalog_texts).to include("R$ 90,00")
+      expect(response.body).to include(Views::Owner::Services::Index::HIDDEN_PRICE_LABEL)
+    end
+
+    it "leaves a visible-price service without the hidden-price badge" do
+      create(:service, tenant: tenant, name: "Corte feminino", price_cents: 9_000)
+      sign_in
+
+      get owner_services_path
+
+      expect(catalog_texts).to include("R$ 90,00")
+      expect(response.body).not_to include(Views::Owner::Services::Index::HIDDEN_PRICE_LABEL)
+    end
+
+    it "leaves a service without a price free of the hidden-price badge even when hidden" do
+      create(:service, :price_hidden, tenant: tenant, name: "Avaliação", price_cents: nil)
+      sign_in
+
+      get owner_services_path
+
+      expect(response.body).to include("Avaliação")
+      expect(response.body).not_to include(Views::Owner::Services::Index::HIDDEN_PRICE_LABEL)
+    end
+
     it "asks the database the same number of times for many services as for one" do
       create(:service, tenant: tenant, name: "Corte feminino")
       sign_in
