@@ -18,7 +18,9 @@ class Branding < ApplicationRecord
   HEADER_LOGO_LIMIT = [ 96, 96 ].freeze
   LOGO_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
   LOGO_MAX_BYTES = 5.megabytes
+  LOGO_MAX_PIXELS = 4096
   INVALID_IMAGE_MESSAGE = "não é uma imagem válida".freeze
+  OVERSIZED_IMAGE_MESSAGE = "excede as dimensões máximas de #{LOGO_MAX_PIXELS}×#{LOGO_MAX_PIXELS} pixels".freeze
   CONTRAST_MESSAGE = "não tem contraste suficiente com o texto que vai sobre ela (mínimo 4.5:1)".freeze
   CUSTOM_COLOR_CHOICE = "custom".freeze
 
@@ -114,18 +116,22 @@ class Branding < ApplicationRecord
     within_size = logo.blob.byte_size <= LOGO_MAX_BYTES
     errors.add(:logo, "tipo de arquivo não suportado (use PNG, JPEG ou WEBP)") unless supported_type
     errors.add(:logo, "excede o tamanho máximo de 5MB") unless within_size
-    errors.add(:logo, INVALID_IMAGE_MESSAGE) if supported_type && within_size && !logo_upload_decodes?
+    validate_logo_image if supported_type && within_size
   end
 
-  def logo_upload_decodes?
+  def validate_logo_image
     change = attachment_changes["logo"]
-    return true unless change
+    return unless change
 
     bytes = change.attachable.is_a?(String) ? logo.blob.download : logo_upload_bytes(change.attachable)
-    Vips::Image.new_from_buffer(bytes, "", access: :sequential, fail_on: :error).avg
-    true
+    image = Vips::Image.new_from_buffer(bytes, "", access: :sequential, fail_on: :error)
+    if image.width > LOGO_MAX_PIXELS || image.height > LOGO_MAX_PIXELS
+      errors.add(:logo, OVERSIZED_IMAGE_MESSAGE)
+    else
+      image.avg
+    end
   rescue Vips::Error
-    false
+    errors.add(:logo, INVALID_IMAGE_MESSAGE)
   end
 
   def logo_upload_bytes(attachable)
