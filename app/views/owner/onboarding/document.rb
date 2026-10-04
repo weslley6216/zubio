@@ -21,6 +21,8 @@ class Views::Owner::Onboarding::Document < Views::Base
   SERVICES_SUBTITLE = "Adicione aqui os seus serviços".freeze
   NEW_SERVICE_LABEL = "Novo serviço".freeze
   ADD_SERVICE_LABEL = "Adicionar à lista".freeze
+  EDITING_LABEL = "Editando".freeze
+  SAVE_SERVICE_LABEL = "Salvar alterações".freeze
   SERVICES_HELP = "Sem preço fixo? Deixe em branco: o cliente vê \"sob consulta\".".freeze
   EDIT_LABEL = "Editar".freeze
   REMOVE_LABEL = "Remover".freeze
@@ -104,6 +106,10 @@ class Views::Owner::Onboarding::Document < Views::Base
       controller: "onboarding",
       onboarding_tenant_value: @tenant.id,
       onboarding_open_value: @open_section,
+      onboarding_new_service_label_value: NEW_SERVICE_LABEL,
+      onboarding_editing_label_value: EDITING_LABEL,
+      onboarding_add_service_label_value: ADD_SERVICE_LABEL,
+      onboarding_save_service_label_value: SAVE_SERVICE_LABEL,
       preview_brand: @branding.brand_600,
       preview_secondary: @branding.brand_secondary_600.presence || "none"
     }
@@ -150,7 +156,7 @@ class Views::Owner::Onboarding::Document < Views::Base
       div(class: SERVICE_TEXT_CLASS) do
         span(class: SERVICE_NAME_CLASS, data: { service_name: true }) { service.name }
         span(class: SERVICE_META_CLASS, data: { service_meta: true }) { service_meta(service) }
-        render Components::Form::Errors.new(messages: service.errors.full_messages)
+        div(data: { service_errors: true }) { render Components::Form::Errors.new(messages: service.errors.full_messages) }
       end
       render_service_action(EDIT_LABEL, "onboarding#editService") { render_edit_icon }
       render_service_action(REMOVE_LABEL, "onboarding#removeService") { render_remove_icon }
@@ -189,11 +195,11 @@ class Views::Owner::Onboarding::Document < Views::Base
 
   def render_new_service_card
     div(class: NEW_SERVICE_CARD_CLASS) do
-      span(class: NEW_SERVICE_LABEL_CLASS) { NEW_SERVICE_LABEL }
+      span(class: NEW_SERVICE_LABEL_CLASS, data: { onboarding_target: "cardLabel" }) { NEW_SERVICE_LABEL }
       render Components::Owner::Service::Fields.new(service: Service.new, onboarding: true)
       button(type: "button", class: ADD_SERVICE_BUTTON_CLASS, data: { action: "onboarding#addService" }) do
         render_add_service_icon
-        plain ADD_SERVICE_LABEL
+        span(data: { onboarding_target: "commitLabel" }) { ADD_SERVICE_LABEL }
       end
       p(class: SERVICES_HELP_CLASS) { SERVICES_HELP }
     end

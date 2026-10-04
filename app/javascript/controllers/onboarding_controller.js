@@ -4,11 +4,17 @@ export default class extends Controller {
   static targets = [
     "section", "back", "servicesList", "serviceRowTemplate", "count",
     "dayCount", "breakToggle", "break", "breakSummary",
-    "serviceName", "serviceDuration", "servicePrice"
+    "serviceName", "serviceDuration", "servicePrice",
+    "cardLabel", "commitLabel", "serviceNameError"
   ]
-  static values = { tenant: String, open: String }
+  static values = {
+    tenant: String, open: String,
+    newServiceLabel: String, editingLabel: String,
+    addServiceLabel: String, saveServiceLabel: String
+  }
 
   connect() {
+    this.editingRow = null
     this.draft = this.#readDraft()
     if (!this.#servicesPrefilled()) this.#restoreServices()
     this.#restoreFields()
@@ -63,31 +69,41 @@ export default class extends Controller {
 
   addService() {
     const name = this.serviceNameTarget.value.trim()
-    if (!name) return
+    if (!name) { this.#showNameError(); return }
+    this.#clearNameError()
 
-    const fragment = this.serviceRowTemplateTarget.content.cloneNode(true)
-    this.#fillRow(fragment.querySelector("[data-service-row]"), {
+    const service = {
       name, duration_minutes: this.serviceDurationTarget.value, price: this.servicePriceTarget.value
-    })
-    this.servicesListTarget.appendChild(fragment)
-    this.#clearDraft()
+    }
+
+    if (this.editingRow) {
+      this.#fillRow(this.editingRow, service)
+      this.#exitEdit()
+    } else {
+      const fragment = this.serviceRowTemplateTarget.content.cloneNode(true)
+      this.#fillRow(fragment.querySelector("[data-service-row]"), service)
+      this.servicesListTarget.appendChild(fragment)
+      this.#clearDraft()
+    }
+
     this.#updateServiceCount()
     this.#save()
   }
 
   editService(event) {
     const row = event.target.closest("[data-service-row]")
+    this.#enterEdit(row)
 
     this.serviceNameTarget.value = this.#rowField(row, "name")
     this.serviceDurationTarget.value = this.#rowField(row, "duration_minutes")
     this.servicePriceTarget.value = this.#rowField(row, "price")
-    row.remove()
-    this.#updateServiceCount()
-    this.#save()
+    this.serviceNameTarget.focus()
   }
 
   removeService(event) {
-    event.target.closest("[data-service-row]").remove()
+    const row = event.target.closest("[data-service-row]")
+    if (row === this.editingRow) this.#exitEdit()
+    row.remove()
     this.#updateServiceCount()
     this.#save()
   }
@@ -124,7 +140,7 @@ export default class extends Controller {
 
   #go(target) {
     const clamped = Math.max(0, Math.min(target, this.sectionTargets.length - 1))
-    const paint = () => { this.index = clamped; this.#render(); this.#save() }
+    const paint = () => { this.#exitEdit(); this.index = clamped; this.#render(); this.#save() }
     if (document.startViewTransition) document.startViewTransition(paint)
     else paint()
   }
@@ -251,6 +267,7 @@ export default class extends Controller {
   #fillRow(row, service) {
     row.querySelector("[data-service-name]").textContent = service.name
     row.querySelector("[data-service-meta]").textContent = this.#metaLabel(service)
+    row.querySelector("[data-service-errors]").replaceChildren()
     this.#setRowField(row, "name", service.name)
     this.#setRowField(row, "duration_minutes", service.duration_minutes)
     this.#setRowField(row, "price", service.price)
@@ -269,12 +286,31 @@ export default class extends Controller {
 
     const hours = Math.floor(value / 60)
     const rest = value % 60
-    return [ hours > 0 ? `${hours} h` : null, rest > 0 ? `${rest} min` : null ].filter(Boolean).join(" ")
+    return [ hours > 0 ? `${hours}h` : null, rest > 0 ? `${rest}min` : null ].filter(Boolean).join(" ")
   }
 
   #priceLabel(price) {
-    const text = price?.trim()
-    return text ? `R$ ${text}` : "Sob consulta"
+    const cents = this.#priceCents(price)
+    if (cents === null) return "Sob consulta"
+
+    const reais = Math.floor(cents / 100)
+    const fraction = String(cents % 100).padStart(2, "0")
+    const grouped = String(reais).replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+    return `R$ ${grouped},${fraction}`
+  }
+
+  #priceCents(price) {
+    const amount = String(price ?? "").replace(/^\s+|\s+$/g, "").replace(/^R\$\s*/, "")
+    if (amount === "") return null
+
+    const brazilian = /^(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d{1,2}))?$/
+    const dotDecimal = /^(\d+)\.(\d{1,2})$/
+    const match = amount.match(brazilian) || amount.match(dotDecimal)
+    if (!match) return null
+
+    const reais = match[1].replaceAll(".", "")
+    const fraction = (match[2] || "").padEnd(2, "0")
+    return parseInt(reais, 10) * 100 + parseInt(fraction, 10)
   }
 
   #rowField(row, attribute) {
@@ -289,6 +325,41 @@ export default class extends Controller {
     this.serviceNameTarget.value = ""
     this.serviceDurationTarget.value = ""
     this.servicePriceTarget.value = ""
+  }
+
+  #enterEdit(row) {
+    this.#exitEdit()
+    this.editingRow = row
+    row.dataset.editing = "true"
+    row.classList.remove("border-line")
+    row.classList.add("border-brand-600", "border-2")
+    this.cardLabelTarget.textContent = this.editingLabelValue
+    this.commitLabelTarget.textContent = this.saveServiceLabelValue
+  }
+
+  #exitEdit() {
+    this.#clearNameError()
+    if (!this.editingRow) return
+    delete this.editingRow.dataset.editing
+    this.editingRow.classList.remove("border-brand-600", "border-2")
+    this.editingRow.classList.add("border-line")
+    this.editingRow = null
+    this.cardLabelTarget.textContent = this.newServiceLabelValue
+    this.commitLabelTarget.textContent = this.addServiceLabelValue
+    this.#clearDraft()
+  }
+
+  #showNameError() {
+    this.serviceNameTarget.setAttribute("aria-invalid", "true")
+    this.serviceNameTarget.setAttribute("aria-describedby", this.serviceNameErrorTarget.id)
+    this.serviceNameErrorTarget.hidden = false
+    this.serviceNameTarget.focus()
+  }
+
+  #clearNameError() {
+    this.serviceNameTarget.removeAttribute("aria-invalid")
+    this.serviceNameTarget.removeAttribute("aria-describedby")
+    this.serviceNameErrorTarget.hidden = true
   }
 
   #updateServiceCount() {

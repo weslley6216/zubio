@@ -47,6 +47,48 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     JS
   end
 
+  def reach_services
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    find("[data-swatch-row] [data-swatch]", match: :first).click
+    click_on "Continuar"
+    fill_in "Nome da marca", with: "Barbearia do Zé"
+    click_on "Continuar"
+    click_on "Pular por enquanto"
+  end
+
+  def add_service(name, minutes, price)
+    fill_in "Nome", with: name
+    fill_in "Duração (minutos)", with: minutes
+    fill_in "Preço (R$, opcional)", with: price
+    click_on "Adicionar à lista"
+  end
+
+  def reach_services_with_two
+    reach_services
+    add_service("Corte", "30", "40,00")
+    add_service("Corte + barba", "60", "80,00")
+  end
+
+  def submit_with_valid_hours(continue_label)
+    click_on continue_label
+    find("label", text: WorkingHour::WEEKDAY_NAMES[2].first(3), exact_text: true).click
+    fill_time("working_hours_opens_at", "09:00")
+    fill_time("working_hours_closes_at", "18:00")
+    click_on "Ver minha página"
+    expect(page).to have_content(Owner::OnboardingController::REFUSED)
+  end
+
+  def service_rows = all("[data-service-row]", visible: :all)
+
+  def service_names = all("[data-service-name]", visible: :all).map { |name| name.text(:all) }
+
+  def service_metas = all("[data-service-meta]", visible: :all).map { |meta| meta.text(:all) }
+
+  def edit_button = "button[aria-label='#{Views::Owner::Onboarding::Document::EDIT_LABEL}']"
+
+  def remove_button = "button[aria-label='#{Views::Owner::Onboarding::Document::REMOVE_LABEL}']"
+
   def reach_logo_question
     sign_up_and_reach_onboarding
     click_on "Começar"
@@ -178,7 +220,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     click_on "Adicionar à lista"
 
     expect(page).to have_css("[data-service-row]", text: "Corte na máquina")
-    expect(page).to have_content("30 min · R$ 45,00")
+    expect(page).to have_content("30min · R$ 45,00")
     expect(find_field("Nome", with: "")).to be_present
   end
 
@@ -574,5 +616,158 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
 
     expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
     expect(computed_bg(colors_continue)).to eq("rgb(44, 108, 176)")
+  end
+
+  it "renders the same service label on the client and after a server refusal (AC5)" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    find("[data-swatch-row] [data-swatch]", match: :first).click
+    click_on "Continuar"
+    fill_in "Nome da marca", with: "Barbearia do Zé"
+    click_on "Continuar"
+    click_on "Pular por enquanto"
+    fill_in "Nome", with: "Corte + barba"
+    fill_in "Duração (minutos)", with: "60"
+    fill_in "Preço (R$, opcional)", with: "80"
+    click_on "Adicionar à lista"
+
+    client_label = find("[data-service-meta]", visible: :all).text(:all)
+
+    click_on "Continuar com 1 serviço"
+    %w[2].each { |weekday| find("label", text: WorkingHour::WEEKDAY_NAMES[weekday.to_i].first(3), exact_text: true).click }
+    fill_time("working_hours_opens_at", "18:00")
+    fill_time("working_hours_closes_at", "09:00")
+    click_on "Ver minha página"
+
+    expect(page).to have_content(Owner::OnboardingController::REFUSED)
+    server_label = find("[data-service-meta]", visible: :all).text(:all)
+
+    expect(client_label).to eq("1h · R$ 80,00")
+    expect(server_label).to eq(client_label)
+  end
+
+  it "keeps the service in the list, marked for editing, with its values in the card (AC1)" do
+    reach_services_with_two
+
+    within(service_rows.last) { find(edit_button).click }
+
+    expect(page).to have_css("[data-service-row][data-editing='true']", text: "Corte + barba")
+    expect(service_rows.size).to eq(2)
+    expect(find_field("Nome").value).to eq("Corte + barba")
+    expect(find_field("Duração (minutos)").value).to eq("60")
+  end
+
+  it "keeps the edited service in its place with the new values (AC2)" do
+    reach_services_with_two
+
+    within(service_rows.first) { find(edit_button).click }
+    fill_in "Preço (R$, opcional)", with: "55,00"
+    click_on "Salvar alterações"
+
+    expect(service_names).to eq([ "Corte", "Corte + barba" ])
+    expect(service_metas).to eq([ "30min · R$ 55,00", "1h · R$ 80,00" ])
+  end
+
+  it "discards an unconfirmed edit when another service is picked for editing" do
+    reach_services_with_two
+
+    within(service_rows.first) { find(edit_button).click }
+    fill_in "Preço (R$, opcional)", with: "55,00"
+    within(service_rows.last) { find(edit_button).click }
+    fill_in "Preço (R$, opcional)", with: "95,00"
+    click_on "Salvar alterações"
+
+    expect(service_metas).to eq([ "30min · R$ 40,00", "1h · R$ 95,00" ])
+    expect(page).to have_no_css("[data-service-row][data-editing]", visible: :all)
+  end
+
+  it "leaves editing when the service being edited is removed" do
+    reach_services_with_two
+
+    within(service_rows.first) { find(edit_button).click }
+    within(service_rows.first) { find(remove_button).click }
+    add_service("Barba", "20", "30,00")
+
+    expect(service_names).to eq([ "Corte + barba", "Barba" ])
+    expect(page).to have_css("[data-onboarding-target='commitLabel']", text: Views::Owner::Onboarding::Document::ADD_SERVICE_LABEL)
+  end
+
+  it "labels every price shape the same on the client and after a server refusal (AC5)" do
+    prices = { "80" => "R$ 80,00", "80,5" => "R$ 80,50", "1.200" => "R$ 1.200,00", "" => Service::Price::UNPRICED_LABEL, "abc" => Service::Price::UNPRICED_LABEL }
+    reach_services
+    prices.keys.each_with_index { |price, index| add_service("Service #{index}", "30", price) }
+    client_labels = service_metas
+
+    submit_with_valid_hours("Continuar com 5 serviços")
+
+    expect(client_labels).to eq(prices.values.map { |label| "30min · #{label}" })
+    expect(service_metas).to eq(client_labels)
+  end
+
+  it "drops the server's error from a refused service once it is edited and saved" do
+    reach_services
+    add_service("Corte", "30", "abc")
+    submit_with_valid_hours("Continuar com 1 serviço")
+    expect(service_rows.first).to have_text(Service::PRICE_UNREADABLE_MESSAGE)
+
+    within(service_rows.first) { find(edit_button).click }
+    fill_in "Preço (R$, opcional)", with: "80,00"
+    click_on "Salvar alterações"
+
+    expect(service_rows.first).to have_text("30min · R$ 80,00")
+    expect(service_rows.first).to have_no_text(Service::PRICE_UNREADABLE_MESSAGE)
+  end
+
+  it "clears the missing-name warning when a service is picked for editing" do
+    reach_services
+    add_service("Corte", "30", "40,00")
+    click_on "Adicionar à lista"
+    expect(page).to have_content(Service::NAME_REQUIRED_MESSAGE)
+
+    within(service_rows.first) { find(edit_button).click }
+
+    expect(find_field("Nome")["aria-invalid"]).to be_nil
+    expect(page).to have_no_content(Service::NAME_REQUIRED_MESSAGE)
+  end
+
+  it "clears the missing-name warning when leaving the services step" do
+    reach_services
+    click_on "Adicionar à lista"
+    expect(page).to have_content(Service::NAME_REQUIRED_MESSAGE)
+
+    find("[data-onboarding-target='back']").click
+
+    expect(page).to have_css("[data-onboarding-section='logo']:not([hidden])")
+    expect(find("#service_name", visible: :all)["aria-invalid"]).to be_nil
+    expect(page.evaluate_script("document.getElementById('service_name-error').hidden")).to be(true)
+  end
+
+  it "keeps the service with its previous values when advancing mid-edit (AC3)" do
+    reach_services_with_two
+
+    within(service_rows.last) { find(edit_button).click }
+    fill_in "Preço (R$, opcional)", with: "95,00"
+    find("[data-onboarding-target='back']").click
+
+    expect(page).to have_css("[data-onboarding-section='logo']:not([hidden])")
+    expect(service_rows.size).to eq(2)
+    expect(find("[data-service-row]", text: "Corte + barba", visible: :all).text(:all)).to include("1h · R$ 80,00")
+    expect(page).to have_no_css("[data-service-row][data-editing='true']", visible: :all)
+  end
+
+  it "flags the name field as required when adding without a name (AC4)" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    find("[data-swatch-row] [data-swatch]", match: :first).click
+    click_on "Continuar"
+    fill_in "Nome da marca", with: "Barbearia do Zé"
+    click_on "Continuar"
+    click_on "Pular por enquanto"
+
+    click_on "Adicionar à lista"
+
+    expect(find_field("Nome")["aria-invalid"]).to eq("true")
+    expect(page).to have_content(Service::NAME_REQUIRED_MESSAGE)
+    expect(service_rows).to be_empty
   end
 end
