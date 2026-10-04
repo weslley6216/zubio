@@ -6,6 +6,7 @@ class Views::Client::Establishments::Show < Views::Base
   BAR_CLASS = "bg-brand-600 px-6 pb-8 pt-6 text-on-brand".freeze
   BAR_INNER_CLASS = "mx-auto flex w-full max-w-2xl items-center gap-3".freeze
   NAME_CLASS = "text-2xl font-extrabold tracking-tight".freeze
+  LIST_CLASS = "grid gap-3".freeze
   MAIN_CLASS = "mx-auto grid w-full max-w-2xl gap-3 px-6 py-8".freeze
   EMPTY_CLASS = "grid gap-2 rounded-xl border border-line bg-surface p-6".freeze
   EMPTY_TITLE_CLASS = "text-lg font-bold text-ink".freeze
@@ -41,7 +42,7 @@ class Views::Client::Establishments::Show < Views::Base
   end
 
   def render_catalog
-    ul(class: "grid gap-3", data: { catalog: true }) do
+    ul(class: LIST_CLASS, data: { catalog: true }) do
       @services.each do |service|
         render Components::Service::Card.new(service: service, href: new_client_service_booking_path(service))
       end
