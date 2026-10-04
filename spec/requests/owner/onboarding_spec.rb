@@ -433,6 +433,24 @@ RSpec.describe "Owner onboarding", type: :request do
       expect(tenant.reload.onboarding_completed?).to be(false)
     end
 
+    it "refuses a logo over the pixel ceiling by signed id and reopens the logo section" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in(tenant)
+      edge = Branding::LOGO_MAX_PIXELS + 1
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new(Vips::Image.black(edge, edge).pngsave_buffer),
+        filename: "huge.png",
+        content_type: "image/png"
+      )
+
+      post owner_onboarding_path, params: answers.merge(branding: { brand_600: "#2F6FED", logo: blob.signed_id })
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include(%(data-onboarding-open-value="logo"))
+      expect(tenant.reload.onboarding_completed?).to be(false)
+      ActsAsTenant.with_tenant(tenant) { expect(Service.count).to eq(0) }
+    end
+
     it "completes onboarding with a direct-upload signed id pointing to a real PNG" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       sign_in(tenant)

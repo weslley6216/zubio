@@ -165,6 +165,76 @@ RSpec.describe Branding, type: :model do
 
       expect(branding).to be_valid
     end
+
+    it "is invalid, with the oversized-dimensions message, when the logo exceeds the maximum pixel size" do
+      branding = build(:branding)
+      branding.logo.attach(
+        io: StringIO.new(Vips::Image.black(20000, 20000).pngsave_buffer),
+        filename: "huge.png",
+        content_type: "image/png"
+      )
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:logo]).to eq([ Branding::OVERSIZED_IMAGE_MESSAGE ])
+    end
+
+    it "is invalid when only the width exceeds the maximum pixel size" do
+      branding = build(:branding)
+      branding.logo.attach(
+        io: StringIO.new(Vips::Image.black(Branding::LOGO_MAX_PIXELS + 1, 1).pngsave_buffer),
+        filename: "wide.png",
+        content_type: "image/png"
+      )
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:logo]).to eq([ Branding::OVERSIZED_IMAGE_MESSAGE ])
+    end
+
+    it "is invalid when only the height exceeds the maximum pixel size" do
+      branding = build(:branding)
+      branding.logo.attach(
+        io: StringIO.new(Vips::Image.black(1, Branding::LOGO_MAX_PIXELS + 1).pngsave_buffer),
+        filename: "tall.png",
+        content_type: "image/png"
+      )
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:logo]).to eq([ Branding::OVERSIZED_IMAGE_MESSAGE ])
+    end
+
+    it "does not decode past the header when the logo is over the pixel ceiling" do
+      branding = build(:branding, :with_logo)
+      image = Vips::Image.black(1, 1)
+      allow(image).to receive(:width).and_return(20000)
+      allow(image).to receive(:height).and_return(20000)
+      allow(Vips::Image).to receive(:new_from_buffer).and_return(image)
+      expect(image).not_to receive(:avg)
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:logo]).to eq([ Branding::OVERSIZED_IMAGE_MESSAGE ])
+    end
+
+    it "decodes a logo at the pixel ceiling to confirm it is a real image" do
+      branding = build(:branding, :with_logo)
+      image = Vips::Image.black(1, 1)
+      allow(image).to receive(:width).and_return(4096)
+      allow(image).to receive(:height).and_return(4096)
+      allow(Vips::Image).to receive(:new_from_buffer).and_return(image)
+      expect(image).to receive(:avg).and_call_original
+
+      expect(branding).to be_valid
+    end
+
+    it "accepts a logo at the maximum pixel size" do
+      branding = build(:branding)
+      branding.logo.attach(
+        io: StringIO.new(Vips::Image.black(4096, 4096).pngsave_buffer),
+        filename: "edge.png",
+        content_type: "image/png"
+      )
+
+      expect(branding).to be_valid
+    end
   end
 
   describe ".platform_default" do
