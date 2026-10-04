@@ -178,6 +178,30 @@ RSpec.describe Branding, type: :model do
       expect(branding.errors[:logo]).to eq([ Branding::OVERSIZED_IMAGE_MESSAGE ])
     end
 
+    it "is invalid when only the width exceeds the maximum pixel size" do
+      branding = build(:branding)
+      branding.logo.attach(
+        io: StringIO.new(Vips::Image.black(Branding::LOGO_MAX_PIXELS + 1, 1).pngsave_buffer),
+        filename: "wide.png",
+        content_type: "image/png"
+      )
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:logo]).to eq([ Branding::OVERSIZED_IMAGE_MESSAGE ])
+    end
+
+    it "is invalid when only the height exceeds the maximum pixel size" do
+      branding = build(:branding)
+      branding.logo.attach(
+        io: StringIO.new(Vips::Image.black(1, Branding::LOGO_MAX_PIXELS + 1).pngsave_buffer),
+        filename: "tall.png",
+        content_type: "image/png"
+      )
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:logo]).to eq([ Branding::OVERSIZED_IMAGE_MESSAGE ])
+    end
+
     it "does not decode past the header when the logo is over the pixel ceiling" do
       branding = build(:branding, :with_logo)
       image = Vips::Image.black(1, 1)
