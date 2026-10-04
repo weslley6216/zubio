@@ -267,6 +267,7 @@ export default class extends Controller {
   #fillRow(row, service) {
     row.querySelector("[data-service-name]").textContent = service.name
     row.querySelector("[data-service-meta]").textContent = this.#metaLabel(service)
+    row.querySelector("[data-service-errors]").replaceChildren()
     this.#setRowField(row, "name", service.name)
     this.#setRowField(row, "duration_minutes", service.duration_minutes)
     this.#setRowField(row, "price", service.price)
@@ -337,6 +338,7 @@ export default class extends Controller {
   }
 
   #exitEdit() {
+    this.#clearNameError()
     if (!this.editingRow) return
     delete this.editingRow.dataset.editing
     this.editingRow.classList.remove("border-brand-600", "border-2")
@@ -344,7 +346,6 @@ export default class extends Controller {
     this.editingRow = null
     this.cardLabelTarget.textContent = this.newServiceLabelValue
     this.commitLabelTarget.textContent = this.addServiceLabelValue
-    this.#clearNameError()
     this.#clearDraft()
   }
 

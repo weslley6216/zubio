@@ -19,6 +19,8 @@ RSpec.describe "Owner services catalog", type: :request do
 
   def control(name) = field(name).at_css("input, textarea")
 
+  def catalog_texts = Nokogiri::HTML5(response.body).css("[data-catalog] span").map(&:text)
+
   def serve_error_pages_as_in_production
     allow(Rails.application).to receive(:env_config).and_wrap_original do |env_config|
       env_config.call.merge("action_dispatch.show_detailed_exceptions" => false)
@@ -44,11 +46,9 @@ RSpec.describe "Owner services catalog", type: :request do
       get owner_services_path
 
       expect(response.body).to include("Corte feminino")
-      expect(response.body).to include("45min")
-      expect(response.body).to include("R$ 90,00")
+      expect(catalog_texts).to include("45min", "R$ 90,00")
       expect(response.body).to include("Coloração completa")
-      expect(response.body).to include("2h")
-      expect(response.body).to include("R$ 250,00")
+      expect(catalog_texts).to include("2h", "R$ 250,00")
     end
 
     it "renders a sixty-minute service as 1h and its price in full" do
@@ -57,8 +57,7 @@ RSpec.describe "Owner services catalog", type: :request do
 
       get owner_services_path
 
-      expect(response.body).to include("1h")
-      expect(response.body).to include("R$ 80,00")
+      expect(catalog_texts).to include("1h", "R$ 80,00")
     end
 
     it "shows the description of a service that has one" do
