@@ -5,7 +5,7 @@ class Client::EstablishmentsController < Client::BaseController
     render Views::Client::Establishments::Show.new(
       tenant: tenant,
       branding: tenant.branding_or_default,
-      services: Service.active.ordered
+      services: Service.active.ordered.to_a
     )
   end
 end
