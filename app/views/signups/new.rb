@@ -10,16 +10,20 @@ class Views::Signups::New < Views::Base
 
   def view_template
     render Views::Layouts::Application.new(title: "Criar conta · Zubio", branding: @branding) do
-      render Components::Platform::Header.new
-      render Components::Panel.new(title: "Criar sua conta") do
-        form_with(url: signup_path, method: :post, class: "space-y-4", data: { turbo: false }) do |form|
-          render_owner_name_field(form)
-          render_email_field(form)
-          render_password_field(form)
-          form.submit "Criar conta", class: SUBMIT
+      div(class: "flex min-h-dvh flex-col") do
+        render Components::Platform::Header.new
+        div(class: "flex-grow") do
+          render Components::Panel.new(title: "Criar sua conta") do
+            form_with(url: signup_path, method: :post, class: "space-y-4", data: { turbo: false }) do |form|
+              render_owner_name_field(form)
+              render_email_field(form)
+              render_password_field(form)
+              form.submit "Criar conta", class: SUBMIT
+            end
+          end
         end
+        render Components::Platform::Footer.new
       end
-      render Components::Platform::Footer.new
     end
   end
 
