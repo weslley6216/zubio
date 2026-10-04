@@ -340,7 +340,7 @@ RSpec.describe "Owner onboarding", type: :request do
       )
 
       expect(response.body).to include("Corte na máquina")
-      expect(response.body).to include("30 min")
+      expect(response.body).to include("30min")
       expect(response.body).to include(Service::Price.label(4_500))
       expect(response.body).to include(Views::Owner::Onboarding::Document::NEW_SERVICE_LABEL)
       expect(response.body).not_to include("Massagem")
