@@ -178,7 +178,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     click_on "Adicionar à lista"
 
     expect(page).to have_css("[data-service-row]", text: "Corte na máquina")
-    expect(page).to have_content("30 min · R$ 45,00")
+    expect(page).to have_content("30min · R$ 45,00")
     expect(find_field("Nome", with: "")).to be_present
   end
 
@@ -574,5 +574,33 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
 
     expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
     expect(computed_bg(colors_continue)).to eq("rgb(44, 108, 176)")
+  end
+
+  it "renders the same service label on the client and after a server refusal (AC5)" do
+    sign_up_and_reach_onboarding
+    click_on "Começar"
+    find("[data-swatch-row] [data-swatch]", match: :first).click
+    click_on "Continuar"
+    fill_in "Nome da marca", with: "Barbearia do Zé"
+    click_on "Continuar"
+    click_on "Pular por enquanto"
+    fill_in "Nome", with: "Corte + barba"
+    fill_in "Duração (minutos)", with: "60"
+    fill_in "Preço (R$, opcional)", with: "80"
+    click_on "Adicionar à lista"
+
+    client_label = find("[data-service-meta]", visible: :all).text(:all)
+
+    click_on "Continuar com 1 serviço"
+    %w[2].each { |weekday| find("label", text: WorkingHour::WEEKDAY_NAMES[weekday.to_i].first(3), exact_text: true).click }
+    fill_time("working_hours_opens_at", "18:00")
+    fill_time("working_hours_closes_at", "09:00")
+    click_on "Ver minha página"
+
+    expect(page).to have_content(Owner::OnboardingController::REFUSED)
+    server_label = find("[data-service-meta]", visible: :all).text(:all)
+
+    expect(client_label).to eq("1h · R$ 80,00")
+    expect(server_label).to eq(client_label)
   end
 end
