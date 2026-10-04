@@ -721,4 +721,17 @@ RSpec.describe Tenant, type: :model do
       expect(tenant_a.manifest_identity[:id]).not_to eq(tenant_b.manifest_identity[:id])
     end
   end
+
+  describe ".platform_host?" do
+    it "recognizes the platform apex and its subdomains" do
+      expect(Tenant.platform_host?("zubio.com.br")).to be(true)
+      expect(Tenant.platform_host?("estudio-aurora.zubio.com.br")).to be(true)
+      expect(Tenant.platform_host?("www.zubio.com.br")).to be(true)
+    end
+
+    it "does not mistake a lookalike or custom domain for a platform host" do
+      expect(Tenant.platform_host?("barbeariadoze.com.br")).to be(false)
+      expect(Tenant.platform_host?("evilzubio.com.br")).to be(false)
+    end
+  end
 end

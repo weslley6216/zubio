@@ -13,6 +13,7 @@ class Tenant < ApplicationRecord
 
   RESERVED = %w[www api admin app assets cdn mail status help blog].freeze
   PLATFORM_HOST = Zubio::PLATFORM_HOST
+  WWW_SUBDOMAIN = "www".freeze
   SUBDOMAIN_LENGTH = (3..63).freeze
   SUBDOMAIN_STATUS_PRIORITY = %i[blank too_short too_long invalid exclusion taken].freeze
   DOMAIN_FORMAT = /\A(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}\z/i
@@ -66,6 +67,18 @@ class Tenant < ApplicationRecord
   def self.clamp_subdomain(subdomain) = subdomain.to_s.first(SUBDOMAIN_LENGTH.max + 1)
 
   def self.host_for(subdomain) = "#{subdomain}.#{PLATFORM_HOST}"
+
+  def self.platform_host?(host)
+    host == PLATFORM_HOST || host.end_with?(".#{PLATFORM_HOST}")
+  end
+
+  def self.platform_root_host?(request)
+    platform_host?(request.host) && request.subdomains.empty?
+  end
+
+  def self.www_host?(request)
+    platform_host?(request.host) && request.subdomains == [ WWW_SUBDOMAIN ]
+  end
 
   def canonical_host
     custom_domain_verified_at? ? custom_domain : self.class.host_for(subdomain)

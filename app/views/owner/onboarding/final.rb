@@ -137,5 +137,5 @@ class Views::Owner::Onboarding::Final < Views::Base
 
   def pluralized_services = "#{@services.size} #{@services.size == 1 ? 'serviço' : 'serviços'}"
 
-  def services_durations = @services.map { |service| Service::Duration.label(service.duration_minutes) }.join(" · ")
+  def services_durations = @services.map { |service| ::Service::Duration.label(service.duration_minutes) }.join(" · ")
 end
