@@ -20,7 +20,7 @@ class Branding < ApplicationRecord
   LOGO_MAX_BYTES = 5.megabytes
   LOGO_MAX_PIXELS = 4096
   INVALID_IMAGE_MESSAGE = "não é uma imagem válida".freeze
-  OVERSIZED_IMAGE_MESSAGE = "excede as dimensões máximas de 4096×4096 pixels".freeze
+  OVERSIZED_IMAGE_MESSAGE = "excede as dimensões máximas de #{LOGO_MAX_PIXELS}×#{LOGO_MAX_PIXELS} pixels".freeze
   CONTRAST_MESSAGE = "não tem contraste suficiente com o texto que vai sobre ela (mínimo 4.5:1)".freeze
   CUSTOM_COLOR_CHOICE = "custom".freeze
 
