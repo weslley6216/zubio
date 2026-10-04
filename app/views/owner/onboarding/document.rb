@@ -141,7 +141,7 @@ class Views::Owner::Onboarding::Document < Views::Base
     h1(class: SERVICES_TITLE_CLASS) { SERVICES_TITLE }
     p(class: SERVICES_SUBTITLE_CLASS) { SERVICES_SUBTITLE }
     div(class: SERVICES_LIST_CLASS, data: services_list_data) { @services.each { |service| render_service_row(service) } }
-    template(data: { onboarding_target: "serviceRowTemplate" }) { render_service_row(Service.new) }
+    template(data: { onboarding_target: "serviceRowTemplate" }) { render_service_row(::Service.new) }
     render_new_service_card
   end
 
@@ -169,7 +169,7 @@ class Views::Owner::Onboarding::Document < Views::Base
   def service_meta(service)
     return "" if service.duration_minutes.blank?
 
-    "#{Service::Duration.label(service.duration_minutes)} · #{Service::Price.label(service.price_cents)}"
+    "#{::Service::Duration.label(service.duration_minutes)} · #{::Service::Price.label(service.price_cents)}"
   end
 
   def render_service_action(label, action)
@@ -196,7 +196,7 @@ class Views::Owner::Onboarding::Document < Views::Base
   def render_new_service_card
     div(class: NEW_SERVICE_CARD_CLASS) do
       span(class: NEW_SERVICE_LABEL_CLASS, data: { onboarding_target: "cardLabel" }) { NEW_SERVICE_LABEL }
-      render Components::Owner::Service::Fields.new(service: Service.new, onboarding: true)
+      render Components::Owner::Service::Fields.new(service: ::Service.new, onboarding: true)
       button(type: "button", class: ADD_SERVICE_BUTTON_CLASS, data: { action: "onboarding#addService" }) do
         render_add_service_icon
         span(data: { onboarding_target: "commitLabel" }) { ADD_SERVICE_LABEL }

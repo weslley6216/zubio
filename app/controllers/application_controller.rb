@@ -24,11 +24,9 @@ class ApplicationController < ActionController::Base
     set_current_tenant(tenant)
   end
 
-  def platform_host?(host)
-    host == Tenant::PLATFORM_HOST || host.end_with?(".#{Tenant::PLATFORM_HOST}")
-  end
+  def platform_host?(host) = Tenant.platform_host?(host)
 
-  def platform_root_host? = platform_host?(request.host) && request.subdomains.empty?
+  def platform_root_host? = Tenant.platform_root_host?(request)
 
   def cache_key_prefix
     ActsAsTenant.current_tenant.cache_key_prefix

@@ -13,11 +13,6 @@ class Views::Owner::Services::Index < Views::Base
   SUBTITLE_CLASS = "text-lg text-ink-muted".freeze
   ACTION_CLASS = "inline-flex min-h-11 items-center justify-self-start rounded-lg bg-brand-accent px-4 text-sm font-bold text-on-brand-accent hover:opacity-90".freeze
   LIST_CLASS = "grid max-w-2xl gap-3".freeze
-  CARD_CLASS = "relative flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3.5 hover:bg-surface-2".freeze
-  NAME_ROW_CLASS = "flex flex-wrap items-center gap-2".freeze
-  NAME_CLASS = "text-sm font-bold text-ink after:absolute after:inset-0 after:rounded-xl".freeze
-  DESCRIPTION_CLASS = "text-xs text-ink-muted".freeze
-  DURATION_CLASS = "text-xs tabular-nums text-ink-muted".freeze
   PRICE_CLASS = "ml-auto flex-none rounded-full bg-surface-3 px-2.5 py-1.5 text-xs font-bold tabular-nums text-ink".freeze
   EMPTY_CLASS = "grid max-w-2xl gap-2 rounded-xl border border-line bg-surface p-6".freeze
   EMPTY_TITLE_CLASS = "text-lg font-bold text-ink".freeze
@@ -72,24 +67,15 @@ class Views::Owner::Services::Index < Views::Base
   end
 
   def render_service(service)
-    li(class: CARD_CLASS) do
-      div(class: "grid min-w-0 gap-0.5") do
-        render_name(service)
-        span(class: DESCRIPTION_CLASS, data: { description: true }) { service.description } if service.description.present?
-        span(class: DURATION_CLASS) { duration(service) }
-      end
+    render Components::Service::Card.new(
+      service: service,
+      href: edit_owner_service_path(service),
+      badge: (Components::Badge.new(text: DISABLED_LABEL, tone: :muted) unless service.active?),
+      description: service.description
+    ) do
       span(class: PRICE_CLASS) { price(service) }
     end
   end
 
-  def render_name(service)
-    div(class: NAME_ROW_CLASS) do
-      a(href: edit_owner_service_path(service), class: NAME_CLASS) { service.name }
-      render Components::Badge.new(text: DISABLED_LABEL, tone: :muted) unless service.active?
-    end
-  end
-
-  def duration(service) = Service::Duration.label(service.duration_minutes)
-
-  def price(service) = Service::Price.label(service.price_cents)
+  def price(service) = ::Service::Price.label(service.price_cents)
 end
