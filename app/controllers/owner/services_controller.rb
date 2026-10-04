@@ -42,7 +42,7 @@ class Owner::ServicesController < Owner::BaseController
 
   private
 
-  def service_params = params.require(:service).permit(:name, :description, :duration_minutes, :price)
+  def service_params = params.require(:service).permit(:name, :description, :duration_minutes, :price, :show_price)
 
   def service_form(service)
     Views::Owner::Services::Form.new(
