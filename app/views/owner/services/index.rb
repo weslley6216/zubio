@@ -70,7 +70,7 @@ class Views::Owner::Services::Index < Views::Base
     render Components::Service::Card.new(
       service: service,
       href: edit_owner_service_path(service),
-      badge: (Components::Badge.new(text: DISABLED_LABEL, tone: :muted) unless service.active?),
+      badges: [ (Components::Badge.new(text: DISABLED_LABEL, tone: :muted) unless service.active?) ].compact,
       description: service.description
     ) do
       span(class: PRICE_CLASS) { price(service) }
