@@ -156,7 +156,7 @@ class Views::Owner::Onboarding::Document < Views::Base
       div(class: SERVICE_TEXT_CLASS) do
         span(class: SERVICE_NAME_CLASS, data: { service_name: true }) { service.name }
         span(class: SERVICE_META_CLASS, data: { service_meta: true }) { service_meta(service) }
-        render Components::Form::Errors.new(messages: service.errors.full_messages)
+        div(data: { service_errors: true }) { render Components::Form::Errors.new(messages: service.errors.full_messages) }
       end
       render_service_action(EDIT_LABEL, "onboarding#editService") { render_edit_icon }
       render_service_action(REMOVE_LABEL, "onboarding#removeService") { render_remove_icon }
