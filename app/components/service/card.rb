@@ -6,10 +6,10 @@ class Components::Service::Card < Components::Base
   DESCRIPTION_CLASS = "text-xs text-ink-muted".freeze
   DURATION_CLASS = "text-xs tabular-nums text-ink-muted".freeze
 
-  def initialize(service:, href:, badge: nil, description: nil)
+  def initialize(service:, href:, badges: [], description: nil)
     @service = service
     @href = href
-    @badge = badge
+    @badges = badges
     @description = description
   end
 
@@ -18,7 +18,7 @@ class Components::Service::Card < Components::Base
       div(class: IDENTITY_CLASS) do
         div(class: NAME_ROW_CLASS) do
           a(href: @href, class: NAME_CLASS) { @service.name }
-          render @badge if @badge
+          @badges.each { |badge| render badge }
         end
         span(class: DESCRIPTION_CLASS, data: { description: true }) { @description } if @description.present?
         span(class: DURATION_CLASS) { ::Service::Duration.label(@service.duration_minutes) }
