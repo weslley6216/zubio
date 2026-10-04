@@ -124,5 +124,43 @@ RSpec.describe "Owner brand logo", type: :request do
     ensure
       fake.close!
     end
+
+    it "rejects an image over the pixel ceiling, keeping the previous logo" do
+      branding = create(:branding, :with_logo, tenant: tenant, brand_600: "#4F46E5")
+      original_blob_id = ActsAsTenant.with_tenant(tenant) { branding.logo.blob.id }
+      sign_in
+      edge = Branding::LOGO_MAX_PIXELS + 1
+      huge = Tempfile.new([ "logo", ".png" ])
+      huge.binmode
+      huge.write(Vips::Image.black(edge, edge).pngsave_buffer)
+      huge.rewind
+
+      patch owner_brand_logo_path, params: { branding: { logo: Rack::Test::UploadedFile.new(huge.path, "image/png") } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.logo.blob.id).to eq(original_blob_id) }
+    ensure
+      huge.close!
+    end
+
+    it "does not touch another establishment's logo when it rejects an image over the pixel ceiling" do
+      other_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+      other_branding = create(:branding, :with_logo, tenant: other_tenant)
+      other_blob_id = ActsAsTenant.with_tenant(other_tenant) { other_branding.logo.blob.id }
+      create(:branding, :with_logo, tenant: tenant, brand_600: "#4F46E5")
+      sign_in
+      edge = Branding::LOGO_MAX_PIXELS + 1
+      huge = Tempfile.new([ "logo", ".png" ])
+      huge.binmode
+      huge.write(Vips::Image.black(edge, edge).pngsave_buffer)
+      huge.rewind
+
+      patch owner_brand_logo_path, params: { branding: { logo: Rack::Test::UploadedFile.new(huge.path, "image/png") } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      ActsAsTenant.with_tenant(other_tenant) { expect(other_tenant.branding.reload.logo.blob.id).to eq(other_blob_id) }
+    ensure
+      huge.close!
+    end
   end
 end
