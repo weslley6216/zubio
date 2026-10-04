@@ -35,5 +35,14 @@ Rails.application.routes.draw do
     resource :working_hours, only: %i[edit update]
   end
 
+  constraints TenantHost do
+    root to: "client/establishments#show", as: :establishment
+    scope module: :client, as: :client do
+      resources :services, only: [] do
+        resource :booking, only: :new
+      end
+    end
+  end
+
   root "pages#home"
 end
