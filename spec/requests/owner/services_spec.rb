@@ -149,8 +149,8 @@ RSpec.describe "Owner services catalog", type: :request do
 
       get owner_services_path
 
-      expect(response.body).to include(%(<a href="#{edit_owner_service_path(beard_trim)}" class="#{Views::Owner::Services::Index::NAME_CLASS}">Barba</a>))
-      expect(response.body).to include(%(<a href="#{edit_owner_service_path(haircut)}" class="#{Views::Owner::Services::Index::NAME_CLASS}">Corte feminino</a>))
+      expect(response.body).to include(%(<a href="#{edit_owner_service_path(beard_trim)}" class="#{Components::Service::Card::NAME_CLASS}">Barba</a>))
+      expect(response.body).to include(%(<a href="#{edit_owner_service_path(haircut)}" class="#{Components::Service::Card::NAME_CLASS}">Corte feminino</a>))
     end
 
     it "sends an anonymous visitor to the login without naming a service" do
