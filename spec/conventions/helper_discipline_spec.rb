@@ -7,15 +7,6 @@ RSpec.describe "Helper discipline" do
   PENDING_SPECS = [
     "spec/conventions/comment_discipline_spec.rb",
     "spec/conventions/neutral_mirror_spec.rb",
-    "spec/system/landing_spec.rb",
-    "spec/system/onboarding_schedule_spec.rb",
-    "spec/system/onboarding_viewport_spec.rb",
-    "spec/system/owner/branding_accent_spec.rb",
-    "spec/system/owner/branding_compact_spec.rb",
-    "spec/system/owner/branding_repaint_spec.rb",
-    "spec/system/owner/brand_logo_spec.rb",
-    "spec/system/registration_footer_spec.rb",
-    "spec/system/surface_spec.rb",
     "spec/views/palette_coverage_spec.rb",
     "spec/views/secondary_fill_spec.rb"
   ].freeze
