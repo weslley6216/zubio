@@ -1,9 +1,9 @@
 require "rails_helper"
 
 RSpec.describe Components::Owner::Service::Fields, type: :component do
-  def service = ActsAsTenant.with_tenant(Tenant.new) { Service.new }
-
   it "drops the description and the long hints in the onboarding variant" do
+    service = ActsAsTenant.with_tenant(Tenant.new) { Service.new }
+
     html = described_class.new(service: service, onboarding: true).call
 
     expect(html).to include(described_class::NAME_LABEL)
@@ -12,6 +12,8 @@ RSpec.describe Components::Owner::Service::Fields, type: :component do
   end
 
   it "brings name, duration and price in the catalog variant" do
+    service = ActsAsTenant.with_tenant(Tenant.new) { Service.new }
+
     html = described_class.new(service: service).call
 
     expect(html).to include(described_class::NAME_LABEL)
@@ -20,6 +22,8 @@ RSpec.describe Components::Owner::Service::Fields, type: :component do
   end
 
   it "drops the name attribute and marks draft targets in the onboarding variant, so the client reads it instead of the form submitting it" do
+    service = ActsAsTenant.with_tenant(Tenant.new) { Service.new }
+
     html = described_class.new(service: service, onboarding: true).call
 
     expect(html).not_to include(%(name="service[name]"))
@@ -29,10 +33,16 @@ RSpec.describe Components::Owner::Service::Fields, type: :component do
   end
 
   it "keeps the name attribute in the catalog variant" do
-    expect(described_class.new(service: service).call).to include(%(name="service[name]"))
+    service = ActsAsTenant.with_tenant(Tenant.new) { Service.new }
+
+    html = described_class.new(service: service).call
+
+    expect(html).to include(%(name="service[name]"))
   end
 
   it "lays duration and price side by side in the onboarding variant, like the canvas card" do
+    service = ActsAsTenant.with_tenant(Tenant.new) { Service.new }
+
     document = Nokogiri::HTML5.fragment(described_class.new(service: service, onboarding: true).call)
 
     row = document.at_css(%([data-onboarding-target="serviceDuration"])).ancestors("[data-fields-row]").first
@@ -41,12 +51,16 @@ RSpec.describe Components::Owner::Service::Fields, type: :component do
   end
 
   it "stacks duration and price in the catalog variant" do
+    service = ActsAsTenant.with_tenant(Tenant.new) { Service.new }
+
     document = Nokogiri::HTML5.fragment(described_class.new(service: service).call)
 
     expect(document.at_css("[data-fields-row]")).to be_nil
   end
 
   it "hides the field labels visually but keeps them as accessible names in the onboarding variant" do
+    service = ActsAsTenant.with_tenant(Tenant.new) { Service.new }
+
     document = Nokogiri::HTML5.fragment(described_class.new(service: service, onboarding: true).call)
     name_label = document.at_css(%(label[for="service_name"]))
 
@@ -55,6 +69,8 @@ RSpec.describe Components::Owner::Service::Fields, type: :component do
   end
 
   it "shows the canvas placeholders on the onboarding fields" do
+    service = ActsAsTenant.with_tenant(Tenant.new) { Service.new }
+
     document = Nokogiri::HTML5.fragment(described_class.new(service: service, onboarding: true).call)
 
     expect(document.at_css("#service_name")["placeholder"]).to eq(described_class::NAME_PLACEHOLDER)
@@ -63,6 +79,8 @@ RSpec.describe Components::Owner::Service::Fields, type: :component do
   end
 
   it "sizes the onboarding fields to 48px with a 10px radius" do
+    service = ActsAsTenant.with_tenant(Tenant.new) { Service.new }
+
     document = Nokogiri::HTML5.fragment(described_class.new(service: service, onboarding: true).call)
 
     expect(document.at_css("#service_name")["class"]).to include("h-12")
@@ -70,6 +88,8 @@ RSpec.describe Components::Owner::Service::Fields, type: :component do
   end
 
   it "keeps visible labels and no placeholders in the catalog variant" do
+    service = ActsAsTenant.with_tenant(Tenant.new) { Service.new }
+
     document = Nokogiri::HTML5.fragment(described_class.new(service: service).call)
     name_label = document.at_css(%(label[for="service_name"]))
 
@@ -78,6 +98,8 @@ RSpec.describe Components::Owner::Service::Fields, type: :component do
   end
 
   it "brings the show-price toggle checked by default in the catalog variant" do
+    service = ActsAsTenant.with_tenant(Tenant.new) { Service.new }
+
     html = described_class.new(service: service).call
 
     expect(html).to include(described_class::SHOW_PRICE_LABEL)
@@ -90,12 +112,16 @@ RSpec.describe Components::Owner::Service::Fields, type: :component do
 
     html = described_class.new(service: hidden).call
 
+    expect(html).to include(%(type="checkbox" name="service[show_price]" value="1"))
     expect(html).not_to include(%(value="1" checked))
   end
 
   it "drops the show-price toggle in the onboarding variant" do
+    service = ActsAsTenant.with_tenant(Tenant.new) { Service.new }
+
     html = described_class.new(service: service, onboarding: true).call
 
+    expect(html).to include(described_class::NAME_LABEL)
     expect(html).not_to include(described_class::SHOW_PRICE_LABEL)
     expect(html).not_to include(%(name="service[show_price]"))
   end
