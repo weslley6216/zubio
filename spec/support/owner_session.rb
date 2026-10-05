@@ -4,7 +4,7 @@ module OwnerSession
     fill_in "E-mail", with: owner.email
     fill_in "Senha", with: owner.password
     click_on "Entrar"
-    page.has_no_button?("Entrar")
+    page.has_no_button?("Entrar") or raise "owner #{owner.email} did not get past the login form"
   end
 end
 

@@ -61,7 +61,7 @@ Checklist completo (13 princípios, o que analisar em cada revisão): [[Checklis
 
 - **Sem `let!`**: usar `let` + referência explícita, ou `create` dentro do `it`.
 - **AAA com linha vazia** entre Arrange/Act/Assert quando as três fases estão no `it`, uma fase de cada (assert → act → assert vira dois exemplos). Nunca comentários no spec.
-- **Sem `def` em arquivo de spec**: o teste é a documentação da funcionalidade e se lê sem saltar para helper. Arrange literal dentro do `it`, leitura da página inline; vocabulário compartilhado (login, matcher) em `spec/support/`, sem `expect` dentro. System spec arranja o estado pelo banco e só age pela tela.
+- **Sem `def` em arquivo de spec**: o teste é a documentação da funcionalidade e se lê sem saltar para helper. Arrange literal dentro do `it`, leitura da página inline; vocabulário compartilhado (login, matcher) em `spec/support/`, sem `expect` dentro. System spec arranja pelo banco o estado que vive no servidor e só age pela tela; estado que só existe no cliente (rascunho do onboarding em `localStorage`) é arranjado pela tela.
 - **Sem `expect_any_instance_of`/`allow_any_instance_of`**: mockar classe/instância específica.
 - **Teste só-negativo exige par positivo discriminante** — exceção: isolamento entre tenants (`not_to include` de dado de outro tenant sempre tem par: "inclui o do próprio tenant").
 - **Todo spec de model/controller que toca dado escopado por tenant precisa de um caso de isolamento entre tenants.**

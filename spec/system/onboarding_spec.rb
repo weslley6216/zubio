@@ -69,33 +69,44 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     fill_in "working_hours_opens_at", with: "18:00"
     fill_in "working_hours_closes_at", with: "09:00"
     find("label:has([data-onboarding-target='breakToggle'])").click
+    find("[data-onboarding-target='breakSummary']").click
+    fill_in "working_hours_break_starts_at", with: "12:30"
+    fill_in "working_hours_break_ends_at", with: "13:30"
 
     click_on "Ver minha página"
 
     expect(page).to have_content(Owner::OnboardingController::REFUSED)
     expect(page).to have_css(%(input[name="working_hours[weekdays][]"][value="2"]:checked), visible: :all)
-    expect(find("#working_hours_break_starts_at", visible: :all).value).to eq("12:00")
+    expect(find("#working_hours_break_starts_at", visible: :all).value).to eq("12:30")
+    expect(find("#working_hours_break_ends_at", visible: :all).value).to eq("13:30")
     expect(find("[data-onboarding-target='breakToggle']", visible: :all)).to be_checked
     expect(find(%(img[data-logo-target="preview"]), visible: :all)[:src]).to be_present
   end
 
-  it "finishes once the refused schedule is fixed" do
-    owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
+  it "finishes with the restored logo and lunch once the refused schedule is fixed" do
+    tenant = create(:tenant, :onboarding)
+    owner = create(:user, :with_professional, name: "Ana Lima", tenant: tenant)
     sign_in_owner(owner)
     click_on "Começar"
     find("[data-swatch-row] [data-swatch]", match: :first).click
     click_on "Continuar"
     fill_in "Nome da marca", with: "Barbearia do Zé"
     click_on "Continuar"
-    click_on "Pular por enquanto"
+    attach_file("Galeria", Rails.root.join("spec/fixtures/files/logo.png"), make_visible: true)
+    find("[data-logo-target='signedId']", visible: :all) { |field| field.value.present? }
+    click_on "Continuar"
     fill_in "Nome", with: "Corte"
     fill_in "Duração (minutos)", with: "45"
     fill_in "Preço (R$, opcional)", with: "90,00"
     click_on "Adicionar à lista"
     click_on "Continuar com 1 serviço"
-    find("label", text: "Ter", exact_text: true).click
+    %w[Ter Qua Qui Sex Sáb].each { |weekday| find("label", text: weekday, exact_text: true).click }
     fill_in "working_hours_opens_at", with: "18:00"
     fill_in "working_hours_closes_at", with: "09:00"
+    find("label:has([data-onboarding-target='breakToggle'])").click
+    find("[data-onboarding-target='breakSummary']").click
+    fill_in "working_hours_break_starts_at", with: "12:30"
+    fill_in "working_hours_break_ends_at", with: "13:30"
     click_on "Ver minha página"
     find("[data-alert]", text: Owner::OnboardingController::REFUSED)
 
@@ -104,6 +115,9 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     click_on "Ver minha página"
 
     expect(page).to have_content("Sua página está no ar, Ana")
+    expect(ActsAsTenant.with_tenant(tenant) { tenant.reload.branding.logo }).to be_attached
+    expect(ActsAsTenant.with_tenant(tenant) { owner.professional.working_hours.ordered.map { |working_hour| [ working_hour.weekday, working_hour.opens_at.strftime("%H:%M"), working_hour.closes_at.strftime("%H:%M") ] } })
+      .to eq((2..6).flat_map { |weekday| [ [ weekday, "09:00", "12:30" ], [ weekday, "13:30", "18:00" ] ] })
   end
 
   it "adds a service through the card and sees it listed above a cleared registration card" do

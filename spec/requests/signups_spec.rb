@@ -162,6 +162,7 @@ RSpec.describe "Signup", type: :request do
       expect(User.unscoped.where(tenant: existing_tenant)).to contain_exactly(owner)
       expect(owner.reload.authenticate("s3cr3t123")).to eq(owner)
       expect(existing_tenant.reload.subdomain).to eq("barbearia-do-ze")
+      expect(existing_tenant.status).to eq("active")
     end
 
     it "emails the new owner the provisional address" do
