@@ -1,55 +1,38 @@
 require "rails_helper"
 
 RSpec.describe "Helper discipline" do
-  METHOD_DEFINITION = /^\s*def\s/
-  SUPPORT_ASSERTION = /\bexpect\s*[({]/
-
-  PENDING_SPECS = [
-    "spec/conventions/comment_discipline_spec.rb",
-    "spec/conventions/neutral_mirror_spec.rb",
-    "spec/views/palette_coverage_spec.rb",
-    "spec/views/secondary_fill_spec.rb"
-  ].freeze
-
-  PENDING_SUPPORT = [].freeze
+  let(:method_definition) { /^\s*def\s/ }
+  let(:assertion) { /\bexpect\s*[({]/ }
 
   it "declares no method in a spec file" do
-    specs = Dir[Rails.root.join("spec/**/*_spec.rb")].map { |path| Pathname.new(path).relative_path_from(Rails.root).to_s }
+    specs = Dir[Rails.root.join("spec/**/*_spec.rb")]
 
-    offenders = specs.select { |path| Rails.root.join(path).read.match?(METHOD_DEFINITION) } - PENDING_SPECS
+    offenders = specs.select { |path| File.read(path).match?(method_definition) }
 
-    expect(offenders).to be_empty, "Spec files declaring methods: #{offenders.join(', ')}"
-  end
-
-  it "keeps a cleaned spec off the pending list" do
-    cleaned = PENDING_SPECS.reject { |path| Rails.root.join(path).read.match?(METHOD_DEFINITION) }
-
-    expect(cleaned).to be_empty, "Remove from PENDING_SPECS: #{cleaned.join(', ')}"
+    expect(offenders.map { |path| Pathname.new(path).relative_path_from(Rails.root).to_s }).to be_empty
   end
 
   it "keeps assertions out of spec/support" do
-    supports = Dir[Rails.root.join("spec/support/**/*.rb")].map { |path| Pathname.new(path).relative_path_from(Rails.root).to_s }
+    supports = Dir[Rails.root.join("spec/support/**/*.rb")]
 
-    offenders = supports.select { |path| Rails.root.join(path).read.match?(SUPPORT_ASSERTION) } - PENDING_SUPPORT
+    offenders = supports.select { |path| File.read(path).match?(assertion) }
 
-    expect(offenders).to be_empty, "Support files asserting: #{offenders.join(', ')}"
-  end
-
-  it "keeps a cleaned support file off the pending list" do
-    cleaned = PENDING_SUPPORT.reject { |path| Rails.root.join(path).read.match?(SUPPORT_ASSERTION) }
-
-    expect(cleaned).to be_empty, "Remove from PENDING_SUPPORT: #{cleaned.join(', ')}"
+    expect(offenders.map { |path| Pathname.new(path).relative_path_from(Rails.root).to_s }).to be_empty
   end
 
   it "recognizes a method definition at any indentation, one-line or not" do
-    probe = [ "def sign_in", "  def field(name) = name", "    def  body" ]
-
-    expect(probe.grep(METHOD_DEFINITION).size).to eq(3)
+    expect([ "def sign_in", "  def field(name) = name", "    def  body" ].grep(method_definition).size).to eq(3)
   end
 
   it "leaves a word merely containing def out of the count" do
-    probe = [ "  defaults = {}", %(  it "is undefined"), "  default_hours" ]
+    expect([ "  defaults = {}", %(  it "is undefined"), "  default_hours" ].grep(method_definition)).to be_empty
+  end
 
-    expect(probe.grep(METHOD_DEFINITION)).to be_empty
+  it "recognizes an assertion in either argument or block form" do
+    expect([ "expect(page).to have_css", "expect { post path }.to change" ].grep(assertion).size).to eq(2)
+  end
+
+  it "leaves a word merely containing expect out of the count" do
+    expect([ %(page.has_no_button?("Entrar")), "expected_hex = branding.tokens" ].grep(assertion)).to be_empty
   end
 end
