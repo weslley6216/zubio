@@ -13,7 +13,7 @@ RSpec.describe "Owner branding on one screen", type: :system, js: true do
 
   def open(tenant, owner, path, screen: phone_screen)
     page.driver.resize(*screen)
-    sign_in_owner(tenant, owner)
+    sign_in_owner(owner)
     visit "http://#{tenant.subdomain}.zubio.com.br#{path}"
   end
 
@@ -51,7 +51,7 @@ RSpec.describe "Owner branding on one screen", type: :system, js: true do
 
     %w[light dark].each do |scheme|
       emulate_color_scheme(scheme)
-      sign_in_owner(tenant, owner)
+      sign_in_owner(owner)
       visit "http://#{tenant.subdomain}.zubio.com.br#{edit_owner_brand_colors_path}"
       within(%(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::BRAND_LABEL}"])) do
         find(%([data-row-option] [data-swatch="#BE123C"])).click

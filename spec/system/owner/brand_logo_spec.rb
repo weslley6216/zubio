@@ -9,7 +9,7 @@ RSpec.describe "Owner brand logo", type: :system, js: true do
   end
 
   def open(tenant, owner)
-    sign_in_owner(tenant, owner)
+    sign_in_owner(owner)
     visit "http://#{tenant.subdomain}.zubio.com.br#{edit_owner_brand_logo_path}"
   end
 
