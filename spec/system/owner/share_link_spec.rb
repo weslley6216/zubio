@@ -5,7 +5,7 @@ RSpec.describe "Owner share link", type: :system, js: true do
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
     owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
     create(:branding, tenant: tenant)
-    sign_in_owner(tenant, owner)
+    sign_in_owner(owner)
 
     page.execute_script(<<~JS)
       Object.defineProperty(navigator, "clipboard", {
@@ -22,7 +22,7 @@ RSpec.describe "Owner share link", type: :system, js: true do
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
     owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
     create(:branding, tenant: tenant)
-    sign_in_owner(tenant, owner)
+    sign_in_owner(owner)
 
     click_button Components::Owner::ShareLink::COPY_LABEL
 

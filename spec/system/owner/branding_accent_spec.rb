@@ -12,7 +12,7 @@ RSpec.describe "Owner branding accent", type: :system, js: true do
 
     %w[light dark].each do |scheme|
       emulate_color_scheme(scheme)
-      sign_in_owner(tenant, owner)
+      sign_in_owner(owner)
 
       expect(opaque?("span.bg-brand-accent")).to be true
       expect(contrast_ratio("span.bg-brand-accent")).to be >= Branding::ColorScale::MIN_CONTRAST
@@ -27,7 +27,7 @@ RSpec.describe "Owner branding accent", type: :system, js: true do
     %w[light dark].each do |scheme|
       page.driver.resize(1200, 800)
       emulate_color_scheme(scheme)
-      sign_in_owner(tenant, owner)
+      sign_in_owner(owner)
       visit "http://#{tenant.subdomain}.zubio.com.br#{owner_services_path}"
 
       expect(computed("nav a[aria-current='page']", "color")).to eq(rgb(role(branding, "brand-ink-#{scheme}")))

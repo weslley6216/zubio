@@ -45,7 +45,6 @@ RSpec.describe "Helper discipline" do
     "spec/requests/tenant_resolution_spec.rb",
     "spec/system/landing_spec.rb",
     "spec/system/onboarding_schedule_spec.rb",
-    "spec/system/onboarding_spec.rb",
     "spec/system/onboarding_viewport_spec.rb",
     "spec/system/owner/branding_accent_spec.rb",
     "spec/system/owner/branding_compact_spec.rb",
@@ -57,9 +56,7 @@ RSpec.describe "Helper discipline" do
     "spec/views/secondary_fill_spec.rb"
   ].freeze
 
-  PENDING_SUPPORT = [
-    "spec/support/owner_session.rb"
-  ].freeze
+  PENDING_SUPPORT = [].freeze
 
   it "declares no method in a spec file" do
     specs = Dir[Rails.root.join("spec/**/*_spec.rb")].map { |path| Pathname.new(path).relative_path_from(Rails.root).to_s }

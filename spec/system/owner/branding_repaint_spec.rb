@@ -15,7 +15,7 @@ RSpec.describe "Owner branding repaint", type: :system, js: true do
     create(:branding, tenant: tenant, brand_600: "#4F46E5")
 
     emulate_color_scheme("light")
-    sign_in_owner(tenant, owner)
+    sign_in_owner(owner)
     save_brand_color(tenant, "#BE123C")
 
     expect(page).to have_content(Owner::BrandQuestionsController::NOTICE)
@@ -27,7 +27,7 @@ RSpec.describe "Owner branding repaint", type: :system, js: true do
     owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
     create(:branding, tenant: tenant, brand_600: "#4F46E5")
     emulate_color_scheme("light")
-    sign_in_owner(tenant, owner)
+    sign_in_owner(owner)
     visit "http://#{tenant.subdomain}.zubio.com.br#{edit_owner_brand_colors_path}"
     submit = %(input[type="submit"][value="#{Views::Owner::BrandQuestions::Edit::SUBMIT_LABEL}"])
     expect(computed(submit, "backgroundColor")).to eq("rgb(79, 70, 229)")
