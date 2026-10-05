@@ -67,7 +67,7 @@ class Views::Owner::Onboarding::Final < Views::Base
 
   def render_body
     div(class: BODY_CLASS) do
-      render Components::Owner::ShareLink.new(host: @tenant.canonical_host)
+      render Components::Owner::ShareLink.new(host: @tenant.canonical_host, name: @tenant.name)
       span(class: CONFIGURED_LABEL_CLASS) { CONFIGURED_LABEL }
       div(class: ROWS_CLASS) do
         render_brand_row
