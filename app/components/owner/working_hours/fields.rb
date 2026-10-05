@@ -28,8 +28,6 @@ class Components::Owner::WorkingHours::Fields < Components::Base
   BREAK_SUMMARY_CLASS = "block cursor-pointer text-left text-xs text-ink-muted empty:hidden".freeze
   BREAK_CLASS = "grid gap-3".freeze
   BREAK_FIELDS_CLASS = "grid grid-cols-2 gap-3".freeze
-  TOGGLE_CLASS = "relative inline-flex h-[26px] w-[46px] flex-none cursor-pointer items-center rounded-full bg-line p-[3px] has-checked:bg-brand-600".freeze
-  TOGGLE_THUMB_CLASS = "h-5 w-5 rounded-full bg-white transition-transform peer-checked:translate-x-5".freeze
 
   def initialize(schedule: nil)
     @schedule = schedule
@@ -85,10 +83,7 @@ class Components::Owner::WorkingHours::Fields < Components::Base
           span(class: BREAK_TEXT_CLASS) { BREAK_TOGGLE_LABEL }
           button(type: "button", class: BREAK_SUMMARY_CLASS, data: { action: "onboarding#revealBreak", onboarding_target: "breakSummary" })
         end
-        label(class: TOGGLE_CLASS) do
-          input(type: "checkbox", class: "peer sr-only", data: { action: "change->onboarding#toggleBreak", onboarding_target: "breakToggle" })
-          span(class: TOGGLE_THUMB_CLASS)
-        end
+        render Components::Toggle.new(data: { action: "change->onboarding#toggleBreak", onboarding_target: "breakToggle" })
       end
       div(class: "#{BREAK_FIELDS_CLASS} hidden", data: { onboarding_target: "break" }) do
         render_time_field(:break_starts_at, BREAK_STARTS_LABEL, action: BREAK_FIELD_ACTION)
