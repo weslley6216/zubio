@@ -33,6 +33,7 @@ Rails.application.routes.draw do
     resource :brand_logo, only: %i[edit update]
     resource :settings, only: :show
     resource :working_hours, only: %i[edit update]
+    resources :schedule_exceptions, only: %i[index create destroy]
   end
 
   constraints TenantHost do
