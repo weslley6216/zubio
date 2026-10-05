@@ -42,7 +42,7 @@ RSpec.describe "Owner schedule exceptions", type: :request do
       get owner_schedule_exceptions_path
 
       windows = rows.map { |row| row.at_css("[data-window]")&.text }
-      expect(windows).to include("09:00 – 12:00")
+      expect(windows).to include("09:00 às 12:00")
       expect(windows).to include(nil)
     end
 
@@ -59,6 +59,26 @@ RSpec.describe "Owner schedule exceptions", type: :request do
       reasons = rows.map { |row| row.at_css("[data-reason]")&.text }
       expect(reasons).to include("Feriado")
       expect(reasons).to include(nil)
+    end
+
+    it "heads the upcoming list with its section label" do
+      professional = professional_for(owner)
+      ActsAsTenant.with_tenant(tenant) { create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current.next_week(:monday)) }
+      sign_in
+
+      get owner_schedule_exceptions_path
+
+      expect(document.at_css("[data-exceptions]").text).to include(Views::Owner::ScheduleExceptions::Index::UPCOMING_LABEL)
+    end
+
+    it "leaves no detail slot on a closure without a reason" do
+      professional = professional_for(owner)
+      ActsAsTenant.with_tenant(tenant) { create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current.next_week(:monday), reason: nil) }
+      sign_in
+
+      get owner_schedule_exceptions_path
+
+      expect(rows.first.css("[data-detail] > *").size).to eq(1)
     end
 
     it "hides a past exception and keeps the upcoming one" do

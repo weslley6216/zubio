@@ -14,26 +14,33 @@ class Views::Owner::ScheduleExceptions::Index < Views::Base
   CLOSED_LABEL = "Fechado".freeze
   REDUCED_LABEL = "Horário reduzido".freeze
   REMOVE_LABEL = "Remover".freeze
+  UPCOMING_LABEL = "Próximas".freeze
+  WINDOW_JOINER = "às".freeze
   EMPTY_TITLE = "Nenhuma folga por vir".freeze
   EMPTY_BODY = "Registre acima a primeira data em que você não atende ou atende diferente.".freeze
   MONTHS = %w[jan fev mar abr mai jun jul ago set out nov dez].freeze
-  TRASH_ICON = "M6 7h12M9 7V5h6v2M8 7l1 12h6l1-12".freeze
+  TRASH_ICON = "M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13".freeze
 
   PAGE_CLASS = "mx-auto grid w-full max-w-2xl gap-6 px-6 py-10".freeze
   HEADING_CLASS = "mt-2 text-xl font-extrabold tracking-tight text-ink".freeze
   SUBTITLE_CLASS = "text-sm text-ink-muted".freeze
-  FORM_CLASS = "mt-4 grid gap-4 rounded-2xl border border-line bg-surface p-4".freeze
-  FIELD_CLASS = "grid gap-1".freeze
-  ATTENDS_ROW_CLASS = "flex items-center justify-between gap-3 rounded-[10px] border border-line bg-surface-2 px-3.5 py-3".freeze
+  FORM_CLASS = "mt-4 grid gap-3 rounded-xl border border-line bg-surface p-4".freeze
+  FIELD_CLASS = "grid gap-1.5".freeze
+  FIELD_LABEL_CLASS = "#{SECTION_LABEL} text-ink-muted".freeze
+  ATTENDS_ROW_CLASS = "flex items-center justify-between gap-3 rounded-lg border border-line bg-surface-2 px-3.5 py-3".freeze
   ATTENDS_TEXT_CLASS = "text-sm font-bold text-ink".freeze
   WINDOW_CLASS = "hidden grid-cols-2 gap-2 group-has-checked:grid".freeze
-  LIST_CLASS = "grid gap-3".freeze
-  ROW_CLASS = "flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3".freeze
-  DATE_BLOCK_CLASS = "grid w-12 flex-none justify-items-center".freeze
-  DAY_CLASS = "text-lg font-extrabold leading-none tabular-nums text-ink".freeze
-  MONTH_CLASS = "text-[0.65rem] font-bold uppercase tracking-wide text-ink-muted".freeze
-  DETAIL_CLASS = "min-w-0 flex-1 text-xs text-ink-muted".freeze
-  REMOVE_CLASS = "grid h-9 w-9 flex-none place-items-center rounded-full text-danger hover:bg-surface-2".freeze
+  UPCOMING_CLASS = "grid gap-2.5".freeze
+  UPCOMING_LABEL_CLASS = "#{SECTION_LABEL} text-ink-muted".freeze
+  LIST_CLASS = "grid gap-2.5".freeze
+  ROW_CLASS = "flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3.5".freeze
+  DATE_BLOCK_CLASS = "grid w-11 flex-none justify-items-center".freeze
+  DAY_CLASS = "text-[19px] font-extrabold leading-tight tabular-nums text-ink".freeze
+  MONTH_CLASS = "text-[10px] font-bold uppercase tracking-wide text-ink-muted".freeze
+  DETAIL_CLASS = "grid min-w-0 flex-1 gap-1".freeze
+  REASON_CLASS = "text-[13px] text-ink-muted".freeze
+  WINDOW_TEXT_CLASS = "text-[13px] font-bold tabular-nums text-ink".freeze
+  REMOVE_CLASS = "grid h-11 w-11 flex-none cursor-pointer place-items-center rounded-lg border border-line bg-surface text-danger hover:bg-surface-2".freeze
   EMPTY_CLASS = "grid gap-2 rounded-xl border border-line bg-surface p-6".freeze
   EMPTY_TITLE_CLASS = "text-lg font-bold text-ink".freeze
   EMPTY_BODY_CLASS = "text-sm text-ink-muted".freeze
@@ -76,7 +83,7 @@ class Views::Owner::ScheduleExceptions::Index < Views::Base
 
   def render_date_field
     div(class: FIELD_CLASS) do
-      label(for: "schedule_exception_occurs_on", class: LABEL) { DATE_LABEL }
+      label(for: "schedule_exception_occurs_on", class: FIELD_LABEL_CLASS) { DATE_LABEL }
       input(type: "date", id: "schedule_exception_occurs_on", name: "schedule_exception[occurs_on]",
         value: @exception.occurs_on&.iso8601, min: Date.current.iso8601, class: CONTROL)
       render Components::Form::Errors.new(messages: @exception.errors[:occurs_on])
@@ -105,22 +112,24 @@ class Views::Owner::ScheduleExceptions::Index < Views::Base
 
   def render_reason_field
     div(class: FIELD_CLASS) do
-      label(for: "schedule_exception_reason", class: LABEL) { REASON_LABEL }
+      label(for: "schedule_exception_reason", class: FIELD_LABEL_CLASS) { REASON_LABEL }
       input(type: "text", id: "schedule_exception_reason", name: "schedule_exception[reason]",
         value: @exception.reason, placeholder: REASON_PLACEHOLDER, class: CONTROL)
     end
   end
 
   def render_list
-    ul(class: LIST_CLASS, data: { exceptions: true }) do
-      @exceptions.each { |exception| render_row(exception) }
+    section(class: UPCOMING_CLASS, data: { exceptions: true }) do
+      span(class: UPCOMING_LABEL_CLASS) { UPCOMING_LABEL }
+      ul(class: LIST_CLASS) do
+        @exceptions.each { |exception| render_row(exception) }
+      end
     end
   end
 
   def render_row(exception)
     li(class: ROW_CLASS, data: { exception: exception.id }) do
       render_date_block(exception)
-      render_badge(exception)
       render_detail(exception)
       render_remove(exception)
     end
@@ -142,11 +151,12 @@ class Views::Owner::ScheduleExceptions::Index < Views::Base
   end
 
   def render_detail(exception)
-    span(class: DETAIL_CLASS) do
+    div(class: DETAIL_CLASS, data: { detail: true }) do
+      render_badge(exception)
       if exception.closed?
-        span(data: { reason: true }) { exception.reason } if exception.reason.present?
+        span(class: REASON_CLASS, data: { reason: true }) { exception.reason } if exception.reason.present?
       else
-        span(data: { window: true }) { window_label(exception) }
+        span(class: WINDOW_TEXT_CLASS, data: { window: true }) { window_label(exception) }
       end
     end
   end
@@ -154,7 +164,7 @@ class Views::Owner::ScheduleExceptions::Index < Views::Base
   def render_remove(exception)
     button_to(owner_schedule_exception_path(exception), method: :delete, class: REMOVE_CLASS, aria_label: REMOVE_LABEL) do
       svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-        stroke_linejoin: "round", aria_hidden: "true", class: "h-4 w-4") { |icon| icon.path(d: TRASH_ICON) }
+        stroke_linejoin: "round", aria_hidden: "true", class: "h-[17px] w-[17px]") { |icon| icon.path(d: TRASH_ICON) }
     end
   end
 
@@ -167,5 +177,5 @@ class Views::Owner::ScheduleExceptions::Index < Views::Base
 
   def attending? = @exception.closed == false
 
-  def window_label(exception) = "#{exception.opens_at.strftime('%H:%M')} – #{exception.closes_at.strftime('%H:%M')}"
+  def window_label(exception) = "#{exception.opens_at.strftime('%H:%M')} #{WINDOW_JOINER} #{exception.closes_at.strftime('%H:%M')}"
 end
