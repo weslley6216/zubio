@@ -144,4 +144,58 @@ RSpec.describe "Owner schedule exceptions", type: :request do
       expect(count_queries { get owner_schedule_exceptions_path }).to eq(one)
     end
   end
+
+  describe "POST /owner/schedule_exceptions" do
+    def saved(professional, establishment = tenant)
+      ActsAsTenant.with_tenant(establishment) { professional.reload.schedule_exceptions.order(:occurs_on).to_a }
+    end
+
+    it "stores a full-day closure on the owner's professional and shows it afterwards" do
+      professional = professional_for(owner)
+      sign_in
+
+      post owner_schedule_exceptions_path, params: { schedule_exception: { occurs_on: Date.current.next_week(:monday).iso8601 } }
+
+      stored = saved(professional)
+      expect(response).to redirect_to(owner_schedule_exceptions_path)
+      expect(stored.size).to eq(1)
+      expect(stored.first).to be_closed
+      expect(stored.first.opens_at).to be_nil
+    end
+
+    it "stores an alternate window when the owner says they attend" do
+      professional = professional_for(owner)
+      sign_in
+
+      post owner_schedule_exceptions_path, params: { schedule_exception: { occurs_on: Date.current.next_week(:saturday).iso8601, attends: "1", opens_at: "09:00", closes_at: "12:00" } }
+
+      stored = saved(professional).first
+      expect(stored).not_to be_closed
+      expect(stored.opens_at.strftime("%H:%M")).to eq("09:00")
+      expect(stored.closes_at.strftime("%H:%M")).to eq("12:00")
+    end
+
+    it "refuses a date already registered, flags the date and keeps a single entry" do
+      professional = professional_for(owner)
+      ActsAsTenant.with_tenant(tenant) { create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current.next_week(:monday)) }
+      sign_in
+
+      post owner_schedule_exceptions_path, params: { schedule_exception: { occurs_on: Date.current.next_week(:monday).iso8601 } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(Nokogiri::HTML5(response.body).at_css("#schedule_exception_occurs_on").parent.at_css(".text-danger")).to be_present
+      expect(saved(professional).size).to eq(1)
+    end
+
+    it "refuses an attended day with no window, flags the window and writes nothing" do
+      professional = professional_for(owner)
+      sign_in
+
+      post owner_schedule_exceptions_path, params: { schedule_exception: { occurs_on: Date.current.next_week(:saturday).iso8601, attends: "1" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("informe o horário de atendimento")
+      expect(saved(professional)).to be_empty
+    end
+  end
 end
