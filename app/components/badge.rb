@@ -1,7 +1,8 @@
 class Components::Badge < Components::Base
   TONES = {
     accent: "bg-secondary-soft text-secondary-soft-ink",
-    muted: "bg-surface-3 text-ink-muted"
+    muted: "bg-surface-3 text-ink-muted",
+    brand: "bg-brand-soft text-brand-ink"
   }.freeze
 
   BASE_CLASS = "justify-self-start rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide".freeze
