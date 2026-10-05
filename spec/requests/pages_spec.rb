@@ -126,6 +126,7 @@ RSpec.describe "Landing page", type: :request do
   describe "GET / on the www host" do
     it "redirects permanently to the apex, which serves the landing page" do
       host! "www.zubio.com.br"
+
       get root_path
 
       expect(response).to have_http_status(:moved_permanently)
@@ -134,6 +135,7 @@ RSpec.describe "Landing page", type: :request do
 
     it "preserves the query string so campaign attribution survives the redirect" do
       host! "www.zubio.com.br"
+
       get root_path, params: { utm_source: "instagram", utm_campaign: "launch" }
 
       expect(response).to have_http_status(:moved_permanently)

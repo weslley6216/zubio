@@ -2,12 +2,6 @@ require "rails_helper"
 
 RSpec.describe "Tenant resolution by subdomain", type: :request do
   before do
-    stub_const("TenantResolutionProbeController", Class.new(ApplicationController) do
-      def show
-        render plain: ActsAsTenant.current_tenant.subdomain
-      end
-    end)
-
     Rails.application.routes.draw do
       get "/tenant_resolution_probe", to: "tenant_resolution_probe#show"
     end
@@ -17,8 +11,8 @@ RSpec.describe "Tenant resolution by subdomain", type: :request do
 
   it "populates the current tenant when the subdomain is valid" do
     create(:tenant, subdomain: "joes-barbershop")
-
     host! "joes-barbershop.zubio.com.br"
+
     get "/tenant_resolution_probe"
 
     expect(response).to have_http_status(:ok)
@@ -27,6 +21,7 @@ RSpec.describe "Tenant resolution by subdomain", type: :request do
 
   it "returns 404 when the subdomain does not exist" do
     host! "does-not-exist.zubio.com.br"
+
     get "/tenant_resolution_probe"
 
     expect(response).to have_http_status(:not_found)
@@ -34,8 +29,8 @@ RSpec.describe "Tenant resolution by subdomain", type: :request do
 
   it "returns 404 when the tenant is suspended" do
     create(:tenant, subdomain: "suspended-tenant", status: "suspended")
-
     host! "suspended-tenant.zubio.com.br"
+
     get "/tenant_resolution_probe"
 
     expect(response).to have_http_status(:not_found)
@@ -43,8 +38,8 @@ RSpec.describe "Tenant resolution by subdomain", type: :request do
 
   it "populates the current tenant when the host is a verified custom domain" do
     create(:tenant, :with_verified_custom_domain, subdomain: "joes-barbershop", custom_domain: "barbeariadoze.com.br")
-
     host! "barbeariadoze.com.br"
+
     get "/tenant_resolution_probe"
 
     expect(response).to have_http_status(:ok)
@@ -53,8 +48,8 @@ RSpec.describe "Tenant resolution by subdomain", type: :request do
 
   it "returns 404 when the custom domain is registered but not yet verified" do
     create(:tenant, :with_pending_custom_domain, subdomain: "joes-barbershop", custom_domain: "barbeariadoze.com.br")
-
     host! "barbeariadoze.com.br"
+
     get "/tenant_resolution_probe"
 
     expect(response).to have_http_status(:not_found)
@@ -63,10 +58,11 @@ RSpec.describe "Tenant resolution by subdomain", type: :request do
   it "never resolves another tenant's data through its custom domain" do
     create(:tenant, :with_verified_custom_domain, subdomain: "joes-barbershop", custom_domain: "barbeariadoze.com.br")
     other_tenant = create(:tenant, :with_verified_custom_domain, subdomain: "other-salon", custom_domain: "outrosalao.com.br")
-
     host! "barbeariadoze.com.br"
+
     get "/tenant_resolution_probe"
 
+    expect(response.body).to eq("joes-barbershop")
     expect(response.body).not_to eq(other_tenant.subdomain)
   end
 end
