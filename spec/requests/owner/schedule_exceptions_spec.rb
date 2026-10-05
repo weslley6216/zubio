@@ -195,6 +195,18 @@ RSpec.describe "Owner schedule exceptions", type: :request do
       expect(stored.closes_at.strftime("%H:%M")).to eq("12:00")
     end
 
+    it "discards a submitted window when the owner does not say they attend" do
+      professional = professional_for(owner)
+      sign_in
+
+      post owner_schedule_exceptions_path, params: { schedule_exception: { occurs_on: Date.current.next_week(:monday).iso8601, opens_at: "09:00", closes_at: "12:00" } }
+
+      stored = saved(professional).first
+      expect(stored).to be_closed
+      expect(stored.opens_at).to be_nil
+      expect(stored.closes_at).to be_nil
+    end
+
     it "refuses a date already registered, flags the date and keeps a single entry" do
       professional = professional_for(owner)
       ActsAsTenant.with_tenant(tenant) { create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current.next_week(:monday)) }
