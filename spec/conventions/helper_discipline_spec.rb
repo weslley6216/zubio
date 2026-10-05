@@ -7,11 +7,6 @@ RSpec.describe "Helper discipline" do
   PENDING_SPECS = [
     "spec/conventions/comment_discipline_spec.rb",
     "spec/conventions/neutral_mirror_spec.rb",
-    "spec/models/branding_spec.rb",
-    "spec/models/concerns/stylesheet_producer_spec.rb",
-    "spec/models/tenant_spec.rb",
-    "spec/models/weekly_schedule_spec.rb",
-    "spec/models/working_hour/summary_spec.rb",
     "spec/system/landing_spec.rb",
     "spec/system/onboarding_schedule_spec.rb",
     "spec/system/onboarding_viewport_spec.rb",
