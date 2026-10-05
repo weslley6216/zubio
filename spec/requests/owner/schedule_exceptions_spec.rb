@@ -198,4 +198,39 @@ RSpec.describe "Owner schedule exceptions", type: :request do
       expect(saved(professional)).to be_empty
     end
   end
+
+  describe "DELETE /owner/schedule_exceptions/:id" do
+    it "removes the owner's exception and drops it from the list" do
+      professional = professional_for(owner)
+      exception = ActsAsTenant.with_tenant(tenant) { create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current.next_week(:tuesday)) }
+      sign_in
+
+      delete owner_schedule_exception_path(exception)
+
+      expect(response).to redirect_to(owner_schedule_exceptions_path)
+      expect(ActsAsTenant.with_tenant(tenant) { ScheduleException.exists?(exception.id) }).to be(false)
+    end
+  end
+
+  describe "tenant isolation" do
+    it "shows only the host's exception and never removes another tenant's" do
+      professional = professional_for(owner)
+      own = ActsAsTenant.with_tenant(tenant) { create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current.next_week(:monday)) }
+      aurora = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+      aurora_owner = create(:user, tenant: aurora, email: "ana@example.com", password: "s3cr3t123")
+      aurora_professional = professional_for(aurora_owner, aurora)
+      foreign = ActsAsTenant.with_tenant(aurora) { create(:schedule_exception, tenant: aurora, professional: aurora_professional, occurs_on: Date.current.next_week(:tuesday)) }
+      sign_in
+
+      get owner_schedule_exceptions_path
+
+      expect(document.css("[data-exception]").size).to eq(1)
+      expect(response.body).to include(Date.current.next_week(:monday).strftime("%d"))
+
+      delete owner_schedule_exception_path(foreign)
+
+      expect(ActsAsTenant.with_tenant(aurora) { ScheduleException.exists?(foreign.id) }).to be(true)
+      expect(ActsAsTenant.with_tenant(tenant) { ScheduleException.exists?(own.id) }).to be(true)
+    end
+  end
 end

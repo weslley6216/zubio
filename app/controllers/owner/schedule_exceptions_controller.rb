@@ -3,6 +3,7 @@ class Owner::ScheduleExceptionsController < Owner::BaseController
 
   SAVED = "Folga registrada.".freeze
   REFUSED = "Não foi possível registrar. Confira os campos destacados.".freeze
+  REMOVED = "Folga removida.".freeze
 
   def index
     render screen(exceptions.build(closed: true))
@@ -17,6 +18,11 @@ class Owner::ScheduleExceptionsController < Owner::BaseController
       flash.now[:alert] = REFUSED
       render screen(exception), status: :unprocessable_entity
     end
+  end
+
+  def destroy
+    exceptions.find(params[:id]).destroy
+    redirect_to owner_schedule_exceptions_path, notice: REMOVED
   end
 
   private
