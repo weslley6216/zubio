@@ -12,6 +12,10 @@ module ComputedStyle
     )
   end
 
+  def computed_hex(selector, property)
+    "#" + computed(selector, property).scan(/\d+/).first(3).map { |channel| channel.to_i.to_s(16).rjust(2, "0") }.join.upcase
+  end
+
   def contrast_ratio(selector)
     foreground = color_scale(computed(selector, "color"))
     background = color_scale(computed(selector, "backgroundColor"))

@@ -1,21 +1,11 @@
 require "rails_helper"
 
 RSpec.describe "Owner brand logo", type: :system, js: true do
-  def establishment
+  it "swaps the preview to the newly chosen image" do
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
     create(:branding, tenant: tenant)
-
-    [ tenant, create(:user, tenant: tenant, email: "owner@example.com") ]
-  end
-
-  def open(tenant, owner)
-    sign_in_owner(owner)
-    visit "http://#{tenant.subdomain}.zubio.com.br#{edit_owner_brand_logo_path}"
-  end
-
-  it "swaps the preview to the newly chosen image" do
-    tenant, owner = establishment
-    open(tenant, owner)
+    sign_in_owner(create(:user, tenant: tenant))
+    visit "http://estudio-aurora.zubio.com.br#{edit_owner_brand_logo_path}"
 
     find("input[type=file]", visible: :all, match: :first).attach_file(Rails.root.join("spec/fixtures/files/logo.png"))
 
@@ -26,8 +16,10 @@ RSpec.describe "Owner brand logo", type: :system, js: true do
   end
 
   it "clears a valid file chosen through the other picker when a later one is refused" do
-    tenant, owner = establishment
-    open(tenant, owner)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    sign_in_owner(create(:user, tenant: tenant))
+    visit "http://estudio-aurora.zubio.com.br#{edit_owner_brand_logo_path}"
     gallery, camera = all("input[type=file]", visible: :all).to_a
 
     gallery.attach_file(Rails.root.join("spec/fixtures/files/logo.png"))
@@ -38,8 +30,10 @@ RSpec.describe "Owner brand logo", type: :system, js: true do
   end
 
   it "refuses an oversized file and clears the field" do
-    tenant, owner = establishment
-    open(tenant, owner)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    sign_in_owner(create(:user, tenant: tenant))
+    visit "http://estudio-aurora.zubio.com.br#{edit_owner_brand_logo_path}"
     oversized = Tempfile.new([ "huge", ".png" ])
     oversized.write("0" * (Branding::LOGO_MAX_BYTES + 1))
     oversized.rewind
@@ -51,8 +45,10 @@ RSpec.describe "Owner brand logo", type: :system, js: true do
   end
 
   it "refuses a file whose type is not in the allowlist and clears the field" do
-    tenant, owner = establishment
-    open(tenant, owner)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    sign_in_owner(create(:user, tenant: tenant))
+    visit "http://estudio-aurora.zubio.com.br#{edit_owner_brand_logo_path}"
 
     find("input[type=file]", visible: :all, match: :first).attach_file(Rails.root.join("spec/fixtures/files/not-an-image.txt"))
 
