@@ -5,18 +5,6 @@ RSpec.describe "Helper discipline" do
   SUPPORT_ASSERTION = /\bexpect\s*[({]/
 
   PENDING_SPECS = [
-    "spec/components/alert_spec.rb",
-    "spec/components/form/color_swatches_spec.rb",
-    "spec/components/owner/brand_question/colors_spec.rb",
-    "spec/components/owner/brand_question/logo_spec.rb",
-    "spec/components/owner/brand_question/name_spec.rb",
-    "spec/components/owner/menu_spec.rb",
-    "spec/components/owner/onboarding/screen_spec.rb",
-    "spec/components/owner/service/fields_spec.rb",
-    "spec/components/owner/settings_back_link_spec.rb",
-    "spec/components/owner/share_link_spec.rb",
-    "spec/components/owner/working_hours/fields_spec.rb",
-    "spec/components/toggle_spec.rb",
     "spec/conventions/comment_discipline_spec.rb",
     "spec/conventions/neutral_mirror_spec.rb",
     "spec/models/branding_spec.rb",
