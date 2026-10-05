@@ -16,5 +16,9 @@ FactoryBot.define do
     trait :professional do
       role { "professional" }
     end
+
+    trait :with_professional do
+      after(:create) { |user| create(:professional, tenant: user.tenant, user: user, display_name: user.name) }
+    end
   end
 end

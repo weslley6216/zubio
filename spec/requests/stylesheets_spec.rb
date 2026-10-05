@@ -11,8 +11,8 @@ RSpec.describe "Generated stylesheets", type: :request do
       other = create(:tenant, subdomain: "salon-b")
       branding = create(:branding, tenant: aurora, brand_600: "#1D4ED8", brand_secondary_600: "#0B7658")
       create(:branding, tenant: other, brand_600: "#DC2626", brand_secondary_600: "#96590B")
-
       host! "estudio-aurora.zubio.com.br"
+
       get branding_stylesheet_path(v: branding.stylesheet_digest)
 
       expect(response.media_type).to eq("text/css")
@@ -25,8 +25,8 @@ RSpec.describe "Generated stylesheets", type: :request do
     it "serves the platform default at the platform root, where no establishment is resolved" do
       aurora = create(:tenant, subdomain: "estudio-aurora")
       create(:branding, tenant: aurora, brand_600: "#1D4ED8")
-
       host! "zubio.com.br"
+
       get branding_stylesheet_path(v: Branding.platform_default.stylesheet_digest)
 
       expect(response.body).to include("--brand-600:#{Branding::DEFAULT_BRAND_600};")
@@ -35,8 +35,8 @@ RSpec.describe "Generated stylesheets", type: :request do
 
     it "falls back to the platform default when the establishment has no branding yet" do
       create(:tenant, subdomain: "no-branding-yet")
-
       host! "no-branding-yet.zubio.com.br"
+
       get branding_stylesheet_path(v: Branding.platform_default.stylesheet_digest)
 
       expect(response).to have_http_status(:ok)
@@ -45,6 +45,7 @@ RSpec.describe "Generated stylesheets", type: :request do
 
     it "answers nothing for a host no establishment owns" do
       host! "does-not-exist.zubio.com.br"
+
       get branding_stylesheet_path(v: "no-such-digest")
 
       expect(response).to have_http_status(:not_found)
@@ -53,8 +54,8 @@ RSpec.describe "Generated stylesheets", type: :request do
     it "lets the sheet be cached forever when the URL carries the digest of what it serves" do
       tenant = create(:tenant, subdomain: "estudio-aurora")
       branding = create(:branding, tenant: tenant, brand_600: "#1D4ED8")
-
       host! "estudio-aurora.zubio.com.br"
+
       get branding_stylesheet_path(v: branding.stylesheet_digest)
 
       expect(response.headers["Cache-Control"]).to include("max-age=31536000")
@@ -64,8 +65,8 @@ RSpec.describe "Generated stylesheets", type: :request do
     it "refuses to be cached when the URL carries a version it no longer serves" do
       tenant = create(:tenant, subdomain: "estudio-aurora")
       create(:branding, tenant: tenant, brand_600: "#1D4ED8")
-
       host! "estudio-aurora.zubio.com.br"
+
       get branding_stylesheet_path(v: "stale-digest")
 
       expect(response.headers["Cache-Control"]).to include("no-cache")
@@ -74,6 +75,7 @@ RSpec.describe "Generated stylesheets", type: :request do
 
     it "serves an outdated browser too, so the landing it paints never loses its colors" do
       host! "zubio.com.br"
+
       get branding_stylesheet_path(v: Branding.platform_default.stylesheet_digest),
         headers: { "User-Agent" => outdated_safari }
 
@@ -84,6 +86,7 @@ RSpec.describe "Generated stylesheets", type: :request do
   describe "GET /showcase.css" do
     it "serves the demo ramps and never the tenant namespace" do
       host! "zubio.com.br"
+
       get showcase_stylesheet_path(v: Landing::ShowcaseBrand.stylesheet_digest)
 
       expect(response.media_type).to eq("text/css")
@@ -93,6 +96,7 @@ RSpec.describe "Generated stylesheets", type: :request do
 
     it "lets the sheet be cached forever when the URL carries the digest of what it serves" do
       host! "zubio.com.br"
+
       get showcase_stylesheet_path(v: Landing::ShowcaseBrand.stylesheet_digest)
 
       expect(response.headers["Cache-Control"]).to include("max-age=31536000")
@@ -102,6 +106,7 @@ RSpec.describe "Generated stylesheets", type: :request do
   describe "GET /palette.css" do
     it "serves one background rule per swatch of the brand palette and the preview ramps" do
       host! "zubio.com.br"
+
       get palette_stylesheet_path(v: Branding::Palette.stylesheet_digest)
 
       expect(response.media_type).to eq("text/css")
@@ -112,8 +117,8 @@ RSpec.describe "Generated stylesheets", type: :request do
     it "is built from the families alone and never carries a stored brand color" do
       tenant = create(:tenant, subdomain: "estudio-aurora")
       create(:branding, tenant: tenant, brand_600: "#123456")
-
       host! "estudio-aurora.zubio.com.br"
+
       get palette_stylesheet_path(v: Branding::Palette.stylesheet_digest)
 
       expect(response.body).to eq(Branding::Palette.stylesheet)
@@ -122,6 +127,7 @@ RSpec.describe "Generated stylesheets", type: :request do
 
     it "lets the sheet be cached forever when the URL carries the digest of what it serves" do
       host! "zubio.com.br"
+
       get palette_stylesheet_path(v: Branding::Palette.stylesheet_digest)
 
       expect(response.headers["Cache-Control"]).to include("max-age=31536000")
@@ -131,6 +137,7 @@ RSpec.describe "Generated stylesheets", type: :request do
   describe "GET /preview.css" do
     it "serves the brand ramp for a valid hex, public and cacheable" do
       host! "zubio.com.br"
+
       get "/preview.css", params: { brand: "#2C6CB0" }
 
       expect(response.media_type).to eq("text/css")
@@ -141,6 +148,7 @@ RSpec.describe "Generated stylesheets", type: :request do
 
     it "serves the support ramp for a valid hex" do
       host! "zubio.com.br"
+
       get "/preview.css", params: { secondary: "#E8493C" }
 
       expect(response.body).to include(%([data-preview-secondary="#E8493C"]{))
@@ -148,6 +156,7 @@ RSpec.describe "Generated stylesheets", type: :request do
 
     it "answers not found when the code is not a color" do
       host! "zubio.com.br"
+
       get "/preview.css", params: { brand: "#ZZZ123" }
 
       expect(response).to have_http_status(:not_found)
@@ -155,6 +164,7 @@ RSpec.describe "Generated stylesheets", type: :request do
 
     it "answers not found and never echoes an injection payload" do
       host! "zubio.com.br"
+
       get "/preview.css", params: { brand: "#fff;}body{background:red" }
 
       expect(response).to have_http_status(:not_found)
@@ -163,6 +173,7 @@ RSpec.describe "Generated stylesheets", type: :request do
 
     it "answers not found when no valid role is given" do
       host! "zubio.com.br"
+
       get "/preview.css"
 
       expect(response).to have_http_status(:not_found)
@@ -171,18 +182,16 @@ RSpec.describe "Generated stylesheets", type: :request do
     it "carries no establishment data and is identical on any host" do
       tenant = create(:tenant, subdomain: "estudio-aurora")
       create(:branding, tenant: tenant, brand_600: "#123456")
-
-      host! "estudio-aurora.zubio.com.br"
-      get "/preview.css", params: { brand: "#2C6CB0" }
-      on_tenant = response.body
-
       host! "zubio.com.br"
       get "/preview.css", params: { brand: "#2C6CB0" }
       on_platform = response.body
+      host! "estudio-aurora.zubio.com.br"
 
-      expect(on_tenant).to eq(on_platform)
-      expect(on_tenant).to include(%([data-preview-brand="#2C6CB0"]{))
-      expect(on_tenant).not_to include("#123456")
+      get "/preview.css", params: { brand: "#2C6CB0" }
+
+      expect(response.body).to eq(on_platform)
+      expect(response.body).to include(%([data-preview-brand="#2C6CB0"]{))
+      expect(response.body).not_to include("#123456")
     end
   end
 end

@@ -268,26 +268,6 @@ RSpec.describe Branding, type: :model do
   end
 
   describe "#css_variables" do
-    def role(css, name) = css[/--#{name}:(#\h{6});/, 1]
-
-    def contrast(foreground, background)
-      Branding::ColorScale.new(foreground).contrast_against(Branding::ColorScale.new(background))
-    end
-
-    def role_failures(css, prefix, theme)
-      neutrals = Branding::NEUTRALS.fetch(theme).values
-      ink = role(css, "#{prefix}-ink-#{theme}")
-      mark = role(css, "#{prefix}-mark-#{theme}")
-      soft = role(css, "#{prefix}-soft-#{theme}")
-      soft_ink = role(css, "#{prefix}-soft-ink-#{theme}")
-
-      [
-        ("ink" if neutrals.any? { |neutral| contrast(ink, neutral) < Branding::ColorScale::MIN_CONTRAST }),
-        ("mark" if neutrals.any? { |neutral| contrast(mark, neutral) < Branding::ColorScale::MIN_NON_TEXT_CONTRAST }),
-        ("soft-ink" if contrast(soft_ink, soft) < Branding::ColorScale::MIN_CONTRAST)
-      ].compact
-    end
-
     it "includes the brand scale and the on-brand token" do
       branding = build(:branding, brand_600: "#4F46E5")
 
@@ -354,22 +334,16 @@ RSpec.describe Branding, type: :model do
     end
 
     it "gives every swatch, as brand and as secondary, a label and an underline that read on every neutral and a light pair that reads, in both themes" do
-      failures = Branding::Palette.swatches.flat_map do |hex|
-        css = build(:branding, brand_600: hex, brand_secondary_600: hex).css_variables
-
-        %w[brand secondary].product(Branding::NEUTRALS.keys).flat_map do |prefix, theme|
-          role_failures(css, prefix, theme).map { |failure| "#{hex} #{prefix} #{theme} #{failure}" }
-        end
-      end
+      stylesheets = Branding::Palette.swatches.map { |hex| build(:branding, brand_600: hex, brand_secondary_600: hex).css_variables }
 
       expect(Branding::Palette.swatches.size).to eq(24)
-      expect(failures).to be_empty
+      expect(stylesheets).to all(have_legible_roles("brand").and(have_legible_roles("secondary")))
     end
 
     it "catches a label that does not read on the neutrals" do
       css = build(:branding, brand_600: "#EAB308").css_variables.sub(/--brand-ink-light:#\h{6};/, "--brand-ink-light:#EAB308;")
 
-      expect(role_failures(css, "brand", :light)).to include("ink")
+      expect(css).not_to have_legible_roles("brand")
     end
 
     it "labels a light yellow brand on a darker step of its ramp, because the chosen color fails on the neutrals" do
@@ -377,21 +351,21 @@ RSpec.describe Branding, type: :model do
 
       css = branding.css_variables
 
-      expect(role(css, "brand-ink-light")).not_to eq("#EAB308")
-      expect(role(css, "brand-ink-light")).to eq(branding.color_scale.tokens.fetch(900))
+      expect(css[/--brand-ink-light:(#\h{6});/, 1]).not_to eq("#EAB308")
+      expect(css[/--brand-ink-light:(#\h{6});/, 1]).to eq(branding.color_scale.tokens.fetch(900))
     end
 
     it "keeps the chosen color as the label when it already reads on every neutral" do
       css = build(:branding, brand_600: "#2C6CB0").css_variables
 
-      expect(role(css, "brand-ink-light")).to eq("#2C6CB0")
+      expect(css[/--brand-ink-light:(#\h{6});/, 1]).to eq("#2C6CB0")
     end
 
     it "underlines with the chosen secondary color itself when it reaches the non-text minimum on every neutral" do
       css = build(:branding, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C").css_variables
 
-      expect(role(css, "secondary-mark-light")).to eq("#E8493C")
-      expect(role(css, "secondary-ink-light")).not_to eq("#E8493C")
+      expect(css[/--secondary-mark-light:(#\h{6});/, 1]).to eq("#E8493C")
+      expect(css[/--secondary-ink-light:(#\h{6});/, 1]).not_to eq("#E8493C")
     end
 
     it "takes the light pair from the end of the ramp that belongs to each theme" do
@@ -399,8 +373,8 @@ RSpec.describe Branding, type: :model do
 
       css = branding.css_variables
 
-      expect(role(css, "brand-soft-light")).to eq(branding.color_scale.tokens.fetch(50))
-      expect(role(css, "brand-soft-dark")).to eq(branding.color_scale.tokens.fetch(900))
+      expect(css[/--brand-soft-light:(#\h{6});/, 1]).to eq(branding.color_scale.tokens.fetch(50))
+      expect(css[/--brand-soft-dark:(#\h{6});/, 1]).to eq(branding.color_scale.tokens.fetch(900))
     end
 
     it "draws the secondary underline and light pair from the brand ramp when no secondary color is set" do
@@ -408,8 +382,8 @@ RSpec.describe Branding, type: :model do
       paired = build(:branding, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C").css_variables
       roles = %w[mark-light mark-dark soft-light soft-dark soft-ink-light soft-ink-dark]
 
-      expect(roles.map { |name| role(lone, "secondary-#{name}") }).to eq(roles.map { |name| role(lone, "brand-#{name}") })
-      expect(role(paired, "secondary-mark-light")).not_to eq(role(paired, "brand-mark-light"))
+      expect(roles.map { |name| lone[/--secondary-#{name}:(#\h{6});/, 1] }).to eq(roles.map { |name| lone[/--brand-#{name}:(#\h{6});/, 1] })
+      expect(paired[/--secondary-mark-light:(#\h{6});/, 1]).not_to eq(paired[/--brand-mark-light:(#\h{6});/, 1])
     end
 
     it "derives the same ramp through the class method that the instance uses" do

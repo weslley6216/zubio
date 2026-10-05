@@ -1,10 +1,8 @@
 require "rails_helper"
 
 RSpec.describe StylesheetProducer do
-  def producers = [ Branding.platform_default, Landing::ShowcaseBrand, Branding::Palette ]
-
   it "gives every sheet the stylesheets controller serves a digest short enough to travel in a URL" do
-    digests = producers.map(&:stylesheet_digest)
+    digests = [ Branding.platform_default, Landing::ShowcaseBrand, Branding::Palette ].map(&:stylesheet_digest)
 
     expect(digests).to all(have_attributes(length: described_class::DIGEST_LENGTH))
   end

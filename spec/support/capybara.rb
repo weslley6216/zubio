@@ -2,6 +2,7 @@ require "capybara/rspec"
 require "capybara/cuprite"
 
 Capybara.javascript_driver = :cuprite
+Capybara.enable_aria_label = true
 
 RSpec.configure do |config|
   config.before(:each, type: :system) do

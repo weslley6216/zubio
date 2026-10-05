@@ -3,10 +3,6 @@ require "rails_helper"
 RSpec.describe "Signup", type: :request do
   before { host! "zubio.com.br" }
 
-  def signup_params(name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123")
-    { user: { name: name, email: email, password: password } }
-  end
-
   describe "GET /signup/new" do
     it "renders the signup form outside any tenant subdomain" do
       get new_signup_path
@@ -75,11 +71,10 @@ RSpec.describe "Signup", type: :request do
 
   describe "POST /signup" do
     it "creates a nameless tenant with a provisional subdomain, its owner and professional" do
-      post signup_path, params: signup_params
+      post signup_path, params: { user: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123" } }
 
       owner = User.unscoped.sole
       tenant = owner.tenant
-
       expect(tenant.name).to be_nil
       expect(tenant).to be_active
       ActsAsTenant.with_tenant(tenant) { expect(tenant.users.sole).to be_owner }
@@ -87,23 +82,21 @@ RSpec.describe "Signup", type: :request do
     end
 
     it "hands the owner over to the provisional subdomain" do
-      post signup_path, params: signup_params
+      post signup_path, params: { user: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123" } }
 
       tenant = User.unscoped.sole.tenant
-
       expect(response.location).to start_with(owner_handoff_url(subdomain: tenant.subdomain))
     end
 
     it "creates the account with the single password the visitor typed, without confirmation" do
-      post signup_path, params: signup_params(password: "s3cr3t123")
+      post signup_path, params: { user: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123" } }
 
       owner = User.unscoped.sole
-
       expect(owner.authenticate("s3cr3t123")).to eq(owner)
     end
 
     it "rejects an invalid email and re-renders the form with the typed name kept" do
-      post signup_path, params: signup_params(email: "not-an-email")
+      post signup_path, params: { user: { name: "Ana Lima", email: "not-an-email", password: "s3cr3t123" } }
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include(%(value="Ana Lima"))
@@ -111,7 +104,7 @@ RSpec.describe "Signup", type: :request do
     end
 
     it "rejects a short password, keeps the account uncreated, and states the minimum by the password field" do
-      post signup_path, params: signup_params(password: "123")
+      post signup_path, params: { user: { name: "Ana Lima", email: "ana@example.com", password: "123" } }
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include("é muito curto (mínimo: 8 caracteres)")
@@ -120,16 +113,15 @@ RSpec.describe "Signup", type: :request do
     end
 
     it "accepts a password of the minimum length and hands the owner to onboarding" do
-      post signup_path, params: signup_params(password: "12345678")
+      post signup_path, params: { user: { name: "Ana Lima", email: "ana@example.com", password: "12345678" } }
 
       owner = User.unscoped.sole
-
       expect(owner.authenticate("12345678")).to eq(owner)
       expect(response.location).to start_with(owner_handoff_url(subdomain: owner.tenant.subdomain))
     end
 
     it "names blank fields in Portuguese, without the default English" do
-      post signup_path, params: signup_params(name: "", email: "", password: "")
+      post signup_path, params: { user: { name: "", email: "", password: "" } }
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include("não pode ficar em branco")
@@ -137,7 +129,7 @@ RSpec.describe "Signup", type: :request do
     end
 
     it "states a malformed email in Portuguese, without the default English" do
-      post signup_path, params: signup_params(email: "not-an-email")
+      post signup_path, params: { user: { name: "Ana Lima", email: "not-an-email", password: "s3cr3t123" } }
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include("não é válido")
@@ -145,11 +137,17 @@ RSpec.describe "Signup", type: :request do
     end
 
     it "blocks further signup attempts after the rate limit is exceeded" do
-      5.times { |index| post signup_path, params: signup_params(email: "ana#{index}@example.com") }
-      post signup_path, params: signup_params(email: "ana-over@example.com")
+      5.times { |index| post signup_path, params: { user: { name: "Ana Lima", email: "ana#{index}@example.com", password: "s3cr3t123" } } }
+
+      post signup_path, params: { user: { name: "Ana Lima", email: "ana-over@example.com", password: "s3cr3t123" } }
 
       expect(response).to redirect_to(new_signup_path)
+    end
 
+    it "tells the visitor to try again later once the rate limit is exceeded" do
+      5.times { |index| post signup_path, params: { user: { name: "Ana Lima", email: "ana#{index}@example.com", password: "s3cr3t123" } } }
+
+      post signup_path, params: { user: { name: "Ana Lima", email: "ana-over@example.com", password: "s3cr3t123" } }
       follow_redirect!
 
       expect(response.body).to include("Muitas tentativas. Tente novamente mais tarde.")
@@ -159,24 +157,21 @@ RSpec.describe "Signup", type: :request do
       existing_tenant = create(:tenant, subdomain: "barbearia-do-ze")
       owner = create(:user, tenant: existing_tenant, email: "ze@example.com", password: "s3cr3t123")
 
-      post signup_path, params: signup_params
+      post signup_path, params: { user: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123" } }
 
-      host! "#{existing_tenant.subdomain}.zubio.com.br"
-      post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
-      get owner_dashboard_path
-
-      expect(response).to have_http_status(:ok)
-      expect(User.unscoped.where(tenant: existing_tenant).count).to eq(1)
+      expect(User.unscoped.where(tenant: existing_tenant)).to contain_exactly(owner)
+      expect(owner.reload.authenticate("s3cr3t123")).to eq(owner)
+      expect(existing_tenant.reload.subdomain).to eq("barbearia-do-ze")
+      expect(existing_tenant.status).to eq("active")
     end
 
     it "emails the new owner the provisional address" do
       perform_enqueued_jobs do
-        post signup_path, params: signup_params
+        post signup_path, params: { user: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123" } }
       end
 
       tenant = User.unscoped.sole.tenant
       delivery = ActionMailer::Base.deliveries.last
-
       expect(delivery.subject).to eq("Sua conta no Zubio está pronta")
       expect(delivery.body.to_s).to include(tenant.subdomain)
     end

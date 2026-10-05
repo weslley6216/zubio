@@ -37,31 +37,43 @@ RSpec.describe "Login links", type: :request do
         .to have_enqueued_mail(OwnerMailer, :login_links).with("ze@example.com")
     end
 
-    it "confirms the send and keeps the message identical for a known address" do
+    it "sends a known address back to the form" do
       tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
       create(:user, tenant: tenant, email: "ze@example.com", role: "owner")
 
       post login_link_path, params: { email: "ze@example.com" }
 
       expect(response).to redirect_to(new_login_link_path)
+    end
+
+    it "confirms the send for a known address" do
+      tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      create(:user, tenant: tenant, email: "ze@example.com", role: "owner")
+
+      post login_link_path, params: { email: "ze@example.com" }
       follow_redirect!
+
       expect(response.body).to include(LoginLinksController::CONFIRMATION)
     end
 
-    it "enqueues nothing and shows the same confirmation for an unknown address" do
+    it "enqueues nothing for an unknown address" do
       expect { post login_link_path, params: { email: "nobody@example.com" } }
         .not_to have_enqueued_mail(OwnerMailer, :login_links)
+    end
 
+    it "shows the same confirmation for an unknown address" do
       post login_link_path, params: { email: "nobody@example.com" }
       follow_redirect!
 
       expect(response.body).to include(LoginLinksController::CONFIRMATION)
     end
 
-    it "enqueues nothing for a blank email and still confirms" do
+    it "enqueues nothing for a blank email" do
       expect { post login_link_path, params: { email: "" } }
         .not_to have_enqueued_mail(OwnerMailer, :login_links)
+    end
 
+    it "still confirms for a blank email" do
       post login_link_path, params: { email: "" }
       follow_redirect!
 
@@ -70,10 +82,16 @@ RSpec.describe "Login links", type: :request do
 
     it "blocks further attempts after the rate limit is exceeded" do
       5.times { post login_link_path, params: { email: "nobody@example.com" } }
+
       post login_link_path, params: { email: "nobody@example.com" }
 
       expect(response).to redirect_to(new_login_link_path)
+    end
 
+    it "tells the visitor to try again later once the rate limit is exceeded" do
+      5.times { post login_link_path, params: { email: "nobody@example.com" } }
+
+      post login_link_path, params: { email: "nobody@example.com" }
       follow_redirect!
 
       expect(response.body).to include("Muitas tentativas. Tente novamente mais tarde.")

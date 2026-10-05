@@ -4,15 +4,10 @@ RSpec.describe "Owner dashboard", type: :request do
   let(:tenant) { create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora") }
   let(:owner) { create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123") }
 
-  def sign_in
-    host! "#{tenant.subdomain}.zubio.com.br"
-    post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
-  end
-
   describe "GET /owner/dashboard" do
     it "stacks the panel subtitle under the establishment name in the identity" do
       create(:branding, tenant: tenant)
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
@@ -23,7 +18,7 @@ RSpec.describe "Owner dashboard", type: :request do
 
     it "greets the owner by first name and names the establishment" do
       create(:branding, tenant: tenant)
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
@@ -33,7 +28,7 @@ RSpec.describe "Owner dashboard", type: :request do
 
     it "shows the establishment logo when one is attached" do
       create(:branding, :with_logo, tenant: tenant)
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
@@ -42,7 +37,7 @@ RSpec.describe "Owner dashboard", type: :request do
 
     it "falls back to the establishment initial when no logo is attached" do
       create(:branding, tenant: tenant)
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
@@ -52,7 +47,7 @@ RSpec.describe "Owner dashboard", type: :request do
 
     it "applies the tenant's brand through the accent token and its own sheet" do
       branding = create(:branding, tenant: tenant, brand_600: "#2F6FED")
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
@@ -62,7 +57,7 @@ RSpec.describe "Owner dashboard", type: :request do
 
     it "shows no brand card for a tenant that has finished onboarding" do
       create(:branding, tenant: tenant)
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
@@ -72,7 +67,7 @@ RSpec.describe "Owner dashboard", type: :request do
     end
 
     it "renders the platform default identity for a tenant with no branding at all" do
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
@@ -82,7 +77,7 @@ RSpec.describe "Owner dashboard", type: :request do
 
     it "offers a path to settings and a way out of the session" do
       create(:branding, tenant: tenant)
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
@@ -91,23 +86,30 @@ RSpec.describe "Owner dashboard", type: :request do
       expect(response.body).to include(%(value="delete"))
     end
 
-    it "sends an anonymous visitor to the login without naming the establishment" do
+    it "sends an anonymous visitor to the login" do
       create(:branding, tenant: tenant)
       host! "#{tenant.subdomain}.zubio.com.br"
 
       get owner_dashboard_path
 
       expect(response).to redirect_to(new_owner_session_path)
+    end
 
+    it "names nothing of the establishment on the login an anonymous visitor lands on" do
+      create(:branding, tenant: tenant)
+      host! "#{tenant.subdomain}.zubio.com.br"
+
+      get owner_dashboard_path
       follow_redirect!
 
+      expect(response.body).to include(%(action="#{owner_session_path}"))
       expect(response.body).not_to include("Estúdio Aurora")
       expect(response.body).not_to include("wa.me")
     end
 
     it "shows the establishment public address in full" do
       create(:branding, tenant: tenant)
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
@@ -116,7 +118,7 @@ RSpec.describe "Owner dashboard", type: :request do
 
     it "writes a WhatsApp message carrying the establishment address" do
       create(:branding, tenant: tenant)
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
@@ -127,7 +129,7 @@ RSpec.describe "Owner dashboard", type: :request do
     it "shows its own host and no other tenant's host" do
       other_tenant = create(:tenant, subdomain: "salon-b", name: "Barbearia do Zé")
       create(:branding, tenant: tenant)
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
@@ -139,7 +141,7 @@ RSpec.describe "Owner dashboard", type: :request do
       other_tenant = create(:tenant, subdomain: "salon-b", name: "Barbearia do Zé")
       other_branding = create(:branding, :with_logo, tenant: other_tenant, brand_600: "#DC2626")
       branding = create(:branding, tenant: tenant, brand_600: "#2F6FED")
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 

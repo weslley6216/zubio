@@ -4,19 +4,10 @@ RSpec.describe "Content Security Policy", type: :request do
   let(:tenant) { create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora") }
   let(:owner) { create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123") }
 
-  def nonce_from(response)
-    response.headers["Content-Security-Policy"][/script-src [^;]*'nonce-([^']+)'/, 1]
-  end
-
-  def sign_in
-    host! "#{tenant.subdomain}.zubio.com.br"
-    post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
-  end
-
   describe "a panel response" do
     it "carries an enforcing policy, not a report-only one" do
       create(:branding, tenant: tenant)
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
@@ -27,11 +18,11 @@ RSpec.describe "Content Security Policy", type: :request do
 
     it "gives the layout's inline script the nonce it announced, and keeps inline style out of the head entirely" do
       create(:branding, tenant: tenant)
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
-      nonce = nonce_from(response)
+      nonce = response.headers["Content-Security-Policy"][/script-src [^;]*'nonce-([^']+)'/, 1]
       expect(nonce).to be_present
       expect(response.body).to include(%(<script nonce="#{nonce}">))
       expect(response.body).not_to include("<style")
@@ -42,7 +33,7 @@ RSpec.describe "Content Security Policy", type: :request do
     it "allows the configured storage origin so the direct upload PUT is not blocked" do
       allow(Zubio).to receive(:storage_upload_origin).and_return("https://abcxyz.storage.supabase.co")
       create(:branding, tenant: tenant)
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
@@ -52,7 +43,7 @@ RSpec.describe "Content Security Policy", type: :request do
     it "falls back to self when storage is same-origin" do
       allow(Zubio).to receive(:storage_upload_origin).and_return(nil)
       create(:branding, tenant: tenant)
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
@@ -64,7 +55,7 @@ RSpec.describe "Content Security Policy", type: :request do
   describe "the img-src directive" do
     it "allows blob images so the chosen logo can be previewed before upload" do
       create(:branding, tenant: tenant)
-      sign_in
+      sign_in_owner(owner)
 
       get owner_dashboard_path
 
@@ -78,17 +69,20 @@ RSpec.describe "Content Security Policy", type: :request do
     it "carries the policy too" do
       get root_path
 
+      nonce = response.headers["Content-Security-Policy"][/script-src [^;]*'nonce-([^']+)'/, 1]
       expect(response.headers["Content-Security-Policy"]).to include("style-src 'self'")
-      expect(response.body).to include(%(nonce="#{nonce_from(response)}"))
+      expect(response.body).to include(%(nonce="#{nonce}"))
     end
 
     it "mints a different nonce for every response" do
       get root_path
-      first = nonce_from(response)
+      first_nonce = response.headers["Content-Security-Policy"][/script-src [^;]*'nonce-([^']+)'/, 1]
 
       get root_path
 
-      expect(nonce_from(response)).not_to eq(first)
+      second_nonce = response.headers["Content-Security-Policy"][/script-src [^;]*'nonce-([^']+)'/, 1]
+      expect(second_nonce).to be_present
+      expect(second_nonce).not_to eq(first_nonce)
     end
   end
 end

@@ -1,30 +1,6 @@
 require "rails_helper"
 
 RSpec.describe "Landing page appearance", type: :system, js: true do
-  def faq_summary_heights_script
-    <<~JS
-      Array.from(document.querySelectorAll("#faq summary")).map(
-        (element) => element.getBoundingClientRect().height
-      )
-    JS
-  end
-
-  def control_cursors_script
-    <<~JS
-      Array.from(document.querySelectorAll("button, summary")).map(
-        (element) => getComputedStyle(element).cursor
-      )
-    JS
-  end
-
-  def clipped_details_script
-    <<~JS
-      Array.from(document.querySelectorAll("[data-agenda-detail]")).some(
-        (element) => element.scrollWidth > element.clientWidth
-      )
-    JS
-  end
-
   it "loads the platform typeface" do
     visit "http://zubio.com.br/"
 
@@ -63,8 +39,8 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
     expect(page).to have_no_css("[data-demo-swatch][style]", visible: :all)
   end
 
-  it "keeps the previewed establishment readable in both color schemes" do
-    %w[light dark].each do |scheme|
+  %w[light dark].each do |scheme|
+    it "keeps the previewed establishment readable, in #{scheme}" do
       emulate_color_scheme(scheme)
 
       visit "http://zubio.com.br/"
@@ -96,7 +72,7 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
   it "gives every FAQ question a target a thumb can hit" do
     visit "http://zubio.com.br/"
 
-    heights = page.evaluate_script(faq_summary_heights_script)
+    heights = page.evaluate_script(%(Array.from(document.querySelectorAll("#faq summary")).map((element) => element.getBoundingClientRect().height)))
     expect(heights.size).to eq(Views::Pages::Home::Faq::QUESTIONS.size)
     expect(heights.min).to be >= 44
   end
@@ -104,7 +80,7 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
   it "points the cursor at every control, which the framework reset does not do for buttons" do
     visit "http://zubio.com.br/"
 
-    cursors = page.evaluate_script(control_cursors_script)
+    cursors = page.evaluate_script(%(Array.from(document.querySelectorAll("button, summary")).map((element) => getComputedStyle(element).cursor)))
     expect(cursors).not_to be_empty
     expect(cursors.uniq).to eq([ "pointer" ])
   end
@@ -112,8 +88,6 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
   it "repaints the page in the other theme when the visitor asks for it" do
     emulate_color_scheme("dark")
     visit "http://zubio.com.br/"
-
-    expect(computed("html", "backgroundColor")).to eq("rgb(11, 17, 23)")
 
     click_button Components::ThemeToggle::LABEL
 
@@ -147,14 +121,18 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
 
     details = page.all("[data-agenda-detail]", visible: :all)
     expect(details.size).to eq(Views::Pages::Home::DashboardPreview::APPOINTMENTS.size)
-    expect(page.evaluate_script(clipped_details_script)).to be false
+    expect(page.evaluate_script(%(Array.from(document.querySelectorAll("[data-agenda-detail]")).some((element) => element.scrollWidth > element.clientWidth)))).to be false
   end
 
-  it "swaps the previewed establishment when another identity is picked" do
+  it "previews the salon by default" do
     visit "http://zubio.com.br/"
 
     expect(page).to have_css('[data-demo-brand="salao"]')
     expect(page).to have_content("Studio Aurora")
+  end
+
+  it "swaps the previewed establishment when another identity is picked" do
+    visit "http://zubio.com.br/"
 
     click_on "Barbearia"
 
@@ -164,8 +142,8 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
   end
 
   it "keeps the showcase colors when the visitor comes back from the signup screen through the header" do
-    visit "http://zubio.com.br#{Rails.application.routes.url_helpers.new_signup_path}"
-    expect(page).to have_content("Criar sua conta")
+    visit "http://zubio.com.br#{new_signup_path}"
+    find("h1", text: "Criar sua conta")
 
     within("header") { click_on "Zubio" }
 

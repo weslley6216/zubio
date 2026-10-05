@@ -6,9 +6,13 @@ require 'rspec/rails'
 
 require_relative "support/capybara"
 require_relative "support/computed_style"
+require_relative "support/legible_roles"
+require_relative "support/neutral_mirror"
 require_relative "support/owner_session"
 require_relative "support/phlex_component"
+require_relative "support/probe_controllers"
 require_relative "support/query_count"
+require_relative "support/waiting"
 require "webmock/rspec"
 
 WebMock.disable_net_connect!(allow_localhost: true)
