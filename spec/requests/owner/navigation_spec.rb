@@ -4,81 +4,64 @@ RSpec.describe "Owner panel navigation", type: :request do
   let(:tenant) { create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora") }
   let(:owner) { create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123") }
 
-  def sign_in
-    host! "#{tenant.subdomain}.zubio.com.br"
-    post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
-  end
-
-  def band_item(href)
-    %(<a href="#{href}" class="#{Components::Owner::Header::ITEM_CLASS} #{Components::Owner::Header::RESTING_CLASS}">)
-  end
-
-  def current_band_item(href)
-    %(<a href="#{href}" aria-current="page" class="#{Components::Owner::Header::ITEM_CLASS} #{Components::Owner::Header::CURRENT_CLASS}">)
-  end
-
-  def menu_item(href)
-    %(<a href="#{href}" class="#{Components::Owner::Menu::ITEM_CLASS} #{Components::Owner::Menu::RESTING_CLASS}">)
-  end
-
-  def current_menu_item(href)
-    %(<a href="#{href}" aria-current="page" class="#{Components::Owner::Menu::ITEM_CLASS} #{Components::Owner::Menu::CURRENT_CLASS}">)
-  end
-
-  def current_identity = %(<a href="#{owner_dashboard_path}" aria-current="page")
-
   it "offers settings from the panel, in the band and in the menu, with the identity as the current page" do
     create(:branding, tenant: tenant)
-    sign_in
+    sign_in_owner(owner)
 
     get owner_dashboard_path
 
-    expect(response.body).to include(current_identity)
-    expect(response.body).to include(band_item(owner_settings_path))
-    expect(response.body).to include(menu_item(owner_settings_path))
+    document = Nokogiri::HTML5(response.body)
+    expect(document.at_css("header a[href='#{owner_dashboard_path}']")["aria-current"]).to eq("page")
+    expect(document.at_css("header nav a[href='#{owner_settings_path}']")["aria-current"]).to be_nil
+    expect(document.at_css("header nav a[href='#{owner_settings_path}']")["class"]).to include(Components::Owner::Header::RESTING_CLASS)
+    expect(document.at_css("header details a[href='#{owner_settings_path}']")["aria-current"]).to be_nil
   end
 
   it "drops the band and the menu on the settings hub for a bar back to the panel" do
     create(:branding, tenant: tenant)
-    sign_in
+    sign_in_owner(owner)
 
     get owner_settings_path
 
-    expect(response.body).to include(%(<a href="#{owner_dashboard_path}"))
-    expect(response.body).not_to include(Components::Owner::Menu::LABEL)
-    expect(response.body).not_to include(current_band_item(owner_settings_path))
+    document = Nokogiri::HTML5(response.body)
+    expect(document.at_css("a[href='#{owner_dashboard_path}']")).to be_present
+    expect(document.at_css("header nav")).to be_nil
+    expect(document.at_css("header details")).to be_nil
   end
 
   it "keeps settings current on the catalog, the service form and the three brand screens, which settings leads to" do
     create(:branding, tenant: tenant)
-    sign_in
+    sign_in_owner(owner)
 
-    bodies = [ owner_services_path, new_owner_service_path, edit_owner_brand_colors_path, edit_owner_brand_name_path, edit_owner_brand_logo_path ].map do |path|
+    documents = [ owner_services_path, new_owner_service_path, edit_owner_brand_colors_path, edit_owner_brand_name_path, edit_owner_brand_logo_path ].map do |path|
       get path
-      response.body
+      Nokogiri::HTML5(response.body)
     end
 
-    expect(bodies).to all(include(current_band_item(owner_settings_path)))
-    expect(bodies).to all(include(current_menu_item(owner_settings_path)))
-    expect(bodies).not_to include(a_string_including(current_identity))
+    expect(documents.map { |document| document.at_css("header nav a[href='#{owner_settings_path}']")["aria-current"] }).to all(eq("page"))
+    expect(documents.map { |document| document.at_css("header nav a[href='#{owner_settings_path}']")["class"] }).to all(include(Components::Owner::Header::CURRENT_CLASS))
+    expect(documents.map { |document| document.at_css("header details a[href='#{owner_settings_path}']")["aria-current"] }).to all(eq("page"))
+    expect(documents.map { |document| document.at_css("header a[href='#{owner_dashboard_path}']")["aria-current"] }).to all(be_nil)
   end
 
   it "leaves the old sections and every destination without a screen out of the band and the menu" do
     create(:branding, tenant: tenant)
-    sign_in
+    sign_in_owner(owner)
 
     get owner_dashboard_path
 
-    expect(response.body).to include(band_item(owner_settings_path))
+    expect(response.body).to include(%(href="#{owner_settings_path}"))
     expect(response.body).to include(%(action="#{owner_session_path}"))
     expect(response.body).not_to include(%(href="#{owner_services_path}"))
     expect(response.body).not_to include(%(href="#{edit_owner_brand_colors_path}"))
-    [ "Minha agenda", "Meu link", "Ajuda" ].each { |label| expect(response.body).not_to include(label) }
+    expect(response.body).not_to include("Minha agenda")
+    expect(response.body).not_to include("Meu link")
+    expect(response.body).not_to include("Ajuda")
   end
 
   it "folds the theme switch and the way out into the menu, where the band has no room" do
     create(:branding, tenant: tenant)
-    sign_in
+    sign_in_owner(owner)
 
     get owner_dashboard_path
 
@@ -87,18 +70,14 @@ RSpec.describe "Owner panel navigation", type: :request do
     expect(response.body.scan(%(action="#{owner_session_path}")).size).to eq(2)
   end
 
-  it "shows the destinations to the owner and none of them to an anonymous visitor" do
+  it "shows no destination to an anonymous visitor sent to the login" do
     create(:branding, tenant: tenant)
-    sign_in
-    get owner_dashboard_path
-    signed_in_body = response.body
-
-    reset!
     host! "#{tenant.subdomain}.zubio.com.br"
+
     get owner_dashboard_path
     follow_redirect!
 
-    expect(signed_in_body).to include(Components::Owner::Header::SETTINGS_LABEL)
+    expect(response.body).to include(%(action="#{owner_session_path}"))
     expect(response.body).not_to include(Components::Owner::Header::SETTINGS_LABEL)
     expect(response.body).not_to include(Components::Owner::Menu::LABEL)
     expect(response.body).not_to include(%(aria-current="page"))
@@ -108,7 +87,7 @@ RSpec.describe "Owner panel navigation", type: :request do
     other_tenant = create(:tenant, subdomain: "salon-b", name: "Barbearia do Zé")
     create(:branding, :with_logo, tenant: other_tenant, brand_600: "#DC2626")
     create(:branding, tenant: tenant)
-    sign_in
+    sign_in_owner(owner)
 
     get owner_dashboard_path
 

@@ -8,6 +8,14 @@ module OwnerSession
   end
 end
 
+module OwnerRequestSession
+  def sign_in_owner(owner)
+    host! "#{owner.tenant.subdomain}.zubio.com.br"
+    post owner_session_path, params: { email: owner.email, password: owner.password }
+  end
+end
+
 RSpec.configure do |config|
   config.include OwnerSession, type: :system
+  config.include OwnerRequestSession, type: :request
 end
