@@ -7,11 +7,11 @@ RSpec.describe Landing::ShowcaseBrand do
     end
 
     it "gives every brand two services with a price and a duration" do
-      described_class.all.each do |showcase_brand|
-        expect(showcase_brand.services.size).to eq(2)
-        expect(showcase_brand.services.map(&:price)).to all(start_with("R$"))
-        expect(showcase_brand.services.map(&:duration)).to all(include("min"))
-      end
+      services = described_class.all.map(&:services)
+
+      expect(services.map(&:size)).to all(eq(2))
+      expect(services.flatten.map(&:price)).to all(start_with("R$"))
+      expect(services.flatten.map(&:duration)).to all(include("min"))
     end
 
     it "hands out a catalog no caller can mutate" do
