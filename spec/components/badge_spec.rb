@@ -18,6 +18,14 @@ RSpec.describe Components::Badge, type: :component do
     expect(html).not_to include("bg-secondary-soft")
   end
 
+  it "paints the brand tone with the soft brand pair for a reduced-hours badge" do
+    html = described_class.new(text: "Horário reduzido", tone: :brand).call
+
+    expect(html).to include("bg-brand-soft")
+    expect(html).to include("text-brand-ink")
+    expect(html).not_to include("bg-surface-3")
+  end
+
   it "keeps the pill shape on every tone" do
     shapes = described_class::TONES.each_key.map do |tone|
       described_class.new(text: "Desativado", tone: tone).call.include?(described_class::BASE_CLASS)
