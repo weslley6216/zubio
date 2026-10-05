@@ -19,7 +19,9 @@ Convenções de spec compartilhadas por todas as camadas do Zubio. Testes são R
 | Regra | Detalhe |
 |-------|---------|
 | **Sem `let!`** | usar `let` + referência explícita, ou `create` dentro do `it` |
-| **AAA com linha vazia** | linha em branco entre Arrange/Act/Assert quando as três fases estão no `it`; se arrange/act estão em `let`, o `it` só tem o Assert |
+| **AAA com linha vazia** | linha em branco entre Arrange/Act/Assert quando as três fases estão no `it`; se arrange/act estão em `let`, o `it` só tem o Assert. Uma fase de cada: nada de assert → act → assert (`expect` → `follow_redirect!` → `expect` vira dois exemplos) |
+| **Sem `def` em arquivo de spec** | o spec se lê como documentação da funcionalidade, de cima a baixo, sem saltar para helper. Arrange com valores literais dentro do `it` (ou factory/trait), leitura da página inline no Assert. Vocabulário compartilhado de verdade (login por tipo de spec, matcher customizado) mora em `spec/support/`, com nome do domínio e **sem `expect` dentro**. Guardado por `spec/conventions/helper_discipline_spec.rb` |
+| **System spec arranja pelo banco, age pela tela** | o estado de partida (dono no meio do onboarding, serviço cadastrado) vem de factory + `visit` direto; clicar por N passos só para chegar ao ponto do teste é Arrange escondido |
 | **Nunca comentários** | nada de `# Arrange`, nem qualquer outro comentário no spec |
 | **Sem `*_any_instance_of`** | proibido `allow_any_instance_of`/`expect_any_instance_of`; mockar classe/instância específica ou testar o comportamento resultante |
 | **Sem referência a ACs** | o nome do exemplo descreve o comportamento e faz sentido sozinho |
