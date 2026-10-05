@@ -4,15 +4,10 @@ RSpec.describe "Owner brand name", type: :request do
   let(:tenant) { create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé") }
   let(:owner) { create(:user, tenant: tenant, email: "ze@example.com", password: "s3cr3t123") }
 
-  def sign_in
-    host! "#{tenant.subdomain}.zubio.com.br"
-    post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
-  end
-
   describe "GET /owner/brand_name/edit" do
     it "shows the establishment address and does not remount it from the name" do
       create(:branding, tenant: tenant)
-      sign_in
+      sign_in_owner(owner)
 
       get edit_owner_brand_name_path
 
@@ -32,7 +27,7 @@ RSpec.describe "Owner brand name", type: :request do
 
   describe "PATCH /owner/brand_name" do
     it "stores a name at the limit" do
-      sign_in
+      sign_in_owner(owner)
 
       patch owner_brand_name_path, params: { tenant: { name: "a" * Tenant::NAME_MAX_LENGTH } }
 
@@ -41,7 +36,7 @@ RSpec.describe "Owner brand name", type: :request do
     end
 
     it "refuses a name over the limit on the same screen, keeping the stored one" do
-      sign_in
+      sign_in_owner(owner)
 
       patch owner_brand_name_path, params: { tenant: { name: "a" * (Tenant::NAME_MAX_LENGTH + 1) } }
 
@@ -51,7 +46,7 @@ RSpec.describe "Owner brand name", type: :request do
     end
 
     it "states a blank name in Portuguese, without the default English" do
-      sign_in
+      sign_in_owner(owner)
 
       patch owner_brand_name_path, params: { tenant: { name: "" } }
 
@@ -61,7 +56,7 @@ RSpec.describe "Owner brand name", type: :request do
     end
 
     it "keeps the address after a rename, since the subdomain does not change" do
-      sign_in
+      sign_in_owner(owner)
 
       patch owner_brand_name_path, params: { tenant: { name: "Navalha Barber Club" } }
       follow_redirect!
@@ -70,7 +65,7 @@ RSpec.describe "Owner brand name", type: :request do
     end
 
     it "renames a tenant that never saved a brand without failing on the missing branding" do
-      sign_in
+      sign_in_owner(owner)
 
       patch owner_brand_name_path, params: { tenant: { name: "Navalha" } }
 
@@ -81,7 +76,7 @@ RSpec.describe "Owner brand name", type: :request do
 
     it "does not rename another establishment" do
       other_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
-      sign_in
+      sign_in_owner(owner)
 
       patch owner_brand_name_path, params: { tenant: { name: "Hijacked" } }
 

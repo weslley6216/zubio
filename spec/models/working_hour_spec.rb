@@ -17,7 +17,6 @@ RSpec.describe WorkingHour, type: :model do
     it "accepts two ranges on the same day, morning and afternoon" do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
-
       morning = build(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
       afternoon = build(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "14:00", closes_at: "18:00")
 

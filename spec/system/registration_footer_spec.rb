@@ -1,22 +1,23 @@
 require "rails_helper"
 
 RSpec.describe "Registration footer", type: :system, js: true do
-  def footer_bottom = page.evaluate_script("document.querySelector('footer').getBoundingClientRect().bottom")
+  it "rests the signup footer at the bottom of a phone screen, with no band below it" do
+    page.driver.resize(390, 800)
 
-  def inner_height = page.evaluate_script("window.innerHeight")
+    visit new_signup_url(host: Tenant::PLATFORM_HOST)
 
-  def taller_than_screen? = page.evaluate_script("document.documentElement.scrollHeight > window.innerHeight")
+    expect(page.evaluate_script("document.documentElement.scrollHeight > window.innerHeight")).to be(false)
+    expect(page.evaluate_script("document.querySelector('footer').getBoundingClientRect().bottom"))
+      .to be_within(2).of(page.evaluate_script("window.innerHeight"))
+  end
 
-  {
-    "signup" => "new_signup_url",
-    "login link request" => "new_login_link_url"
-  }.each do |screen, helper|
-    it "rests the #{screen} footer at the bottom of a phone screen, with no band below it" do
-      page.driver.resize(390, 800)
-      visit send(helper, host: Tenant::PLATFORM_HOST)
+  it "rests the login link request footer at the bottom of a phone screen, with no band below it" do
+    page.driver.resize(390, 800)
 
-      expect(taller_than_screen?).to be(false)
-      expect(footer_bottom).to be_within(2).of(inner_height)
-    end
+    visit new_login_link_url(host: Tenant::PLATFORM_HOST)
+
+    expect(page.evaluate_script("document.documentElement.scrollHeight > window.innerHeight")).to be(false)
+    expect(page.evaluate_script("document.querySelector('footer').getBoundingClientRect().bottom"))
+      .to be_within(2).of(page.evaluate_script("window.innerHeight"))
   end
 end

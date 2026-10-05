@@ -304,37 +304,33 @@ RSpec.describe Tenant, type: :model do
   end
 
   describe ".provision_owner!" do
-    def provision(owner_name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123")
-      Tenant.provision_owner!(owner_attributes: { name: owner_name, email: email, password: password })
-    end
-
     it "returns the owner it created for the new tenant" do
-      owner = provision
+      owner = described_class.provision_owner!(owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123" })
 
       expect(owner).to be_owner
     end
 
     it "gives the tenant no name yet" do
-      owner = provision
+      owner = described_class.provision_owner!(owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123" })
 
       expect(owner.tenant.name).to be_nil
     end
 
     it "gives the tenant a provisional address that leaks neither the owner's name nor their email" do
-      owner = provision
+      owner = described_class.provision_owner!(owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123" })
 
       expect(owner.tenant.subdomain).not_to include("ana")
     end
 
     it "leaves the tenant's onboarding unfinished" do
-      owner = provision
+      owner = described_class.provision_owner!(owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123" })
 
       expect(owner.tenant.onboarding_completed?).to be(false)
     end
 
     it "rolls back the tenant when the owner attributes are invalid" do
       ActsAsTenant.without_tenant do
-        expect { provision(password: "") }
+        expect { described_class.provision_owner!(owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "" }) }
           .to raise_error(ActiveRecord::RecordInvalid)
           .and change(Tenant, :count).by(0)
           .and change(User, :count).by(0)
@@ -343,7 +339,7 @@ RSpec.describe Tenant, type: :model do
     end
 
     it "creates a professional for the new tenant's owner" do
-      owner = provision
+      owner = described_class.provision_owner!(owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123" })
 
       professionals = ActsAsTenant.with_tenant(owner.tenant) { Professional.all }
 
@@ -351,7 +347,7 @@ RSpec.describe Tenant, type: :model do
     end
 
     it "names the owner's professional after them and links it to their login" do
-      owner = provision
+      owner = described_class.provision_owner!(owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123" })
 
       professional = ActsAsTenant.with_tenant(owner.tenant) { Professional.sole }
 
@@ -359,7 +355,7 @@ RSpec.describe Tenant, type: :model do
     end
 
     it "creates the owner's professional active" do
-      owner = provision
+      owner = described_class.provision_owner!(owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123" })
 
       professional = ActsAsTenant.with_tenant(owner.tenant) { Professional.sole }
 
@@ -367,8 +363,8 @@ RSpec.describe Tenant, type: :model do
     end
 
     it "keeps each establishment's professional inside its own tenant" do
-      aurora = provision.tenant
-      provision(owner_name: "José Silva", email: "ze@example.com")
+      aurora = described_class.provision_owner!(owner_attributes: { name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123" }).tenant
+      described_class.provision_owner!(owner_attributes: { name: "José Silva", email: "ze@example.com", password: "s3cr3t123" })
 
       professionals = ActsAsTenant.with_tenant(aurora) { Professional.all }
 
@@ -419,11 +415,11 @@ RSpec.describe Tenant, type: :model do
   end
 
   describe "#complete_onboarding!" do
-    def answers(name: "Barbearia do Zé", price: "90,00")
+    let(:answers) do
       {
-        name: name,
+        name: "Barbearia do Zé",
         branding_attrs: { brand_600: "#2F6FED" },
-        services_attrs: [ { name: "Corte", duration_minutes: 45, price: price } ],
+        services_attrs: [ { name: "Corte", duration_minutes: 45, price: "90,00" } ],
         schedule: { weekdays: [ 2, 3 ], opens_at: "09:00", closes_at: "18:00", break_starts_at: nil, break_ends_at: nil }
       }
     end
@@ -431,7 +427,7 @@ RSpec.describe Tenant, type: :model do
     it "writes brand, name, derived address, services and schedule in one shot" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
-      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      professional = create(:professional, tenant: tenant, user: owner)
 
       ActsAsTenant.with_tenant(tenant) do
         tenant.complete_onboarding!(professional: professional, **answers)
@@ -447,10 +443,10 @@ RSpec.describe Tenant, type: :model do
     it "rolls the whole thing back when one answer is invalid, leaving nothing written" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
-      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      professional = create(:professional, tenant: tenant, user: owner)
 
       ActsAsTenant.with_tenant(tenant) do
-        expect { tenant.complete_onboarding!(professional: professional, **answers(price: "abc")) }
+        expect { tenant.complete_onboarding!(professional: professional, **answers.merge(services_attrs: [ { name: "Corte", duration_minutes: 45, price: "abc" } ])) }
           .to raise_error(Tenant::OnboardingRejected)
 
         expect(tenant.reload).to have_attributes(name: nil)
@@ -463,10 +459,10 @@ RSpec.describe Tenant, type: :model do
     it "exposes every invalid record at once and writes nothing" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
-      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      professional = create(:professional, tenant: tenant, user: owner)
 
       ActsAsTenant.with_tenant(tenant) do
-        expect { tenant.complete_onboarding!(professional: professional, **answers(price: "abc").merge(branding_attrs: { brand_600: "not-a-hex" })) }
+        expect { tenant.complete_onboarding!(professional: professional, **answers.merge(services_attrs: [ { name: "Corte", duration_minutes: 45, price: "abc" } ], branding_attrs: { brand_600: "not-a-hex" })) }
           .to raise_error(Tenant::OnboardingRejected) do |rejection|
             expect(rejection.branding.errors[:brand_600]).to be_present
             expect(rejection.services.first.errors[:price_cents]).to be_present
@@ -480,11 +476,11 @@ RSpec.describe Tenant, type: :model do
     it "flags a repeated service name even when another answer is also refused" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
-      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      professional = create(:professional, tenant: tenant, user: owner)
       repeated = [ { name: "Corte", duration_minutes: 45, price: "90,00" }, { name: "Corte", duration_minutes: 30, price: "50,00" } ]
 
       ActsAsTenant.with_tenant(tenant) do
-        expect { tenant.complete_onboarding!(professional: professional, **answers(name: "").merge(services_attrs: repeated)) }
+        expect { tenant.complete_onboarding!(professional: professional, **answers.merge(name: "", services_attrs: repeated)) }
           .to raise_error(Tenant::OnboardingRejected) do |rejection|
             expect(rejection.tenant.errors[:name]).to be_present
             expect(rejection.services.last.errors[:name]).to include(Service::NAME_TAKEN_MESSAGE)
@@ -496,7 +492,7 @@ RSpec.describe Tenant, type: :model do
     it "reports only the missing name, not a repetition, for two services left without a name" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
-      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      professional = create(:professional, tenant: tenant, user: owner)
       nameless = [ { name: "", duration_minutes: 45, price: "90,00" }, { name: "", duration_minutes: 30, price: "50,00" } ]
 
       ActsAsTenant.with_tenant(tenant) do
@@ -510,7 +506,7 @@ RSpec.describe Tenant, type: :model do
     it "refuses an inverted lunch break before writing any hour" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
-      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      professional = create(:professional, tenant: tenant, user: owner)
       inverted = { weekdays: [ 2 ], opens_at: "09:00", closes_at: "18:00", break_starts_at: "14:00", break_ends_at: "12:00" }
 
       ActsAsTenant.with_tenant(tenant) do
@@ -524,7 +520,7 @@ RSpec.describe Tenant, type: :model do
     it "refuses to finish when no weekday was marked" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
-      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      professional = create(:professional, tenant: tenant, user: owner)
 
       ActsAsTenant.with_tenant(tenant) do
         expect { tenant.complete_onboarding!(professional: professional, **answers.merge(schedule: { weekdays: [], opens_at: "09:00", closes_at: "18:00", break_starts_at: nil, break_ends_at: nil })) }
@@ -539,7 +535,7 @@ RSpec.describe Tenant, type: :model do
       create(:tenant, subdomain: "barbearia-do-ze")
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
-      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      professional = create(:professional, tenant: tenant, user: owner)
 
       ActsAsTenant.with_tenant(tenant) { tenant.complete_onboarding!(professional: professional, **answers) }
 
@@ -549,7 +545,7 @@ RSpec.describe Tenant, type: :model do
     it "writes only to the target tenant" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com")
-      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      professional = create(:professional, tenant: tenant, user: owner)
       other_tenant = create(:tenant, :onboarding, subdomain: "other123abc456")
 
       ActsAsTenant.with_tenant(tenant) { tenant.complete_onboarding!(professional: professional, **answers) }

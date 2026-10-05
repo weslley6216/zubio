@@ -12,28 +12,26 @@ module ComputedStyle
     )
   end
 
+  def computed_hex(selector, property)
+    "#" + computed(selector, property).scan(/\d+/).first(3).map { |channel| channel.to_i.to_s(16).rjust(2, "0") }.join.upcase
+  end
+
   def contrast_ratio(selector)
-    foreground = color_scale(computed(selector, "color"))
-    background = color_scale(computed(selector, "backgroundColor"))
+    foreground = Branding::ColorScale.new(computed_hex(selector, "color"))
+    background = Branding::ColorScale.new(computed_hex(selector, "backgroundColor"))
 
     foreground.contrast_against(background)
   end
 
   def border_contrast_ratio(selector)
-    border = color_scale(computed(selector, "borderTopColor"))
-    background = color_scale(computed(selector, "backgroundColor"))
+    border = Branding::ColorScale.new(computed_hex(selector, "borderTopColor"))
+    background = Branding::ColorScale.new(computed_hex(selector, "backgroundColor"))
 
     border.contrast_against(background)
   end
 
   def opaque?(selector)
     computed(selector, "backgroundColor").start_with?("rgb(")
-  end
-
-  def color_scale(rgb)
-    channels = rgb.scan(/\d+/).first(3).map { |channel| channel.to_i.to_s(16).rjust(2, "0") }
-
-    Branding::ColorScale.new("##{channels.join}")
   end
 end
 
