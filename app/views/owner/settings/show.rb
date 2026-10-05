@@ -15,6 +15,9 @@ class Views::Owner::Settings::Show < Views::Base
   SERVICES_LABEL = "Serviços".freeze
   NO_SERVICES = "Nenhum cadastrado".freeze
   WORKING_HOURS_LABEL = "Horários da semana".freeze
+  SCHEDULE_EXCEPTIONS_LABEL = "Folgas e feriados".freeze
+  NO_EXCEPTIONS = "Nenhuma".freeze
+  UPCOMING = { one: "próxima", other: "próximas" }.freeze
   REGISTERED = { one: "cadastrado", other: "cadastrados" }.freeze
   DISABLED = { one: "desativado", other: "desativados" }.freeze
   CHEVRON_PATH = "m9 6 6 6-6 6".freeze
@@ -37,11 +40,12 @@ class Views::Owner::Settings::Show < Views::Base
   CHIPS_CLASS = "flex flex-none gap-1".freeze
   CHEVRON_CLASS = "h-4 w-4 flex-none text-ink-subtle".freeze
 
-  def initialize(tenant:, branding:, service_counts:, working_hours_summary:)
+  def initialize(tenant:, branding:, service_counts:, working_hours_summary:, schedule_exceptions_count:)
     @tenant = tenant
     @branding = branding
     @service_counts = service_counts
     @working_hours_summary = working_hours_summary
+    @schedule_exceptions_count = schedule_exceptions_count
   end
 
   def view_template
@@ -82,6 +86,7 @@ class Views::Owner::Settings::Show < Views::Base
     render_group("service-group", SERVICE_GROUP) do
       render_link_row("services", SERVICES_LABEL, services_summary, owner_services_path)
       render_link_row("working_hours", WORKING_HOURS_LABEL, @working_hours_summary, edit_owner_working_hours_path)
+      render_link_row("schedule_exceptions", SCHEDULE_EXCEPTIONS_LABEL, schedule_exceptions_summary, owner_schedule_exceptions_path)
     end
   end
 
@@ -155,4 +160,10 @@ class Views::Owner::Settings::Show < Views::Base
   end
 
   def counted(amount, words) = "#{amount} #{amount == 1 ? words.fetch(:one) : words.fetch(:other)}"
+
+  def schedule_exceptions_summary
+    return NO_EXCEPTIONS if @schedule_exceptions_count.zero?
+
+    counted(@schedule_exceptions_count, UPCOMING)
+  end
 end
