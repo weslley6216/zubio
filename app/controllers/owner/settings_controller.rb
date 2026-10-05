@@ -6,7 +6,8 @@ class Owner::SettingsController < Owner::BaseController
       tenant: ActsAsTenant.current_tenant,
       branding: current_branding,
       service_counts: Service.count_by_state,
-      working_hours_summary: working_hours_summary
+      working_hours_summary: working_hours_summary,
+      schedule_exceptions_count: schedule_exceptions_count
     )
   end
 
@@ -17,5 +18,12 @@ class Owner::SettingsController < Owner::BaseController
     return WorkingHour::Summary::NO_HOURS unless professional
 
     professional.working_hours_summary
+  end
+
+  def schedule_exceptions_count
+    professional = current_owner.professional
+    return 0 unless professional
+
+    professional.schedule_exceptions.upcoming.count
   end
 end

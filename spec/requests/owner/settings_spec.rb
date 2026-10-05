@@ -129,8 +129,8 @@ RSpec.describe "Owner settings", type: :request do
 
       get owner_settings_path
 
-      expect(%w[name logo colors address services working_hours sign-out].map { |key| row(key) }).to all(be_present)
-      [ "Minha agenda", "Meu link", "Ajuda", "Folgas e feriados",
+      expect(%w[name logo colors address services working_hours schedule_exceptions sign-out].map { |key| row(key) }).to all(be_present)
+      [ "Minha agenda", "Meu link", "Ajuda",
         "Antecedência mínima", "Meus dados", "Refazer a configuração inicial" ].each do |label|
         expect(response.body).not_to include(label)
       end
@@ -174,6 +174,30 @@ RSpec.describe "Owner settings", type: :request do
       get owner_settings_path
 
       expect(summary("working_hours")).to eq(WorkingHour::Summary::NO_HOURS)
+    end
+
+    it "lists holidays and time off under the service group, with a count and a chevron" do
+      professional = ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      ActsAsTenant.with_tenant(tenant) do
+        create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current.next_week(:monday))
+        create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.current.next_week(:tuesday))
+      end
+      sign_in
+
+      get owner_settings_path
+
+      expect(destination("schedule_exceptions")).to eq(owner_schedule_exceptions_path)
+      expect(summary("schedule_exceptions")).to eq("2 próximas")
+      expect(row("schedule_exceptions").to_html).to include(Views::Owner::Settings::Show::CHEVRON_PATH)
+    end
+
+    it "summarizes holidays as none when there is nothing upcoming" do
+      ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner) }
+      sign_in
+
+      get owner_settings_path
+
+      expect(summary("schedule_exceptions")).to eq(Views::Owner::Settings::Show::NO_EXCEPTIONS)
     end
 
     it "sends an anonymous visitor to the login without naming the establishment" do
