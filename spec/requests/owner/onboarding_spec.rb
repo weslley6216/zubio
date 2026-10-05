@@ -1,19 +1,11 @@
 require "rails_helper"
 
 RSpec.describe "Owner onboarding", type: :request do
-  def sign_in(tenant)
-    owner = create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123")
-    ActsAsTenant.with_tenant(tenant) { create(:professional, tenant: tenant, user: owner, display_name: owner.name) }
-    host! "#{tenant.subdomain}.zubio.com.br"
-    post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
-    owner
-  end
-
-  def answers(name: "Barbearia do Zé", price: "90,00")
+  let(:answers) do
     {
-      tenant: { name: name },
+      tenant: { name: "Barbearia do Zé" },
       branding: { brand_600: "#2F6FED" },
-      services: [ { name: "Corte", duration_minutes: "45", price: price } ],
+      services: [ { name: "Corte", duration_minutes: "45", price: "90,00" } ],
       working_hours: { weekdays: %w[2 3], opens_at: "09:00", closes_at: "18:00" }
     }
   end
@@ -21,7 +13,7 @@ RSpec.describe "Owner onboarding", type: :request do
   describe "GET /owner/onboarding" do
     it "renders welcome and the five questions in one document, only welcome visible" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       get owner_onboarding_path
 
@@ -34,7 +26,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "carries no draft, so another device starts fresh with an empty name field" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       get owner_onboarding_path
 
@@ -44,7 +36,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "redirects an owner who already finished to the dashboard" do
       tenant = create(:tenant, subdomain: "barbearia-do-ze")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       get owner_onboarding_path
 
@@ -63,8 +55,8 @@ RSpec.describe "Owner onboarding", type: :request do
     it "does not show another tenant's brand or services" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       other_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
-      ActsAsTenant.with_tenant(other_tenant) { create(:service, tenant: other_tenant, name: "Massagem") }
-      sign_in(tenant)
+      create(:service, tenant: other_tenant, name: "Massagem")
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       get owner_onboarding_path
 
@@ -74,7 +66,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "lists three welcome groups with the Zubio emblem and the estimated time" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       get owner_onboarding_path
 
@@ -87,7 +79,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "shows the derived address card with the emblem and the typed name on the name question" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       get owner_onboarding_path
 
@@ -97,7 +89,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "offers gallery, camera and skipping without a logo, explaining the initial on the logo question" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       get owner_onboarding_path
 
@@ -109,7 +101,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "explains the sob consulta hint on the services question" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       get owner_onboarding_path
 
@@ -118,36 +110,36 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "renders the onboarding root as the repaint scope in the default brand color" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       get owner_onboarding_path
-      root = Nokogiri::HTML5(response.body).at_css(%([data-controller="onboarding"]))
 
+      root = Nokogiri::HTML5(response.body).at_css(%([data-controller="onboarding"]))
       expect(root["data-preview-brand"]).to eq(Branding::DEFAULT_BRAND_600)
       expect(root["data-preview-secondary"]).to eq("none")
     end
 
     it "fills the schedule with the 09:00 to 18:00 starting point on the first visit" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       get owner_onboarding_path
-      document = Nokogiri::HTML5(response.body)
 
+      document = Nokogiri::HTML5(response.body)
       expect(document.at_css("#working_hours_opens_at")["value"]).to eq("09:00")
       expect(document.at_css("#working_hours_closes_at")["value"]).to eq("18:00")
     end
 
     it "sizes the services and days titles and paces the welcome by 14px" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       get owner_onboarding_path
+
       document = Nokogiri::HTML5(response.body)
       services_title = document.css("h1").find { |node| node.text.include?(Views::Owner::Onboarding::Document::SERVICES_TITLE) }
       hours_title = document.css("h1").find { |node| node.text.include?(Views::Owner::Onboarding::Document::HOURS_TITLE) }
       welcome_stack = document.at_css("section[data-onboarding-section='welcome'] > div")
-
       expect(services_title["class"]).to include("text-[26px]")
       expect(hours_title["class"]).to include("text-[28px]")
       expect(welcome_stack["class"]).to include("gap-3.5")
@@ -155,11 +147,11 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "styles the new service label with the shared section-label token in the brand ink" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       get owner_onboarding_path
-      label = Nokogiri::HTML5(response.body).css("span").find { |node| node.text == Views::Owner::Onboarding::Document::NEW_SERVICE_LABEL }
 
+      label = Nokogiri::HTML5(response.body).css("span").find { |node| node.text == Views::Owner::Onboarding::Document::NEW_SERVICE_LABEL }
       expect(label["class"]).to include(Components::Form::Styles::SECTION_LABEL)
       expect(label["class"]).to include("text-brand-ink")
     end
@@ -168,7 +160,7 @@ RSpec.describe "Owner onboarding", type: :request do
   describe "POST /owner/onboarding" do
     it "refuses two services with the same name in one submit and reopens services" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       post owner_onboarding_path, params: answers.merge(
         services: [ { name: "Corte", duration_minutes: "45", price: "90,00" }, { name: "Corte", duration_minutes: "30", price: "50,00" } ]
@@ -182,17 +174,17 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "carries the uploaded logo back on refill: fills the signed id, shows the preview and drops the no-logo card" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
       blob = ActiveStorage::Blob.create_and_upload!(
         io: File.open(Rails.root.join("spec/fixtures/files/logo.png")),
         filename: "logo.png",
         content_type: "image/png"
       )
 
-      post owner_onboarding_path, params: answers(name: "").merge(branding: { brand_600: "#2F6FED", logo: blob.signed_id })
+      post owner_onboarding_path, params: answers.merge(tenant: { name: "" }, branding: { brand_600: "#2F6FED", logo: blob.signed_id })
 
-      expect(response).to have_http_status(:unprocessable_entity)
       document = Nokogiri::HTML5(response.body)
+      expect(response).to have_http_status(:unprocessable_entity)
       expect(document.at_css(%(input[name="branding[logo]"]))["value"]).to eq(blob.signed_id)
       expect(document.at_css(%(img[data-logo-target="preview"]))["src"]).to be_present
       expect(response.body).not_to include(Components::Owner::BrandQuestion::Logo::NO_LOGO_TEXT)
@@ -200,7 +192,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "opens the first failing section and still carries a later section's error" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       post owner_onboarding_path, params: answers.merge(
         branding: { brand_600: "not-a-hex" },
@@ -215,9 +207,10 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "carries back the marked days, hours and lunch values when another section fails" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
-      post owner_onboarding_path, params: answers(name: "").merge(
+      post owner_onboarding_path, params: answers.merge(
+        tenant: { name: "" },
         working_hours: { weekdays: %w[2 3 4 5 6], opens_at: "09:00", closes_at: "18:00", break_starts_at: "12:00", break_ends_at: "14:00" }
       )
 
@@ -230,7 +223,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "keeps the brand name and colours intact when only the schedule is refused" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       post owner_onboarding_path, params: answers.merge(
         working_hours: { weekdays: %w[2], opens_at: "18:00", closes_at: "09:00" }
@@ -243,7 +236,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "refuses a schedule with no weekday and reopens working_hours" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       post owner_onboarding_path, params: answers.merge(working_hours: { weekdays: [], opens_at: "09:00", closes_at: "18:00" })
 
@@ -255,7 +248,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "refuses an inverted lunch break with a re-render instead of a crash" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       post owner_onboarding_path, params: answers.merge(
         working_hours: { weekdays: %w[2], opens_at: "09:00", closes_at: "18:00", break_starts_at: "14:00", break_ends_at: "12:00" }
@@ -269,7 +262,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "refuses a marked day without a closing time, flagging the range" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       post owner_onboarding_path, params: answers.merge(working_hours: { weekdays: %w[2 3 4 5 6], opens_at: "09:00", closes_at: "" })
 
@@ -281,7 +274,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "writes everything, enqueues the completion email and hands off to the derived host" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       expect { post owner_onboarding_path, params: answers }
         .to have_enqueued_mail(OwnerMailer, :completed)
@@ -295,7 +288,7 @@ RSpec.describe "Owner onboarding", type: :request do
     it "hands out the suffixed address when the derived one collides, untouched neighbour" do
       create(:tenant, subdomain: "barbearia-do-ze")
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       post owner_onboarding_path, params: answers
 
@@ -305,9 +298,9 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "refuses an unreadable price, writes nothing and reopens the services section filled" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
-      post owner_onboarding_path, params: answers(price: "abc")
+      post owner_onboarding_path, params: answers.merge(services: [ { name: "Corte", duration_minutes: "45", price: "abc" } ])
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include(Service::PRICE_UNREADABLE_MESSAGE)
@@ -319,7 +312,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "states a service without a duration in Portuguese, with no attribute name in English" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       post owner_onboarding_path, params: answers.merge(services: [ { name: "Corte", duration_minutes: "", price: "90,00" } ])
 
@@ -331,8 +324,8 @@ RSpec.describe "Owner onboarding", type: :request do
     it "shows a submitted service with its formatted duration and price, with the new-service card below, when a later section fails" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       other_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
-      ActsAsTenant.with_tenant(other_tenant) { create(:service, tenant: other_tenant, name: "Massagem") }
-      sign_in(tenant)
+      create(:service, tenant: other_tenant, name: "Massagem")
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       post owner_onboarding_path, params: answers.merge(
         services: [ { name: "Corte na máquina", duration_minutes: "30", price: "45,00" } ],
@@ -350,7 +343,7 @@ RSpec.describe "Owner onboarding", type: :request do
     it "does not write to another tenant" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       other_tenant = create(:tenant, :onboarding, subdomain: "other123abc456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       post owner_onboarding_path, params: answers
 
@@ -360,9 +353,9 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "refuses a blank brand name and reopens the name section" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
-      post owner_onboarding_path, params: answers(name: "")
+      post owner_onboarding_path, params: answers.merge(tenant: { name: "" })
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include(%(data-onboarding-open-value="name"))
@@ -371,7 +364,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "refuses an unreadable brand color and reopens the colors section" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       post owner_onboarding_path, params: answers.merge(branding: { brand_600: "not-a-hex" })
 
@@ -382,43 +375,31 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "refuses an unsupported logo file and reopens the logo section" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
-      pdf_file = Tempfile.new([ "logo", ".pdf" ])
-      pdf_file.write("%PDF-1.4 fake pdf content")
-      pdf_file.rewind
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
+      pdf = Rack::Test::UploadedFile.new(StringIO.new("%PDF-1.4 fake pdf content"), "application/pdf", original_filename: "logo.pdf")
 
-      post owner_onboarding_path, params: answers.merge(
-        branding: { brand_600: "#2F6FED", logo: Rack::Test::UploadedFile.new(pdf_file.path, "application/pdf") }
-      )
+      post owner_onboarding_path, params: answers.merge(branding: { brand_600: "#2F6FED", logo: pdf })
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include(%(data-onboarding-open-value="logo"))
       expect(tenant.reload.onboarding_completed?).to be(false)
-    ensure
-      pdf_file.close!
     end
 
     it "refuses a logo whose bytes are not an image and reopens the logo section" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
-      fake = Tempfile.new([ "logo", ".png" ])
-      fake.write("not an image")
-      fake.rewind
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
+      fake_png = Rack::Test::UploadedFile.new(StringIO.new("not an image"), "image/png", original_filename: "logo.png")
 
-      post owner_onboarding_path, params: answers.merge(
-        branding: { brand_600: "#2F6FED", logo: Rack::Test::UploadedFile.new(fake.path, "image/png") }
-      )
+      post owner_onboarding_path, params: answers.merge(branding: { brand_600: "#2F6FED", logo: fake_png })
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include(%(data-onboarding-open-value="logo"))
       expect(tenant.reload.onboarding_completed?).to be(false)
-    ensure
-      fake.close!
     end
 
     it "refuses a direct-upload signed id pointing to non-image bytes and reopens the logo section" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
       blob = ActiveStorage::Blob.create_and_upload!(
         io: StringIO.new("not an image"),
         filename: "logo.png",
@@ -435,7 +416,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "refuses a logo over the pixel ceiling by signed id and reopens the logo section" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
       edge = Branding::LOGO_MAX_PIXELS + 1
       blob = ActiveStorage::Blob.create_and_upload!(
         io: StringIO.new(Vips::Image.black(edge, edge).pngsave_buffer),
@@ -453,7 +434,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "completes onboarding with a direct-upload signed id pointing to a real PNG" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
       blob = ActiveStorage::Blob.create_and_upload!(
         io: File.open(Rails.root.join("spec/fixtures/files/logo.png")),
         filename: "logo.png",
@@ -467,7 +448,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
     it "refuses a schedule that closes before it opens and reopens the working_hours section" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
-      sign_in(tenant)
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       post owner_onboarding_path, params: answers.merge(working_hours: { weekdays: %w[2], opens_at: "18:00", closes_at: "09:00" })
 
