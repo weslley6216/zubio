@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Helper discipline" do
-  let(:method_definition) { /^\s*def\s/ }
+  let(:method_definition) { /^\s*(?:def\s|define_method\b)/ }
   let(:assertion) { /\bexpect\s*[({]/ }
 
   it "declares no method in a spec file" do
@@ -21,7 +21,7 @@ RSpec.describe "Helper discipline" do
   end
 
   it "recognizes a method definition at any indentation, one-line or not" do
-    expect([ "def sign_in", "  def field(name) = name", "    def  body" ].grep(method_definition).size).to eq(3)
+    expect([ "def sign_in", "  def field(name) = name", "    def  body", "  define_method(:body) { }" ].grep(method_definition).size).to eq(4)
   end
 
   it "leaves a word merely containing def out of the count" do

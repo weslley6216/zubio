@@ -13,7 +13,7 @@ RSpec.describe "Owner panel navigation", type: :request do
     document = Nokogiri::HTML5(response.body)
     expect(document.at_css("header a[href='#{owner_dashboard_path}']")["aria-current"]).to eq("page")
     expect(document.at_css("header nav a[href='#{owner_settings_path}']")["aria-current"]).to be_nil
-    expect(document.at_css("header nav a[href='#{owner_settings_path}']")["class"]).to include(Components::Owner::Header::RESTING_CLASS)
+    expect(document.at_css("header nav a[href='#{owner_settings_path}']")["class"]).to eq("#{Components::Owner::Header::ITEM_CLASS} #{Components::Owner::Header::RESTING_CLASS}")
     expect(document.at_css("header details a[href='#{owner_settings_path}']")["aria-current"]).to be_nil
   end
 
@@ -27,6 +27,7 @@ RSpec.describe "Owner panel navigation", type: :request do
     expect(document.at_css("a[href='#{owner_dashboard_path}']")).to be_present
     expect(document.at_css("header nav")).to be_nil
     expect(document.at_css("header details")).to be_nil
+    expect(response.body).not_to include(Components::Owner::Menu::LABEL)
   end
 
   it "keeps settings current on the catalog, the service form and the three brand screens, which settings leads to" do
@@ -39,7 +40,7 @@ RSpec.describe "Owner panel navigation", type: :request do
     end
 
     expect(documents.map { |document| document.at_css("header nav a[href='#{owner_settings_path}']")["aria-current"] }).to all(eq("page"))
-    expect(documents.map { |document| document.at_css("header nav a[href='#{owner_settings_path}']")["class"] }).to all(include(Components::Owner::Header::CURRENT_CLASS))
+    expect(documents.map { |document| document.at_css("header nav a[href='#{owner_settings_path}']")["class"] }).to all(eq("#{Components::Owner::Header::ITEM_CLASS} #{Components::Owner::Header::CURRENT_CLASS}"))
     expect(documents.map { |document| document.at_css("header details a[href='#{owner_settings_path}']")["aria-current"] }).to all(eq("page"))
     expect(documents.map { |document| document.at_css("header a[href='#{owner_dashboard_path}']")["aria-current"] }).to all(be_nil)
   end
@@ -50,7 +51,7 @@ RSpec.describe "Owner panel navigation", type: :request do
 
     get owner_dashboard_path
 
-    expect(response.body).to include(%(href="#{owner_settings_path}"))
+    expect(Nokogiri::HTML5(response.body).at_css("header nav a[href='#{owner_settings_path}']")).to be_present
     expect(response.body).to include(%(action="#{owner_session_path}"))
     expect(response.body).not_to include(%(href="#{owner_services_path}"))
     expect(response.body).not_to include(%(href="#{edit_owner_brand_colors_path}"))

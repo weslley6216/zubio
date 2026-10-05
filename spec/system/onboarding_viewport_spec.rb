@@ -20,17 +20,21 @@ RSpec.describe "Onboarding viewport", type: :system, js: true do
       taller_than_screen["colors"] = page.evaluate_script("document.documentElement.scrollHeight > window.innerHeight")
       find("[data-swatch-row] [data-swatch]", match: :first).click
       click_on "Continuar"
+      find_field("Nome da marca")
       taller_than_screen["name"] = page.evaluate_script("document.documentElement.scrollHeight > window.innerHeight")
       fill_in "Nome da marca", with: "Barbearia do Zé"
       click_on "Continuar"
+      find_button("Pular por enquanto")
       taller_than_screen["logo"] = page.evaluate_script("document.documentElement.scrollHeight > window.innerHeight")
       click_on "Pular por enquanto"
+      find_button("Adicionar à lista")
       taller_than_screen["services"] = page.evaluate_script("document.documentElement.scrollHeight > window.innerHeight")
       fill_in "Nome", with: "Corte"
       fill_in "Duração (minutos)", with: "45"
       fill_in "Preço (R$, opcional)", with: "90,00"
       click_on "Adicionar à lista"
       click_on "Continuar com 1 serviço"
+      find_button("Ver minha página")
       taller_than_screen["working_hours"] = page.evaluate_script("document.documentElement.scrollHeight > window.innerHeight")
       %w[Ter Qua Qui Sex Sáb].each { |weekday| find("label", text: weekday, exact_text: true).click }
       fill_in "working_hours_opens_at", with: "09:00"
