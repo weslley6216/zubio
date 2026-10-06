@@ -2,6 +2,7 @@ class Professional < ApplicationRecord
   belongs_to :user, optional: true, dependent: nil
   has_many :working_hours, dependent: :destroy
   has_many :schedule_exceptions, dependent: :destroy
+  has_many :appointments
 
   acts_as_tenant(:tenant)
 
