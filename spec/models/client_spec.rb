@@ -69,7 +69,9 @@ RSpec.describe Client, type: :model do
     it "is invalid without a name" do
       client = build(:client, name: nil)
 
-      expect(client).not_to be_valid
+      client.valid?
+
+      expect(client.errors[:name]).to be_present
     end
   end
 
