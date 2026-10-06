@@ -135,13 +135,10 @@ RSpec.describe Professional::Availability, type: :model do
     create(:working_hour, tenant: tenant, professional: professional, weekday: 6, opens_at: "09:00", closes_at: "18:00")
     create(:schedule_exception, :with_alternate_hours, tenant: tenant, professional: professional, occurs_on: saturday)
     nine = saturday.in_time_zone.change(hour: 9)
-    noon = saturday.in_time_zone.change(hour: 12)
 
     slots = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: saturday..saturday).slots_by_date }
 
-    expect(slots[saturday]).to include(nine)
-    expect(slots[saturday]).not_to include(saturday.in_time_zone.change(hour: 14))
-    expect(slots[saturday]).to all(satisfy { |candidate| candidate + 45.minutes <= noon })
+    expect(slots[saturday]).to eq([ nine, nine + 45.minutes, nine + 90.minutes, nine + 135.minutes ])
   end
 
   it "never offers a time in the past" do
