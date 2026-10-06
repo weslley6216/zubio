@@ -53,6 +53,7 @@ module Zubio
     # in config/environments, which are processed later.
     #
     config.time_zone = "America/Sao_Paulo"
+    config.active_record.time_zone_aware_types = [ :datetime ]
     # config.eager_load_paths << Rails.root.join("extras")
 
     # Don't generate system test files.
