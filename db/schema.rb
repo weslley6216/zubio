@@ -10,8 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_04_201927) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_06_120000) do
   # These are extensions that must be enabled in order to support this database
+  enable_extension "btree_gist"
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
 
@@ -41,6 +42,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_201927) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "appointments", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "ends_at", null: false
+    t.bigint "professional_id", null: false
+    t.bigint "service_id", null: false
+    t.datetime "starts_at", null: false
+    t.string "status", default: "confirmed", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["professional_id"], name: "index_appointments_on_professional_id"
+    t.index ["service_id"], name: "index_appointments_on_service_id"
+    t.index ["tenant_id", "professional_id", "starts_at"], name: "idx_on_tenant_id_professional_id_starts_at_4775c6f93a"
+    t.index ["tenant_id"], name: "index_appointments_on_tenant_id"
+    t.check_constraint "ends_at > starts_at", name: "appointments_positive_duration"
+    t.exclusion_constraint "professional_id WITH =, tsrange(starts_at, ends_at, '[)'::text) WITH &&", where: "(status)::text <> 'cancelled'::text", using: :gist, name: "appointments_no_overlap"
   end
 
   create_table "brandings", force: :cascade do |t|
@@ -134,6 +152,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_201927) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "appointments", "professionals"
+  add_foreign_key "appointments", "services"
+  add_foreign_key "appointments", "tenants"
   add_foreign_key "brandings", "tenants"
   add_foreign_key "professionals", "tenants"
   add_foreign_key "professionals", "users"
