@@ -41,6 +41,15 @@ RSpec.describe ScheduleException, type: :model do
       expect(exception.closes_at.strftime("%H:%M")).to eq("12:00")
     end
 
+    it "stores the alternate window as wall-clock time, unshifted by the application time zone" do
+      tenant = create(:tenant)
+      exception = create(:schedule_exception, :with_alternate_hours, tenant: tenant, occurs_on: Date.current.next_occurring(:saturday))
+
+      stored = ActsAsTenant.with_tenant(tenant) { ScheduleException.where(id: exception.id).pick(Arel.sql("opens_at::text AS stored_opens_at"), Arel.sql("closes_at::text AS stored_closes_at")) }
+
+      expect(stored).to eq([ "09:00:00", "12:00:00" ])
+    end
+
     it "rejects a closed day carrying a window" do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
