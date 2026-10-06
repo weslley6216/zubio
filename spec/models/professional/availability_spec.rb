@@ -173,6 +173,22 @@ RSpec.describe Professional::Availability, type: :model do
     expect(slots[tuesday]).to include(nine)
   end
 
+  it "does not let a colleague's appointment or day off block a slot" do
+    tenant = create(:tenant)
+    professional = create(:professional, tenant: tenant)
+    colleague = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    tuesday = Date.current.next_week(:tuesday)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    create(:appointment, tenant: tenant, professional: colleague, service: service, starts_at: tuesday.in_time_zone.change(hour: 9))
+    create(:schedule_exception, tenant: tenant, professional: colleague, occurs_on: tuesday)
+    nine = tuesday.in_time_zone.change(hour: 9)
+
+    slots = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).slots_by_date }
+
+    expect(slots[tuesday]).to eq([ nine, nine + 45.minutes, nine + 90.minutes, nine + 135.minutes ])
+  end
+
   it "runs the same number of queries for thirty days as for one" do
     tenant = create(:tenant)
     professional = create(:professional, tenant: tenant)
