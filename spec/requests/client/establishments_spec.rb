@@ -197,4 +197,63 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Corte feminino")
   end
+
+  it "announces the establishment's name, an online-booking line, its logo and its canonical address" do
+    create(:branding, :with_logo, tenant: tenant)
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    head = Nokogiri::HTML5(response.body)
+    expect(head.at_css('meta[property="og:title"]')["content"]).to eq("Estúdio Aurora")
+    expect(head.at_css('meta[property="og:description"]')["content"]).to eq("Agende seu horário online — Estúdio Aurora.")
+    expect(head.at_css('meta[property="og:image"]')).not_to be_nil
+    expect(head.at_css('meta[property="og:url"]')["content"]).to eq("http://estudio-aurora.zubio.com.br/")
+  end
+
+  it "gives the preview an absolute image and address on the establishment's own host" do
+    create(:branding, :with_logo, tenant: tenant)
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    head = Nokogiri::HTML5(response.body)
+    expect(head.at_css('meta[property="og:url"]')["content"]).to start_with("http://estudio-aurora.zubio.com.br")
+    expect(head.at_css('meta[property="og:image"]')["content"]).to start_with("http://estudio-aurora.zubio.com.br")
+  end
+
+  it "keeps the preview's title and description but announces no image when there is no logo" do
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    head = Nokogiri::HTML5(response.body)
+    expect(head.at_css('meta[property="og:title"]')["content"]).to eq("Estúdio Aurora")
+    expect(head.at_css('meta[property="og:description"]')["content"]).to eq("Agende seu horário online — Estúdio Aurora.")
+    expect(head.at_css('meta[property="og:image"]')).to be_nil
+  end
+
+  it "announces nothing to share on the owner's authenticated screens" do
+    sign_in_owner(create(:user, tenant: tenant))
+
+    get owner_dashboard_path
+
+    expect(response).to have_http_status(:ok)
+    expect(Nokogiri::HTML5(response.body).css('meta[property^="og:"]')).to be_empty
+  end
+
+  it "announces only the host establishment and nothing of another in the preview" do
+    create(:branding, :with_logo, tenant: tenant)
+    other_tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    create(:branding, :with_logo, tenant: other_tenant)
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    head = Nokogiri::HTML5(response.body)
+    expect(head.at_css('meta[property="og:title"]')["content"]).to eq("Estúdio Aurora")
+    expect(head.at_css('meta[property="og:url"]')["content"]).to include("estudio-aurora.zubio.com.br")
+    expect(response.body).not_to include("Barbearia do Zé")
+    expect(response.body).not_to include("barbearia-do-ze.zubio.com.br")
+  end
 end
