@@ -15,6 +15,7 @@ class Branding < ApplicationRecord
   SOFT_STEP = { light: 50, dark: 900 }.freeze
   ON_SOFT_STEPS = { light: [ 700, 800, 900 ], dark: [ 300, 200, 100, 50 ] }.freeze
   ICON_SIZES = [ [ 192, "any" ], [ 512, "any" ], [ 512, "maskable" ] ].freeze
+  SOCIAL_IMAGE_SIZE = 512
   HEADER_LOGO_LIMIT = [ 96, 96 ].freeze
   LOGO_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
   LOGO_MAX_BYTES = 5.megabytes
@@ -76,11 +77,17 @@ class Branding < ApplicationRecord
 
     ICON_SIZES.map do |size, purpose|
       {
-        variant: logo.variant(resize_to_fill: [ size, size ], format: :png),
+        variant: square_logo_variant(size),
         sizes: "#{size}x#{size}",
         purpose: purpose
       }
     end
+  end
+
+  def social_image_variant
+    return unless logo.attached?
+
+    square_logo_variant(SOCIAL_IMAGE_SIZE)
   end
 
   def header_logo
@@ -92,6 +99,10 @@ class Branding < ApplicationRecord
   private
 
   def hex?(value) = value.present? && value.match?(ColorScale::HEX)
+
+  def square_logo_variant(size)
+    logo.variant(resize_to_fill: [ size, size ], format: :png)
+  end
 
   def secondary_color_scale
     @secondary_color_scale ||= hex?(brand_secondary_600) ? ColorScale.new(brand_secondary_600) : color_scale
