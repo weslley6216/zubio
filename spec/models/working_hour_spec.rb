@@ -14,6 +14,15 @@ RSpec.describe WorkingHour, type: :model do
       expect(working_hour.professional).to eq(professional)
     end
 
+    it "stores the range as wall-clock time, unshifted by the application time zone" do
+      tenant = create(:tenant)
+      working_hour = create(:working_hour, tenant: tenant, opens_at: "09:00", closes_at: "18:00")
+
+      stored = ActsAsTenant.with_tenant(tenant) { WorkingHour.where(id: working_hour.id).pick(Arel.sql("opens_at::text AS stored_opens_at"), Arel.sql("closes_at::text AS stored_closes_at")) }
+
+      expect(stored).to eq([ "09:00:00", "18:00:00" ])
+    end
+
     it "accepts two ranges on the same day, morning and afternoon" do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
