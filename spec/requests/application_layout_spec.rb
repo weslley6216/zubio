@@ -118,4 +118,15 @@ RSpec.describe "Application layout branding", type: :request do
 
     expect(response.body).to include(%(<html lang="pt-BR" class="bg-canvas text-ink [color-scheme:light_dark]">))
   end
+
+  it "announces nothing to share when a view passes no social metadata, leaving the head as before" do
+    tenant = create(:tenant, subdomain: "joes-barbershop")
+    create(:branding, tenant: tenant, brand_600: "#4F46E5")
+    host! "joes-barbershop.zubio.com.br"
+
+    get "/layout_probe"
+
+    expect(response.body).to include('<meta name="theme-color" content="#4F46E5">')
+    expect(Nokogiri::HTML5(response.body).css('meta[property^="og:"]')).to be_empty
+  end
 end
