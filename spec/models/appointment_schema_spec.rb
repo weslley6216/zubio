@@ -16,4 +16,17 @@ RSpec.describe "appointments schema", type: :model do
 
     expect(names).to include("appointments_no_overlap")
   end
+
+  it "rejects an appointment without a client at the database level" do
+    tenant = create(:tenant)
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    nine = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
+    appointment = ActsAsTenant.with_tenant(tenant) do
+      Appointment.new(professional: professional, service: service, starts_at: nine, ends_at: nine + 45.minutes)
+    end
+
+    expect { ActsAsTenant.with_tenant(tenant) { appointment.save(validate: false) } }
+      .to raise_error(ActiveRecord::NotNullViolation, /client_id/)
+  end
 end
