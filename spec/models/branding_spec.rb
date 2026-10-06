@@ -469,6 +469,20 @@ RSpec.describe Branding, type: :model do
     end
   end
 
+  describe "#social_image_variant" do
+    it "is nil when no logo is attached" do
+      branding = create(:branding)
+
+      expect(branding.social_image_variant).to be_nil
+    end
+
+    it "fills a 512 square png from the logo for the link preview" do
+      branding = create(:branding, :with_logo)
+
+      expect(branding.social_image_variant.variation.transformations[:resize_to_fill]).to eq([ Branding::SOCIAL_IMAGE_SIZE, Branding::SOCIAL_IMAGE_SIZE ])
+    end
+  end
+
   describe "#header_logo" do
     it "is nil when no logo is attached" do
       branding = create(:branding)

@@ -2,6 +2,7 @@ class Views::Client::Establishments::Show < Views::Base
   EMPTY_TITLE = "Nenhum serviço publicado ainda".freeze
   EMPTY_BODY = "Este estabelecimento ainda não publicou serviços para agendamento.".freeze
   OWNER_LINK_LABEL = "É o dono deste estabelecimento? Entrar".freeze
+  SHARE_DESCRIPTION = "Agende seu horário online — %s.".freeze
 
   BAR_CLASS = "bg-brand-600 px-6 pb-8 pt-6 text-on-brand".freeze
   BAR_INNER_CLASS = "mx-auto flex w-full max-w-2xl items-center gap-3".freeze
@@ -23,7 +24,7 @@ class Views::Client::Establishments::Show < Views::Base
   end
 
   def view_template
-    render Views::Layouts::Application.new(title: @tenant.name, branding: @branding) do
+    render Views::Layouts::Application.new(title: @tenant.name, branding: @branding, social: social_meta) do
       render_brand_bar
       main(class: MAIN_CLASS) do
         @services.empty? ? render_empty_state : render_catalog
@@ -41,6 +42,20 @@ class Views::Client::Establishments::Show < Views::Base
         h1(class: NAME_CLASS) { @tenant.name }
       end
     end
+  end
+
+  def social_meta
+    Components::SocialMeta.new(
+      title: @tenant.name,
+      description: SHARE_DESCRIPTION % @tenant.name,
+      url: root_url(host: @tenant.canonical_host),
+      image_url: share_image_url
+    )
+  end
+
+  def share_image_url
+    variant = @branding.social_image_variant
+    rails_storage_proxy_url(variant, host: @tenant.canonical_host) if variant
   end
 
   def render_catalog
