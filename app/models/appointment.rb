@@ -1,6 +1,7 @@
 class Appointment < ApplicationRecord
   belongs_to :professional
   belongs_to :service
+  belongs_to :client
 
   acts_as_tenant :tenant
 

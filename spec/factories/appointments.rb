@@ -6,6 +6,7 @@ FactoryBot.define do
     tenant
     professional { association :professional, tenant: tenant }
     service { association :service, tenant: tenant }
+    client { association :client, tenant: tenant }
     starts_at { 1.week.from_now.change(hour: 9, min: 0, sec: 0) }
 
     trait :cancelled do

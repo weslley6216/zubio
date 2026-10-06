@@ -6,10 +6,11 @@ RSpec.describe Appointment, type: :model do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
       service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
       starts_at = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
 
       appointment = ActsAsTenant.with_tenant(tenant) do
-        Appointment.create!(professional: professional, service: service, starts_at: starts_at)
+        Appointment.create!(professional: professional, service: service, client: client, starts_at: starts_at)
       end
 
       expect(appointment.tenant).to eq(tenant)
@@ -21,10 +22,11 @@ RSpec.describe Appointment, type: :model do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
       service = create(:service, tenant: tenant, duration_minutes: 30)
+      client = create(:client, tenant: tenant)
       starts_at = Time.current.next_week(:tuesday).change(hour: 14, min: 0, sec: 0)
 
       appointment = ActsAsTenant.with_tenant(tenant) do
-        Appointment.create!(professional: professional, service: service, starts_at: starts_at)
+        Appointment.create!(professional: professional, service: service, client: client, starts_at: starts_at)
       end
 
       expect(appointment.ends_at).to eq(starts_at + 30.minutes)
@@ -34,9 +36,10 @@ RSpec.describe Appointment, type: :model do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
       service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
       starts_at = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
       appointment = ActsAsTenant.with_tenant(tenant) do
-        Appointment.create!(professional: professional, service: service, starts_at: starts_at)
+        Appointment.create!(professional: professional, service: service, client: client, starts_at: starts_at)
       end
 
       ActsAsTenant.with_tenant(tenant) { service.update!(duration_minutes: 60) }
@@ -47,8 +50,9 @@ RSpec.describe Appointment, type: :model do
     it "is invalid without a service and does not raise while deriving the end" do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
+      client = create(:client, tenant: tenant)
       starts_at = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
-      appointment = ActsAsTenant.with_tenant(tenant) { Appointment.new(professional: professional, starts_at: starts_at) }
+      appointment = ActsAsTenant.with_tenant(tenant) { Appointment.new(professional: professional, client: client, starts_at: starts_at) }
 
       ActsAsTenant.with_tenant(tenant) { appointment.valid? }
 
@@ -61,9 +65,10 @@ RSpec.describe Appointment, type: :model do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
       service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
       nine = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
-      first = ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, starts_at: nine) }
-      overlapping = ActsAsTenant.with_tenant(tenant) { Appointment.new(professional: professional, service: service, starts_at: nine + 30.minutes) }
+      first = ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, client: client, starts_at: nine) }
+      overlapping = ActsAsTenant.with_tenant(tenant) { Appointment.new(professional: professional, service: service, client: client, starts_at: nine + 30.minutes) }
 
       expect { ActsAsTenant.with_tenant(tenant) { overlapping.save! } }.to raise_error(ActiveRecord::StatementInvalid)
 
@@ -74,10 +79,11 @@ RSpec.describe Appointment, type: :model do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
       service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
       nine = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
-      ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, starts_at: nine) }
+      ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, client: client, starts_at: nine) }
 
-      back_to_back = ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, starts_at: nine + 45.minutes) }
+      back_to_back = ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, client: client, starts_at: nine + 45.minutes) }
 
       expect(back_to_back).to be_persisted
     end
@@ -86,10 +92,11 @@ RSpec.describe Appointment, type: :model do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
       service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
       nine = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
       ActsAsTenant.with_tenant(tenant) { create(:appointment, :cancelled, tenant: tenant, professional: professional, service: service, starts_at: nine) }
 
-      replacement = ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, starts_at: nine) }
+      replacement = ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, client: client, starts_at: nine) }
 
       expect(replacement).to be_persisted
     end
@@ -99,10 +106,11 @@ RSpec.describe Appointment, type: :model do
       professional = create(:professional, tenant: tenant)
       another_professional = create(:professional, tenant: tenant)
       service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
       nine = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
-      ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, starts_at: nine) }
+      ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, client: client, starts_at: nine) }
 
-      twin = ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: another_professional, service: service, starts_at: nine) }
+      twin = ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: another_professional, service: service, client: client, starts_at: nine) }
 
       expect(twin).to be_persisted
     end
@@ -111,8 +119,9 @@ RSpec.describe Appointment, type: :model do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
       service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
       nine = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
-      inverted = ActsAsTenant.with_tenant(tenant) { Appointment.new(professional: professional, service: service, starts_at: nine, ends_at: nine) }
+      inverted = ActsAsTenant.with_tenant(tenant) { Appointment.new(professional: professional, service: service, client: client, starts_at: nine, ends_at: nine) }
 
       expect { ActsAsTenant.with_tenant(tenant) { inverted.save! } }.to raise_error(ActiveRecord::StatementInvalid)
     end
@@ -123,10 +132,11 @@ RSpec.describe Appointment, type: :model do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
       service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
       nine = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
       confirmed = nil
       ActsAsTenant.with_tenant(tenant) do
-        confirmed = Appointment.create!(professional: professional, service: service, starts_at: nine)
+        confirmed = Appointment.create!(professional: professional, service: service, client: client, starts_at: nine)
         create(:appointment, :cancelled, tenant: tenant, professional: professional, service: service, starts_at: nine + 2.hours)
       end
 
@@ -139,11 +149,12 @@ RSpec.describe Appointment, type: :model do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
       service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
       nine = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
       inside = nil
       ActsAsTenant.with_tenant(tenant) do
-        inside = Appointment.create!(professional: professional, service: service, starts_at: nine)
-        Appointment.create!(professional: professional, service: service, starts_at: nine + 30.days)
+        inside = Appointment.create!(professional: professional, service: service, client: client, starts_at: nine)
+        Appointment.create!(professional: professional, service: service, client: client, starts_at: nine + 30.days)
       end
 
       results = ActsAsTenant.with_tenant(tenant) { Appointment.within(nine.beginning_of_day..(nine + 7.days)).to_a }
@@ -156,11 +167,12 @@ RSpec.describe Appointment, type: :model do
       professional = create(:professional, tenant: tenant)
       another_professional = create(:professional, tenant: tenant)
       service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
       nine = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
       mine = nil
       ActsAsTenant.with_tenant(tenant) do
-        mine = Appointment.create!(professional: professional, service: service, starts_at: nine)
-        Appointment.create!(professional: another_professional, service: service, starts_at: nine)
+        mine = Appointment.create!(professional: professional, service: service, client: client, starts_at: nine)
+        Appointment.create!(professional: another_professional, service: service, client: client, starts_at: nine)
       end
 
       results = ActsAsTenant.with_tenant(tenant) { Appointment.for_professional(professional).to_a }
@@ -174,12 +186,14 @@ RSpec.describe Appointment, type: :model do
       aurora = create(:tenant, name: "Estúdio Aurora")
       aurora_professional = create(:professional, tenant: aurora)
       aurora_service = create(:service, tenant: aurora, duration_minutes: 45)
+      aurora_client = create(:client, tenant: aurora)
       nine = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
-      own = ActsAsTenant.with_tenant(aurora) { Appointment.create!(professional: aurora_professional, service: aurora_service, starts_at: nine) }
+      own = ActsAsTenant.with_tenant(aurora) { Appointment.create!(professional: aurora_professional, service: aurora_service, client: aurora_client, starts_at: nine) }
       ze = create(:tenant, name: "Barbearia do Zé")
       ze_professional = create(:professional, tenant: ze)
       ze_service = create(:service, tenant: ze, duration_minutes: 45)
-      ActsAsTenant.with_tenant(ze) { Appointment.create!(professional: ze_professional, service: ze_service, starts_at: nine) }
+      ze_client = create(:client, tenant: ze)
+      ActsAsTenant.with_tenant(ze) { Appointment.create!(professional: ze_professional, service: ze_service, client: ze_client, starts_at: nine) }
 
       results = ActsAsTenant.with_tenant(aurora) { Appointment.occupying.to_a }
 
