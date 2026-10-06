@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_06_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_06_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "citext"
@@ -45,6 +45,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_06_120000) do
   end
 
   create_table "appointments", force: :cascade do |t|
+    t.bigint "client_id", null: false
     t.datetime "created_at", null: false
     t.datetime "ends_at", null: false
     t.bigint "professional_id", null: false
@@ -68,6 +69,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_06_120000) do
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["tenant_id"], name: "index_brandings_on_tenant_id", unique: true
+  end
+
+  create_table "clients", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "phone", null: false
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "phone"], name: "index_clients_on_tenant_id_and_phone", unique: true
   end
 
   create_table "professionals", force: :cascade do |t|
@@ -152,10 +162,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_06_120000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "appointments", "clients"
   add_foreign_key "appointments", "professionals"
   add_foreign_key "appointments", "services"
   add_foreign_key "appointments", "tenants"
   add_foreign_key "brandings", "tenants"
+  add_foreign_key "clients", "tenants"
   add_foreign_key "professionals", "tenants"
   add_foreign_key "professionals", "users"
   add_foreign_key "schedule_exceptions", "professionals"
