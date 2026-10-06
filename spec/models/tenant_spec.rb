@@ -583,6 +583,15 @@ RSpec.describe Tenant, type: :model do
       end
     end
 
+    it "refuses to destroy a tenant that still has clients" do
+      tenant = create(:tenant)
+      create(:client, tenant: tenant)
+
+      ActsAsTenant.with_tenant(tenant) do
+        expect { tenant.destroy }.to change(Tenant, :count).by(0)
+      end
+    end
+
     it "destroys a tenant with nothing left attached to it" do
       tenant = create(:tenant)
 
