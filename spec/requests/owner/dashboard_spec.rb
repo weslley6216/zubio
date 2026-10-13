@@ -151,5 +151,30 @@ RSpec.describe "Owner dashboard", type: :request do
       expect(response.body).not_to include(other_branding.stylesheet_digest)
       expect(response.body).not_to include("/rails/active_storage/representations/proxy/")
     end
+
+    it "carries the install invite hidden, reserving no space until a browser asks for it" do
+      create(:branding, tenant: tenant)
+      sign_in_owner(owner)
+
+      get owner_dashboard_path
+
+      invite = Nokogiri::HTML5(response.body).at_css("[data-controller='pwa-install']")
+      expect(invite["hidden"]).not_to be_nil
+      expect(invite.text).to include(Components::Owner::InstallInvite::TITLE)
+    end
+
+    it "builds the install invite from its own tenant icon and name, nothing of another tenant" do
+      other_tenant = create(:tenant, subdomain: "salon-b", name: "Barbearia do Zé")
+      create(:branding, :with_logo, tenant: other_tenant)
+      create(:branding, :with_logo, tenant: tenant)
+      sign_in_owner(owner)
+
+      get owner_dashboard_path
+
+      icon = Nokogiri::HTML5(response.body).at_css("[data-controller='pwa-install'] img")
+      expect(icon["alt"]).to eq("Estúdio Aurora")
+      expect(icon["src"]).to include("/rails/active_storage/representations/proxy/")
+      expect(response.body).not_to include("Barbearia do Zé")
+    end
   end
 end
