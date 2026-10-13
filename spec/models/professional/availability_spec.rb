@@ -255,6 +255,18 @@ RSpec.describe Professional::Availability, type: :model do
       expect(reasons[tuesday]).to eq(:fully_booked)
     end
 
+    it "marks today as fully_booked once its working hours are over" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+
+      reasons = travel_to(tuesday.in_time_zone.change(hour: 15)) { ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).reasons_by_date } }
+
+      expect(reasons[tuesday]).to eq(:fully_booked)
+    end
+
     it "does not let another tenant's appointment turn a bookable day into fully_booked" do
       aurora = create(:tenant, name: "Estúdio Aurora")
       aurora_professional = create(:professional, tenant: aurora)

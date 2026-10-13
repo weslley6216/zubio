@@ -32,6 +32,9 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
 
       expect(opaque?("header")).to be(true)
       expect(contrast_ratio("header")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(opaque?("[data-slot]")).to be(true)
+      expect(contrast_ratio("[data-slot]")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(opaque?("[data-day][aria-disabled='true']")).to be(true)
     end
   end
 end

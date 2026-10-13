@@ -129,15 +129,36 @@ RSpec.describe "Public booking day and time selection", type: :request do
     expect(response.body).not_to include("data-day-selector")
   end
 
-  it "falls back to the default day for a garbage day parameter" do
+  %w[banana 2020-01-01 2026-13-40].each do |unusable_day|
+    it "falls back to the first bookable day for day=#{unusable_day}" do
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      monday = Date.current.next_week(:monday)
+      tuesday = monday + 1
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+
+      travel_to(monday.in_time_zone.change(hour: 8)) { get new_client_service_booking_path(service, day: unusable_day) }
+
+      document = Nokogiri::HTML5(response.body)
+      expect(response).to have_http_status(:ok)
+      expect(document.css("[data-day-selector] [aria-current='date']").map { |day| day["data-day"] }).to eq([ tuesday.iso8601 ])
+      expect(document.css("[data-slots] [data-slot]").map { |slot| slot.text.strip }).to eq([ "09:00", "09:45", "10:30", "11:15" ])
+    end
+  end
+
+  it "shows today as no longer bookable once its working hours are over" do
     professional = create(:professional, tenant: tenant)
     service = create(:service, tenant: tenant, duration_minutes: 45)
+    tuesday = Date.current.next_week(:tuesday)
     create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
     host! "#{tenant.subdomain}.zubio.com.br"
 
-    get new_client_service_booking_path(service, day: "banana")
+    travel_to(tuesday.in_time_zone.change(hour: 15)) { get new_client_service_booking_path(service, day: tuesday.iso8601) }
 
-    expect(response).to have_http_status(:ok)
+    document = Nokogiri::HTML5(response.body)
+    expect(document.at_css("[data-day='#{tuesday.iso8601}']")["aria-disabled"]).to eq("true")
+    expect(response.body).to include(Views::Client::Bookings::New::FULLY_BOOKED_MESSAGE)
   end
 
   it "answers not found for another establishment's service, with none of its data" do
