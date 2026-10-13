@@ -129,6 +129,33 @@ RSpec.describe "Public booking day and time selection", type: :request do
     expect(response.body).not_to include("data-day-selector")
   end
 
+  it "tells an establishment whose only professional is inactive has no grid" do
+    professional = create(:professional, tenant: tenant, active: false)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(Views::Client::Bookings::New::UNPUBLISHED_MESSAGE)
+    expect(response.body).not_to include("data-day-selector")
+  end
+
+  it "keeps the confirm button inert while no time can be chosen" do
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    tuesday = Date.current.next_week(:tuesday)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service, day: tuesday.iso8601)
+
+    button = Nokogiri::HTML5(response.body).css("button").find { |candidate| candidate.text.strip == Views::Client::Bookings::New::CONFIRM_LABEL }
+    expect(button).to be_present
+    expect(button.key?("disabled")).to be(true)
+  end
+
   %w[banana 2020-01-01 2026-13-40].each do |unusable_day|
     it "falls back to the first bookable day for day=#{unusable_day}" do
       professional = create(:professional, tenant: tenant)
