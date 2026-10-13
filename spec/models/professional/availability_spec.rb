@@ -203,4 +203,125 @@ RSpec.describe Professional::Availability, type: :model do
 
     expect(thirty).to eq(one)
   end
+
+  describe "#reasons_by_date" do
+    it "marks an open day with free slots as bookable" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+
+      reasons = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).reasons_by_date }
+
+      expect(reasons[tuesday]).to eq(:bookable)
+    end
+
+    it "marks a weekday without working hours as no_working_day" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      wednesday = Date.current.next_week(:wednesday)
+
+      reasons = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: wednesday..wednesday).reasons_by_date }
+
+      expect(reasons[wednesday]).to eq(:no_working_day)
+    end
+
+    it "marks a day closed by a full-day exception as day_off" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: tuesday)
+
+      reasons = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).reasons_by_date }
+
+      expect(reasons[tuesday]).to eq(:day_off)
+    end
+
+    it "marks an open day with no free slot left as fully_booked" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "09:45")
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: tuesday.in_time_zone.change(hour: 9))
+
+      reasons = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).reasons_by_date }
+
+      expect(reasons[tuesday]).to eq(:fully_booked)
+    end
+
+    it "marks today as fully_booked once its working hours are over" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+
+      reasons = travel_to(tuesday.in_time_zone.change(hour: 15)) { ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).reasons_by_date } }
+
+      expect(reasons[tuesday]).to eq(:fully_booked)
+    end
+
+    it "does not let another tenant's appointment turn a bookable day into fully_booked" do
+      aurora = create(:tenant, name: "Estúdio Aurora")
+      aurora_professional = create(:professional, tenant: aurora)
+      aurora_service = create(:service, tenant: aurora, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: aurora, professional: aurora_professional, weekday: 2, opens_at: "09:00", closes_at: "09:45")
+      ze = create(:tenant, name: "Barbearia do Zé")
+      ze_professional = create(:professional, tenant: ze)
+      ze_service = create(:service, tenant: ze, duration_minutes: 45)
+      create(:working_hour, tenant: ze, professional: ze_professional, weekday: 2, opens_at: "09:00", closes_at: "09:45")
+      create(:appointment, tenant: ze, professional: ze_professional, service: ze_service, starts_at: tuesday.in_time_zone.change(hour: 9))
+
+      reasons = ActsAsTenant.with_tenant(aurora) { described_class.new(professional: aurora_professional, service: aurora_service, dates: tuesday..tuesday).reasons_by_date }
+
+      expect(reasons[tuesday]).to eq(:bookable)
+    end
+
+    it "runs the same number of queries for thirty days as for one" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+      create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: tuesday + 7)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: tuesday.in_time_zone.change(hour: 10))
+
+      one = ActsAsTenant.with_tenant(tenant) { count_queries { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).reasons_by_date } }
+      thirty = ActsAsTenant.with_tenant(tenant) { count_queries { described_class.new(professional: professional, service: service, dates: tuesday..(tuesday + 29)).reasons_by_date } }
+
+      expect(thirty).to eq(one)
+    end
+  end
+
+  describe "#schedule_published?" do
+    it "is true when the professional has working hours" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      tuesday = Date.current.next_week(:tuesday)
+
+      published = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).schedule_published? }
+
+      expect(published).to be(true)
+    end
+
+    it "is false when the professional has no working hours" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+
+      published = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).schedule_published? }
+
+      expect(published).to be(false)
+    end
+  end
 end

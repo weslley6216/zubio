@@ -9,6 +9,8 @@ class Professional < ApplicationRecord
   validates :display_name, presence: true
   validates :user_id, uniqueness: true, allow_nil: true
 
+  scope :active, -> { where(active: true) }
+
   def replace_working_hours!(declaration)
     transaction do
       working_hours.destroy_all

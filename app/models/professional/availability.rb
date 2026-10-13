@@ -9,12 +9,34 @@ class Professional::Availability
     @dates.index_with { |date| slots_for(date) }
   end
 
+  def reasons_by_date
+    @dates.index_with { |date| reason_for(date) }
+  end
+
+  def schedule_published?
+    working_hours.any?
+  end
+
   private
 
   def slots_for(date)
     open_windows(date)
       .flat_map { |window| candidates(window, @duration) }
       .select { |candidate| free?(candidate) && future?(candidate) }
+  end
+
+  def reason_for(date)
+    if open_windows(date).any?
+      slots_for(date).any? ? :bookable : :fully_booked
+    elsif closed_exception?(date)
+      :day_off
+    else
+      :no_working_day
+    end
+  end
+
+  def closed_exception?(date)
+    exceptions.any? { |schedule_exception| schedule_exception.occurs_on == date && schedule_exception.closed? }
   end
 
   def open_windows(date)
