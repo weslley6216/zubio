@@ -229,6 +229,38 @@ RSpec.describe Professional, type: :model do
     end
   end
 
+  describe ".active" do
+    it "excludes professionals that are not active" do
+      tenant = create(:tenant)
+      inactive = create(:professional, tenant: tenant, active: false)
+
+      result = ActsAsTenant.with_tenant(tenant) { Professional.active }
+
+      expect(result).not_to include(inactive)
+    end
+
+    it "returns only the active professionals of the tenant" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      create(:professional, tenant: tenant, active: false)
+
+      result = ActsAsTenant.with_tenant(tenant) { Professional.active }
+
+      expect(result).to contain_exactly(professional)
+    end
+
+    it "never returns an active professional from another tenant" do
+      tenant = create(:tenant)
+      other_tenant = create(:tenant)
+      create(:professional, tenant: other_tenant)
+      own = create(:professional, tenant: tenant)
+
+      result = ActsAsTenant.with_tenant(tenant) { Professional.active }
+
+      expect(result).to contain_exactly(own)
+    end
+  end
+
   describe "tenant isolation" do
     it "does not include professionals from another tenant" do
       tenant_a = create(:tenant)
