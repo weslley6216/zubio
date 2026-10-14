@@ -20,7 +20,7 @@ class Views::Owner::BrandQuestions::Edit < Views::Base
         section(aria_labelledby: @body::HEADING_ID, data: preview_data, class: Components::Owner::FormCard::CARD_CLASS) do
           form_with(url: @url, method: :patch, multipart: true, class: Components::Owner::FormCard::FORM_CLASS) do |form|
             render @body.new(tenant: @tenant, branding: @branding)
-            form.submit(SUBMIT_LABEL, class: submit_class)
+            form.submit(SUBMIT_LABEL, class: PLATFORM_SUBMIT)
           end
         end
       end
@@ -28,10 +28,6 @@ class Views::Owner::BrandQuestions::Edit < Views::Base
   end
 
   private
-
-  def submit_class
-    @body == Components::Owner::BrandQuestion::Colors ? PLATFORM_SUBMIT : SUBMIT
-  end
 
   def preview_data
     { panel: true, preview_brand: @branding.brand_600, preview_secondary: @branding.brand_secondary_600.presence || "none" }

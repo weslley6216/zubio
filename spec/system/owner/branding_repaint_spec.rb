@@ -26,10 +26,10 @@ RSpec.describe "Owner branding repaint", type: :system, js: true do
     within(%(fieldset[aria-label="Cor principal"])) { find(%([data-row-option] [data-swatch="#BE123C"])).click }
 
     expect(page).to have_css(%([data-preview-brand="#BE123C"] #{submit_button}))
-    expect(computed_hex(submit_button, "backgroundColor")).to eq(Branding::DEFAULT_BRAND_600)
+    expect(computed_hex(submit_button, "backgroundColor")).to eq("#4F46E5")
   end
 
-  it "keeps the save button of the other brand questions in the establishment color" do
+  it "keeps the save button of the other brand questions in the Zubio color" do
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
     create(:branding, tenant: tenant, brand_600: "#0F766E")
     emulate_color_scheme("light")
@@ -37,6 +37,6 @@ RSpec.describe "Owner branding repaint", type: :system, js: true do
 
     visit "http://estudio-aurora.zubio.com.br#{edit_owner_brand_name_path}"
 
-    expect(computed_hex(%(input[type="submit"][value="#{Views::Owner::BrandQuestions::Edit::SUBMIT_LABEL}"]), "backgroundColor")).to eq("#0F766E")
+    expect(computed_hex(%(input[type="submit"][value="#{Views::Owner::BrandQuestions::Edit::SUBMIT_LABEL}"]), "backgroundColor")).to eq("#4F46E5")
   end
 end

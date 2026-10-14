@@ -27,7 +27,7 @@ class Views::Owner::Onboarding::Final < Views::Base
   LOGO_NOTICE_CLASS = "flex items-center gap-3 rounded-xl border border-dashed border-line-strong bg-surface px-4 py-3.5 text-[13px] leading-relaxed text-ink-muted".freeze
   LOGO_NOTICE_ICON_CLASS = "h-5 w-5 flex-none text-ink-muted".freeze
   FOOTER_CLASS = "mt-auto flex flex-col gap-2.5".freeze
-  DASHBOARD_LINK_CLASS = "grid min-h-13 place-items-center rounded-xl bg-brand-600 text-base font-extrabold text-on-brand".freeze
+  DASHBOARD_LINK_CLASS = "grid min-h-13 place-items-center rounded-xl bg-zubio text-base font-extrabold text-on-zubio".freeze
   ADD_SERVICE_CLASS = "text-[13px] font-bold text-brand-ink".freeze
 
   def initialize(tenant:, branding:, owner_name:, services:, working_hours:, logo_attached:)

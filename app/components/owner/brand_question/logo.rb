@@ -28,7 +28,7 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
   UPLOAD_TITLE_CLASS = "text-base font-extrabold text-ink".freeze
   UPLOAD_SUBTITLE_CLASS = "text-center text-[13px] leading-normal text-ink-muted".freeze
   ONBOARDING_ACTIONS_CLASS = "mt-0.5 flex gap-2".freeze
-  PRIMARY_PICKER_CLASS = "inline-flex h-11 cursor-pointer items-center justify-center rounded-[10px] bg-brand-600 px-4 text-sm font-bold text-on-brand focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-accent".freeze
+  PRIMARY_PICKER_CLASS = "inline-flex h-11 cursor-pointer items-center justify-center rounded-[10px] bg-zubio px-4 text-sm font-bold text-on-zubio focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-accent".freeze
   SECONDARY_PICKER_CLASS = "inline-flex h-11 cursor-pointer items-center justify-center rounded-[10px] border border-line-strong px-4 text-sm font-bold text-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-accent".freeze
   NO_LOGO_CARD_CLASS = "mt-4 grid gap-3 rounded-2xl border border-line bg-surface p-4".freeze
   NO_LOGO_LABEL_CLASS = "#{SECTION_LABEL} text-ink-subtle".freeze
