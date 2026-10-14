@@ -443,7 +443,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
 
     expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#{chosen}']", visible: :all)
     expect(computed_hex("[data-onboarding-section='colors'] [data-progress-bar] .bg-brand-600", "backgroundColor")).to eq(chosen)
-    expect(computed_hex("[data-onboarding-section='colors'] button[data-action='onboarding#next']", "backgroundColor")).to eq(Branding::DEFAULT_BRAND_600)
+    expect(computed_hex("[data-onboarding-section='colors'] button[data-action='onboarding#next']", "backgroundColor")).to eq("#4F46E5")
   end
 
   it "carries the chosen color into the next questions while their continue button stays in the Zubio color" do
@@ -457,7 +457,34 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
 
     expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#{chosen}']", visible: :all)
     expect(computed_hex("[data-onboarding-section='name'] [data-progress-bar] .bg-brand-600", "backgroundColor")).to eq(chosen)
-    expect(computed_hex("[data-onboarding-section='name'] button[data-action='onboarding#next']", "backgroundColor")).to eq(Branding::DEFAULT_BRAND_600)
+    expect(computed_hex("[data-onboarding-section='name'] button[data-action='onboarding#next']", "backgroundColor")).to eq("#4F46E5")
+  end
+
+  it "paints every onboarding action in the Zubio color while the screens take the chosen color" do
+    owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
+    sign_in_owner(owner)
+    welcome_color = computed_hex("button[data-action='onboarding#next']", "backgroundColor")
+    click_on "Começar"
+    find("[data-swatch-row] [data-swatch='#BE123C']").click
+    click_on "Continuar"
+    fill_in "Nome da marca", with: "Barbearia do Zé"
+    click_on "Continuar"
+    gallery_color = computed_hex("[data-onboarding-section='logo'] label:has(input[type=file]:not([capture]))", "backgroundColor")
+    click_on "Pular por enquanto"
+    add_service_color = computed_hex("button[data-action='onboarding#addService']", "backgroundColor")
+    fill_in "Nome", with: "Corte"
+    fill_in "Duração (minutos)", with: "45"
+    click_on "Adicionar à lista"
+    click_on "Continuar com 1 serviço"
+    %w[Ter Qua Qui Sex Sáb].each { |weekday| find("label", text: weekday, exact_text: true).click }
+    fill_in "working_hours_opens_at", with: "09:00"
+    fill_in "working_hours_closes_at", with: "18:00"
+
+    click_on "Ver minha página"
+
+    expect(page).to have_content("Sua página está no ar, Ana")
+    expect([ welcome_color, gallery_color, add_service_color ]).to all(eq("#4F46E5"))
+    expect(computed_hex("main a[href='#{owner_dashboard_path}']", "backgroundColor")).to eq("#4F46E5")
   end
 
   it "repaints the screen from a code typed behind the plus" do
