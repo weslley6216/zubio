@@ -74,6 +74,24 @@ RSpec.describe Service::Price do
     end
   end
 
+  describe ".compact_label" do
+    it "drops the cents of a whole price" do
+      expect(described_class.compact_label(6_000)).to eq("R$ 60")
+    end
+
+    it "keeps the thousands delimiter of a whole price" do
+      expect(described_class.compact_label(145_000)).to eq("R$ 1.450")
+    end
+
+    it "keeps the cents of a price that has them" do
+      expect(described_class.compact_label(6_050)).to eq("R$ 60,50")
+    end
+
+    it "shows a service with no price as sob consulta" do
+      expect(described_class.compact_label(nil)).to eq("Sob consulta")
+    end
+  end
+
   describe "round trip" do
     [ 0, 5, 50, 9_000, 9_050, 123_456, 9_999_999 ].each do |cents|
       it "reads #{cents} cents back from the text it wrote, with or without the currency" do

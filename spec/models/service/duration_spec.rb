@@ -16,4 +16,12 @@ RSpec.describe Service::Duration do
       end
     end
   end
+
+  describe ".minutes_label" do
+    { 45 => "45 min", 120 => "120 min" }.each do |minutes, label|
+      it "spells #{minutes} minutes as #{label.inspect}" do
+        expect(described_class.minutes_label(minutes)).to eq(label)
+      end
+    end
+  end
 end

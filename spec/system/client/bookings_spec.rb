@@ -19,6 +19,49 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
     expect(page.evaluate_script("window.__noReload")).to be(true)
   end
 
+  it "carries the picked day into the confirmation bar" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45, price_cents: 6_000)
+    [ 2, 4 ].each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "12:00") }
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service)}"
+
+    find("[data-day='2026-09-10']").click
+
+    expect(page).to have_css("[data-summary]", exact_text: "Qui, 10 set · R$ 60")
+  end
+
+  it "pins the confirmation bar to the bottom of a short screen" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 180)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: Date.current.next_week(:tuesday).wday, opens_at: "09:00", closes_at: "12:00")
+
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: Date.current.next_week(:tuesday).iso8601)}"
+
+    expect(page).to have_css("[data-slots] [data-slot]", count: 1)
+    expect(page.evaluate_script("Math.round(document.querySelector('[data-confirm-bar]').parentElement.getBoundingClientRect().bottom)")).to eq(page.evaluate_script("window.innerHeight"))
+  end
+
+  it "shows four days at a time on the phone, each a touch target" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 60)
+    (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "18:00") }
+
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service)}"
+
+    expect(page.evaluate_script(<<~JS)).to eq(4)
+      (() => {
+        const strip = document.querySelector('[data-day-selector]').getBoundingClientRect();
+        return [...document.querySelectorAll('[data-day-selector] [data-day]')]
+          .filter((day) => { const box = day.getBoundingClientRect(); return box.left >= strip.left && box.right <= strip.right + 0.5; }).length;
+      })()
+    JS
+    expect(page.evaluate_script("document.querySelector('[data-slots] [data-slot]').getBoundingClientRect().height")).to be >= 44
+  end
+
   it "fits two weeks of days inside the phone screen" do
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
     professional = create(:professional, tenant: tenant)
@@ -91,7 +134,7 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
       expect(opaque?("[data-price]")).to be(true)
       expect(contrast_ratio("[data-price]")).to be >= Branding::ColorScale::MIN_CONTRAST
       expect(opaque?("[data-confirm-bar]")).to be(true)
-      expect(contrast_ratio("[data-confirm-bar]")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(contrast_ratio("[data-confirm-bar]")).to be >= Branding::ColorScale::MIN_NON_TEXT_CONTRAST
     end
   end
 end

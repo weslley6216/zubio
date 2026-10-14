@@ -27,6 +27,10 @@ class Service::Price
     cents ? new(cents).with_currency : UNPRICED_LABEL
   end
 
+  def self.compact_label(cents)
+    cents ? new(cents).compact_with_currency : UNPRICED_LABEL
+  end
+
   def initialize(cents)
     @cents = cents
   end
@@ -38,4 +42,9 @@ class Service::Price
   end
 
   def with_currency = "#{CURRENCY} #{self}"
+
+  def compact_with_currency
+    whole = (cents % CENTS_PER_REAL).zero?
+    whole ? "#{CURRENCY} #{ActiveSupport::NumberHelper.number_to_delimited(cents / CENTS_PER_REAL, delimiter: THOUSANDS_DELIMITER)}" : with_currency
+  end
 end

@@ -204,6 +204,55 @@ RSpec.describe Professional::Availability, type: :model do
     expect(thirty).to eq(one)
   end
 
+  describe "#taken_slots_by_date" do
+    it "lists the future candidates an appointment occupies" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      nine = tuesday.in_time_zone.change(hour: 9)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: nine + 45.minutes)
+
+      taken = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).taken_slots_by_date }
+
+      expect(taken[tuesday]).to eq([ nine + 45.minutes ])
+    end
+
+    it "leaves a past candidate out even when it was taken" do
+      travel_to Time.zone.local(2026, 9, 8, 10, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: Time.zone.local(2026, 9, 8, 9, 0))
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: Time.zone.local(2026, 9, 8, 10, 30))
+
+      taken = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).taken_slots_by_date }
+
+      expect(taken[tuesday]).to eq([ Time.zone.local(2026, 9, 8, 10, 30) ])
+    end
+
+    it "does not count another tenant's appointment as taken" do
+      aurora = create(:tenant, name: "Estúdio Aurora")
+      aurora_professional = create(:professional, tenant: aurora)
+      aurora_service = create(:service, tenant: aurora, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: aurora, professional: aurora_professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      create(:appointment, tenant: aurora, professional: aurora_professional, service: aurora_service, starts_at: tuesday.in_time_zone.change(hour: 10, min: 30))
+      ze = create(:tenant, name: "Barbearia do Zé")
+      ze_professional = create(:professional, tenant: ze)
+      ze_service = create(:service, tenant: ze, duration_minutes: 45)
+      create(:working_hour, tenant: ze, professional: ze_professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      create(:appointment, tenant: ze, professional: ze_professional, service: ze_service, starts_at: tuesday.in_time_zone.change(hour: 9))
+
+      taken = ActsAsTenant.with_tenant(aurora) { described_class.new(professional: aurora_professional, service: aurora_service, dates: tuesday..tuesday).taken_slots_by_date }
+
+      expect(taken[tuesday]).to eq([ tuesday.in_time_zone.change(hour: 10, min: 30) ])
+    end
+  end
+
   describe "#reasons_by_date" do
     it "marks an open day with free slots as bookable" do
       tenant = create(:tenant)
