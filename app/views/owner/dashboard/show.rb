@@ -15,6 +15,7 @@ class Views::Owner::Dashboard::Show < Views::Base
       div(class: "mx-auto grid w-full max-w-6xl gap-6 px-6 py-10") do
         render_greeting
         render_share_link
+        render_install_invite
       end
     end
   end
@@ -34,6 +35,14 @@ class Views::Owner::Dashboard::Show < Views::Base
       name: @tenant.name,
       label: SHARE_LABEL,
       helper: SHARE_HELPER
+    )
+  end
+
+  def render_install_invite
+    render Components::Owner::InstallInvite.new(
+      name: @tenant.name,
+      icon: @branding.invite_icon,
+      initial: @tenant.initial
     )
   end
 

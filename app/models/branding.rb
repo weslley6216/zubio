@@ -15,6 +15,7 @@ class Branding < ApplicationRecord
   SOFT_STEP = { light: 50, dark: 900 }.freeze
   ON_SOFT_STEPS = { light: [ 700, 800, 900 ], dark: [ 300, 200, 100, 50 ] }.freeze
   ICON_SIZES = [ [ 192, "any" ], [ 512, "any" ], [ 512, "maskable" ] ].freeze
+  INVITE_ICON_SIZE = 192
   SOCIAL_IMAGE_SIZE = 512
   HEADER_LOGO_LIMIT = [ 96, 96 ].freeze
   LOGO_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
@@ -94,6 +95,12 @@ class Branding < ApplicationRecord
     return unless logo.attached? && logo.blob.persisted?
 
     logo.variant(resize_to_limit: HEADER_LOGO_LIMIT, format: :png)
+  end
+
+  def invite_icon
+    return unless logo.attached? && logo.blob.persisted?
+
+    square_logo_variant(INVITE_ICON_SIZE)
   end
 
   private

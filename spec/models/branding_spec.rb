@@ -502,4 +502,26 @@ RSpec.describe Branding, type: :model do
       expect(branding.header_logo).to be_nil
     end
   end
+
+  describe "#invite_icon" do
+    it "is nil when no logo is attached" do
+      branding = create(:branding)
+
+      expect(branding.invite_icon).to be_nil
+    end
+
+    it "fills a 192 square png, reusing the manifest's 192 'any' icon instead of cutting a second crop" do
+      branding = create(:branding, :with_logo)
+      manifest_icon = branding.icon_variants.find { |icon| icon[:sizes] == "192x192" && icon[:purpose] == "any" }[:variant]
+
+      expect(branding.invite_icon.variation.transformations[:resize_to_fill]).to eq([ Branding::INVITE_ICON_SIZE, Branding::INVITE_ICON_SIZE ])
+      expect(branding.invite_icon.variation.key).to eq(manifest_icon.variation.key)
+    end
+
+    it "is nil when a rejected upload left an attachment whose blob was never persisted" do
+      branding = build(:branding, :with_logo)
+
+      expect(branding.invite_icon).to be_nil
+    end
+  end
 end
