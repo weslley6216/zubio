@@ -8,7 +8,7 @@ module Phone
     browser_page.command("Emulation.setTouchEmulationEnabled", enabled: true, maxTouchPoints: 5)
   end
 
-  def emulate_desktop(width: 1280, height: 800)
+  def emulate_desktop_screen(width: 1280, height: 800)
     page.driver.resize(width, height)
     page.driver.browser.page.command("Emulation.setTouchEmulationEnabled", enabled: false)
   end

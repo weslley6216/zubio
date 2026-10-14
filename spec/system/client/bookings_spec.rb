@@ -57,7 +57,7 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
     professional = create(:professional, tenant: tenant)
     service = create(:service, tenant: tenant, duration_minutes: 60)
     (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "18:00") }
-    emulate_desktop(width: 1280, height: 800)
+    emulate_desktop_screen(width: 1280, height: 800)
 
     visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service)}"
 
