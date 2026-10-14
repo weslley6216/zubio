@@ -45,11 +45,12 @@ class Views::Owner::ScheduleExceptions::Index < Views::Base
   EMPTY_TITLE_CLASS = "text-lg font-bold text-ink".freeze
   EMPTY_BODY_CLASS = "text-sm text-ink-muted".freeze
 
-  def initialize(tenant:, branding:, exceptions:, exception:, current_section:)
+  def initialize(tenant:, branding:, exceptions:, exception:, conflicts:, current_section:)
     @tenant = tenant
     @branding = branding
     @exceptions = exceptions
     @exception = exception
+    @conflicts = conflicts
     @current_section = current_section
   end
 
@@ -59,6 +60,7 @@ class Views::Owner::ScheduleExceptions::Index < Views::Base
       main(class: PAGE_CLASS) do
         render Components::Owner::SettingsBackLink.new
         render_heading
+        render Components::Owner::OutsideHoursNotice.new(conflicts: @conflicts)
         render_form
         @exceptions.empty? ? render_empty_state : render_list
       end

@@ -300,6 +300,140 @@ RSpec.describe Professional::Availability, type: :model do
     end
   end
 
+  describe "#appointments_outside_hours" do
+    it "reports an appointment that ends after the window closes" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      friday = Date.current.next_week(:friday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 5, opens_at: "09:00", closes_at: "18:00")
+      appointment = create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 17, min: 30))
+
+      conflicts = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).appointments_outside_hours }
+
+      expect(conflicts).to include(appointment)
+    end
+
+    it "keeps an appointment fully inside the window out of the warning" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      friday = Date.current.next_week(:friday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 5, opens_at: "09:00", closes_at: "18:00")
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 14))
+
+      conflicts = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).appointments_outside_hours }
+
+      expect(conflicts).to be_empty
+    end
+
+    it "reports an appointment that straddles the midday break" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 60)
+      friday = Date.current.next_week(:friday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 5, opens_at: "09:00", closes_at: "12:00")
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 5, opens_at: "14:00", closes_at: "18:00")
+      appointment = create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 11, min: 30))
+
+      conflicts = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).appointments_outside_hours }
+
+      expect(conflicts).to include(appointment)
+    end
+
+    it "reports every appointment of a day closed by a full-day exception" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      friday = Date.current.next_week(:friday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 5, opens_at: "09:00", closes_at: "18:00")
+      create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: friday)
+      appointment = create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 10))
+
+      conflicts = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).appointments_outside_hours }
+
+      expect(conflicts).to include(appointment)
+    end
+
+    it "ignores a cancelled appointment" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      friday = Date.current.next_week(:friday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 5, opens_at: "09:00", closes_at: "12:00")
+      create(:appointment, :cancelled, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 17))
+      confirmed = create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 17, min: 30))
+
+      conflicts = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).appointments_outside_hours }
+
+      expect(conflicts).to eq([ confirmed ])
+    end
+
+    it "ignores an appointment already in the past" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      friday = Date.current.next_week(:friday)
+      next_friday = friday + 7
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 5, opens_at: "09:00", closes_at: "12:00")
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 17))
+      future = create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: next_friday.in_time_zone.change(hour: 17))
+
+      conflicts = travel_to(friday.in_time_zone.change(hour: 20)) { ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).appointments_outside_hours } }
+
+      expect(conflicts).to eq([ future ])
+    end
+
+    it "orders the reported appointments by start time" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      friday = Date.current.next_week(:friday)
+      next_friday = friday + 7
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 5, opens_at: "09:00", closes_at: "12:00")
+      later = create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: next_friday.in_time_zone.change(hour: 17))
+      earlier = create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 17))
+
+      conflicts = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).appointments_outside_hours }
+
+      expect(conflicts).to eq([ earlier, later ])
+    end
+
+    it "never reports an appointment from another tenant" do
+      aurora = create(:tenant, name: "Estúdio Aurora")
+      aurora_professional = create(:professional, tenant: aurora)
+      aurora_service = create(:service, tenant: aurora, duration_minutes: 45)
+      friday = Date.current.next_week(:friday)
+      create(:working_hour, tenant: aurora, professional: aurora_professional, weekday: 5, opens_at: "09:00", closes_at: "12:00")
+      aurora_appointment = create(:appointment, tenant: aurora, professional: aurora_professional, service: aurora_service, starts_at: friday.in_time_zone.change(hour: 17))
+      ze = create(:tenant, name: "Barbearia do Zé")
+      ze_professional = create(:professional, tenant: ze)
+      ze_service = create(:service, tenant: ze, duration_minutes: 45)
+      create(:working_hour, tenant: ze, professional: ze_professional, weekday: 5, opens_at: "09:00", closes_at: "12:00")
+      create(:appointment, tenant: ze, professional: ze_professional, service: ze_service, starts_at: friday.in_time_zone.change(hour: 17))
+
+      conflicts = ActsAsTenant.with_tenant(aurora) { described_class.new(professional: aurora_professional).appointments_outside_hours }
+
+      expect(conflicts).to eq([ aurora_appointment ])
+    end
+
+    it "reports outside appointments in the same number of queries for one as for many" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      friday = Date.current.next_week(:friday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 5, opens_at: "09:00", closes_at: "12:00")
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 17))
+
+      one = ActsAsTenant.with_tenant(tenant) { count_queries { described_class.new(professional: professional).appointments_outside_hours } }
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: (friday + 7).in_time_zone.change(hour: 17))
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: (friday + 14).in_time_zone.change(hour: 17))
+      many = ActsAsTenant.with_tenant(tenant) { count_queries { described_class.new(professional: professional).appointments_outside_hours } }
+
+      expect(many).to eq(one)
+    end
+  end
+
   describe "#schedule_published?" do
     it "is true when the professional has working hours" do
       tenant = create(:tenant)

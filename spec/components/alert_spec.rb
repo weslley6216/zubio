@@ -49,4 +49,20 @@ RSpec.describe Components::Alert, type: :component do
   it "refuses a tone with no palette behind it" do
     expect { described_class.new(text: "Salvo", tone: :warning).call }.to raise_error(KeyError)
   end
+
+  it "outlines a neutral notice in the line color with the muted icon on the neutral surface" do
+    alert = Nokogiri::HTML5.fragment(described_class.new(text: "Aviso", tone: :neutral).call).at_css("[data-alert]")
+
+    expect(alert["class"].split).to include("border-line", "bg-surface", "text-ink")
+    expect(alert["class"].split).not_to include("border-danger", "border-success")
+  end
+
+  it "marks a neutral notice with its own icon in the muted color" do
+    neutral_icon = Nokogiri::HTML5.fragment(described_class.new(text: "Aviso", tone: :neutral).call).at_css("[data-alert] svg")
+    danger_icon = Nokogiri::HTML5.fragment(described_class.new(text: "E-mail ou senha inválidos.", tone: :danger).call).at_css("[data-alert] svg")
+
+    expect(neutral_icon["class"].split).to include("text-ink-muted")
+    expect(neutral_icon["aria-hidden"]).to eq("true")
+    expect(neutral_icon.to_html).not_to eq(danger_icon.to_html)
+  end
 end

@@ -95,6 +95,62 @@ RSpec.describe "Owner working hours", type: :request do
 
       expect(seven_days).to eq(one_day)
     end
+
+    it "ignores a cancelled appointment" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      friday = Date.current.next_week(:friday)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(5 => [ [ "09:00", "18:00" ] ]) }
+      service = create(:service, tenant: tenant)
+      create(:appointment, :cancelled, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 19))
+      sign_in_owner(owner)
+
+      get edit_owner_working_hours_path
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("[data-outside-hours]")).to be_nil
+    end
+
+    it "ignores an appointment already in the past" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      friday = Date.current.next_week(:friday)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(5 => [ [ "09:00", "18:00" ] ]) }
+      service = create(:service, tenant: tenant)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 19))
+      sign_in_owner(owner)
+
+      travel_to(friday + 1) { get edit_owner_working_hours_path }
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("[data-outside-hours]")).to be_nil
+    end
+
+    it "warns on load whenever a future appointment sits outside the hours" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      friday = Date.current.next_week(:friday)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(5 => [ [ "09:00", "18:00" ] ]) }
+      service = create(:service, tenant: tenant, duration_minutes: 30)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 18, min: 30))
+      sign_in_owner(owner)
+
+      get edit_owner_working_hours_path
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("[data-outside-hours]")).to be_present
+    end
+
+    it "drops the warning once the hours cover the appointment again" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      friday = Date.current.next_week(:friday)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(5 => [ [ "09:00", "20:00" ] ]) }
+      service = create(:service, tenant: tenant, duration_minutes: 30)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 18, min: 30))
+      sign_in_owner(owner)
+
+      get edit_owner_working_hours_path
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("[data-outside-hours]")).to be_nil
+    end
   end
 
   describe "PATCH /owner/working_hours" do
@@ -151,6 +207,67 @@ RSpec.describe "Owner working hours", type: :request do
       expect(response.body).to include(WeeklySchedule::OVERLAP_MESSAGE)
       expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.to_a }).to be_empty
     end
+
+    it "shortening the week warns about the appointment left outside, with its date and time" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      friday = Date.current.next_week(:friday)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(5 => [ [ "09:00", "19:00" ] ]) }
+      service = create(:service, tenant: tenant, duration_minutes: 30)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 18, min: 30))
+      sign_in_owner(owner)
+
+      patch owner_working_hours_path, params: { working_hours: { "5" => { active: "1", opens_at_0: "09:00", closes_at_0: "18:00" } } }
+      follow_redirect!
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("[data-outside-hours]")).to be_present
+      expect(document.text).to include(friday.strftime("%d/%m"))
+      expect(document.text).to include("18:30")
+    end
+
+    it "leaves the appointment left outside still confirmed" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      friday = Date.current.next_week(:friday)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(5 => [ [ "09:00", "19:00" ] ]) }
+      service = create(:service, tenant: tenant, duration_minutes: 30)
+      appointment = create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 18, min: 30))
+      sign_in_owner(owner)
+
+      patch owner_working_hours_path, params: { working_hours: { "5" => { active: "1", opens_at_0: "09:00", closes_at_0: "18:00" } } }
+
+      expect(ActsAsTenant.with_tenant(tenant) { appointment.reload }).to be_confirmed
+    end
+
+    it "says nothing when the change leaves every appointment inside" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      friday = Date.current.next_week(:friday)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(5 => [ [ "09:00", "19:00" ] ]) }
+      service = create(:service, tenant: tenant, duration_minutes: 30)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 14))
+      sign_in_owner(owner)
+
+      patch owner_working_hours_path, params: { working_hours: { "5" => { active: "1", opens_at_0: "09:00", closes_at_0: "18:00" } } }
+      follow_redirect!
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("[data-outside-hours]")).to be_nil
+    end
+
+    it "warns about every appointment of a day that was unchecked" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      friday = Date.current.next_week(:friday)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(5 => [ [ "09:00", "19:00" ] ]) }
+      service = create(:service, tenant: tenant)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 10))
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 14))
+      sign_in_owner(owner)
+
+      patch owner_working_hours_path, params: { working_hours: {} }
+      follow_redirect!
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.text).to include("2 agendamentos ficaram fora do expediente")
+    end
   end
 
   describe "tenant isolation" do
@@ -182,6 +299,28 @@ RSpec.describe "Owner working hours", type: :request do
       expect(response).to redirect_to(edit_owner_working_hours_path)
       expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.ordered.map(&:weekday) }).to eq([ 4 ])
       expect(ActsAsTenant.with_tenant(aurora) { aurora_professional.working_hours.ordered.map(&:weekday) }).to eq([ 5 ])
+    end
+
+    it "never shows another tenant's appointment in the warning" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      friday = Date.current.next_week(:friday)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(5 => [ [ "09:00", "18:00" ] ]) }
+      service = create(:service, tenant: tenant)
+      own_client = create(:client, tenant: tenant, name: "Cliente do Zé")
+      create(:appointment, tenant: tenant, professional: professional, service: service, client: own_client, starts_at: friday.in_time_zone.change(hour: 19))
+      aurora = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+      aurora_professional = create(:professional, tenant: aurora)
+      ActsAsTenant.with_tenant(aurora) { aurora_professional.replace_working_hours!(5 => [ [ "09:00", "18:00" ] ]) }
+      aurora_service = create(:service, tenant: aurora)
+      aurora_client = create(:client, tenant: aurora, name: "Cliente da Aurora")
+      create(:appointment, tenant: aurora, professional: aurora_professional, service: aurora_service, client: aurora_client, starts_at: friday.in_time_zone.change(hour: 19))
+      sign_in_owner(owner)
+
+      get edit_owner_working_hours_path
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.text).not_to include("Cliente da Aurora")
+      expect(document.text).to include("Cliente do Zé")
     end
   end
 end

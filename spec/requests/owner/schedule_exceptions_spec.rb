@@ -150,6 +150,23 @@ RSpec.describe "Owner schedule exceptions", type: :request do
 
       expect(three).to eq(one)
     end
+
+    it "warns about the appointment a full-day closure leaves outside" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      tuesday = Date.current.next_week(:tuesday)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(2 => [ [ "09:00", "18:00" ] ]) }
+      service = create(:service, tenant: tenant)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: tuesday.in_time_zone.change(hour: 10))
+      sign_in_owner(owner)
+
+      post owner_schedule_exceptions_path, params: { schedule_exception: { occurs_on: tuesday.iso8601 } }
+      follow_redirect!
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("[data-outside-hours]")).to be_present
+      expect(document.text).to include(tuesday.strftime("%d/%m"))
+      expect(document.text).to include("10:00")
+    end
   end
 
   describe "POST /owner/schedule_exceptions" do
@@ -252,6 +269,28 @@ RSpec.describe "Owner schedule exceptions", type: :request do
 
       expect(ActsAsTenant.with_tenant(aurora) { ScheduleException.exists?(foreign.id) }).to be(true)
       expect(ActsAsTenant.with_tenant(tenant) { ScheduleException.exists?(own.id) }).to be(true)
+    end
+
+    it "never shows another tenant's appointment in the warning" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      tuesday = Date.current.next_week(:tuesday)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(2 => [ [ "09:00", "18:00" ] ]) }
+      service = create(:service, tenant: tenant)
+      own_client = create(:client, tenant: tenant, name: "Cliente do Zé")
+      create(:appointment, tenant: tenant, professional: professional, service: service, client: own_client, starts_at: tuesday.in_time_zone.change(hour: 19))
+      aurora = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+      aurora_professional = create(:professional, tenant: aurora)
+      ActsAsTenant.with_tenant(aurora) { aurora_professional.replace_working_hours!(2 => [ [ "09:00", "18:00" ] ]) }
+      aurora_service = create(:service, tenant: aurora)
+      aurora_client = create(:client, tenant: aurora, name: "Cliente da Aurora")
+      create(:appointment, tenant: aurora, professional: aurora_professional, service: aurora_service, client: aurora_client, starts_at: tuesday.in_time_zone.change(hour: 19))
+      sign_in_owner(owner)
+
+      get owner_schedule_exceptions_path
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.text).not_to include("Cliente da Aurora")
+      expect(document.text).to include("Cliente do Zé")
     end
   end
 end
