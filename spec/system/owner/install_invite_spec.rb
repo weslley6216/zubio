@@ -41,6 +41,16 @@ RSpec.describe "Owner install invite", type: :system, js: true do
     expect(page).to have_no_button(Components::Owner::InstallInvite::INSTALL_LABEL)
   end
 
+  it "gives an iPad that presents itself as a Mac the two manual steps" do
+    create(:branding, tenant: tenant)
+    emulate_ipad_in_desktop_mode
+    sign_in_owner(owner)
+    visit dashboard_url
+
+    expect(page).to have_css("[data-pwa-install-target='instructions']:not([hidden])")
+    expect(page).to have_no_button(Components::Owner::InstallInvite::INSTALL_LABEL)
+  end
+
   it "stays away when the app is already installed, even with an install prompt waiting" do
     create(:branding, tenant: tenant)
     emulate_installed_app

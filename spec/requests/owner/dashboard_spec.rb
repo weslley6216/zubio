@@ -165,15 +165,16 @@ RSpec.describe "Owner dashboard", type: :request do
 
     it "builds the install invite from its own tenant icon and name, nothing of another tenant" do
       other_tenant = create(:tenant, subdomain: "salon-b", name: "Barbearia do Zé")
-      create(:branding, :with_logo, tenant: other_tenant)
-      create(:branding, :with_logo, tenant: tenant)
+      other_branding = create(:branding, :with_logo, tenant: other_tenant)
+      branding = create(:branding, :with_logo, tenant: tenant)
       sign_in_owner(owner)
 
       get owner_dashboard_path
 
       icon = Nokogiri::HTML5(response.body).at_css("[data-controller='pwa-install'] img")
       expect(icon["alt"]).to eq("Estúdio Aurora")
-      expect(icon["src"]).to include("/rails/active_storage/representations/proxy/")
+      expect(icon["src"]).to eq(rails_storage_proxy_path(branding.invite_icon))
+      expect(response.body).not_to include(rails_storage_proxy_path(other_branding.invite_icon))
       expect(response.body).not_to include("Barbearia do Zé")
     end
   end

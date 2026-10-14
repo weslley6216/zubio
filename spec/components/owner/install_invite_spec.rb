@@ -63,6 +63,7 @@ RSpec.describe Components::Owner::InstallInvite, type: :component do
   it "does not render the reference-board eyebrows or the dashed cross-persona note" do
     html = render_phlex(described_class.new(name: "Barbearia do Zé", icon: nil, initial: "B"))
 
+    expect(html).to include(described_class::TITLE)
     expect(html).not_to include("prompt nativo")
     expect(html).not_to include("instrução manual")
     expect(html).not_to include("O mesmo convite aparece")
