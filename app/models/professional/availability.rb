@@ -9,6 +9,10 @@ class Professional::Availability
     @dates.index_with { |date| slots_for(date) }
   end
 
+  def taken_slots_by_date
+    @dates.index_with { |date| taken_slots_for(date) }
+  end
+
   def reasons_by_date
     @dates.index_with { |date| reason_for(date) }
   end
@@ -41,9 +45,17 @@ class Professional::Availability
   end
 
   def slots_for(date)
+    future_candidates(date).select { |candidate| free?(candidate) }
+  end
+
+  def taken_slots_for(date)
+    future_candidates(date).reject { |candidate| free?(candidate) }
+  end
+
+  def future_candidates(date)
     open_windows(date)
       .flat_map { |window| candidates(window, @duration) }
-      .select { |candidate| free?(candidate) && future?(candidate) }
+      .select { |candidate| future?(candidate) }
   end
 
   def reason_for(date)

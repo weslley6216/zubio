@@ -24,6 +24,7 @@ class Client::BookingsController < Client::BaseController
       reasons: reasons,
       selected_day: selected,
       slots: slots.fetch(selected),
+      taken_slots: availability.taken_slots_by_date.fetch(selected),
       reason: reasons.fetch(selected)
     )
   end

@@ -17,7 +17,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
     expect(response.body).to include("Design de sobrancelhas")
   end
 
-  it "hides a taken slot and still offers a free one" do
+  it "strikes a taken slot through and still offers the free ones" do
     professional = create(:professional, tenant: tenant)
     service = create(:service, tenant: tenant, duration_minutes: 45)
     tuesday = Date.current.next_week(:tuesday)
@@ -27,9 +27,79 @@ RSpec.describe "Public booking day and time selection", type: :request do
 
     get new_client_service_booking_path(service, day: tuesday.iso8601)
 
-    times = Nokogiri::HTML5(response.body).css("[data-slots] [data-slot]").map { |slot| slot.text.strip }
-    expect(times).to include("09:00")
-    expect(times).not_to include("09:45")
+    document = Nokogiri::HTML5(response.body)
+    expect(document.css("[data-slots] [data-slot]").map { |slot| slot.text.strip }).to eq([ "09:00", "10:30", "11:15" ])
+    taken = document.css("[data-slots] [data-slot-taken]")
+    expect(taken.map { |slot| slot.text.strip }).to eq([ "09:45" ])
+    expect(taken.first["aria-label"]).to eq("09:45, ocupado")
+    expect(taken.first["class"]).to include("line-through")
+  end
+
+  it "spells the service, the grid step and the chosen day like the canvas" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45, price_cents: 6_000)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service)
+
+    document = Nokogiri::HTML5(response.body)
+    expect(document.at_css("[data-price]").text).to eq("R$ 60")
+    expect(response.body).to include("45 min")
+    expect(document.at_css("[data-grid-hint]").text).to eq("A grade anda de 45 em 45 porque o serviço dura 45.")
+    expect(document.at_css("[data-summary]").text).to eq("Ter, 8 set · R$ 60")
+    expect(document.at_css("[data-day='2026-09-08'] span:last-child").text).to eq("08")
+  end
+
+  it "names the single day with no free slot in the hint" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "12:00") }
+    create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: Date.new(2026, 9, 11))
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service)
+
+    expect(Nokogiri::HTML5(response.body).at_css("[data-days-off-hint]").text).to eq("Sexta está em cinza: sem horário livre.")
+  end
+
+  it "groups several days with no free slot in the hint" do
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service)
+
+    expect(Nokogiri::HTML5(response.body).at_css("[data-days-off-hint]").text).to eq(Views::Client::Bookings::New::DAYS_OFF_HINT)
+  end
+
+  it "leaves the hint out when every day has a free slot" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "12:00") }
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service)
+
+    document = Nokogiri::HTML5(response.body)
+    expect(document.css("[data-day-selector] a[data-day]").size).to eq(Client::BookingsController::WINDOW_DAYS)
+    expect(document.at_css("[data-days-off-hint]")).to be_nil
+  end
+
+  it "leads back to the establishment page from the header" do
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service)
+
+    back = Nokogiri::HTML5(response.body).at_css("header a[aria-label='#{Views::Client::Bookings::New::BACK_LABEL}']")
+    expect(back["href"]).to eq(establishment_path)
   end
 
   it "offers the next days from today and disables the ones with no free slot" do

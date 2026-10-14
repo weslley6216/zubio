@@ -3,6 +3,10 @@ class Service::Duration
   HOURS_UNIT = "h".freeze
   MINUTES_UNIT = "min".freeze
 
+  def self.minutes_label(minutes)
+    "#{minutes} #{MINUTES_UNIT}"
+  end
+
   def self.label(minutes)
     hours, rest = minutes.divmod(MINUTES_PER_HOUR)
     parts = []
