@@ -11,6 +11,8 @@ class Views::Client::Bookings::New < Views::Base
   DAY_STEP = "Dia".freeze
   TIME_STEP = "Horário".freeze
   DAYS_OFF_HINT = "Dias em cinza: sem horário livre.".freeze
+  DAY_OFF_HINT = "%<weekday>s está em cinza: sem horário livre.".freeze
+  GRID_HINT = "A grade anda de %<minutes>d em %<minutes>d porque o serviço dura %<minutes>d.".freeze
   TAKEN_LABEL = "ocupado".freeze
   NO_SERVICE_MESSAGE = "Não há atendimento nesse dia.".freeze
   FULLY_BOOKED_MESSAGE = "Não há mais horários livres nesse dia.".freeze
@@ -167,7 +169,7 @@ class Views::Client::Bookings::New < Views::Base
 
   def days_off_hint
     days = disabled_days
-    days.one? ? "#{WEEKDAY_NAMES[days.first.wday]} está em cinza: sem horário livre." : DAYS_OFF_HINT
+    days.one? ? Kernel.format(DAY_OFF_HINT, weekday: WEEKDAY_NAMES[days.first.wday]) : DAYS_OFF_HINT
   end
 
   def render_grid_or_reason
@@ -191,8 +193,7 @@ class Views::Client::Bookings::New < Views::Base
   end
 
   def grid_hint
-    minutes = @service.duration_minutes
-    "A grade anda de #{minutes} em #{minutes} porque o serviço dura #{minutes}."
+    Kernel.format(GRID_HINT, minutes: @service.duration_minutes)
   end
 
   def render_reason
