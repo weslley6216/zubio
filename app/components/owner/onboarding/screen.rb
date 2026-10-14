@@ -14,11 +14,10 @@ class Components::Owner::Onboarding::Screen < Components::Base
   BODY_CLASS = "flex flex-grow flex-col gap-3.5 overflow-y-auto px-6".freeze
 
   FOOTER_CLASS = "px-6 pb-5 pt-3".freeze
-  PRIMARY_CLASS = "min-h-13 w-full rounded-xl bg-brand-600 text-base font-extrabold text-on-brand".freeze
-  PLATFORM_PRIMARY_CLASS = "min-h-13 w-full rounded-xl bg-zubio text-base font-extrabold text-on-zubio".freeze
+  PRIMARY_CLASS = "min-h-13 w-full rounded-xl bg-zubio text-base font-extrabold text-on-zubio".freeze
   SECONDARY_CLASS = "mt-2 min-h-10 w-full bg-none text-sm font-bold text-ink-muted".freeze
 
-  def initialize(section:, group:, position:, primary:, total: 5, submit: false, secondary: nil, count: false, hidden: false, platform_primary: false)
+  def initialize(section:, group:, position:, primary:, total: 5, submit: false, secondary: nil, count: false, hidden: false)
     @section = section
     @group = group
     @position = position
@@ -28,7 +27,6 @@ class Components::Owner::Onboarding::Screen < Components::Base
     @secondary = secondary
     @count = count
     @hidden = hidden
-    @platform_primary = platform_primary
   end
 
   def view_template
@@ -74,15 +72,11 @@ class Components::Owner::Onboarding::Screen < Components::Base
     end
   end
 
-  def primary_class
-    @platform_primary ? PLATFORM_PRIMARY_CLASS : PRIMARY_CLASS
-  end
-
   def render_primary
     if @submit
-      button(type: "submit", class: primary_class) { @primary }
+      button(type: "submit", class: PRIMARY_CLASS) { @primary }
     else
-      button(type: "button", class: primary_class, data: primary_data) { @primary }
+      button(type: "button", class: PRIMARY_CLASS, data: primary_data) { @primary }
     end
   end
 

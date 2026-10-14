@@ -446,7 +446,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     expect(computed_hex("[data-onboarding-section='colors'] button[data-action='onboarding#next']", "backgroundColor")).to eq(Branding::DEFAULT_BRAND_600)
   end
 
-  it "carries the chosen color into the next questions" do
+  it "carries the chosen color into the next questions while their continue button stays in the Zubio color" do
     owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
     sign_in_owner(owner)
     click_on "Começar"
@@ -456,7 +456,8 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     click_on "Continuar"
 
     expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#{chosen}']", visible: :all)
-    expect(computed_hex("[data-onboarding-section='name'] button[data-action='onboarding#next']", "backgroundColor")).to eq(chosen)
+    expect(computed_hex("[data-onboarding-section='name'] [data-progress-bar] .bg-brand-600", "backgroundColor")).to eq(chosen)
+    expect(computed_hex("[data-onboarding-section='name'] button[data-action='onboarding#next']", "backgroundColor")).to eq(Branding::DEFAULT_BRAND_600)
   end
 
   it "repaints the screen from a code typed behind the plus" do

@@ -41,7 +41,7 @@ class Views::Owner::Onboarding::Document < Views::Base
   WELCOME_GROUP_ROW_CLASS = "flex items-center gap-2.5 text-sm text-ink-muted".freeze
   WELCOME_MARKER_CLASS = "grid h-5.5 w-5.5 flex-none place-items-center rounded-full bg-[#E6E1FD] text-[11px] font-extrabold text-[#4830C4]".freeze
   WELCOME_FOOTER_CLASS = "flex flex-col gap-3".freeze
-  WELCOME_BUTTON_CLASS = "min-h-13 w-full rounded-xl bg-brand-600 text-base font-extrabold text-on-brand".freeze
+  WELCOME_BUTTON_CLASS = "min-h-13 w-full rounded-xl bg-zubio text-base font-extrabold text-on-zubio".freeze
   WELCOME_NOTE_CLASS = "text-center text-xs text-ink-subtle".freeze
 
   SERVICES_TITLE_CLASS = "text-[26px] leading-tight font-extrabold tracking-tight text-balance text-ink".freeze
@@ -55,7 +55,7 @@ class Views::Owner::Onboarding::Document < Views::Base
   SERVICE_ICON_CLASS = "h-4 w-4".freeze
   NEW_SERVICE_CARD_CLASS = "grid gap-3 rounded-2xl border-2 border-brand-600 bg-surface p-4 shadow-[0_2px_8px_rgba(44,108,176,0.12)]".freeze
   NEW_SERVICE_LABEL_CLASS = "#{SECTION_LABEL} text-brand-ink".freeze
-  ADD_SERVICE_BUTTON_CLASS = "flex min-h-11.5 items-center justify-center gap-2 rounded-lg bg-brand-600 text-[15px] font-bold text-on-brand".freeze
+  ADD_SERVICE_BUTTON_CLASS = "flex min-h-11.5 items-center justify-center gap-2 rounded-lg bg-zubio text-[15px] font-bold text-on-zubio".freeze
   SERVICES_HELP_CLASS = "text-xs leading-snug text-ink-subtle".freeze
 
   HOURS_TITLE_CLASS = "text-[28px] leading-tight font-extrabold tracking-tight text-balance text-ink".freeze
@@ -78,7 +78,7 @@ class Views::Owner::Onboarding::Document < Views::Base
           form_with(url: owner_onboarding_path, method: :post, class: CONTROLLER_CLASS,
             data: { turbo: false, action: "input->onboarding#save change->onboarding#save submit->onboarding#submit" }) do
             render_welcome
-            render Components::Owner::Onboarding::Screen.new(section: "colors", group: BRAND_GROUP, position: 1, primary: CONTINUE_LABEL, platform_primary: true, hidden: @open_section != "colors") do
+            render Components::Owner::Onboarding::Screen.new(section: "colors", group: BRAND_GROUP, position: 1, primary: CONTINUE_LABEL, hidden: @open_section != "colors") do
               render Components::Owner::BrandQuestion::Colors.new(tenant: @tenant, branding: @branding)
             end
             render Components::Owner::Onboarding::Screen.new(section: "name", group: BRAND_GROUP, position: 2, primary: CONTINUE_LABEL, hidden: @open_section != "name") do
