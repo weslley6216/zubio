@@ -51,7 +51,7 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
   end
 
   it "keeps the whole signup call to action inside the first screen on a small phone" do
-    page.driver.resize(375, 667)
+    emulate_phone(width: 375, height: 667)
 
     visit "http://zubio.com.br/"
 
@@ -88,6 +88,7 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
   it "repaints the page in the other theme when the visitor asks for it" do
     emulate_color_scheme("dark")
     visit "http://zubio.com.br/"
+    find("header summary").click
 
     click_button Components::ThemeToggle::LABEL
 
@@ -97,6 +98,7 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
   it "keeps the chosen theme on the next visit, against the system preference" do
     emulate_color_scheme("dark")
     visit "http://zubio.com.br/"
+    find("header summary").click
     click_button Components::ThemeToggle::LABEL
 
     visit "http://zubio.com.br/"
@@ -106,7 +108,7 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
   end
 
   it "never pushes the page sideways on a small phone" do
-    page.driver.resize(375, 667)
+    emulate_phone(width: 375, height: 667)
 
     visit "http://zubio.com.br/"
 
@@ -115,7 +117,7 @@ RSpec.describe "Landing page appearance", type: :system, js: true do
   end
 
   it "shows every appointment description in full on a small phone" do
-    page.driver.resize(375, 667)
+    emulate_phone(width: 375, height: 667)
 
     visit "http://zubio.com.br/"
 

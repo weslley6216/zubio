@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Registration footer", type: :system, js: true do
   it "rests the signup footer at the bottom of a phone screen, with no band below it" do
-    page.driver.resize(390, 800)
+    emulate_phone(width: 390, height: 800)
 
     visit new_signup_url(host: Tenant::PLATFORM_HOST)
 
@@ -12,7 +12,7 @@ RSpec.describe "Registration footer", type: :system, js: true do
   end
 
   it "rests the login link request footer at the bottom of a phone screen, with no band below it" do
-    page.driver.resize(390, 800)
+    emulate_phone(width: 390, height: 800)
 
     visit new_login_link_url(host: Tenant::PLATFORM_HOST)
 

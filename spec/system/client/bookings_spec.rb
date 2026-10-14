@@ -19,6 +19,39 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
     expect(page.evaluate_script("window.__noReload")).to be(true)
   end
 
+  it "fits two weeks of days inside the phone screen" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 60)
+    (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "18:00") }
+
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service)}"
+
+    expect(page).to have_css("[data-day-selector] [data-day]", count: 14)
+    expect(page).to fit_the_phone_width
+  end
+
+  it "keeps the day picked at the end of the strip in view" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 60)
+    (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "18:00") }
+    last_day = Date.current + 13
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service)}"
+    page.execute_script("document.querySelector('[data-day-selector]').scrollLeft = 10000")
+
+    find("[data-day='#{last_day.iso8601}']").click
+
+    expect(page).to have_css("[data-day='#{last_day.iso8601}'][aria-current='date']")
+    expect(page.evaluate_script(<<~JS)).to be(true)
+      (() => {
+        const strip = document.querySelector('[data-day-selector]').getBoundingClientRect();
+        const day = document.querySelector('[aria-current=date]').getBoundingClientRect();
+        return day.left >= strip.left && day.right <= strip.right;
+      })()
+    JS
+  end
+
   %w[light dark].each do |scheme|
     it "keeps the booking screen readable in #{scheme}" do
       tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")

@@ -4,7 +4,7 @@ RSpec.describe "Owner branding on one screen", type: :system, js: true do
   it "fits each brand question on a phone screen without scrolling" do
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
     create(:branding, tenant: tenant, brand_600: "#4F46E5")
-    page.driver.resize(430, 800)
+    emulate_phone(width: 430, height: 800)
     sign_in_owner(create(:user, tenant: tenant))
 
     taller_than_screen = [ edit_owner_brand_colors_path, edit_owner_brand_name_path, edit_owner_brand_logo_path ].to_h do |path|
@@ -23,7 +23,7 @@ RSpec.describe "Owner branding on one screen", type: :system, js: true do
   it "keeps the brand row inside the narrowest phone" do
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
     create(:branding, tenant: tenant, brand_600: "#4F46E5")
-    page.driver.resize(320, 800)
+    emulate_phone(width: 320, height: 800)
     sign_in_owner(create(:user, tenant: tenant))
 
     visit "http://estudio-aurora.zubio.com.br#{edit_owner_brand_colors_path}"

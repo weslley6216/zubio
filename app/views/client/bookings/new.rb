@@ -19,7 +19,7 @@ class Views::Client::Bookings::New < Views::Base
   BAR_INNER_CLASS = "mx-auto flex w-full max-w-2xl items-center gap-3".freeze
   NAME_CLASS = "text-2xl font-extrabold tracking-tight".freeze
   MAIN_CLASS = "mx-auto grid w-full max-w-2xl gap-7 px-6 py-8".freeze
-  STEP_CLASS = "grid gap-3".freeze
+  STEP_CLASS = "grid min-w-0 gap-3".freeze
   STEP_LABEL_ROW_CLASS = "flex items-center gap-2.5".freeze
   STEP_NUMBER_CLASS = "grid h-6 w-6 place-items-center rounded-full bg-brand-100 text-xs font-extrabold text-brand-700".freeze
   STEP_TITLE_CLASS = "text-base font-bold tracking-tight text-ink".freeze
@@ -27,8 +27,9 @@ class Views::Client::Bookings::New < Views::Base
   SERVICE_NAME_CLASS = "text-sm font-bold text-ink".freeze
   SERVICE_META_CLASS = "text-xs text-ink-muted".freeze
   SERVICE_PRICE_CLASS = "ml-auto flex-none rounded-full bg-brand px-2.5 py-1.5 text-xs font-bold tabular-nums text-on-brand".freeze
-  SELECTOR_CLASS = "flex gap-2 overflow-x-auto".freeze
-  DAY_BASE_CLASS = "grid flex-1 shrink-0 basis-16 justify-items-center rounded-xl py-3".freeze
+  FRAME_CLASS = "min-w-0".freeze
+  SELECTOR_CLASS = "-mx-6 flex snap-x snap-mandatory scroll-px-6 gap-2 overflow-x-auto overscroll-x-contain px-6".freeze
+  DAY_BASE_CLASS = "grid flex-1 shrink-0 basis-16 snap-start justify-items-center rounded-xl py-3".freeze
   DAY_SELECTED_CLASS = "bg-brand-600 text-on-brand shadow-md".freeze
   DAY_FREE_CLASS = "border border-line bg-surface text-ink".freeze
   DAY_DISABLED_CLASS = "border border-line bg-surface-3 text-ink-subtle".freeze
@@ -100,7 +101,7 @@ class Views::Client::Bookings::New < Views::Base
   def render_time_step
     div(class: STEP_CLASS) do
       render_step_label("2", "Escolha o horário")
-      turbo_frame_tag(FRAME_ID) do
+      turbo_frame_tag(FRAME_ID, class: FRAME_CLASS) do
         render_day_selector
         render_grid_or_reason
       end
@@ -108,7 +109,7 @@ class Views::Client::Bookings::New < Views::Base
   end
 
   def render_day_selector
-    div(class: SELECTOR_CLASS, data: { day_selector: true }) do
+    div(class: SELECTOR_CLASS, data: { day_selector: true, controller: "day-selector" }) do
       @days.each { |date| render_day(date) }
     end
   end
@@ -121,7 +122,7 @@ class Views::Client::Bookings::New < Views::Base
     selected = date == @selected_day
     a(href: new_client_service_booking_path(@service, day: date.iso8601),
       class: [ DAY_BASE_CLASS, selected ? DAY_SELECTED_CLASS : DAY_FREE_CLASS ],
-      data: { day: date.iso8601 },
+      data: { day: date.iso8601, day_selector_target: selected ? "selected" : nil },
       aria_current: selected ? "date" : nil) do
       render_day_face(date)
     end
