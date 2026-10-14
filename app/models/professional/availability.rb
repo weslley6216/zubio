@@ -1,8 +1,8 @@
 class Professional::Availability
-  def initialize(professional:, service:, dates:)
+  def initialize(professional:, service: nil, dates: nil)
     @professional = professional
     @dates = dates
-    @duration = service.duration_minutes.minutes
+    @duration = service.duration_minutes.minutes if service
   end
 
   def slots_by_date
@@ -17,7 +17,28 @@ class Professional::Availability
     working_hours.any?
   end
 
+  def appointments_outside_hours
+    @dates ||= conflict_horizon
+    future_appointments.reject { |appointment| within_hours?(appointment) }
+  end
+
   private
+
+  def future_appointments
+    @future_appointments ||= @professional.appointments.occupying.where(starts_at: Time.current..).includes(:client).order(:starts_at).to_a
+  end
+
+  def within_hours?(appointment)
+    open_windows(appointment.starts_at.to_date).any? do |opening, closing|
+      opening <= appointment.starts_at && appointment.ends_at <= closing
+    end
+  end
+
+  def conflict_horizon
+    return Date.current..Date.current if future_appointments.empty?
+
+    Date.current..future_appointments.last.starts_at.to_date
+  end
 
   def slots_for(date)
     open_windows(date)
