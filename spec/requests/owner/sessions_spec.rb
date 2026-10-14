@@ -19,6 +19,13 @@ RSpec.describe "Owner session", type: :request do
       expect(response.body).to include(%(value="ze@example.com"))
     end
 
+    it "links to the password reset form" do
+      get new_owner_session_path
+
+      expect(response.body).to include(%(href="#{new_owner_password_reset_path}"))
+      expect(response.body).to include("Esqueci minha senha")
+    end
+
     it "renders the alert message outlined in the danger color after an invalid login attempt" do
       create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
 

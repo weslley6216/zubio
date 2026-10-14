@@ -26,6 +26,7 @@ Rails.application.routes.draw do
 
     resource :session, only: %i[new create destroy]
     resource :handoff, only: :show
+    resource :password_reset, only: %i[new create edit update]
     resource :dashboard, only: :show, controller: "dashboard"
     resources :services, only: %i[index new create edit update]
     resource :brand_colors, only: %i[edit update]

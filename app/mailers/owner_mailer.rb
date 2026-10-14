@@ -29,6 +29,21 @@ class OwnerMailer < ApplicationMailer
     end
   end
 
+  def password_reset(tenant_id, user_id, token)
+    tenant = Tenant.find(tenant_id)
+
+    ActsAsTenant.with_tenant(tenant) do
+      owner = User.find(user_id)
+
+      mail(
+        to: owner.email,
+        subject: "Recuperação de senha no Zubio",
+        body: password_reset_body(tenant, owner, token),
+        content_type: "text/plain"
+      )
+    end
+  end
+
   def login_links(email)
     targets = User.login_targets_for(email)
     return if targets.empty?
@@ -81,6 +96,18 @@ class OwnerMailer < ApplicationMailer
       https://#{tenant.canonical_host}
 
       Mande esse link pra quem você quiser: é por ele que seus clientes marcam horário.
+    TEXT
+  end
+
+  def password_reset_body(tenant, owner, token)
+    <<~TEXT
+      Olá, #{owner.name}!
+
+      Recebemos um pedido para trocar a senha da sua conta no Zubio. Para escolher uma senha nova, abra este link em até 2 horas:
+
+      #{edit_owner_password_reset_url(host: tenant.canonical_host, token: token)}
+
+      Se você pediu mais de uma vez, só o link mais recente funciona. Se não foi você, ignore este e-mail: sua senha continua a mesma.
     TEXT
   end
 end

@@ -85,6 +85,54 @@ RSpec.describe OwnerMailer, type: :mailer do
     end
   end
 
+  describe "#password_reset" do
+    let(:tenant) { create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé") }
+    let(:owner) { create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com", role: "owner") }
+
+    it "is addressed to the owner who asked for it" do
+      mail = described_class.password_reset(tenant.id, owner.id, "reset-token")
+
+      expect(mail.to).to eq([ "ana@example.com" ])
+    end
+
+    it "names the password reset in the subject" do
+      mail = described_class.password_reset(tenant.id, owner.id, "reset-token")
+
+      expect(mail.subject).to eq("Recuperação de senha no Zubio")
+    end
+
+    it "is delivered as plain text" do
+      mail = described_class.password_reset(tenant.id, owner.id, "reset-token")
+
+      expect(mail.mime_type).to eq("text/plain")
+    end
+
+    it "carries the reset link on the establishment's host" do
+      mail = described_class.password_reset(tenant.id, owner.id, "reset-token")
+
+      expect(mail.body.to_s).to include("barbearia-do-ze.zubio.com.br/owner/password_reset/edit?token=reset-token")
+    end
+
+    it "warns that only the latest link works" do
+      mail = described_class.password_reset(tenant.id, owner.id, "reset-token")
+
+      expect(mail.body.to_s).to include("só o link mais recente funciona")
+    end
+
+    it "greets the owner by name" do
+      mail = described_class.password_reset(tenant.id, owner.id, "reset-token")
+
+      expect(mail.body.to_s).to include("Ana Lima")
+    end
+
+    it "refuses to render an owner who belongs to another tenant" do
+      other_owner = create(:user, tenant: create(:tenant, subdomain: "salon-b"), role: "owner")
+
+      expect { described_class.password_reset(tenant.id, other_owner.id, "reset-token").message }
+        .to raise_error(ActiveRecord::RecordNotFound)
+    end
+  end
+
   describe "#login_links" do
     it "is addressed to the queried email and delivered as plain text" do
       tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")

@@ -1,6 +1,6 @@
 class User < ApplicationRecord
   acts_as_tenant(:tenant)
-  has_secure_password
+  has_secure_password reset_token: false
   has_one :professional, dependent: nil
 
   MINIMUM_PASSWORD_LENGTH = 8
@@ -17,6 +17,22 @@ class User < ApplicationRecord
   def handoff_token = generate_token_for(HANDOFF_PURPOSE)
 
   def consume_handoff_token! = increment!(:handoff_generation)
+
+  PASSWORD_RESET_PURPOSE = :password_reset
+  PASSWORD_RESET_WINDOW = 2.hours
+
+  generates_token_for PASSWORD_RESET_PURPOSE, expires_in: PASSWORD_RESET_WINDOW do
+    [ password_salt&.last(10), password_reset_generation ]
+  end
+
+  def self.find_by_password_reset_token(token) = find_by_token_for(PASSWORD_RESET_PURPOSE, token)
+
+  def issue_password_reset_token!
+    increment!(:password_reset_generation)
+    generate_token_for(PASSWORD_RESET_PURPOSE)
+  end
+
+  def reset_password(new_password) = update(password: new_password.presence)
 
   def self.login_targets_for(email)
     ActsAsTenant.without_tenant do
