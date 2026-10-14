@@ -16,7 +16,7 @@ RSpec.describe "Owner branding accent", type: :system, js: true do
     it "labels the current section in the brand and underlines it in the secondary on a wide screen, in #{scheme}" do
       tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
       branding = create(:branding, tenant: tenant, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C")
-      page.driver.resize(1200, 800)
+      emulate_desktop_screen(width: 1200, height: 800)
       emulate_color_scheme(scheme)
       sign_in_owner(create(:user, tenant: tenant))
 
@@ -30,7 +30,7 @@ RSpec.describe "Owner branding accent", type: :system, js: true do
     it "lights the current section in the brand inside the phone menu, in #{scheme}" do
       tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
       branding = create(:branding, tenant: tenant, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C")
-      page.driver.resize(375, 667)
+      emulate_phone(width: 375, height: 667)
       emulate_color_scheme(scheme)
       sign_in_owner(create(:user, tenant: tenant))
       visit "http://barbearia-do-ze.zubio.com.br#{owner_services_path}"

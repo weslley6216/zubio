@@ -4,6 +4,7 @@ RSpec.describe "Application surface", type: :system, js: true do
   it "keeps the stored dark choice when the visitor moves from the landing to the signup screen" do
     emulate_color_scheme("light")
     visit "http://zubio.com.br/"
+    find("header summary").click
     click_button Components::ThemeToggle::LABEL
     find("html[data-theme='dark']")
 
@@ -34,7 +35,7 @@ RSpec.describe "Application surface", type: :system, js: true do
   end
 
   it "keeps the theme toggle reachable on a phone, where the signup screen has no menu to hide it in" do
-    page.driver.resize(375, 667)
+    emulate_phone(width: 375, height: 667)
     emulate_color_scheme("light")
     visit "http://zubio.com.br#{new_signup_path}"
 

@@ -14,7 +14,7 @@ RSpec.configure do |config|
       raise "app/assets/builds/tailwind.css is missing — run bin/rails tailwindcss:build"
     end
 
-    driven_by :cuprite, screen_size: [ 1200, 800 ], options: {
+    driven_by :cuprite, screen_size: [ Phone::WIDTH, Phone::HEIGHT ], options: {
       process_timeout: 60,
       browser_options: {
         "no-sandbox" => nil,
@@ -22,5 +22,6 @@ RSpec.configure do |config|
         "host-resolver-rules" => "MAP zubio.com.br 127.0.0.1, MAP *.zubio.com.br 127.0.0.1"
       }
     }
+    emulate_phone
   end
 end

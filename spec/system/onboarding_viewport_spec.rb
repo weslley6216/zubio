@@ -4,7 +4,7 @@ RSpec.describe "Onboarding viewport", type: :system, js: true do
   %w[light dark].each do |scheme|
     it "fits every one of the seven screens inside a 390x800 phone, with no floating card, in #{scheme}" do
       owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
-      page.driver.resize(390, 800)
+      emulate_phone(width: 390, height: 800)
       emulate_color_scheme(scheme)
       sign_in_owner(owner)
       taller_than_screen = {}

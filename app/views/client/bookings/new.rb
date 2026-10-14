@@ -19,16 +19,17 @@ class Views::Client::Bookings::New < Views::Base
   BAR_INNER_CLASS = "mx-auto flex w-full max-w-2xl items-center gap-3".freeze
   NAME_CLASS = "text-2xl font-extrabold tracking-tight".freeze
   MAIN_CLASS = "mx-auto grid w-full max-w-2xl gap-7 px-6 py-8".freeze
-  STEP_CLASS = "grid gap-3".freeze
+  STEP_CLASS = "grid min-w-0 gap-3".freeze
   STEP_LABEL_ROW_CLASS = "flex items-center gap-2.5".freeze
   STEP_NUMBER_CLASS = "grid h-6 w-6 place-items-center rounded-full bg-brand-100 text-xs font-extrabold text-brand-700".freeze
   STEP_TITLE_CLASS = "text-base font-bold tracking-tight text-ink".freeze
-  SERVICE_ROW_CLASS = "flex items-center gap-2.5 rounded-xl border-2 border-brand bg-surface px-3.5 py-3.5 shadow-md".freeze
+  SERVICE_ROW_CLASS = "flex items-center gap-2.5 rounded-xl border-2 border-brand-600 bg-surface px-3.5 py-3.5 shadow-md".freeze
   SERVICE_NAME_CLASS = "text-sm font-bold text-ink".freeze
   SERVICE_META_CLASS = "text-xs text-ink-muted".freeze
-  SERVICE_PRICE_CLASS = "ml-auto flex-none rounded-full bg-brand px-2.5 py-1.5 text-xs font-bold tabular-nums text-on-brand".freeze
-  SELECTOR_CLASS = "flex gap-2 overflow-x-auto".freeze
-  DAY_BASE_CLASS = "grid flex-1 shrink-0 basis-16 justify-items-center rounded-xl py-3".freeze
+  SERVICE_PRICE_CLASS = "ml-auto flex-none rounded-full bg-brand-600 px-2.5 py-1.5 text-xs font-bold tabular-nums text-on-brand".freeze
+  FRAME_CLASS = "min-w-0".freeze
+  SELECTOR_CLASS = "-mx-6 flex snap-x snap-mandatory scroll-px-6 gap-2 overflow-x-auto overscroll-x-contain px-6 sm:mx-0 sm:grid sm:grid-cols-7 sm:overflow-visible sm:px-0".freeze
+  DAY_BASE_CLASS = "grid flex-1 shrink-0 basis-16 snap-start justify-items-center rounded-xl py-3".freeze
   DAY_SELECTED_CLASS = "bg-brand-600 text-on-brand shadow-md".freeze
   DAY_FREE_CLASS = "border border-line bg-surface text-ink".freeze
   DAY_DISABLED_CLASS = "border border-line bg-surface-3 text-ink-subtle".freeze
@@ -41,7 +42,7 @@ class Views::Client::Bookings::New < Views::Base
   UNPUBLISHED_BODY_CLASS = "text-sm text-ink-muted".freeze
   CONFIRM_BAR_CLASS = "sticky bottom-0 flex items-center gap-3 border-t border-line bg-surface px-5 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-4".freeze
   CONFIRM_SUMMARY_CLASS = "grid gap-0.5".freeze
-  CONFIRM_BUTTON_CLASS = "ml-auto flex-none rounded-lg bg-brand px-4 py-2.5 text-sm font-bold text-on-brand opacity-50".freeze
+  CONFIRM_BUTTON_CLASS = "ml-auto flex-none rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-bold text-on-brand opacity-50".freeze
 
   def initialize(service:, tenant:, branding:, published:, days: [], reasons: {}, selected_day: nil, slots: [], reason: nil)
     @service = service
@@ -85,7 +86,7 @@ class Views::Client::Bookings::New < Views::Base
           span(class: SERVICE_NAME_CLASS) { @service.name }
           span(class: SERVICE_META_CLASS) { ::Service::Duration.label(@service.duration_minutes) }
         end
-        span(class: SERVICE_PRICE_CLASS) { ::Service::Price.label(@service.public_price_cents) }
+        span(class: SERVICE_PRICE_CLASS, data: { price: true }) { ::Service::Price.label(@service.public_price_cents) }
       end
     end
   end
@@ -100,7 +101,7 @@ class Views::Client::Bookings::New < Views::Base
   def render_time_step
     div(class: STEP_CLASS) do
       render_step_label("2", "Escolha o horário")
-      turbo_frame_tag(FRAME_ID) do
+      turbo_frame_tag(FRAME_ID, class: FRAME_CLASS) do
         render_day_selector
         render_grid_or_reason
       end
@@ -108,7 +109,7 @@ class Views::Client::Bookings::New < Views::Base
   end
 
   def render_day_selector
-    div(class: SELECTOR_CLASS, data: { day_selector: true }) do
+    div(class: SELECTOR_CLASS, data: { day_selector: true, controller: "day-selector" }) do
       @days.each { |date| render_day(date) }
     end
   end
@@ -121,7 +122,7 @@ class Views::Client::Bookings::New < Views::Base
     selected = date == @selected_day
     a(href: new_client_service_booking_path(@service, day: date.iso8601),
       class: [ DAY_BASE_CLASS, selected ? DAY_SELECTED_CLASS : DAY_FREE_CLASS ],
-      data: { day: date.iso8601 },
+      data: { day: date.iso8601, day_selector_target: selected ? "selected" : nil },
       aria_current: selected ? "date" : nil) do
       render_day_face(date)
     end
@@ -164,7 +165,7 @@ class Views::Client::Bookings::New < Views::Base
         span(class: SERVICE_NAME_CLASS) { @service.name }
         span(class: SERVICE_META_CLASS) { ::Service::Price.label(@service.public_price_cents) }
       end
-      button(type: "button", disabled: true, class: CONFIRM_BUTTON_CLASS) { CONFIRM_LABEL }
+      button(type: "button", disabled: true, class: CONFIRM_BUTTON_CLASS, data: { confirm_bar: true }) { CONFIRM_LABEL }
     end
   end
 end

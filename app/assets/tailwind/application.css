@@ -23,6 +23,8 @@
   --ink-subtle: #94a6b4;
   --danger: #b42318;
   --success: #067647;
+  --zubio: #4f46e5;
+  --on-zubio: #ffffff;
 
   --brand-accent: var(--brand-600);
   --on-brand-accent: var(--on-brand, #ffffff);
@@ -156,6 +158,9 @@
 }
 
 @theme inline {
+  --color-zubio: var(--zubio);
+  --color-on-zubio: var(--on-zubio);
+
   --color-brand-50: var(--brand-50);
   --color-brand-100: var(--brand-100);
   --color-brand-200: var(--brand-200);
