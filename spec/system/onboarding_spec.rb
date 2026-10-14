@@ -433,20 +433,18 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     expect(page.driver.network_traffic.count { |exchange| exchange.url&.include?("/rails/active_storage/direct_uploads") }).to eq(0)
   end
 
-  it "paints the current screen the moment a swatch is chosen" do
+  it "paints the current screen the moment a swatch is chosen, but not its continue button" do
     owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
     sign_in_owner(owner)
     click_on "Começar"
     chosen = Branding::Palette::SUGGESTIONS.fetch(:brand_600)[1]
-    continue_button = within("[data-onboarding-section='colors']") { find_button("Continuar") }
-    painted_before = continue_button.evaluate_script("getComputedStyle(this).backgroundColor")
 
     find("[data-swatch-row] [data-swatch='#{chosen}']").click
 
     expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#{chosen}']", visible: :all)
-    expect(continue_button.evaluate_script("getComputedStyle(this).backgroundColor")).not_to eq(painted_before)
-    expect(first("[data-progress-bar] .bg-brand-600", visible: :all).evaluate_script("getComputedStyle(this).backgroundColor"))
-      .to eq(continue_button.evaluate_script("getComputedStyle(this).backgroundColor"))
+    expect(computed_hex("[data-onboarding-section='colors'] [data-progress-bar] .bg-brand-600", "backgroundColor")).to eq(chosen)
+    expect(within("[data-onboarding-section='colors']") { find_button("Continuar") }.evaluate_script("getComputedStyle(this).backgroundColor"))
+      .to eq(format("rgb(%d, %d, %d)", *Branding::DEFAULT_BRAND_600.scan(/\h\h/).map(&:hex)))
   end
 
   it "carries the chosen color into the next questions" do
@@ -459,8 +457,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     click_on "Continuar"
 
     expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#{chosen}']", visible: :all)
-    expect(within("[data-onboarding-section='name']") { find_button("Continuar") }.evaluate_script("getComputedStyle(this).backgroundColor"))
-      .to eq(within("[data-onboarding-section='colors']", visible: :all) { find_button("Continuar", visible: :all) }.evaluate_script("getComputedStyle(this).backgroundColor"))
+    expect(computed_hex("[data-onboarding-section='name'] button.bg-brand-600", "backgroundColor")).to eq(chosen)
   end
 
   it "repaints the screen from a code typed behind the plus" do
@@ -475,7 +472,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     fill_in "branding[brand_600_custom]", with: "#2C6CB0"
 
     expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
-    expect(within("[data-onboarding-section='colors']") { find_button("Continuar") }.evaluate_script("getComputedStyle(this).backgroundColor"))
+    expect(find("[data-onboarding-section='colors'] [data-progress-bar] .bg-brand-600").evaluate_script("getComputedStyle(this).backgroundColor"))
       .to eq("rgb(44, 108, 176)")
   end
 
@@ -522,7 +519,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     page.refresh
 
     expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#1E60C4']", visible: :all)
-    expect(within("[data-onboarding-section='colors']", visible: :all) { find_button("Continuar", visible: :all) }.evaluate_script("getComputedStyle(this).backgroundColor"))
+    expect(find("[data-onboarding-section='colors'] [data-progress-bar] .bg-brand-600", visible: :all).evaluate_script("getComputedStyle(this).backgroundColor"))
       .to eq("rgb(30, 96, 196)")
   end
 
@@ -541,7 +538,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     page.refresh
 
     expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
-    expect(within("[data-onboarding-section='colors']", visible: :all) { find_button("Continuar", visible: :all) }.evaluate_script("getComputedStyle(this).backgroundColor"))
+    expect(find("[data-onboarding-section='colors'] [data-progress-bar] .bg-brand-600", visible: :all).evaluate_script("getComputedStyle(this).backgroundColor"))
       .to eq("rgb(44, 108, 176)")
   end
 
@@ -651,7 +648,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     fill_in "branding[brand_600_custom]", with: "#2C6CB0"
 
     expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
-    expect(within("[data-onboarding-section='colors']") { find_button("Continuar") }.evaluate_script("getComputedStyle(this).backgroundColor"))
+    expect(find("[data-onboarding-section='colors'] [data-progress-bar] .bg-brand-600").evaluate_script("getComputedStyle(this).backgroundColor"))
       .to eq("rgb(44, 108, 176)")
   end
 
