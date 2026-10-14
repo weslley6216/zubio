@@ -26,8 +26,13 @@ class Owner::WorkingHoursController < Owner::BaseController
       tenant: ActsAsTenant.current_tenant,
       branding: current_branding,
       schedule: schedule,
+      conflicts: conflicts,
       current_section: panel_section
     )
+  end
+
+  def conflicts
+    Professional::Availability.new(professional: current_owner.professional).appointments_outside_hours
   end
 
   def schedule_params

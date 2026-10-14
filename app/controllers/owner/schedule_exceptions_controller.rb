@@ -42,7 +42,12 @@ class Owner::ScheduleExceptionsController < Owner::BaseController
       branding: current_branding,
       exceptions: exceptions.upcoming.to_a,
       exception: exception,
+      conflicts: conflicts,
       current_section: panel_section
     )
+  end
+
+  def conflicts
+    Professional::Availability.new(professional: current_owner.professional).appointments_outside_hours
   end
 end

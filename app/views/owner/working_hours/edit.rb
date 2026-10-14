@@ -13,10 +13,11 @@ class Views::Owner::WorkingHours::Edit < Views::Base
   TOGGLE_LABEL_CLASS = "relative inline-flex h-11 w-[72px] flex-none cursor-pointer items-center justify-start rounded-full bg-line p-1 transition-colors group-has-checked:justify-end group-has-checked:bg-brand-600".freeze
   TOGGLE_THUMB_CLASS = "h-9 w-9 rounded-full bg-white shadow-sm".freeze
 
-  def initialize(tenant:, branding:, schedule:, current_section:)
+  def initialize(tenant:, branding:, schedule:, conflicts:, current_section:)
     @tenant = tenant
     @branding = branding
     @schedule = schedule
+    @conflicts = conflicts
     @current_section = current_section
   end
 
@@ -25,6 +26,7 @@ class Views::Owner::WorkingHours::Edit < Views::Base
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
       main(class: Components::Owner::FormCard::PAGE_CLASS) do
         render_heading
+        render Components::Owner::OutsideHoursNotice.new(conflicts: @conflicts)
         render_invite unless @schedule.any_marked?
         form_with(url: owner_working_hours_path, method: :patch, class: "mt-4 grid gap-3") do |form|
           WorkingHour::WEEKDAYS.each { |weekday| render_day(weekday) }
