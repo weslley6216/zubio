@@ -131,6 +131,127 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe "password reset token" do
+    it "resolves back to the user who requested it" do
+      user = create(:user)
+
+      ActsAsTenant.with_tenant(user.tenant) do
+        token = user.issue_password_reset_token!
+
+        expect(User.find_by_password_reset_token(token)).to eq(user)
+      end
+    end
+
+    it "stops resolving once the password changes" do
+      user = create(:user)
+
+      ActsAsTenant.with_tenant(user.tenant) do
+        token = user.issue_password_reset_token!
+        user.update!(password: "an0th3rpass")
+
+        expect(User.find_by_password_reset_token(token)).to be_nil
+      end
+    end
+
+    it "stops resolving once a newer token is requested" do
+      user = create(:user)
+
+      ActsAsTenant.with_tenant(user.tenant) do
+        first_token = user.issue_password_reset_token!
+        user.issue_password_reset_token!
+
+        expect(User.find_by_password_reset_token(first_token)).to be_nil
+      end
+    end
+
+    it "keeps the newest token valid after a newer request" do
+      user = create(:user)
+
+      ActsAsTenant.with_tenant(user.tenant) do
+        user.issue_password_reset_token!
+        newest_token = user.issue_password_reset_token!
+
+        expect(User.find_by_password_reset_token(newest_token)).to eq(user)
+      end
+    end
+
+    it "stops resolving once the window is over" do
+      user = create(:user)
+
+      ActsAsTenant.with_tenant(user.tenant) do
+        token = travel_to(3.hours.ago) { user.issue_password_reset_token! }
+
+        expect(User.find_by_password_reset_token(token)).to be_nil
+      end
+    end
+
+    it "still resolves inside the window" do
+      user = create(:user)
+
+      ActsAsTenant.with_tenant(user.tenant) do
+        token = travel_to(1.hour.ago) { user.issue_password_reset_token! }
+
+        expect(User.find_by_password_reset_token(token)).to eq(user)
+      end
+    end
+
+    it "leaves a pending handoff token valid" do
+      user = create(:user)
+      handoff_token = user.handoff_token
+
+      ActsAsTenant.with_tenant(user.tenant) do
+        user.issue_password_reset_token!
+
+        expect(User.find_by_handoff_token(handoff_token)).to eq(user)
+      end
+    end
+
+    it "does not resolve under another tenant" do
+      user = create(:user)
+      token = ActsAsTenant.with_tenant(user.tenant) { user.issue_password_reset_token! }
+
+      result = ActsAsTenant.with_tenant(create(:tenant)) { User.find_by_password_reset_token(token) }
+
+      expect(result).to be_nil
+    end
+  end
+
+  describe "#reset_password" do
+    it "replaces the password with a valid new one" do
+      user = create(:user, password: "s3cr3t123")
+
+      ActsAsTenant.with_tenant(user.tenant) { user.reset_password("an0th3rpass") }
+
+      expect(user.reload.authenticate("an0th3rpass")).to eq(user)
+    end
+
+    it "refuses a password shorter than the minimum and keeps the old one" do
+      user = create(:user, password: "s3cr3t123")
+
+      result = ActsAsTenant.with_tenant(user.tenant) { user.reset_password("short") }
+
+      expect(result).to be(false)
+      expect(user.reload.authenticate("s3cr3t123")).to eq(user)
+    end
+
+    it "refuses a blank password and keeps the old one" do
+      user = create(:user, password: "s3cr3t123")
+
+      result = ActsAsTenant.with_tenant(user.tenant) { user.reset_password("") }
+
+      expect(result).to be(false)
+      expect(user.reload.authenticate("s3cr3t123")).to eq(user)
+    end
+
+    it "flags the password field when the new one is blank" do
+      user = create(:user)
+
+      ActsAsTenant.with_tenant(user.tenant) { user.reset_password("") }
+
+      expect(user.errors[:password]).not_to be_empty
+    end
+  end
+
   describe "professional association" do
     it "reaches the professional created for the owner" do
       tenant = create(:tenant)

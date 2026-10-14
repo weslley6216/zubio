@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_06_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_11_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "citext"
@@ -140,6 +140,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_06_130000) do
     t.integer "handoff_generation", default: 0, null: false
     t.string "name", null: false
     t.string "password_digest"
+    t.integer "password_reset_generation", default: 0, null: false
     t.string "role"
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
