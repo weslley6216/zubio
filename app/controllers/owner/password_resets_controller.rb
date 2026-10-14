@@ -29,7 +29,7 @@ class Owner::PasswordResetsController < ApplicationController
     owner = owner_from_token
     return redirect_to(new_owner_session_path, alert: REFUSED) unless owner
 
-    if owner.reset_password(params[:password])
+    if owner.reset_password(reset_params[:password].to_s)
       start_owner_session(owner)
     else
       render Views::Owner::PasswordResets::Edit.new(branding: current_branding, user: owner, token: params[:token]),
@@ -40,7 +40,9 @@ class Owner::PasswordResetsController < ApplicationController
   private
 
   def owner_from_token
-    user = User.find_by_password_reset_token(params[:token])
+    user = User.find_by_password_reset_token(reset_params[:token].to_s)
     user if user&.owner? && user.tenant_id == ActsAsTenant.current_tenant&.id
   end
+
+  def reset_params = params.permit(:token, :password)
 end

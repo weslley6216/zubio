@@ -160,6 +160,12 @@ RSpec.describe "Owner password reset", type: :request do
       expect(response).to redirect_to(new_owner_session_path)
     end
 
+    it "sends a token that arrives as a list back to the login form" do
+      get edit_owner_password_reset_path, params: { token: [ "not-a-real-token" ] }
+
+      expect(response).to redirect_to(new_owner_session_path)
+    end
+
     it "refuses a token minted for a user who is not an owner" do
       professional = create(:user, tenant: tenant, role: "professional")
       token = ActsAsTenant.with_tenant(tenant) { professional.issue_password_reset_token! }
@@ -260,6 +266,15 @@ RSpec.describe "Owner password reset", type: :request do
       token = ActsAsTenant.with_tenant(tenant) { owner.issue_password_reset_token! }
 
       patch owner_password_reset_path, params: { token: token, password: "" }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(session[:user_id]).to be_nil
+    end
+
+    it "refuses a password that arrives as a list without opening a session" do
+      token = ActsAsTenant.with_tenant(tenant) { owner.issue_password_reset_token! }
+
+      patch owner_password_reset_path, params: { token: token, password: [ "an0th3rpass" ] }
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(session[:user_id]).to be_nil
