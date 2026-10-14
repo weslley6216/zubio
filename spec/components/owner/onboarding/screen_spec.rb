@@ -17,6 +17,22 @@ RSpec.describe Components::Owner::Onboarding::Screen, type: :component do
     expect(segments.last["class"]).to include("bg-line")
   end
 
+  it "paints the primary button in the establishment color by default" do
+    html = described_class.new(section: "name", group: "Sua marca", position: 2, total: 5, primary: "Continuar").call { "corpo" }
+
+    primary = Nokogiri::HTML5.fragment(html).at_css("button[data-action='onboarding#next']")
+    expect(primary["class"].split).to include("bg-brand-600", "text-on-brand")
+    expect(primary["class"].split).not_to include("bg-zubio")
+  end
+
+  it "paints the primary button in the Zubio color when asked for the platform primary" do
+    html = described_class.new(section: "colors", group: "Sua marca", position: 1, total: 5, primary: "Continuar", platform_primary: true).call { "corpo" }
+
+    primary = Nokogiri::HTML5.fragment(html).at_css("button[data-action='onboarding#next']")
+    expect(primary["class"].split).to include("bg-zubio", "text-on-zubio")
+    expect(primary["class"].split).not_to include("bg-brand-600")
+  end
+
   it "anchors a next button by default" do
     html = described_class.new(section: "logo", group: "Sua marca", position: 3, total: 5, primary: "Continuar").call { "corpo" }
 
