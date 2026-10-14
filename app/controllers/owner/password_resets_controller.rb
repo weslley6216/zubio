@@ -22,7 +22,7 @@ class Owner::PasswordResetsController < ApplicationController
     owner = owner_from_token
     return redirect_to(new_owner_session_path, alert: REFUSED) unless owner
 
-    render Views::Owner::PasswordResets::Edit.new(branding: current_branding, user: owner, token: params[:token])
+    render Views::Owner::PasswordResets::Edit.new(branding: current_branding, user: owner, token: reset_params[:token])
   end
 
   def update
@@ -32,7 +32,7 @@ class Owner::PasswordResetsController < ApplicationController
     if owner.reset_password(reset_params[:password].to_s)
       start_owner_session(owner)
     else
-      render Views::Owner::PasswordResets::Edit.new(branding: current_branding, user: owner, token: params[:token]),
+      render Views::Owner::PasswordResets::Edit.new(branding: current_branding, user: owner, token: reset_params[:token]),
         status: :unprocessable_entity
     end
   end

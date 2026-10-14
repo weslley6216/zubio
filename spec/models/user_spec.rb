@@ -206,6 +206,12 @@ RSpec.describe User, type: :model do
       end
     end
 
+    it "issues reset tokens only through the path that invalidates the previous link" do
+      user = create(:user)
+
+      expect(user).not_to respond_to(:password_reset_token)
+    end
+
     it "does not resolve under another tenant" do
       user = create(:user)
       token = ActsAsTenant.with_tenant(user.tenant) { user.issue_password_reset_token! }
