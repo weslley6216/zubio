@@ -1,6 +1,8 @@
 class Views::Owner::Sessions::New < Views::Base
   include Components::Form::Styles
 
+  FORGOT_PASSWORD_LINK = "block text-center text-sm font-medium text-brand-600".freeze
+
   def initialize(branding:, email: nil)
     @branding = branding
     @email = email
@@ -20,6 +22,7 @@ class Views::Owner::Sessions::New < Views::Base
           end
           form.submit "Entrar", class: SUBMIT
         end
+        a(href: new_owner_password_reset_path, class: FORGOT_PASSWORD_LINK) { "Esqueci minha senha" }
       end
     end
   end
