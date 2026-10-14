@@ -165,7 +165,7 @@ class Views::Client::Bookings::New < Views::Base
         span(class: SERVICE_NAME_CLASS) { @service.name }
         span(class: SERVICE_META_CLASS) { ::Service::Price.label(@service.public_price_cents) }
       end
-      button(type: "button", disabled: true, class: CONFIRM_BUTTON_CLASS, data: { confirm: true }) { CONFIRM_LABEL }
+      button(type: "button", disabled: true, class: CONFIRM_BUTTON_CLASS, data: { confirm_bar: true }) { CONFIRM_LABEL }
     end
   end
 end

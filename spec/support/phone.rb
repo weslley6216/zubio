@@ -7,6 +7,11 @@ module Phone
     browser_page.set_viewport(width: width, height: height, scale_factor: 2, mobile: true)
     browser_page.command("Emulation.setTouchEmulationEnabled", enabled: true, maxTouchPoints: 5)
   end
+
+  def emulate_desktop(width: 1280, height: 800)
+    page.driver.resize(width, height)
+    page.driver.browser.page.command("Emulation.setTouchEmulationEnabled", enabled: false)
+  end
 end
 
 RSpec::Matchers.define :fit_the_phone_width do

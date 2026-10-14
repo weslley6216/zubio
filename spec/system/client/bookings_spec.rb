@@ -57,7 +57,7 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
     professional = create(:professional, tenant: tenant)
     service = create(:service, tenant: tenant, duration_minutes: 60)
     (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "18:00") }
-    page.driver.resize(1280, 800)
+    emulate_desktop(width: 1280, height: 800)
 
     visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service)}"
 
@@ -65,7 +65,7 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
     expect(page.evaluate_script(<<~JS)).to be(true)
       (() => {
         const strip = document.querySelector('[data-day-selector]');
-        const column = document.querySelector('[data-day-selector]').closest('main').querySelector('[data-slots]').getBoundingClientRect();
+        const column = strip.closest('main').querySelector('[data-slots]').getBoundingClientRect();
         const box = strip.getBoundingClientRect();
         return strip.scrollWidth <= strip.clientWidth && box.left >= column.left && box.right <= column.right;
       })()
@@ -90,8 +90,8 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
       expect(opaque?("[data-day][aria-disabled='true']")).to be(true)
       expect(opaque?("[data-price]")).to be(true)
       expect(contrast_ratio("[data-price]")).to be >= Branding::ColorScale::MIN_CONTRAST
-      expect(opaque?("[data-confirm]")).to be(true)
-      expect(contrast_ratio("[data-confirm]")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(opaque?("[data-confirm-bar]")).to be(true)
+      expect(contrast_ratio("[data-confirm-bar]")).to be >= Branding::ColorScale::MIN_CONTRAST
     end
   end
 end
