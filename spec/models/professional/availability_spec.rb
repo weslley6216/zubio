@@ -507,4 +507,150 @@ RSpec.describe Professional::Availability, type: :model do
       expect(published).to be(false)
     end
   end
+
+  describe "#open_until" do
+    it "returns the closing time when the moment falls inside the open window" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+      ten = tuesday.in_time_zone.change(hour: 10)
+      closing = tuesday.in_time_zone.change(hour: 18)
+
+      open_until = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).open_until(ten) }
+
+      expect(open_until).to eq(closing)
+    end
+
+    it "returns nil before the window opens" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+      eight = tuesday.in_time_zone.change(hour: 8)
+
+      open_until = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).open_until(eight) }
+
+      expect(open_until).to be_nil
+    end
+
+    it "returns the closing time at the exact opening moment" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+      nine = tuesday.in_time_zone.change(hour: 9)
+      closing = tuesday.in_time_zone.change(hour: 18)
+
+      open_until = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).open_until(nine) }
+
+      expect(open_until).to eq(closing)
+    end
+
+    it "returns nil after the window closes" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+      eight_pm = tuesday.in_time_zone.change(hour: 20)
+
+      open_until = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).open_until(eight_pm) }
+
+      expect(open_until).to be_nil
+    end
+
+    it "returns the last closing of the day across a midday break" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "14:00", closes_at: "19:00")
+      ten = tuesday.in_time_zone.change(hour: 10)
+      seven_pm = tuesday.in_time_zone.change(hour: 19)
+
+      open_until = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).open_until(ten) }
+
+      expect(open_until).to eq(seven_pm)
+    end
+
+    it "returns nil at the exact closing moment" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+      closing = tuesday.in_time_zone.change(hour: 18)
+
+      open_until = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).open_until(closing) }
+
+      expect(open_until).to be_nil
+    end
+
+    it "returns nil on a weekday without working hours" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+      wednesday = Date.current.next_week(:wednesday)
+      ten = wednesday.in_time_zone.change(hour: 10)
+
+      open_until = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).open_until(ten) }
+
+      expect(open_until).to be_nil
+    end
+
+    it "returns nil on a day closed by a full-day exception" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+      create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: tuesday)
+      ten = tuesday.in_time_zone.change(hour: 10)
+
+      open_until = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).open_until(ten) }
+
+      expect(open_until).to be_nil
+    end
+
+    it "returns the alternate closing time when an exception replaces the weekday hours" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      saturday = Date.current.next_week(:saturday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 6, opens_at: "09:00", closes_at: "18:00")
+      create(:schedule_exception, :with_alternate_hours, tenant: tenant, professional: professional, occurs_on: saturday)
+      ten = saturday.in_time_zone.change(hour: 10)
+      noon = saturday.in_time_zone.change(hour: 12)
+
+      open_until = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional).open_until(ten) }
+
+      expect(open_until).to eq(noon)
+    end
+
+    it "reflects only the host tenant's working hours, not another tenant's" do
+      aurora = create(:tenant, name: "Estúdio Aurora")
+      aurora_professional = create(:professional, tenant: aurora)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: aurora, professional: aurora_professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+      ze = create(:tenant, name: "Barbearia do Zé")
+      ze_professional = create(:professional, tenant: ze)
+      create(:working_hour, tenant: ze, professional: ze_professional, weekday: 2, opens_at: "09:00", closes_at: "20:00")
+      ten = tuesday.in_time_zone.change(hour: 10)
+      closing = tuesday.in_time_zone.change(hour: 18)
+
+      open_until = ActsAsTenant.with_tenant(aurora) { described_class.new(professional: aurora_professional).open_until(ten) }
+
+      expect(open_until).to eq(closing)
+    end
+
+    it "sees none of another tenant's working hours under the host tenant" do
+      aurora = create(:tenant, name: "Estúdio Aurora")
+      tuesday = Date.current.next_week(:tuesday)
+      ze = create(:tenant, name: "Barbearia do Zé")
+      ze_professional = create(:professional, tenant: ze)
+      create(:working_hour, tenant: ze, professional: ze_professional, weekday: 2, opens_at: "09:00", closes_at: "20:00")
+      ten = tuesday.in_time_zone.change(hour: 10)
+
+      open_until = ActsAsTenant.with_tenant(aurora) { described_class.new(professional: ze_professional).open_until(ten) }
+
+      expect(open_until).to be_nil
+    end
+  end
 end

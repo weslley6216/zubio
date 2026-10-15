@@ -45,4 +45,42 @@ RSpec.describe Components::Service::Card, type: :component do
 
     expect(html).to include("R$ 90,00")
   end
+
+  it "renders no clock or chevron icon in the panel variant" do
+    html = described_class.new(service: service, href: "/x").call
+
+    expect(html).not_to include(%(d="m9 6 6 6-6 6"))
+    expect(html).not_to include(%(d="M12 7v5l3 2"))
+  end
+
+  it "renders the showcase variant's name and duration in minutes with a clock icon" do
+    html = described_class.new(service: service, href: "/x", variant: :showcase).call
+
+    expect(html).to include(%(<a href="/x" class="#{described_class::SHOWCASE_NAME_CLASS}">Corte feminino</a>))
+    expect(html).to include("45 min")
+    expect(html).to include(%(d="M12 7v5l3 2"))
+  end
+
+  it "renders the description in the showcase variant too" do
+    html = described_class.new(service: service, href: "/x", variant: :showcase, description: "Inclui lavagem.").call
+
+    expect(html).to include("data-description")
+    expect(html).to include("Inclui lavagem.")
+  end
+
+  it "sets the description line height to normal only in the showcase variant" do
+    showcase = described_class.new(service: service, href: "/x", variant: :showcase, description: "Inclui lavagem.").call
+    panel = described_class.new(service: service, href: "/x", description: "Inclui lavagem.").call
+
+    expect(showcase).to include(%(<span class="#{described_class::SHOWCASE_DESCRIPTION_CLASS}" data-description>))
+    expect(panel).to include(%(<span class="#{described_class::DESCRIPTION_CLASS}" data-description>))
+    expect(panel).not_to include("leading-[normal]")
+  end
+
+  it "wraps the caller's aside with a chevron in the showcase variant" do
+    html = described_class.new(service: service, href: "/x", variant: :showcase).call { "R$ 90" }
+
+    expect(html).to include("R$ 90")
+    expect(html).to include(%(d="m9 6 6 6-6 6"))
+  end
 end
