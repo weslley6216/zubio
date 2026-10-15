@@ -8,7 +8,7 @@ RSpec.describe Components::Service::Card, type: :component do
     html = described_class.new(service: service, href: "/services/1/booking/new").call
 
     expect(html).to include(%(<a href="/services/1/booking/new" class="#{described_class::NAME_CLASS}">Corte feminino</a>))
-    expect(html).to include("45min")
+    expect(html).to include("45 min")
   end
 
   it "renders every badge given beside the name" do
