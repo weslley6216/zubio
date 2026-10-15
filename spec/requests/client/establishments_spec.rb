@@ -14,7 +14,7 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(response.body).to include("Estúdio Aurora")
     expect(response.body).to include("Corte feminino")
     expect(response.body).to include("Coloração completa")
-    expect(Nokogiri::HTML5(response.body).css("[data-catalog] span").map(&:text)).to include("45min", "2h")
+    expect(Nokogiri::HTML5(response.body).css("[data-catalog] span").map(&:text)).to include("45 min", "120 min")
     expect(response.body).not_to include(%(type="password"))
   end
 
@@ -36,6 +36,7 @@ RSpec.describe "Public establishment showcase", type: :request do
     get root_path
 
     expect(response.body).to include("data-brand-initial")
+    expect(response.body).to include("bg-on-brand/20")
     expect(response.body).not_to include("<img")
   end
 
@@ -140,7 +141,7 @@ RSpec.describe "Public establishment showcase", type: :request do
 
     get root_path
 
-    expect(Nokogiri::HTML5(response.body).css("[data-catalog] span").map(&:text)).to include("R$ 90,00")
+    expect(Nokogiri::HTML5(response.body).css("[data-catalog] span").map(&:text)).to include("R$ 90")
   end
 
   it "hides the amount of a hidden-price service, showing sob consulta with the amount nowhere in the response" do
@@ -255,5 +256,98 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(head.at_css('meta[property="og:url"]')["content"]).to include("estudio-aurora.zubio.com.br")
     expect(response.body).not_to include("Barbearia do Zé")
     expect(response.body).not_to include("barbearia-do-ze.zubio.com.br")
+  end
+
+  it "shows an open-until badge while the professional's working hours cover the current moment" do
+    travel_to Time.zone.local(2026, 9, 8, 10, 0)
+    professional = create(:professional, tenant: tenant)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+    create(:service, tenant: tenant, name: "Corte feminino")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    expect(response.body).to include("Aberto até 18h")
+  end
+
+  it "shows no open-until badge outside working hours but always shows the confirmation badge" do
+    travel_to Time.zone.local(2026, 9, 8, 20, 0)
+    professional = create(:professional, tenant: tenant)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+    create(:service, tenant: tenant, name: "Corte feminino")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    expect(response.body).not_to include("Aberto até")
+    expect(response.body).to include("Confirmação na hora")
+  end
+
+  it "shows only the confirmation badge when the establishment has no professional yet" do
+    create(:service, tenant: tenant, name: "Corte feminino")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    expect(response.body).not_to include("Aberto até")
+    expect(response.body).to include("Confirmação na hora")
+  end
+
+  it "keeps another tenant's working hours from opening the host's badge" do
+    travel_to Time.zone.local(2026, 9, 8, 10, 0)
+    other_tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    other_professional = create(:professional, tenant: other_tenant)
+    create(:working_hour, tenant: other_tenant, professional: other_professional, weekday: 2, opens_at: "09:00", closes_at: "20:00")
+    professional = create(:professional, tenant: tenant)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+    create(:service, tenant: tenant, name: "Corte feminino")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    expect(response.body).to include("Aberto até 18h")
+    expect(response.body).not_to include("Aberto até 20h")
+  end
+
+  it "shows the sheet's title and subtitle above the service list" do
+    create(:service, tenant: tenant, name: "Corte feminino")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    expect(response.body).to include(Views::Client::Establishments::Show::TITLE)
+    expect(response.body).to include(Views::Client::Establishments::Show::SUBTITLE)
+  end
+
+  it "shows no sheet title when there are no services to choose from" do
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    expect(response.body).not_to include(Views::Client::Establishments::Show::TITLE)
+  end
+
+  it "shows a service's description, duration in minutes with a clock icon, its short price and a chevron" do
+    create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45, price_cents: 6_000,
+      description: "Medição, limpeza e finalização")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    expect(Nokogiri::HTML5(response.body).css("[data-catalog] [data-description]").map(&:text)).to include("Medição, limpeza e finalização")
+    expect(response.body).to include("45 min")
+    expect(response.body).to include("R$ 60")
+    expect(response.body).to include(%(d="m9 6 6 6-6 6"))
+  end
+
+  it "shows Sob consulta for a service with no fixed price, and the price for one that has it" do
+    create(:service, :price_hidden, tenant: tenant, name: "Retoque de henna", price_cents: 4_000)
+    create(:service, tenant: tenant, name: "Corte feminino", price_cents: 9_000)
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    expect(response.body).to include(Service::Price::UNPRICED_LABEL)
+    expect(response.body).to include("R$ 90")
   end
 end
