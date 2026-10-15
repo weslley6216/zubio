@@ -64,6 +64,17 @@ RSpec.describe "Owner working hours", type: :request do
       expect(document.at_css("[data-day='2']").text).to include(Views::Owner::WorkingHours::Edit::SECOND_RANGE_HINT)
     end
 
+    it "draws the submit button in extra bold, like the canvas" do
+      create(:professional, tenant: tenant, user: owner)
+      sign_in_owner(owner)
+
+      get edit_owner_working_hours_path
+
+      submit = Nokogiri::HTML5(response.body).at_css("main input[type='submit'], main button[type='submit']")
+      expect(submit["class"].split).to include("font-extrabold")
+      expect(submit["class"].split).not_to include("font-medium")
+    end
+
     it "paints the day chips with brand tokens, never the landing demo tokens" do
       create(:professional, tenant: tenant, user: owner)
       sign_in_owner(owner)
