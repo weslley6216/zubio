@@ -16,7 +16,7 @@ RSpec.describe "Owner onboarding final", type: :request do
       expect(response.body).to include("barbearia-do-ze.zubio.com.br")
       expect(response.body).to include("Barbearia do Zé")
       expect(response.body).to include("1 serviço")
-      expect(response.body).to include("30min")
+      expect(response.body).to include("30 min")
       expect(response.body).to include("wa.me")
     end
 
@@ -45,7 +45,7 @@ RSpec.describe "Owner onboarding final", type: :request do
 
       document = Nokogiri::HTML5(response.body)
       expect(document.at_xpath("//*[@data-summary-value][text()='09:00–18:00']/..").text).to include("Ter a Sáb")
-      expect(document.at_xpath("//*[@data-summary-value][text()='30min']/..").text).to include("1 serviço")
+      expect(document.at_xpath("//*[@data-summary-value][text()='30 min']/..").text).to include("1 serviço")
     end
 
     it "names the missing service and leads back to registering one" do
@@ -88,6 +88,36 @@ RSpec.describe "Owner onboarding final", type: :request do
       expect(response.body).not_to include(other_tenant.canonical_host)
       expect(response.body).to include("Barbearia do Zé")
       expect(response.body).to include(tenant.canonical_host)
+    end
+
+    it "sums the distinct service durations in ascending order, like the canvas" do
+      tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      owner = create(:user, tenant: tenant, name: "Ana Lima")
+      professional = create(:professional, tenant: tenant, user: owner)
+      sign_in_owner(owner)
+      create(:service, tenant: tenant, name: "Corte + barba", duration_minutes: 60)
+      create(:service, tenant: tenant, name: "Corte na máquina", duration_minutes: 30)
+      create(:service, tenant: tenant, name: "Pezinho", duration_minutes: 30)
+
+      get owner_onboarding_final_path
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_xpath("//*[@data-summary-value][contains(text(),'min')]").text).to eq("30 min · 1 h")
+    end
+
+    it "counts only the current tenant's services in the summary, not another tenant's" do
+      tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      other_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+      owner = create(:user, tenant: tenant, name: "Ana Lima")
+      sign_in_owner(owner)
+      create(:service, tenant: tenant, name: "Corte", duration_minutes: 30)
+      ActsAsTenant.with_tenant(other_tenant) { create(:service, tenant: other_tenant, name: "Sessão", duration_minutes: 50) }
+
+      get owner_onboarding_final_path
+
+      expect(response.body).to include("1 serviço")
+      expect(response.body).to include("30 min")
+      expect(response.body).not_to include("50 min")
     end
   end
 end
