@@ -270,6 +270,18 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(response.body).to include("Aberto até 18h")
   end
 
+  it "spells the minutes of a closing time that is not on the hour" do
+    travel_to Time.zone.local(2026, 9, 8, 10, 0)
+    professional = create(:professional, tenant: tenant)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:30")
+    create(:service, tenant: tenant, name: "Corte feminino")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    expect(response.body).to include("Aberto até 18h30")
+  end
+
   it "shows no open-until badge outside working hours but always shows the confirmation badge" do
     travel_to Time.zone.local(2026, 9, 8, 20, 0)
     professional = create(:professional, tenant: tenant)

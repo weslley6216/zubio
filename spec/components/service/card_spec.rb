@@ -68,6 +68,15 @@ RSpec.describe Components::Service::Card, type: :component do
     expect(html).to include("Inclui lavagem.")
   end
 
+  it "sets the description line height to normal only in the showcase variant" do
+    showcase = described_class.new(service: service, href: "/x", variant: :showcase, description: "Inclui lavagem.").call
+    panel = described_class.new(service: service, href: "/x", description: "Inclui lavagem.").call
+
+    expect(showcase).to include(%(<span class="#{described_class::SHOWCASE_DESCRIPTION_CLASS}" data-description>))
+    expect(panel).to include(%(<span class="#{described_class::DESCRIPTION_CLASS}" data-description>))
+    expect(panel).not_to include("leading-[normal]")
+  end
+
   it "wraps the caller's aside with a chevron in the showcase variant" do
     html = described_class.new(service: service, href: "/x", variant: :showcase).call { "R$ 90" }
 

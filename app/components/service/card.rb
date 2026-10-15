@@ -8,9 +8,10 @@ class Components::Service::Card < Components::Base
 
   SHOWCASE_CARD_CLASS = "relative flex items-center gap-3 rounded-[14px] border border-line bg-surface p-4 shadow-[0_1px_3px_rgba(14,26,36,0.05)]".freeze
   SHOWCASE_IDENTITY_CLASS = "grid min-w-0 grow gap-1".freeze
-  SHOWCASE_NAME_CLASS = "text-[15px] font-bold text-ink after:absolute after:inset-0 after:rounded-[14px]".freeze
+  SHOWCASE_NAME_CLASS = "text-[15px] leading-[normal] font-bold text-ink after:absolute after:inset-0 after:rounded-[14px]".freeze
+  SHOWCASE_DESCRIPTION_CLASS = "text-xs leading-[normal] text-ink-muted".freeze
   SHOWCASE_DURATION_ROW_CLASS = "mt-0.5 flex items-center gap-[5px]".freeze
-  SHOWCASE_DURATION_CLASS = "text-xs font-semibold tabular-nums text-ink-muted".freeze
+  SHOWCASE_DURATION_CLASS = "text-xs leading-[normal] font-semibold tabular-nums text-ink-muted".freeze
   SHOWCASE_ASIDE_CLASS = "flex flex-none flex-col items-end gap-2".freeze
   CLOCK_ICON_CLASS = "h-[13px] w-[13px] flex-none text-ink-subtle".freeze
   CHEVRON_ICON_CLASS = "h-5 w-5 flex-none text-brand-600".freeze
@@ -28,7 +29,7 @@ class Components::Service::Card < Components::Base
       li(class: SHOWCASE_CARD_CLASS) do
         div(class: SHOWCASE_IDENTITY_CLASS) do
           a(href: @href, class: SHOWCASE_NAME_CLASS) { @service.name }
-          span(class: DESCRIPTION_CLASS, data: { description: true }) { @description } if @description.present?
+          span(class: SHOWCASE_DESCRIPTION_CLASS, data: { description: true }) { @description } if @description.present?
           div(class: SHOWCASE_DURATION_ROW_CLASS) do
             render_clock_icon
             span(class: SHOWCASE_DURATION_CLASS) { ::Service::Duration.minutes_label(@service.duration_minutes) }

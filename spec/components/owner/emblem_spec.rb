@@ -41,6 +41,14 @@ RSpec.describe Components::Owner::Emblem, type: :component do
     expect(showcase).to include("text-[24px]")
   end
 
+  it "sets the showcase initial's line height to normal and leaves the panel sizes alone" do
+    showcase = described_class.new(tenant: tenant, branding: branding, size: :showcase).call
+    medium = described_class.new(tenant: tenant, branding: branding, size: :medium).call
+
+    expect(showcase).to include("leading-[normal]")
+    expect(medium).not_to include("leading-[normal]")
+  end
+
   it "paints the initial with the brand accent tone by default" do
     html = described_class.new(tenant: tenant, branding: branding, size: :medium).call
 

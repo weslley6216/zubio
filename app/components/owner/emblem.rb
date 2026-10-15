@@ -5,7 +5,7 @@ class Components::Owner::Emblem < Components::Base
     large: "h-12 w-12 rounded-[14px] text-[21px]",
     address: "h-11 w-11 rounded-[13px] text-[19px]",
     row: "h-6.5 w-6.5 rounded-lg text-xs",
-    showcase: "h-14 w-14 rounded-[16px] text-[24px]"
+    showcase: "h-14 w-14 rounded-[16px] text-[24px] leading-[normal]"
   }.freeze
   TONES = {
     accent: "bg-brand-accent text-on-brand-accent",
