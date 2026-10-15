@@ -136,7 +136,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     click_on "Adicionar à lista"
 
     expect(page).to have_css("[data-service-row]", text: "Corte na máquina")
-    expect(page).to have_content("30min · R$ 45,00")
+    expect(page).to have_content("30 min · R$ 45,00")
     expect(find_field("Nome", with: "")).to be_present
   end
 
@@ -730,7 +730,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     fill_in "Preço (R$, opcional)", with: "80"
     click_on "Adicionar à lista"
 
-    expect(find("[data-service-meta]", visible: :all).text(:all)).to eq("1h · R$ 80,00")
+    expect(find("[data-service-meta]", visible: :all).text(:all)).to eq("1 h · R$ 80,00")
   end
 
   it "labels a service the same way after a server refusal" do
@@ -754,7 +754,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     click_on "Ver minha página"
 
     expect(page).to have_content(Owner::OnboardingController::REFUSED)
-    expect(find("[data-service-meta]", visible: :all).text(:all)).to eq("1h · R$ 80,00")
+    expect(find("[data-service-meta]", visible: :all).text(:all)).to eq("1 h · R$ 80,00")
   end
 
   it "labels every price shape on the client" do
@@ -775,11 +775,11 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     end
 
     expect(all("[data-service-meta]", visible: :all).map { |meta| meta.text(:all) }).to eq([
-      "30min · R$ 80,00",
-      "30min · R$ 80,50",
-      "30min · R$ 1.200,00",
-      "30min · #{Service::Price::UNPRICED_LABEL}",
-      "30min · #{Service::Price::UNPRICED_LABEL}"
+      "30 min · R$ 80,00",
+      "30 min · R$ 80,50",
+      "30 min · R$ 1.200,00",
+      "30 min · #{Service::Price::UNPRICED_LABEL}",
+      "30 min · #{Service::Price::UNPRICED_LABEL}"
     ])
   end
 
@@ -807,11 +807,11 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
 
     expect(page).to have_content(Owner::OnboardingController::REFUSED)
     expect(all("[data-service-meta]", visible: :all).map { |meta| meta.text(:all) }).to eq([
-      "30min · R$ 80,00",
-      "30min · R$ 80,50",
-      "30min · R$ 1.200,00",
-      "30min · #{Service::Price::UNPRICED_LABEL}",
-      "30min · #{Service::Price::UNPRICED_LABEL}"
+      "30 min · R$ 80,00",
+      "30 min · R$ 80,50",
+      "30 min · R$ 1.200,00",
+      "30 min · #{Service::Price::UNPRICED_LABEL}",
+      "30 min · #{Service::Price::UNPRICED_LABEL}"
     ])
   end
 
@@ -864,7 +864,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     click_on "Salvar alterações"
 
     expect(all("[data-service-name]").map(&:text)).to eq([ "Corte", "Corte + barba" ])
-    expect(all("[data-service-meta]").map(&:text)).to eq([ "30min · R$ 55,00", "1h · R$ 80,00" ])
+    expect(all("[data-service-meta]").map(&:text)).to eq([ "30 min · R$ 55,00", "1 h · R$ 80,00" ])
   end
 
   it "discards an unconfirmed edit when another service is picked for editing" do
@@ -891,7 +891,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     fill_in "Preço (R$, opcional)", with: "95,00"
     click_on "Salvar alterações"
 
-    expect(all("[data-service-meta]").map(&:text)).to eq([ "30min · R$ 40,00", "1h · R$ 95,00" ])
+    expect(all("[data-service-meta]").map(&:text)).to eq([ "30 min · R$ 40,00", "1 h · R$ 95,00" ])
     expect(page).to have_no_css("[data-service-row][data-editing]", visible: :all)
   end
 
@@ -948,7 +948,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     fill_in "Preço (R$, opcional)", with: "80,00"
     click_on "Salvar alterações"
 
-    expect(first("[data-service-row]")).to have_text("30min · R$ 80,00")
+    expect(first("[data-service-row]")).to have_text("30 min · R$ 80,00")
     expect(first("[data-service-row]")).to have_no_text(Service::PRICE_UNREADABLE_MESSAGE)
   end
 
@@ -1017,7 +1017,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
 
     expect(page).to have_css("[data-onboarding-section='logo']:not([hidden])")
     expect(page).to have_css("[data-service-row]", count: 2, visible: :all)
-    expect(find("[data-service-row]", text: "Corte + barba", visible: :all).text(:all)).to include("1h · R$ 80,00")
+    expect(find("[data-service-row]", text: "Corte + barba", visible: :all).text(:all)).to include("1 h · R$ 80,00")
     expect(page).to have_no_css("[data-service-row][data-editing='true']", visible: :all)
   end
 
