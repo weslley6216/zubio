@@ -5,6 +5,8 @@ class Appointment < ApplicationRecord
 
   acts_as_tenant :tenant
 
+  has_secure_token :cancel_token
+
   enum :status, { confirmed: "confirmed", cancelled: "cancelled" }
 
   before_validation :derive_ends_at

@@ -60,6 +60,33 @@ RSpec.describe Appointment, type: :model do
     end
   end
 
+  describe "cancel token" do
+    it "is generated on creation" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
+      starts_at = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
+
+      appointment = ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, client: client, starts_at: starts_at) }
+
+      expect(appointment.cancel_token).to be_present
+    end
+
+    it "gives two appointments different tokens" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
+      nine = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
+      first = ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, client: client, starts_at: nine) }
+
+      second = ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, client: client, starts_at: nine + 45.minutes) }
+
+      expect(first.cancel_token).not_to eq(second.cancel_token)
+    end
+  end
+
   describe "no-overlap constraint" do
     it "rejects a second overlapping appointment for the same professional and keeps the first" do
       tenant = create(:tenant)
