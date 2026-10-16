@@ -5,16 +5,20 @@ class Views::Owner::Services::Index < Views::Base
   HIDDEN_PRICE_LABEL = "Preço oculto".freeze
   EMPTY_TITLE = "Nenhum serviço cadastrado".freeze
   EMPTY_BODY = "Cadastre o primeiro serviço que você oferece para montar seu catálogo.".freeze
-  NEW_LABEL = "Novo serviço".freeze
+  NEW_LABEL = "Novo".freeze
+  NEW_ACCESSIBLE_LABEL = "Novo serviço".freeze
   FIRST_LABEL = "Cadastrar primeiro serviço".freeze
 
   PAGE_CLASS = "#{Components::Owner::Panel::CONTENT} grid gap-6 py-10".freeze
-  HEADING_ROW_CLASS = "flex max-w-2xl flex-wrap items-end justify-between gap-4".freeze
-  HEADING_CLASS = "text-3xl font-extrabold tracking-tight text-ink".freeze
+  HEADING_BLOCK_CLASS = "grid max-w-2xl gap-2".freeze
+  TITLE_ROW_CLASS = "flex items-center gap-3".freeze
+  HEADING_CLASS = "grow text-3xl font-extrabold tracking-tight text-ink".freeze
   SUBTITLE_CLASS = "text-lg text-ink-muted".freeze
-  ACTION_CLASS = "inline-flex min-h-11 items-center justify-self-start rounded-lg bg-brand-accent px-4 text-sm font-bold text-on-brand-accent hover:opacity-90".freeze
-  LIST_CLASS = "grid max-w-2xl gap-3".freeze
-  PRICE_CLASS = "ml-auto flex-none rounded-full bg-surface-3 px-2.5 py-1.5 text-xs font-bold tabular-nums text-ink".freeze
+  ACTION_CLASS = "inline-flex min-h-11 flex-none items-center justify-self-start gap-1.5 rounded-[10px] bg-brand-accent px-3.5 text-sm leading-[normal] font-bold text-on-brand-accent hover:opacity-90".freeze
+  PLUS_ICON_CLASS = "h-[18px] w-[18px] flex-none".freeze
+  LIST_CLASS = "grid max-w-2xl gap-2.5".freeze
+  PRICE_CLASS = "flex-none rounded-full bg-brand-soft px-3 py-[7px] text-[13px] leading-[normal] font-extrabold tabular-nums text-brand-soft-ink".freeze
+  DISABLED_PRICE_CLASS = "flex-none rounded-full bg-surface-3 px-3 py-[7px] text-[13px] leading-[normal] font-extrabold tabular-nums text-ink-subtle".freeze
   EMPTY_CLASS = "grid max-w-2xl gap-2 rounded-xl border border-line bg-surface p-6".freeze
   EMPTY_TITLE_CLASS = "text-lg font-bold text-ink".freeze
   EMPTY_BODY_CLASS = "text-sm text-ink-muted".freeze
@@ -42,12 +46,12 @@ class Views::Owner::Services::Index < Views::Base
   private
 
   def render_heading
-    div(class: HEADING_ROW_CLASS) do
-      div(class: "grid gap-2") do
+    div(class: HEADING_BLOCK_CLASS) do
+      div(class: TITLE_ROW_CLASS) do
         h1(class: HEADING_CLASS) { TITLE }
-        p(class: SUBTITLE_CLASS) { SUBTITLE }
+        render_new_action if @services.any?
       end
-      render_new_action(NEW_LABEL) if @services.any?
+      p(class: SUBTITLE_CLASS) { SUBTITLE }
     end
   end
 
@@ -55,12 +59,22 @@ class Views::Owner::Services::Index < Views::Base
     div(class: EMPTY_CLASS) do
       h2(class: EMPTY_TITLE_CLASS) { EMPTY_TITLE }
       p(class: EMPTY_BODY_CLASS) { EMPTY_BODY }
-      render_new_action(FIRST_LABEL)
+      a(href: new_owner_service_path, class: ACTION_CLASS) { FIRST_LABEL }
     end
   end
 
-  def render_new_action(label)
-    a(href: new_owner_service_path, class: ACTION_CLASS) { label }
+  def render_new_action
+    a(href: new_owner_service_path, class: ACTION_CLASS, aria_label: NEW_ACCESSIBLE_LABEL) do
+      render_plus_icon
+      plain NEW_LABEL
+    end
+  end
+
+  def render_plus_icon
+    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.5", stroke_linecap: "round",
+      aria_hidden: "true", class: PLUS_ICON_CLASS) do |icon|
+      icon.path(d: "M12 5v14M5 12h14")
+    end
   end
 
   def render_catalog
@@ -76,7 +90,7 @@ class Views::Owner::Services::Index < Views::Base
       badges: badges_for(service),
       description: service.description
     ) do
-      span(class: PRICE_CLASS) { price(service) }
+      span(class: service.active? ? PRICE_CLASS : DISABLED_PRICE_CLASS, data: { price: true }) { price(service) }
     end
   end
 
