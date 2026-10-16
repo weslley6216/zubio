@@ -653,4 +653,134 @@ RSpec.describe Professional::Availability, type: :model do
       expect(open_until).to be_nil
     end
   end
+
+  describe "#offers?" do
+    it "offers a free candidate on the grid" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      nine = tuesday.in_time_zone.change(hour: 9)
+
+      offered = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).offers?(nine) }
+
+      expect(offered).to be(true)
+    end
+
+    it "offers a taken candidate that is still on the grid" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      nine_forty_five = tuesday.in_time_zone.change(hour: 9, min: 45)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: nine_forty_five)
+
+      offered = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).offers?(nine_forty_five) }
+
+      expect(offered).to be(true)
+    end
+
+    it "does not offer a time off the grid step" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      off_step = tuesday.in_time_zone.change(hour: 9, min: 50)
+
+      offered = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).offers?(off_step) }
+
+      expect(offered).to be(false)
+    end
+
+    it "does not offer a time outside the working hours" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      dawn = tuesday.in_time_zone.change(hour: 3)
+
+      offered = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).offers?(dawn) }
+
+      expect(offered).to be(false)
+    end
+
+    it "does not offer a time in the past" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      today = Date.current
+      create(:working_hour, tenant: tenant, professional: professional, weekday: today.wday, opens_at: "09:00", closes_at: "18:00")
+      nine = today.in_time_zone.change(hour: 9)
+
+      offered = travel_to(today.in_time_zone.change(hour: 15)) { ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: today..today).offers?(nine) } }
+
+      expect(offered).to be(false)
+    end
+
+    it "does not offer a nil moment" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+
+      offered = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).offers?(nil) }
+
+      expect(offered).to be(false)
+    end
+
+    it "still offers a slot another tenant booked at the same time" do
+      aurora = create(:tenant, name: "Estúdio Aurora")
+      aurora_professional = create(:professional, tenant: aurora)
+      aurora_service = create(:service, tenant: aurora, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: aurora, professional: aurora_professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      ze = create(:tenant, name: "Barbearia do Zé")
+      ze_professional = create(:professional, tenant: ze)
+      ze_service = create(:service, tenant: ze, duration_minutes: 45)
+      create(:working_hour, tenant: ze, professional: ze_professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      nine = tuesday.in_time_zone.change(hour: 9)
+      create(:appointment, tenant: ze, professional: ze_professional, service: ze_service, starts_at: nine)
+
+      offered = ActsAsTenant.with_tenant(aurora) { described_class.new(professional: aurora_professional, service: aurora_service, dates: tuesday..tuesday).offers?(nine) }
+
+      expect(offered).to be(true)
+    end
+  end
+
+  describe "#nearest_free" do
+    it "returns the free slot closest to the given moment, skipping the taken ones" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      nine = tuesday.in_time_zone.change(hour: 9)
+      nine_forty_five = tuesday.in_time_zone.change(hour: 9, min: 45)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: nine)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: nine_forty_five)
+
+      nearest = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).nearest_free(nine_forty_five) }
+
+      expect(nearest).to eq(tuesday.in_time_zone.change(hour: 10, min: 30))
+    end
+
+    it "returns nil when the day has no free slot left" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "09:45")
+      nine = tuesday.in_time_zone.change(hour: 9)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: nine)
+
+      nearest = ActsAsTenant.with_tenant(tenant) { described_class.new(professional: professional, service: service, dates: tuesday..tuesday).nearest_free(nine) }
+
+      expect(nearest).to be_nil
+    end
+  end
 end

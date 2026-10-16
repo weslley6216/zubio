@@ -329,4 +329,177 @@ RSpec.describe "Public booking day and time selection", type: :request do
     expect(single).to be_positive
     expect(many).to eq(single)
   end
+
+  describe "POST create" do
+    it "confirming creates a confirmed appointment and renders the receipt" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45, price_cents: 6_000)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      post client_service_booking_path(service), params: { name: "Ana Paula Ribeiro", phone: "(11) 98877-1234", starts_at: starts_at.iso8601 }
+
+      appointment_attributes = ActsAsTenant.with_tenant(tenant) do
+        appointment = Appointment.occupying.sole
+        [ appointment.service, appointment.professional, appointment.starts_at, appointment.confirmed? ]
+      end
+      expect(response).to have_http_status(:ok)
+      expect(appointment_attributes).to eq([ service, professional, starts_at, true ])
+      expect(response.body).to include("Horário confirmado")
+      expect(response.body).to include("Ter, 8 set · 09:00")
+    end
+
+    it "creates the client and opens no client session" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      post client_service_booking_path(service), params: { name: "Ana Paula Ribeiro", phone: "11988771234", starts_at: starts_at.iso8601 }
+
+      expect(ActsAsTenant.with_tenant(tenant) { Client.where(phone: "11988771234").count }).to eq(1)
+      expect(session[:client_id]).to be_nil
+    end
+
+    it "an existing phone reuses the single client" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      existing = create(:client, tenant: tenant, name: "Ana", phone: "11988771234")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      post client_service_booking_path(service), params: { name: "Ana Paula Ribeiro", phone: "11988771234", starts_at: starts_at.iso8601 }
+
+      expect(ActsAsTenant.with_tenant(tenant) { Client.count }).to eq(1)
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.occupying.sole.client }).to eq(existing)
+    end
+
+    it "shows the save-this-link block with the cancel token url" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: starts_at.iso8601 }
+
+      token = ActsAsTenant.with_tenant(tenant) { Appointment.occupying.sole.cancel_token }
+      expect(response.body).to include("/a/#{token}")
+      expect(response.body).to include("Esta tela é o comprovante.")
+    end
+
+    it "books in the request tenant and creates nothing in another" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: starts_at.iso8601 }
+
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(1)
+      expect(ActsAsTenant.with_tenant(ze) { [ Appointment.count, Client.count ] }).to eq([ 0, 0 ])
+    end
+
+    it "blocks further booking attempts after the rate limit is exceeded, creating nothing extra" do
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      10.times { post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: "not-a-time" } }
+
+      post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: "not-a-time" }
+
+      expect(response).to redirect_to(new_client_service_booking_path(service))
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
+    it "flags a blank name in the field and creates nothing" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      post client_service_booking_path(service), params: { name: "", phone: "11988771234", starts_at: starts_at.iso8601 }
+
+      document = Nokogiri::HTML5(response.body)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(document.at_css("[data-field='name'] .text-danger")).to be_present
+      expect(document.at_css("input[name='phone']")["value"]).to eq("11988771234")
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
+    it "flags a phone that is not a phone and creates nothing" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      post client_service_booking_path(service), params: { name: "Ana", phone: "1198877", starts_at: starts_at.iso8601 }
+
+      document = Nokogiri::HTML5(response.body)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(document.at_css("[data-field='phone'] .text-danger")).to be_present
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
+    it "refuses a time outside the hours and re-shows the grid without a race message" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      dawn = Date.new(2026, 9, 8).in_time_zone.change(hour: 3)
+
+      post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: dawn.iso8601 }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(Nokogiri::HTML5(response.body).css("[data-slots] [data-slot]")).to be_present
+      expect(response.body).not_to include("antes de você")
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
+    it "refuses a past time" do
+      travel_to Time.zone.local(2026, 9, 8, 15, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: nine.iso8601 }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
+    it "posts the picked slot and keeps its hidden field and the step-4 form" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+
+      get new_client_service_booking_path(service, day: "2026-09-08")
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("form[data-controller~='slot-selector']")["action"]).to eq(client_service_booking_path(service))
+      expect(document.at_css("input[type='hidden'][name='starts_at']")).to be_present
+      expect(document.at_css("[data-field='name'] input[name='name']")).to be_present
+      expect(document.css("[data-slots] button[data-slot]").first["data-starts-at"]).to be_present
+    end
+  end
 end

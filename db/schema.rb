@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_11_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_174512) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "citext"
@@ -45,6 +45,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_120000) do
   end
 
   create_table "appointments", force: :cascade do |t|
+    t.string "cancel_token", null: false
     t.bigint "client_id", null: false
     t.datetime "created_at", null: false
     t.datetime "ends_at", null: false
@@ -54,6 +55,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_120000) do
     t.string "status", default: "confirmed", null: false
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["cancel_token"], name: "index_appointments_on_cancel_token", unique: true
     t.index ["professional_id"], name: "index_appointments_on_professional_id"
     t.index ["service_id"], name: "index_appointments_on_service_id"
     t.index ["tenant_id", "professional_id", "starts_at"], name: "idx_on_tenant_id_professional_id_starts_at_4775c6f93a"

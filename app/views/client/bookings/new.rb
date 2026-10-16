@@ -5,6 +5,7 @@ class Views::Client::Bookings::New < Views::Base
   WEEKDAY_ABBR = %w[DOM SEG TER QUA QUI SEX SÁB].freeze
   WEEKDAY_NAMES = %w[Domingo Segunda Terça Quarta Quinta Sexta Sábado].freeze
   MONTH_ABBR = %w[jan fev mar abr mai jun jul ago set out nov dez].freeze
+  MONTH_NAMES = %w[janeiro fevereiro março abril maio junho julho agosto setembro outubro novembro dezembro].freeze
 
   BACK_LABEL = "Voltar".freeze
   SERVICE_STEP = "Serviço".freeze
@@ -19,6 +20,12 @@ class Views::Client::Bookings::New < Views::Base
   UNPUBLISHED_MESSAGE = "Este estabelecimento ainda não publicou horários.".freeze
   CONFIRM_LABEL = "Confirmar".freeze
   SUMMARY_SEPARATOR = " · ".freeze
+  DATA_STEP = "Seus dados".freeze
+  NAME_LABEL = "Nome".freeze
+  NAME_PLACEHOLDER = "Como você se chama".freeze
+  PHONE_LABEL = "Celular".freeze
+  PHONE_PLACEHOLDER = "(11) 90000-0000".freeze
+  DATA_HINT = "Sem senha, sem cadastro.".freeze
 
   REASON_MESSAGES = {
     no_working_day: NO_SERVICE_MESSAGE,
@@ -51,17 +58,22 @@ class Views::Client::Bookings::New < Views::Base
   DAY_WEEKDAY_FREE_CLASS = "text-ink-muted".freeze
   DAY_NUMBER_CLASS = "text-[20px] leading-[1.15] font-extrabold tabular-nums".freeze
   HINT_CLASS = "text-[12px] text-ink-subtle".freeze
+  DATA_HINT_CLASS = "text-[12px] text-ink-muted".freeze
   GRID_CLASS = "grid grid-cols-4 gap-2".freeze
   SLOT_BASE_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] text-[13px] font-bold tabular-nums".freeze
-  SLOT_FREE_CLASS = "border border-line bg-surface".freeze
+  SLOT_FREE_CLASS = "border border-line bg-surface aria-pressed:border-transparent aria-pressed:bg-brand-600 aria-pressed:text-on-brand aria-pressed:shadow-[0_2px_6px_color-mix(in_srgb,var(--brand-600)_20%,transparent)]".freeze
   SLOT_TAKEN_CLASS = "border border-dashed border-line-strong bg-surface-3 text-ink-subtle line-through".freeze
   REASON_CLASS = "rounded-xl border border-line bg-surface p-6 text-[14px] text-ink-muted".freeze
   UNPUBLISHED_CLASS = "rounded-xl border border-line bg-surface p-6 text-[14px] text-ink-muted".freeze
   CONFIRM_BAR_CLASS = "sticky bottom-0 -mt-[100px] flex items-center gap-3 border-t border-line bg-surface px-5 pt-3.5 pb-[calc(18px+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_16px_rgba(14,26,36,0.06)]".freeze
   CONFIRM_SUMMARY_CLASS = "flex min-w-0 flex-grow flex-col gap-0.5".freeze
   CONFIRM_BUTTON_CLASS = "min-h-[46px] flex-none rounded-[10px] bg-brand-600 px-5 text-[15px] font-extrabold text-on-brand disabled:bg-surface-3 disabled:text-ink-muted".freeze
+  FIELD_WRAPPER_CLASS = "flex flex-col gap-1.5".freeze
+  FIELD_LABEL_CLASS = "text-[11px] font-bold uppercase tracking-[0.06em] text-ink-muted".freeze
+  FIELD_CLASS = "min-h-[46px] w-full rounded-lg border border-line-strong bg-surface px-3 text-[15px] text-ink placeholder:text-ink-subtle".freeze
 
-  def initialize(service:, tenant:, branding:, published:, days: [], reasons: {}, selected_day: nil, slots: [], taken_slots: [], reason: nil)
+  def initialize(service:, tenant:, branding:, published:, days: [], reasons: {}, selected_day: nil, slots: [], taken_slots: [], reason: nil,
+    selected_slot: nil, client_name: nil, client_phone: nil, name_errors: [], phone_errors: [])
     @service = service
     @tenant = tenant
     @branding = branding
@@ -72,6 +84,11 @@ class Views::Client::Bookings::New < Views::Base
     @slots = slots
     @taken_slots = taken_slots
     @reason = reason
+    @selected_slot = selected_slot
+    @client_name = client_name
+    @client_phone = client_phone
+    @name_errors = name_errors
+    @phone_errors = phone_errors
   end
 
   def view_template
@@ -79,11 +96,7 @@ class Views::Client::Bookings::New < Views::Base
       div(class: PAGE_CLASS) do
         render_header
         turbo_frame_tag(FRAME_ID, class: FRAME_CLASS) do
-          main(class: MAIN_CLASS) do
-            render_service_step
-            @published ? render_schedule_steps : render_unpublished
-          end
-          render_confirmation_bar if @published
+          @published ? render_published : render_unpublished_main
         end
       end
     end
@@ -127,12 +140,31 @@ class Views::Client::Bookings::New < Views::Base
     end
   end
 
+  def render_published
+    form_with(url: client_service_booking_path(@service), method: :post, class: "contents", data: { turbo: false, controller: "slot-selector" }) do
+      main(class: MAIN_CLASS) do
+        render_service_step
+        render_schedule_steps
+      end
+      input(type: "hidden", name: "starts_at", value: @selected_slot&.iso8601, data: { slot_selector_target: "input" })
+      render_confirmation_bar
+    end
+  end
+
+  def render_unpublished_main
+    main(class: MAIN_CLASS) do
+      render_service_step
+      render_unpublished
+    end
+  end
+
   def render_schedule_steps
     render_step("2", DAY_STEP) do
       render_day_selector
       p(class: HINT_CLASS, data: { days_off_hint: true }) { days_off_hint } if disabled_days.any?
     end
     render_step("3", TIME_STEP) { render_grid_or_reason }
+    render_data_step
   end
 
   def render_day_selector
@@ -149,7 +181,7 @@ class Views::Client::Bookings::New < Views::Base
     selected = date == @selected_day
     a(href: new_client_service_booking_path(@service, day: date.iso8601),
       class: [ DAY_BASE_CLASS, selected ? DAY_SELECTED_CLASS : DAY_FREE_CLASS ],
-      data: { day: date.iso8601, day_selector_target: selected ? "selected" : nil },
+      data: { day: date.iso8601, day_selector_target: selected ? "selected" : nil, turbo: true },
       aria_current: selected ? "date" : nil) do
       span(class: [ DAY_WEEKDAY_CLASS, (DAY_WEEKDAY_FREE_CLASS unless selected) ]) { WEEKDAY_ABBR[date.wday] }
       span(class: DAY_NUMBER_CLASS) { date.strftime("%d") }
@@ -184,7 +216,9 @@ class Views::Client::Bookings::New < Views::Base
   end
 
   def render_free_slot(slot)
-    span(class: [ SLOT_BASE_CLASS, SLOT_FREE_CLASS ], data: { slot: true }) { slot.strftime("%H:%M") }
+    button(type: "button", aria_pressed: (slot == @selected_slot).to_s,
+      data: { slot: true, starts_at: slot.iso8601, time: slot.strftime("%H:%M"), slot_selector_target: "slot", action: "slot-selector#select" },
+      class: [ SLOT_BASE_CLASS, SLOT_FREE_CLASS ]) { slot.strftime("%H:%M") }
   end
 
   def render_taken_slot(slot)
@@ -204,19 +238,44 @@ class Views::Client::Bookings::New < Views::Base
     p(class: UNPUBLISHED_CLASS) { UNPUBLISHED_MESSAGE }
   end
 
+  def render_data_step
+    render_step("4", DATA_STEP) do
+      render_field(name: "name", caption: NAME_LABEL, placeholder: NAME_PLACEHOLDER, value: @client_name, errors: @name_errors)
+      render_field(name: "phone", caption: PHONE_LABEL, placeholder: PHONE_PLACEHOLDER, value: @client_phone, errors: @phone_errors, inputmode: "tel")
+      p(class: DATA_HINT_CLASS) { DATA_HINT }
+    end
+  end
+
+  def render_field(name:, caption:, placeholder:, value:, errors:, inputmode: nil)
+    div(class: FIELD_WRAPPER_CLASS, data: { field: name }) do
+      label(class: FIELD_LABEL_CLASS) { caption }
+      input(type: "text", name: name, value: value, placeholder: placeholder, inputmode: inputmode, class: FIELD_CLASS)
+      render Components::Form::Errors.new(messages: errors)
+    end
+  end
+
   def render_confirmation_bar
     div(class: CONFIRM_BAR_CLASS) do
       div(class: CONFIRM_SUMMARY_CLASS) do
         span(class: SERVICE_NAME_CLASS) { @service.name }
-        span(class: SERVICE_META_CLASS, data: { summary: true }) { summary }
+        span(class: SERVICE_META_CLASS, data: { summary: true }) { render_summary }
       end
-      button(type: "button", disabled: true, class: CONFIRM_BUTTON_CLASS, data: { confirm_bar: true }) { CONFIRM_LABEL }
+      button(type: "submit", disabled: @selected_slot.nil?, class: CONFIRM_BUTTON_CLASS, data: { confirm_bar: true, slot_selector_target: "submit" }) { confirm_label }
     end
   end
 
-  def summary
-    day = "#{WEEKDAY_ABBR[@selected_day.wday].capitalize}, #{@selected_day.day} #{MONTH_ABBR[@selected_day.month - 1]}"
-    [ day, price_label ].join(SUMMARY_SEPARATOR)
+  def render_summary
+    plain "#{day_label}#{SUMMARY_SEPARATOR}"
+    span(data: { slot_selector_target: "time" }) { "#{@selected_slot.strftime("%H:%M")}#{SUMMARY_SEPARATOR}" if @selected_slot }
+    plain price_label
+  end
+
+  def day_label
+    "#{WEEKDAY_ABBR[@selected_day.wday].capitalize}, #{@selected_day.day} #{MONTH_ABBR[@selected_day.month - 1]}"
+  end
+
+  def confirm_label
+    @selected_slot ? "#{CONFIRM_LABEL} #{@selected_slot.strftime("%H:%M")}" : CONFIRM_LABEL
   end
 
   def price_label
