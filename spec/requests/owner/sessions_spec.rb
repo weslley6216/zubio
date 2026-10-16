@@ -37,6 +37,16 @@ RSpec.describe "Owner session", type: :request do
       expect(response.body).to include("text-danger")
     end
 
+    it "keeps the refused-login alert at the top of the page, where there is no panel header" do
+      create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
+
+      post owner_session_path, params: { email: "owner@example.com", password: "wrong" }
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("header[data-controller='theme']")).to be_nil
+      expect(document.at_xpath("//body/*[1]//*[@data-alert]").text).to include("E-mail ou senha inválidos.")
+    end
+
     it "renders no platform chrome on the tenant's own host" do
       branding = create(:branding, tenant: tenant, brand_600: "#4F46E5")
 

@@ -86,4 +86,18 @@ RSpec.describe Components::Owner::BrandQuestion::Colors, type: :component do
     expect(services["class"]).not_to include("flex-grow")
     expect(services["class"]).to include("h-11")
   end
+
+  it "lays the support-color label on one line with the optional tag pinned right" do
+    html = described_class.new(tenant: tenant, branding: build(:branding, tenant: tenant, brand_600: "#2C6CB0")).call
+
+    legend = Nokogiri::HTML5.fragment(html).css("legend").find { |node| node.text.include?("Cor de apoio") }
+    expect(legend["class"]).to include("flex-nowrap")
+    text_group = legend.at_xpath(".//*[contains(text(),'detalhes e destaques')]/..")
+    expect(text_group["class"].split).to include("min-w-0")
+    hint = legend.at_xpath(".//*[normalize-space(text())='detalhes e destaques']")
+    expect(hint["class"].split).to include("truncate")
+    tag = legend.at_xpath(".//*[normalize-space(text())='Opcional']")
+    expect(tag["class"].split).to include("ml-auto")
+    expect(tag["class"].split).to include("flex-none")
+  end
 end

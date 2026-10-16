@@ -9,8 +9,11 @@ class Components::Form::ColorSwatches < Components::Base
   CUSTOMIZE_LABEL = "Personalizar".freeze
   INVALID_HEX_MESSAGE = "não é uma cor válida".freeze
 
-  LEGEND_CLASS = "flex w-full items-baseline gap-1.5 #{SECTION_LABEL} text-ink-subtle".freeze
-  TAG_CLASS = "ml-auto rounded-full bg-surface-3 px-2 py-[3px] text-[10px] font-extrabold uppercase tracking-[0.08em] text-ink-muted".freeze
+  FIELDSET_CLASS = "min-w-0".freeze
+  LEGEND_CLASS = "flex w-full flex-nowrap items-baseline gap-1.5 #{SECTION_LABEL} text-ink-subtle".freeze
+  TEXT_GROUP_CLASS = "flex min-w-0 items-baseline gap-1.5".freeze
+  HINT_CLASS = "min-w-0 truncate".freeze
+  TAG_CLASS = "ml-auto flex-none rounded-full bg-surface-3 px-2 py-[3px] text-[10px] font-extrabold uppercase tracking-[0.08em] text-ink-muted".freeze
   GRID_CLASS = "mt-1.5 grid w-full grid-cols-6 gap-2".freeze
   ROW_OPTION_CLASS = "block".freeze
   SWATCH_CLASS = "block aspect-square rounded-xl ring-1 ring-line peer-checked:shadow-[0_0_0_3px_var(--color-canvas),0_0_0_5px_currentColor]".freeze
@@ -35,11 +38,13 @@ class Components::Form::ColorSwatches < Components::Base
   end
 
   def view_template
-    fieldset(aria_label: @label) do
+    fieldset(aria_label: @label, class: FIELDSET_CLASS) do
       legend(class: LEGEND_CLASS) do
-        span { @label }
-        span(aria_hidden: "true") { "·" }
-        span { @hint }
+        div(class: TEXT_GROUP_CLASS) do
+          span { @label }
+          span(aria_hidden: "true") { "·" }
+          span(class: HINT_CLASS) { @hint }
+        end
         span(class: TAG_CLASS) { @tag } if @tag
       end
       div(class: "group contents") do

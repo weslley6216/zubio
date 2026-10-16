@@ -286,7 +286,7 @@ export default class extends Controller {
 
     const hours = Math.floor(value / 60)
     const rest = value % 60
-    return [ hours > 0 ? `${hours}h` : null, rest > 0 ? `${rest}min` : null ].filter(Boolean).join(" ")
+    return [ hours > 0 ? `${hours} h` : null, rest > 0 ? `${rest} min` : null ].filter(Boolean).join(" ")
   }
 
   #priceLabel(price) {

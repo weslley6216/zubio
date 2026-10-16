@@ -22,21 +22,21 @@ class Views::Owner::Settings::Show < Views::Base
   DISABLED = { one: "desativado", other: "desativados" }.freeze
   CHEVRON_PATH = "m9 6 6 6-6 6".freeze
 
-  PAGE_CLASS = "mx-auto grid w-full max-w-6xl gap-6 px-6 py-10".freeze
+  PAGE_CLASS = "#{Components::Owner::Panel::CONTENT} grid gap-[18px] py-5".freeze
   BACK_LABEL = "Voltar".freeze
   BACK_ICON = "m15 6-6 6 6 6".freeze
-  TOP_BAR_CLASS = "flex items-center gap-3.5 border-b border-line bg-surface px-6 py-4".freeze
+  TOP_BAR_CLASS = "flex items-center gap-3.5 border-b border-line bg-surface px-5 py-3.5".freeze
   BACK_CLASS = "grid h-11 w-11 flex-none place-items-center rounded-full border border-line bg-surface".freeze
-  TITLE_CLASS = "text-base font-extrabold tracking-tight text-ink".freeze
+  TITLE_CLASS = "text-[16px] leading-[normal] font-extrabold tracking-[-0.01em] text-ink".freeze
   GROUP_CLASS = "grid max-w-2xl gap-2".freeze
-  GROUP_LABEL_CLASS = "text-xs font-bold uppercase tracking-widest text-ink-muted".freeze
-  LIST_CLASS = "divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface".freeze
+  GROUP_LABEL_CLASS = "#{Components::Form::Styles::SECTION_LABEL} leading-[normal] text-ink-subtle".freeze
+  LIST_CLASS = "divide-y divide-line overflow-hidden rounded-[14px] border border-line bg-surface".freeze
   ROW_CLASS = "flex min-h-11 items-center gap-3 px-4 py-3.5".freeze
   LINK_ROW_CLASS = "#{ROW_CLASS} hover:bg-surface-2".freeze
   SIGN_OUT_CLASS = "#{ROW_CLASS} w-full cursor-pointer text-left text-sm font-bold text-ink hover:bg-surface-2".freeze
-  ROW_TEXT_CLASS = "grid min-w-0 flex-1 gap-0.5".freeze
-  ROW_LABEL_CLASS = "text-sm font-bold text-ink".freeze
-  ROW_SUMMARY_CLASS = "truncate text-xs text-ink-muted".freeze
+  ROW_TEXT_CLASS = "grid min-w-0 flex-1 gap-0.5 leading-[normal]".freeze
+  ROW_LABEL_CLASS = "text-[14px] font-bold text-ink".freeze
+  ROW_SUMMARY_CLASS = "truncate text-[12px] text-ink-muted".freeze
   CHIPS_CLASS = "flex flex-none gap-1".freeze
   CHEVRON_CLASS = "h-4 w-4 flex-none text-ink-subtle".freeze
 

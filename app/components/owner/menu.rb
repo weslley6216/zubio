@@ -2,7 +2,7 @@ class Components::Owner::Menu < Components::Base
   include Phlex::Rails::Helpers::ButtonTo
 
   LABEL = "Abrir menu".freeze
-  ITEM_CLASS = "flex items-center gap-3 px-4 py-3.5 text-sm".freeze
+  ITEM_CLASS = "flex items-center gap-3 px-4 py-3.5 text-[14px] leading-[normal]".freeze
   CURRENT_CLASS = "bg-brand-soft text-brand-soft-ink font-extrabold".freeze
   RESTING_CLASS = "font-bold text-ink hover:bg-surface-2".freeze
   CHEVRON_PATH = "m9 6 6 6-6 6".freeze
@@ -16,9 +16,9 @@ class Components::Owner::Menu < Components::Base
   end
 
   def view_template
-    details(class: "group relative sm:hidden") do
+    details(class: "group relative sm:hidden", data: { owner_menu: true, controller: "owner-menu", action: "click@window->owner-menu#closeOutside" }) do
       render_summary
-      div(class: "absolute right-0 top-full z-30 mt-2 w-64 divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface shadow-lg") do
+      div(class: "absolute -right-1.5 top-full z-30 mt-1 w-[262px] divide-y divide-line overflow-hidden rounded-[14px] border border-line bg-surface shadow-[0_16px_40px_rgba(14,26,36,0.18)]") do
         @items.each { |label, href, current| render_item(label, href, current) }
         render_theme_row
         render_sign_out

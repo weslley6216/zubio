@@ -4,7 +4,7 @@ module Components::Form::Styles
   TEXTAREA = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-ink".freeze
   HINT = "mt-1 text-xs leading-snug text-ink-muted".freeze
   CHECKBOX = "rounded border-line".freeze
-  SUBMIT = "h-12 w-full cursor-pointer rounded-md bg-brand-600 px-4 font-medium text-on-brand".freeze
-  PLATFORM_SUBMIT = "h-12 w-full cursor-pointer rounded-md bg-zubio px-4 font-medium text-on-zubio".freeze
+  SUBMIT = "h-12 w-full cursor-pointer rounded-md bg-brand-600 px-4 font-extrabold text-on-brand".freeze
+  PLATFORM_SUBMIT = "h-12 w-full cursor-pointer rounded-md bg-zubio px-4 font-extrabold text-on-zubio".freeze
   SECTION_LABEL = "text-[11px] font-bold uppercase tracking-[0.08em]".freeze
 end

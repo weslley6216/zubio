@@ -2,17 +2,19 @@ class Views::Owner::Dashboard::Show < Views::Base
   SHARE_LABEL = "Seu link".freeze
   SHARE_HELPER = "Mande esse endereço para suas clientes. É por ele que elas escolhem o horário.".freeze
 
-  def initialize(tenant:, branding:, owner:, current_section:)
+  def initialize(tenant:, branding:, owner:, current_section:, subtitle:)
     @tenant = tenant
     @branding = branding
     @owner = owner
     @current_section = current_section
+    @subtitle = subtitle
   end
 
   def view_template
-    render Views::Layouts::Application.new(title: "Painel · #{@tenant.name}", branding: @branding) do
-      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
-      div(class: "mx-auto grid w-full max-w-6xl gap-6 px-6 py-10") do
+    render Views::Layouts::Application.new(title: "Painel · #{@tenant.name}", branding: @branding, flash_in_content: true) do
+      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
+      render Components::FlashBanner.new(container_class: "#{Components::Owner::Panel::CONTENT_WIDE} grid gap-2 pt-4")
+      main(class: "#{Components::Owner::Panel::CONTENT_WIDE} grid gap-6 py-5") do
         render_greeting
         render_share_link
         render_install_invite
@@ -23,9 +25,9 @@ class Views::Owner::Dashboard::Show < Views::Base
   private
 
   def render_greeting
-    div(class: "grid gap-2") do
-      h1(class: "text-3xl font-extrabold tracking-tight text-ink") { "Olá, #{owner_first_name}" }
-      p(class: "text-lg text-ink-muted") { "Este é o painel de #{@tenant.name}." }
+    div(class: "grid gap-2 leading-[normal]") do
+      h1(class: "text-[24px] font-extrabold tracking-[-0.02em] text-ink") { "Olá, #{owner_first_name}" }
+      p(class: "text-[14px] text-ink-muted") { "Este é o painel de #{@tenant.name}." }
     end
   end
 

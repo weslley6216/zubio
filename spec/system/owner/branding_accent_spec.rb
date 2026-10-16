@@ -34,6 +34,7 @@ RSpec.describe "Owner branding accent", type: :system, js: true do
       emulate_color_scheme(scheme)
       sign_in_owner(create(:user, tenant: tenant))
       visit "http://barbearia-do-ze.zubio.com.br#{owner_services_path}"
+      expect(page).to fit_the_phone_width
 
       find("details summary").click
 

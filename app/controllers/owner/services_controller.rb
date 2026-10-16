@@ -2,13 +2,15 @@ class Owner::ServicesController < Owner::BaseController
   REFUSED = "Não foi possível salvar o serviço. Confira os campos destacados.".freeze
 
   self.panel_section = :settings
+  self.panel_subtitle = "Serviços"
 
   def index
     render Views::Owner::Services::Index.new(
       tenant: ActsAsTenant.current_tenant,
       branding: current_branding,
       services: Service.ordered.to_a,
-      current_section: panel_section
+      current_section: panel_section,
+      subtitle: panel_subtitle
     )
   end
 
@@ -49,7 +51,8 @@ class Owner::ServicesController < Owner::BaseController
       tenant: ActsAsTenant.current_tenant,
       branding: current_branding,
       service: service,
-      current_section: panel_section
+      current_section: panel_section,
+      subtitle: panel_subtitle
     )
   end
 

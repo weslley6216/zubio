@@ -26,19 +26,19 @@ RSpec.describe "Owner services catalog", type: :request do
 
       document = Nokogiri::HTML5(response.body)
       expect(response.body).to include("Corte feminino")
-      expect(document.css("[data-catalog] span").map(&:text)).to include("45min", "R$ 90,00")
+      expect(document.css("[data-catalog] span").map(&:text)).to include("45 min", "R$ 90,00")
       expect(response.body).to include("Coloração completa")
-      expect(document.css("[data-catalog] span").map(&:text)).to include("2h", "R$ 250,00")
+      expect(document.css("[data-catalog] span").map(&:text)).to include("2 h", "R$ 250,00")
     end
 
-    it "renders a sixty-minute service as 1h and its price in full" do
+    it "renders a sixty-minute service as 1 h and its price in full" do
       create(:service, tenant: tenant, name: "Corte", duration_minutes: 60, price_cents: 8_000)
       sign_in_owner(owner)
 
       get owner_services_path
 
       document = Nokogiri::HTML5(response.body)
-      expect(document.css("[data-catalog] span").map(&:text)).to include("1h", "R$ 80,00")
+      expect(document.css("[data-catalog] span").map(&:text)).to include("1 h", "R$ 80,00")
     end
 
     it "shows the description of a service that has one" do

@@ -1,5 +1,6 @@
 class Owner::BaseController < ApplicationController
   class_attribute :panel_section, instance_writer: false
+  class_attribute :panel_subtitle, instance_writer: false
 
   before_action :require_owner_session!
   before_action :enforce_onboarding_gate

@@ -14,8 +14,8 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
   MEGABYTE = 1.megabyte
   PREVIEW_ALT = "Prévia da logo escolhida".freeze
 
-  TITLE_CLASS = "text-[26px] leading-[1.2] font-extrabold tracking-tight text-ink".freeze
-  SUBTITLE_CLASS = "mt-1 text-sm text-ink-muted".freeze
+  TITLE_CLASS = "text-[26px] leading-[1.2] font-extrabold tracking-tight text-balance text-ink".freeze
+  SUBTITLE_CLASS = "mt-4 text-sm leading-[1.5] text-ink-muted".freeze
   PREVIEW_CLASS = "mt-4 grid justify-items-center gap-2 rounded-xl border border-dashed border-line-strong bg-surface-2 p-6".freeze
   HINT_CLASS = "text-center text-xs leading-snug text-ink-muted".freeze
   ACTIONS_CLASS = "mt-3 grid grid-cols-2 gap-2".freeze

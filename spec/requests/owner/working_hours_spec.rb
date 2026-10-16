@@ -64,6 +64,17 @@ RSpec.describe "Owner working hours", type: :request do
       expect(document.at_css("[data-day='2']").text).to include(Views::Owner::WorkingHours::Edit::SECOND_RANGE_HINT)
     end
 
+    it "draws the submit button in extra bold, like the canvas" do
+      create(:professional, tenant: tenant, user: owner)
+      sign_in_owner(owner)
+
+      get edit_owner_working_hours_path
+
+      submit = Nokogiri::HTML5(response.body).at_css("main input[type='submit'], main button[type='submit']")
+      expect(submit["class"].split).to include("font-extrabold")
+      expect(submit["class"].split).not_to include("font-medium")
+    end
+
     it "paints the day chips with brand tokens, never the landing demo tokens" do
       create(:professional, tenant: tenant, user: owner)
       sign_in_owner(owner)
@@ -195,6 +206,18 @@ RSpec.describe "Owner working hours", type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
       expect(document.at_css("[data-day='3'] .text-danger").text).to eq("o fechamento precisa ser depois da abertura")
       expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.ordered.map(&:weekday) }).to eq([ 2 ])
+    end
+
+    it "shows the refusal alert inside the content, below the sticky header" do
+      create(:professional, tenant: tenant, user: owner)
+      sign_in_owner(owner)
+
+      patch owner_working_hours_path, params: { working_hours: { "3" => { active: "1", opens_at_0: "18:00", closes_at_0: "09:00" } } }
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_xpath("//header/following::*[@data-alert]").text).to include(Owner::WorkingHoursController::REFUSED)
+      expect(document.at_xpath("//header/preceding::*[@data-alert]")).to be_nil
+      expect(document.at_xpath("//header//*[@data-alert]")).to be_nil
     end
 
     it "refuses overlapping ranges on the same day and writes nothing" do

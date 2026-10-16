@@ -10,16 +10,18 @@ class Views::Owner::Services::Form < Views::Base
   PRICE_HINT_ID = Components::Owner::Service::Fields::PRICE_HINT_ID
   PRICE_HINT = Components::Owner::Service::Fields::PRICE_HINT
 
-  def initialize(tenant:, branding:, service:, current_section:)
+  def initialize(tenant:, branding:, service:, current_section:, subtitle:)
     @tenant = tenant
     @branding = branding
     @service = service
     @current_section = current_section
+    @subtitle = subtitle
   end
 
   def view_template
-    render Views::Layouts::Application.new(title: "#{form_title} · #{@tenant.name}", branding: @branding) do
-      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
+    render Views::Layouts::Application.new(title: "#{form_title} · #{@tenant.name}", branding: @branding, flash_in_content: true) do
+      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
+      render Components::FlashBanner.new(container_class: "#{Components::Owner::Panel::CONTENT} grid gap-2 pt-4")
       render Components::Owner::FormCard.new(title: form_title, subtitle: SUBTITLE) { render_form }
     end
   end

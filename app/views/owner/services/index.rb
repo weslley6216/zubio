@@ -8,7 +8,7 @@ class Views::Owner::Services::Index < Views::Base
   NEW_LABEL = "Novo serviço".freeze
   FIRST_LABEL = "Cadastrar primeiro serviço".freeze
 
-  PAGE_CLASS = "mx-auto grid w-full max-w-6xl gap-6 px-6 py-10".freeze
+  PAGE_CLASS = "#{Components::Owner::Panel::CONTENT} grid gap-6 py-10".freeze
   HEADING_ROW_CLASS = "flex max-w-2xl flex-wrap items-end justify-between gap-4".freeze
   HEADING_CLASS = "text-3xl font-extrabold tracking-tight text-ink".freeze
   SUBTITLE_CLASS = "text-lg text-ink-muted".freeze
@@ -19,16 +19,18 @@ class Views::Owner::Services::Index < Views::Base
   EMPTY_TITLE_CLASS = "text-lg font-bold text-ink".freeze
   EMPTY_BODY_CLASS = "text-sm text-ink-muted".freeze
 
-  def initialize(tenant:, branding:, services:, current_section:)
+  def initialize(tenant:, branding:, services:, current_section:, subtitle:)
     @tenant = tenant
     @branding = branding
     @services = services
     @current_section = current_section
+    @subtitle = subtitle
   end
 
   def view_template
-    render Views::Layouts::Application.new(title: "#{TITLE} · #{@tenant.name}", branding: @branding) do
-      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
+    render Views::Layouts::Application.new(title: "#{TITLE} · #{@tenant.name}", branding: @branding, flash_in_content: true) do
+      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
+      render Components::FlashBanner.new(container_class: "#{Components::Owner::Panel::CONTENT} grid gap-2 pt-4")
       main(class: PAGE_CLASS) do
         render Components::Owner::SettingsBackLink.new
         render_heading

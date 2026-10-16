@@ -8,15 +8,16 @@ class Components::Owner::Header < Components::Base
   CURRENT_CLASS = "border-secondary-mark text-brand-ink".freeze
   RESTING_CLASS = "border-transparent text-ink-muted hover:text-ink".freeze
 
-  def initialize(tenant:, branding:, current_section:)
+  def initialize(tenant:, branding:, current_section:, subtitle: PANEL_SUBTITLE)
     @tenant = tenant
     @branding = branding
     @current_section = current_section
+    @subtitle = subtitle
   end
 
   def view_template
     header(class: "sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur", data: { controller: "theme" }) do
-      div(class: "mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-6") do
+      div(class: "flex items-center gap-3 py-3.5 #{content_width}") do
         render_identity
         render_nav
         render_actions
@@ -35,14 +36,16 @@ class Components::Owner::Header < Components::Base
 
   def render_identity
     a(href: owner_dashboard_path, aria_current: @current_section == :dashboard ? "page" : nil,
-      class: "flex min-h-11 min-w-0 items-center gap-2 font-extrabold tracking-tight text-ink") do
-      render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :medium)
-      span(class: "grid min-w-0") do
-        span(class: "truncate") { @tenant.name }
-        span(class: "text-[11px] font-normal text-ink-muted", data: { panel_subtitle: true }) { PANEL_SUBTITLE }
+      class: "flex min-h-11 min-w-0 items-center gap-3 font-extrabold text-ink") do
+      render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :header)
+      span(class: "grid min-w-0 gap-px leading-[normal]") do
+        span(class: "truncate text-[14px] tracking-[-0.01em]") { @tenant.name }
+        span(class: "min-w-0 truncate text-[11px] font-normal text-ink-muted", data: { panel_subtitle: true }) { @subtitle }
       end
     end
   end
+
+  def content_width = @current_section == :dashboard ? Components::Owner::Panel::CONTENT_WIDE : Components::Owner::Panel::CONTENT
 
   def items = sections.map { |key, label, href| [ label, href, key == @current_section ] }
 
