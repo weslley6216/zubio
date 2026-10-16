@@ -226,4 +226,36 @@ RSpec.describe WorkingHour, type: :model do
       expect(described_class.day_segments("09:00", "18:00", "12:00", "14:00")).to eq([ [ "09:00", "12:00" ], [ "14:00", "18:00" ] ])
     end
   end
+
+  describe ".break_violation" do
+    it "returns nil when there is no break" do
+      expect(described_class.break_violation("09:00", "18:00", nil, nil)).to be_nil
+    end
+
+    it "accepts a break that fits inside the expediente" do
+      expect(described_class.break_violation("09:00", "18:00", "12:00", "13:00")).to be_nil
+    end
+
+    it "flags a break whose end is on or before its start" do
+      expect(described_class.break_violation("09:00", "18:00", "14:00", "12:00")).to eq(described_class::BREAK_INVERTED)
+    end
+
+    it "flags a break that spills past the expediente" do
+      expect(described_class.break_violation("09:00", "18:00", "17:30", "18:30")).to eq(described_class::BREAK_OUT_OF_BOUNDS)
+    end
+
+    it "flags a break that starts before the expediente opens" do
+      expect(described_class.break_violation("09:00", "18:00", "08:00", "10:00")).to eq(described_class::BREAK_OUT_OF_BOUNDS)
+    end
+
+    it "leaves the bounds unjudged when the expediente is blank" do
+      expect(described_class.break_violation("", "", "12:00", "13:00")).to be_nil
+    end
+  end
+
+  describe "WEEKDAY_LABELS" do
+    it "names each weekday without the -feira suffix" do
+      expect(described_class::WEEKDAY_LABELS).to eq(%w[Domingo Segunda Terça Quarta Quinta Sexta Sábado])
+    end
+  end
 end
