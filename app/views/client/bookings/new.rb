@@ -58,6 +58,7 @@ class Views::Client::Bookings::New < Views::Base
   DAY_WEEKDAY_FREE_CLASS = "text-ink-muted".freeze
   DAY_NUMBER_CLASS = "text-[20px] leading-[1.15] font-extrabold tabular-nums".freeze
   HINT_CLASS = "text-[12px] text-ink-subtle".freeze
+  DATA_HINT_CLASS = "text-[12px] text-ink-muted".freeze
   GRID_CLASS = "grid grid-cols-4 gap-2".freeze
   SLOT_BASE_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] text-[13px] font-bold tabular-nums".freeze
   SLOT_FREE_CLASS = "border border-line bg-surface aria-pressed:border-transparent aria-pressed:bg-brand-600 aria-pressed:text-on-brand aria-pressed:shadow-[0_2px_6px_color-mix(in_srgb,var(--brand-600)_20%,transparent)]".freeze
@@ -67,8 +68,9 @@ class Views::Client::Bookings::New < Views::Base
   CONFIRM_BAR_CLASS = "sticky bottom-0 -mt-[100px] flex items-center gap-3 border-t border-line bg-surface px-5 pt-3.5 pb-[calc(18px+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_16px_rgba(14,26,36,0.06)]".freeze
   CONFIRM_SUMMARY_CLASS = "flex min-w-0 flex-grow flex-col gap-0.5".freeze
   CONFIRM_BUTTON_CLASS = "min-h-[46px] flex-none rounded-[10px] bg-brand-600 px-5 text-[15px] font-extrabold text-on-brand disabled:bg-surface-3 disabled:text-ink-muted".freeze
+  FIELD_WRAPPER_CLASS = "flex flex-col gap-1.5".freeze
   FIELD_LABEL_CLASS = "text-[11px] font-bold uppercase tracking-[0.06em] text-ink-muted".freeze
-  FIELD_CLASS = "min-h-11 w-full rounded-lg border border-line-strong bg-surface px-3 text-[15px] text-ink placeholder:text-ink-subtle".freeze
+  FIELD_CLASS = "min-h-[46px] w-full rounded-lg border border-line-strong bg-surface px-3 text-[15px] text-ink placeholder:text-ink-subtle".freeze
 
   def initialize(service:, tenant:, branding:, published:, days: [], reasons: {}, selected_day: nil, slots: [], taken_slots: [], reason: nil,
     selected_slot: nil, client_name: nil, client_phone: nil, name_errors: [], phone_errors: [])
@@ -240,12 +242,12 @@ class Views::Client::Bookings::New < Views::Base
     render_step("4", DATA_STEP) do
       render_field(name: "name", caption: NAME_LABEL, placeholder: NAME_PLACEHOLDER, value: @client_name, errors: @name_errors)
       render_field(name: "phone", caption: PHONE_LABEL, placeholder: PHONE_PLACEHOLDER, value: @client_phone, errors: @phone_errors, inputmode: "tel")
-      p(class: HINT_CLASS) { DATA_HINT }
+      p(class: DATA_HINT_CLASS) { DATA_HINT }
     end
   end
 
   def render_field(name:, caption:, placeholder:, value:, errors:, inputmode: nil)
-    div(data: { field: name }) do
+    div(class: FIELD_WRAPPER_CLASS, data: { field: name }) do
       label(class: FIELD_LABEL_CLASS) { caption }
       input(type: "text", name: name, value: value, placeholder: placeholder, inputmode: inputmode, class: FIELD_CLASS)
       render Components::Form::Errors.new(messages: errors)
