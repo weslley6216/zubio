@@ -28,8 +28,9 @@ class Views::Owner::Services::Index < Views::Base
   end
 
   def view_template
-    render Views::Layouts::Application.new(title: "#{TITLE} · #{@tenant.name}", branding: @branding) do
+    render Views::Layouts::Application.new(title: "#{TITLE} · #{@tenant.name}", branding: @branding, flash_in_content: true) do
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
+      render Components::FlashBanner.new(container_class: "mx-auto grid w-full max-w-[1040px] gap-2 px-5 pt-4")
       main(class: PAGE_CLASS) do
         render Components::Owner::SettingsBackLink.new
         render_heading

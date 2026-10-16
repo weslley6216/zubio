@@ -10,14 +10,15 @@ class Views::Layouts::Application < Views::Base
   JS
 
   SURFACE_CLASS = "bg-canvas text-ink [color-scheme:light_dark]".freeze
-  FLASH_TONES = { "notice" => :success, "alert" => :danger }.freeze
+  FLASH_CLASS = "mx-auto grid w-full max-w-6xl gap-2 px-6 pt-4".freeze
 
-  def initialize(title:, branding:, page_stylesheet: nil, view_transition: false, social: nil)
+  def initialize(title:, branding:, page_stylesheet: nil, view_transition: false, social: nil, flash_in_content: false)
     @title = title
     @branding = branding
     @page_stylesheet = page_stylesheet
     @view_transition = view_transition
     @social = social
+    @flash_in_content = flash_in_content
   end
 
   def view_template(&block)
@@ -25,7 +26,7 @@ class Views::Layouts::Application < Views::Base
     html(lang: "pt-BR", class: SURFACE_CLASS) do
       head { render_head }
       body(class: "min-h-dvh font-sans") do
-        render_flash
+        render Components::FlashBanner.new(container_class: FLASH_CLASS) unless @flash_in_content
         yield if block
       end
     end
@@ -57,14 +58,5 @@ class Views::Layouts::Application < Views::Base
 
   def render_theme_bootstrap
     script(nonce: content_security_policy_nonce) { raw safe(THEME_BOOTSTRAP) }
-  end
-
-  def render_flash
-    messages = FLASH_TONES.filter_map { |key, tone| [ flash[key], tone ] if flash[key].present? }
-    return if messages.empty?
-
-    div(role: "status", class: "mx-auto grid w-full max-w-6xl gap-2 px-6 pt-4") do
-      messages.each { |text, tone| render Components::Alert.new(text: text, tone: tone) }
-    end
   end
 end

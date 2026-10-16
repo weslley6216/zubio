@@ -23,8 +23,9 @@ class Views::Owner::WorkingHours::Edit < Views::Base
   end
 
   def view_template
-    render Views::Layouts::Application.new(title: "#{TITLE} · #{@tenant.name}", branding: @branding) do
+    render Views::Layouts::Application.new(title: "#{TITLE} · #{@tenant.name}", branding: @branding, flash_in_content: true) do
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
+      render Components::FlashBanner.new(container_class: "mx-auto grid w-full max-w-[1040px] gap-2 px-5 pt-4")
       main(class: Components::Owner::FormCard::PAGE_CLASS) do
         render_heading
         render Components::Owner::OutsideHoursNotice.new(conflicts: @conflicts)

@@ -11,8 +11,9 @@ class Views::Owner::Dashboard::Show < Views::Base
   end
 
   def view_template
-    render Views::Layouts::Application.new(title: "Painel · #{@tenant.name}", branding: @branding) do
+    render Views::Layouts::Application.new(title: "Painel · #{@tenant.name}", branding: @branding, flash_in_content: true) do
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
+      render Components::FlashBanner.new(container_class: "mx-auto grid w-full max-w-[1040px] gap-2 px-5 pt-4")
       div(class: "mx-auto grid w-full max-w-6xl gap-6 px-6 py-10") do
         render_greeting
         render_share_link
