@@ -19,14 +19,20 @@ class Client::BookingsController < Client::BaseController
 
     return render_receipt(service, professional, result.value) if result.success?
 
-    render_schedule(service: service, selected_day: starts_at&.to_date, status: :unprocessable_entity)
+    render_schedule(
+      service: service,
+      selected_day: starts_at&.to_date,
+      selected_slot: (starts_at if result.reason == :invalid_client),
+      client_name: params[:name], client_phone: params[:phone], client: result.record,
+      status: :unprocessable_entity
+    )
   end
 
   private
 
   def current_professional = ActsAsTenant.current_tenant.professionals.active.first
 
-  def render_schedule(service:, selected_day: nil, status: :ok)
+  def render_schedule(service:, selected_day: nil, selected_slot: nil, client_name: nil, client_phone: nil, client: nil, status: :ok)
     tenant = ActsAsTenant.current_tenant
     availability = current_professional && Professional::Availability.new(professional: current_professional, service: service, dates: window)
 
@@ -41,7 +47,11 @@ class Client::BookingsController < Client::BaseController
     render Views::Client::Bookings::New.new(
       service: service, tenant: tenant, branding: current_branding, published: true,
       days: window.to_a, reasons: reasons, selected_day: chosen,
-      slots: slots.fetch(chosen), taken_slots: availability.taken_slots_by_date.fetch(chosen), reason: reasons.fetch(chosen)
+      slots: slots.fetch(chosen), taken_slots: availability.taken_slots_by_date.fetch(chosen), reason: reasons.fetch(chosen),
+      selected_slot: (selected_slot if selected_slot && selected_slot.to_date == chosen),
+      client_name: client_name, client_phone: client_phone,
+      name_errors: client ? client.errors[:name] : [],
+      phone_errors: client ? client.errors[:phone] : []
     ), status: status
   end
 

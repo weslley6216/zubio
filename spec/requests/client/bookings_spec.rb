@@ -422,5 +422,84 @@ RSpec.describe "Public booking day and time selection", type: :request do
       expect(response).to redirect_to(new_client_service_booking_path(service))
       expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
     end
+
+    it "flags a blank name in the field and creates nothing" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      post client_service_booking_path(service), params: { name: "", phone: "11988771234", starts_at: starts_at.iso8601 }
+
+      document = Nokogiri::HTML5(response.body)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(document.at_css("[data-field='name'] .text-danger")).to be_present
+      expect(document.at_css("input[name='phone']")["value"]).to eq("11988771234")
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
+    it "flags a phone that is not a phone and creates nothing" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      post client_service_booking_path(service), params: { name: "Ana", phone: "1198877", starts_at: starts_at.iso8601 }
+
+      document = Nokogiri::HTML5(response.body)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(document.at_css("[data-field='phone'] .text-danger")).to be_present
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
+    it "refuses a time outside the hours and re-shows the grid without a race message" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      dawn = Date.new(2026, 9, 8).in_time_zone.change(hour: 3)
+
+      post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: dawn.iso8601 }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(Nokogiri::HTML5(response.body).css("[data-slots] [data-slot]")).to be_present
+      expect(response.body).not_to include("antes de você")
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
+    it "refuses a past time" do
+      travel_to Time.zone.local(2026, 9, 8, 15, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: nine.iso8601 }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
+    it "posts the picked slot and keeps its hidden field and the step-4 form" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+
+      get new_client_service_booking_path(service, day: "2026-09-08")
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("form[data-controller~='slot-selector']")["action"]).to eq(client_service_booking_path(service))
+      expect(document.at_css("input[type='hidden'][name='starts_at']")).to be_present
+      expect(document.at_css("[data-field='name'] input[name='name']")).to be_present
+      expect(document.css("[data-slots] button[data-slot]").first["data-starts-at"]).to be_present
+    end
   end
 end

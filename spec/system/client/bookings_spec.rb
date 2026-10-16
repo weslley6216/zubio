@@ -137,4 +137,37 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
       expect(contrast_ratio("[data-confirm-bar]")).to be >= Branding::ColorScale::MIN_NON_TEXT_CONTRAST
     end
   end
+
+  it "enables the confirm button and names the time once a slot is picked" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant, display_name: "Mary")
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: "2026-09-08")}"
+    find("[data-slot][data-time='09:45']").click
+
+    expect(page).to have_css("[data-confirm-bar]:not([disabled])", text: "Confirmar 09:45")
+    expect(page).to have_css("[data-summary]", text: "09:45")
+  end
+
+  it "keeps the name and phone when the booking comes back with a field error" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant, display_name: "Mary")
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: "2026-09-08")}"
+    find("[data-slot][data-time='09:45']").click
+    fill_in "name", with: "Ana Paula Ribeiro"
+    fill_in "phone", with: "1198877"
+    click_button "Confirmar 09:45"
+
+    expect(page).to have_css("[data-field='phone'] .text-danger")
+    expect(page).to have_field("name", with: "Ana Paula Ribeiro")
+    expect(page).to have_field("phone", with: "1198877")
+    expect(page).to have_css("[data-slot][data-time='09:45'][aria-pressed='true']")
+  end
 end
