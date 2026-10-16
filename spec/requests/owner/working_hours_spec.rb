@@ -5,9 +5,9 @@ RSpec.describe "Owner working hours", type: :request do
   let(:owner) { create(:user, tenant: tenant, name: "José Souza", email: "ze@example.com", password: "s3cr3t123") }
 
   describe "GET /owner/working_hours/edit" do
-    it "shows the saved days marked with their ranges and the rest unmarked" do
+    it "shows the saved days marked with their hours and the rest unmarked" do
       professional = create(:professional, tenant: tenant, user: owner)
-      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(2 => [ [ "09:00", "18:00" ] ]) }
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(2 => [ [ "09:00", "12:00" ], [ "14:00", "18:00" ] ]) }
       sign_in_owner(owner)
 
       get edit_owner_working_hours_path
@@ -15,9 +15,10 @@ RSpec.describe "Owner working hours", type: :request do
       document = Nokogiri::HTML5(response.body)
       expect(response).to have_http_status(:ok)
       expect(document.at_css(%(input[name="working_hours[2][active]"]))["checked"]).to be_truthy
-      expect(document.at_css(%(input[name="working_hours[2][opens_at_0]"]))["value"]).to eq("09:00")
-      expect(document.at_css(%(input[name="working_hours[2][closes_at_0]"]))["value"]).to eq("18:00")
-      expect(document.at_css(%(input[name="working_hours[3][active]"]))["checked"]).to be_falsey
+      expect(document.at_css(%(input[name="working_hours[2][opens_at]"]))["value"]).to eq("09:00")
+      expect(document.at_css(%(input[name="working_hours[2][closes_at]"]))["value"]).to eq("18:00")
+      expect(document.at_css(%(input[name="working_hours[2][break_starts_at]"]))["value"]).to eq("12:00")
+      expect(document.at_css(%(input[name="working_hours[2][break_ends_at]"]))["value"]).to eq("14:00")
     end
 
     it "greets an owner without a schedule with a blank week and an invitation" do
@@ -52,30 +53,53 @@ RSpec.describe "Owner working hours", type: :request do
       expect(document.at_css("nav a[aria-current='page']").text).to eq(Components::Owner::Header::SETTINGS_LABEL)
     end
 
-    it "names every time field and flags the second range as optional" do
-      create(:professional, tenant: tenant, user: owner)
+    it "names the expediente and the break time fields of an open day" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(2 => [ [ "09:00", "12:00" ], [ "14:00", "18:00" ] ]) }
       sign_in_owner(owner)
 
       get edit_owner_working_hours_path
 
-      document = Nokogiri::HTML5(response.body)
-      labels = document.css("[data-day='2'] input[type='time']").map { |field| field["aria-label"] }
-      expect(labels).to eq(%w[Abre Fecha Abre Fecha])
-      expect(document.at_css("[data-day='2']").text).to include(Views::Owner::WorkingHours::Edit::SECOND_RANGE_HINT)
+      labels = Nokogiri::HTML5(response.body).css("[data-day='2'] input[type='time']").map { |field| field["aria-label"] }
+      expect(labels).to eq([ "Abre", "Fecha", "Início do intervalo", "Fim do intervalo" ])
     end
 
-    it "draws the submit button in extra bold, like the canvas" do
+    it "draws the submit button in extra bold with the prancheta label" do
       create(:professional, tenant: tenant, user: owner)
       sign_in_owner(owner)
 
       get edit_owner_working_hours_path
 
       submit = Nokogiri::HTML5(response.body).at_css("main input[type='submit'], main button[type='submit']")
+      expect(submit["value"] || submit.text).to include(Views::Owner::WorkingHours::Edit::SUBMIT_LABEL)
       expect(submit["class"].split).to include("font-extrabold")
       expect(submit["class"].split).not_to include("font-medium")
     end
 
-    it "paints the day chips with brand tokens, never the landing demo tokens" do
+    it "shows the Salvar minha semana button and its note" do
+      create(:professional, tenant: tenant, user: owner)
+      sign_in_owner(owner)
+
+      get edit_owner_working_hours_path
+
+      expect(response.body).to include(Views::Owner::WorkingHours::Edit::SUBMIT_LABEL)
+      expect(response.body).to include(Views::Owner::WorkingHours::Edit::SUBMIT_NOTE)
+    end
+
+    it "groups the closed days into one line and does not repeat each day" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!((2..6).index_with { [ [ "09:00", "18:00" ] ] }) }
+      sign_in_owner(owner)
+
+      get edit_owner_working_hours_path
+
+      group = Nokogiri::HTML5(response.body).at_css("[data-closed-days]")
+      expect(group.text).to include("Domingo e segunda")
+      expect(group.text).to include(Views::Owner::WorkingHours::Edit::CLOSED_SUFFIX)
+      expect(response.body.scan("Não atendo").size).to eq(1)
+    end
+
+    it "paints the days with brand tokens, never the landing demo tokens" do
       create(:professional, tenant: tenant, user: owner)
       sign_in_owner(owner)
 
@@ -169,20 +193,21 @@ RSpec.describe "Owner working hours", type: :request do
       professional = create(:professional, tenant: tenant, user: owner)
       sign_in_owner(owner)
 
-      patch owner_working_hours_path, params: { working_hours: { "2" => { active: "1", opens_at_0: "09:00", closes_at_0: "18:00" } } }
+      patch owner_working_hours_path, params: { working_hours: { "2" => { active: "1", opens_at: "09:00", closes_at: "18:00" } } }
 
       ranges = ActsAsTenant.with_tenant(tenant) { professional.working_hours.ordered.to_a }.map { |working_hour| [ working_hour.weekday, working_hour.opens_at.strftime("%H:%M"), working_hour.closes_at.strftime("%H:%M") ] }
       expect(response).to redirect_to(edit_owner_working_hours_path)
       expect(ranges).to eq([ [ 2, "09:00", "18:00" ] ])
     end
 
-    it "stores two ranges for a day with a midday break" do
+    it "stores a day with a break as the two rows around it" do
       professional = create(:professional, tenant: tenant, user: owner)
       sign_in_owner(owner)
 
-      patch owner_working_hours_path, params: { working_hours: { "2" => { active: "1", opens_at_0: "09:00", closes_at_0: "12:00", opens_at_1: "14:00", closes_at_1: "18:00" } } }
+      patch owner_working_hours_path, params: { working_hours: { "2" => { active: "1", opens_at: "09:00", closes_at: "18:00", break_starts_at: "12:00", break_ends_at: "13:00" } } }
 
-      expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.count }).to eq(2)
+      rows = ActsAsTenant.with_tenant(tenant) { professional.working_hours.ordered.to_a }.map { |working_hour| [ working_hour.opens_at.strftime("%H:%M"), working_hour.closes_at.strftime("%H:%M") ] }
+      expect(rows).to eq([ [ "09:00", "12:00" ], [ "13:00", "18:00" ] ])
     end
 
     it "removes only the unchecked day" do
@@ -190,21 +215,21 @@ RSpec.describe "Owner working hours", type: :request do
       ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(2 => [ [ "09:00", "18:00" ] ], 3 => [ [ "09:00", "18:00" ] ]) }
       sign_in_owner(owner)
 
-      patch owner_working_hours_path, params: { working_hours: { "2" => { active: "1", opens_at_0: "09:00", closes_at_0: "18:00" } } }
+      patch owner_working_hours_path, params: { working_hours: { "2" => { active: "1", opens_at: "09:00", closes_at: "18:00" } } }
 
       expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.ordered.map(&:weekday) }).to eq([ 2 ])
     end
 
-    it "refuses an inverted range, flags the day and keeps the saved day intact" do
+    it "refuses an inverted expediente, flags the day and keeps the saved day intact" do
       professional = create(:professional, tenant: tenant, user: owner)
       ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(2 => [ [ "09:00", "18:00" ] ]) }
       sign_in_owner(owner)
 
-      patch owner_working_hours_path, params: { working_hours: { "2" => { active: "1", opens_at_0: "09:00", closes_at_0: "18:00" }, "3" => { active: "1", opens_at_0: "18:00", closes_at_0: "09:00" } } }
+      patch owner_working_hours_path, params: { working_hours: { "2" => { active: "1", opens_at: "09:00", closes_at: "18:00" }, "4" => { active: "1", opens_at: "18:00", closes_at: "09:00" } } }
 
       document = Nokogiri::HTML5(response.body)
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(document.at_css("[data-day='3'] .text-danger").text).to eq("o fechamento precisa ser depois da abertura")
+      expect(document.at_css("[data-day='4'] .text-danger").text).to eq(WeeklySchedule::INVERTED_MESSAGE)
       expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.ordered.map(&:weekday) }).to eq([ 2 ])
     end
 
@@ -212,7 +237,7 @@ RSpec.describe "Owner working hours", type: :request do
       create(:professional, tenant: tenant, user: owner)
       sign_in_owner(owner)
 
-      patch owner_working_hours_path, params: { working_hours: { "3" => { active: "1", opens_at_0: "18:00", closes_at_0: "09:00" } } }
+      patch owner_working_hours_path, params: { working_hours: { "3" => { active: "1", opens_at: "18:00", closes_at: "09:00" } } }
 
       document = Nokogiri::HTML5(response.body)
       expect(document.at_xpath("//header/following::*[@data-alert]").text).to include(Owner::WorkingHoursController::REFUSED)
@@ -220,14 +245,15 @@ RSpec.describe "Owner working hours", type: :request do
       expect(document.at_xpath("//header//*[@data-alert]")).to be_nil
     end
 
-    it "refuses overlapping ranges on the same day and writes nothing" do
+    it "refuses a break outside the expediente, flags the day and writes nothing" do
       professional = create(:professional, tenant: tenant, user: owner)
       sign_in_owner(owner)
 
-      patch owner_working_hours_path, params: { working_hours: { "2" => { active: "1", opens_at_0: "09:00", closes_at_0: "12:00", opens_at_1: "11:00", closes_at_1: "15:00" } } }
+      patch owner_working_hours_path, params: { working_hours: { "4" => { active: "1", opens_at: "09:00", closes_at: "18:00", break_starts_at: "17:30", break_ends_at: "18:30" } } }
 
+      document = Nokogiri::HTML5(response.body)
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include(WeeklySchedule::OVERLAP_MESSAGE)
+      expect(document.at_css("[data-day='4'] .text-danger").text).to eq("O intervalo precisa caber entre 09:00 e 18:00. Nada foi salvo.")
       expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.to_a }).to be_empty
     end
 
@@ -239,7 +265,7 @@ RSpec.describe "Owner working hours", type: :request do
       create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 18, min: 30))
       sign_in_owner(owner)
 
-      patch owner_working_hours_path, params: { working_hours: { "5" => { active: "1", opens_at_0: "09:00", closes_at_0: "18:00" } } }
+      patch owner_working_hours_path, params: { working_hours: { "5" => { active: "1", opens_at: "09:00", closes_at: "18:00" } } }
       follow_redirect!
 
       document = Nokogiri::HTML5(response.body)
@@ -256,7 +282,7 @@ RSpec.describe "Owner working hours", type: :request do
       appointment = create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 18, min: 30))
       sign_in_owner(owner)
 
-      patch owner_working_hours_path, params: { working_hours: { "5" => { active: "1", opens_at_0: "09:00", closes_at_0: "18:00" } } }
+      patch owner_working_hours_path, params: { working_hours: { "5" => { active: "1", opens_at: "09:00", closes_at: "18:00" } } }
 
       expect(ActsAsTenant.with_tenant(tenant) { appointment.reload }).to be_confirmed
     end
@@ -269,7 +295,7 @@ RSpec.describe "Owner working hours", type: :request do
       create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: friday.in_time_zone.change(hour: 14))
       sign_in_owner(owner)
 
-      patch owner_working_hours_path, params: { working_hours: { "5" => { active: "1", opens_at_0: "09:00", closes_at_0: "18:00" } } }
+      patch owner_working_hours_path, params: { working_hours: { "5" => { active: "1", opens_at: "09:00", closes_at: "18:00" } } }
       follow_redirect!
 
       document = Nokogiri::HTML5(response.body)
@@ -317,7 +343,7 @@ RSpec.describe "Owner working hours", type: :request do
       ActsAsTenant.with_tenant(aurora) { aurora_professional.replace_working_hours!(5 => [ [ "08:00", "13:00" ] ]) }
       sign_in_owner(owner)
 
-      patch owner_working_hours_path, params: { working_hours: { "4" => { active: "1", opens_at_0: "10:00", closes_at_0: "16:00" } } }
+      patch owner_working_hours_path, params: { working_hours: { "4" => { active: "1", opens_at: "10:00", closes_at: "16:00" } } }
 
       expect(response).to redirect_to(edit_owner_working_hours_path)
       expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.ordered.map(&:weekday) }).to eq([ 4 ])
