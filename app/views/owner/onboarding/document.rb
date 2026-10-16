@@ -36,7 +36,7 @@ class Views::Owner::Onboarding::Document < Views::Base
   WELCOME_CLASS = "flex flex-grow flex-col justify-between px-6 pt-8 pb-6".freeze
   WELCOME_STACK_CLASS = "flex flex-col gap-3.5".freeze
   WELCOME_HEADING_CLASS = "text-[26px] leading-[1.15] font-extrabold tracking-tight text-balance text-ink".freeze
-  WELCOME_SUBTITLE_CLASS = "text-[15px] leading-relaxed text-ink-muted".freeze
+  WELCOME_SUBTITLE_CLASS = "text-[15px] leading-[1.55] text-ink-muted".freeze
   WELCOME_GROUPS_CLASS = "mt-0.5 flex flex-col gap-2".freeze
   WELCOME_GROUP_ROW_CLASS = "flex items-center gap-2.5 text-sm text-ink-muted".freeze
   WELCOME_MARKER_CLASS = "grid h-5.5 w-5.5 flex-none place-items-center rounded-full bg-[#E6E1FD] text-[11px] font-extrabold text-[#4830C4]".freeze
@@ -44,8 +44,8 @@ class Views::Owner::Onboarding::Document < Views::Base
   WELCOME_BUTTON_CLASS = "min-h-13 w-full rounded-xl bg-zubio text-base font-extrabold text-on-zubio".freeze
   WELCOME_NOTE_CLASS = "text-center text-xs text-ink-subtle".freeze
 
-  SERVICES_TITLE_CLASS = "text-[26px] leading-tight font-extrabold tracking-tight text-balance text-ink".freeze
-  SERVICES_SUBTITLE_CLASS = "text-sm leading-relaxed text-ink-muted".freeze
+  SERVICES_TITLE_CLASS = "text-[26px] leading-[1.2] font-extrabold tracking-tight text-balance text-ink".freeze
+  SERVICES_SUBTITLE_CLASS = "text-sm leading-[1.5] text-ink-muted".freeze
   SERVICES_LIST_CLASS = "flex flex-col gap-2".freeze
   SERVICE_ROW_CLASS = "flex items-center gap-3 rounded-xl border border-line bg-surface px-3.5 py-3".freeze
   SERVICE_TEXT_CLASS = "min-w-0 flex-grow".freeze
@@ -58,8 +58,8 @@ class Views::Owner::Onboarding::Document < Views::Base
   ADD_SERVICE_BUTTON_CLASS = "flex min-h-11.5 items-center justify-center gap-2 rounded-lg bg-zubio text-[15px] font-bold text-on-zubio".freeze
   SERVICES_HELP_CLASS = "text-xs leading-snug text-ink-subtle".freeze
 
-  HOURS_TITLE_CLASS = "text-[28px] leading-tight font-extrabold tracking-tight text-balance text-ink".freeze
-  HOURS_SUBTITLE_CLASS = "text-sm leading-relaxed text-ink-muted".freeze
+  HOURS_TITLE_CLASS = "text-[28px] leading-[1.2] font-extrabold tracking-tight text-balance text-ink".freeze
+  HOURS_SUBTITLE_CLASS = "text-sm leading-[1.55] text-ink-muted".freeze
 
   def initialize(tenant:, branding:, services:, schedule:, open_section:, page_stylesheet:, direct_upload_url:)
     @tenant = tenant

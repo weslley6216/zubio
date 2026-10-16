@@ -8,8 +8,8 @@ class Components::Owner::BrandQuestion::Name < Components::Base
   COUNTER_SUFFIX = "de #{Tenant::NAME_MAX_LENGTH} caracteres".freeze
   ADDRESS_LABEL = "Seu endereço fica assim".freeze
 
-  TITLE_CLASS = "text-[26px] leading-[1.2] font-extrabold tracking-tight text-ink".freeze
-  SUBTITLE_CLASS = "mt-1 text-sm text-ink-muted".freeze
+  TITLE_CLASS = "text-[26px] leading-[1.2] font-extrabold tracking-tight text-balance text-ink".freeze
+  SUBTITLE_CLASS = "mt-4 text-sm leading-[1.55] text-ink-muted".freeze
   FIELD_CLASS = "mt-4".freeze
   COUNTER_CLASS = "mt-4 text-xs text-ink-subtle".freeze
   NAME_FIELD_CLASS = "h-[58px] w-full rounded-[14px] border-2 border-brand-600 bg-surface px-4 text-[20px] font-bold tracking-[-0.01em] text-ink shadow-[0_2px_8px_rgba(44,108,176,0.12)] focus-visible:outline-none".freeze

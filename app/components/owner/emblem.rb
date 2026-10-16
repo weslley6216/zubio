@@ -2,6 +2,7 @@ class Components::Owner::Emblem < Components::Base
   SIZES = {
     small: "h-7 w-7 rounded-lg text-xs",
     medium: "h-8 w-8 rounded-lg",
+    header: "h-9 w-9 rounded-[10px] text-[15px]",
     large: "h-12 w-12 rounded-[14px] text-[21px]",
     address: "h-11 w-11 rounded-[13px] text-[19px]",
     row: "h-6.5 w-6.5 rounded-lg text-xs",
