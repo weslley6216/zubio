@@ -1,6 +1,6 @@
 class Components::Owner::FormCard < Components::Base
   HEADING_ID = "form-heading".freeze
-  PAGE_CLASS = "mx-auto w-full max-w-md px-3 py-4".freeze
+  PAGE_CLASS = "#{Components::Owner::Panel::CONTENT} py-4".freeze
   CARD_CLASS = "rounded-2xl border border-line bg-surface p-4".freeze
   TITLE_CLASS = "text-xl font-extrabold tracking-tight text-ink".freeze
   SUBTITLE_CLASS = "text-sm text-ink-muted".freeze

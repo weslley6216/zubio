@@ -9,14 +9,15 @@ class Views::Owner::Onboarding::Final < Views::Base
   ADD_SERVICE_LABEL = "Cadastrar o primeiro serviço".freeze
   NO_DAYS = "Nenhum dia definido ainda.".freeze
 
-  MAIN_CLASS = "mx-auto flex min-h-dvh w-full max-w-md flex-col bg-canvas".freeze
-  BANNER_CLASS = "flex flex-col gap-3.5 bg-brand-600 px-6 pt-8.5 pb-10 text-on-brand".freeze
+  MAIN_CLASS = "flex min-h-dvh w-full flex-col bg-canvas".freeze
+  BANNER_CLASS = "bg-brand-600 pt-8.5 pb-10 text-on-brand".freeze
+  BANNER_COLUMN_CLASS = "mx-auto flex w-full max-w-md flex-col gap-3.5 px-6".freeze
   BADGE_CLASS = "grid h-14 w-14 place-items-center rounded-full bg-white/22".freeze
   BADGE_ICON_CLASS = "h-7.5 w-7.5".freeze
   HEADING_CLASS = "text-[27px] leading-tight font-extrabold tracking-tight text-balance".freeze
   SUBTITLE_CLASS = "text-sm leading-relaxed opacity-[0.92]".freeze
 
-  BODY_CLASS = "-mt-5 flex flex-grow flex-col gap-3.5 px-6 pb-6".freeze
+  BODY_CLASS = "-mt-5 mx-auto flex w-full max-w-md flex-grow flex-col gap-3.5 px-6 pb-6".freeze
   CONFIGURED_LABEL_CLASS = "text-xs font-medium uppercase tracking-wide text-ink-subtle".freeze
   ROWS_CLASS = "grid gap-2".freeze
   ROW_CLASS = "flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3.5".freeze
@@ -52,9 +53,11 @@ class Views::Owner::Onboarding::Final < Views::Base
 
   def render_banner
     div(class: BANNER_CLASS) do
-      div(class: BADGE_CLASS) { render_check_icon }
-      h1(class: HEADING_CLASS) { "#{TITLE}, #{first_name}" }
-      p(class: SUBTITLE_CLASS) { SUBTITLE }
+      div(class: BANNER_COLUMN_CLASS) do
+        div(class: BADGE_CLASS) { render_check_icon }
+        h1(class: HEADING_CLASS) { "#{TITLE}, #{first_name}" }
+        p(class: SUBTITLE_CLASS) { SUBTITLE }
+      end
     end
   end
 

@@ -90,6 +90,19 @@ RSpec.describe "Owner onboarding final", type: :request do
       expect(response.body).to include(tenant.canonical_host)
     end
 
+    it "spans the colored band across the window and keeps the body in a column" do
+      tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
+
+      get owner_onboarding_final_path
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("main")["class"].split).not_to include("max-w-md")
+      expect(document.at_css("main > :first-child")["class"].split).not_to include("max-w-md")
+      expect(document.at_css("main > :first-child > :first-child")["class"].split).to include("max-w-md")
+      expect(document.at_css("main > :nth-child(2)")["class"].split).to include("max-w-md")
+    end
+
     it "sums the distinct service durations in ascending order, like the canvas" do
       tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
       owner = create(:user, tenant: tenant, name: "Ana Lima")

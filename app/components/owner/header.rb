@@ -17,7 +17,7 @@ class Components::Owner::Header < Components::Base
 
   def view_template
     header(class: "sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur", data: { controller: "theme" }) do
-      div(class: "mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-6") do
+      div(class: "flex h-16 items-center gap-3 #{content_width}") do
         render_identity
         render_nav
         render_actions
@@ -44,6 +44,8 @@ class Components::Owner::Header < Components::Base
       end
     end
   end
+
+  def content_width = @current_section == :dashboard ? Components::Owner::Panel::CONTENT_WIDE : Components::Owner::Panel::CONTENT
 
   def items = sections.map { |key, label, href| [ label, href, key == @current_section ] }
 

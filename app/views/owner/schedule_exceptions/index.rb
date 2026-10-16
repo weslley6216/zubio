@@ -21,7 +21,7 @@ class Views::Owner::ScheduleExceptions::Index < Views::Base
   MONTHS = %w[jan fev mar abr mai jun jul ago set out nov dez].freeze
   TRASH_ICON = "M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13".freeze
 
-  PAGE_CLASS = "mx-auto grid w-full max-w-2xl gap-6 px-6 py-10".freeze
+  PAGE_CLASS = "#{Components::Owner::Panel::CONTENT} grid gap-6 py-10".freeze
   HEADING_CLASS = "mt-2 text-xl font-extrabold tracking-tight text-ink".freeze
   SUBTITLE_CLASS = "text-sm text-ink-muted".freeze
   FORM_CLASS = "mt-4 grid gap-3 rounded-xl border border-line bg-surface p-4".freeze
@@ -58,7 +58,7 @@ class Views::Owner::ScheduleExceptions::Index < Views::Base
   def view_template
     render Views::Layouts::Application.new(title: "#{TITLE} · #{@tenant.name}", branding: @branding, flash_in_content: true) do
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
-      render Components::FlashBanner.new(container_class: "mx-auto grid w-full max-w-[1040px] gap-2 px-5 pt-4")
+      render Components::FlashBanner.new(container_class: "#{Components::Owner::Panel::CONTENT} grid gap-2 pt-4")
       main(class: PAGE_CLASS) do
         render Components::Owner::SettingsBackLink.new
         render_heading

@@ -22,7 +22,7 @@ class Views::Owner::Settings::Show < Views::Base
   DISABLED = { one: "desativado", other: "desativados" }.freeze
   CHEVRON_PATH = "m9 6 6 6-6 6".freeze
 
-  PAGE_CLASS = "mx-auto grid w-full max-w-6xl gap-6 px-6 py-10".freeze
+  PAGE_CLASS = "#{Components::Owner::Panel::CONTENT} grid gap-6 py-10".freeze
   BACK_LABEL = "Voltar".freeze
   BACK_ICON = "m15 6-6 6 6 6".freeze
   TOP_BAR_CLASS = "flex items-center gap-3.5 border-b border-line bg-surface px-6 py-4".freeze

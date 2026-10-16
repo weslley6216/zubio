@@ -21,7 +21,7 @@ class Views::Owner::Services::Form < Views::Base
   def view_template
     render Views::Layouts::Application.new(title: "#{form_title} · #{@tenant.name}", branding: @branding, flash_in_content: true) do
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
-      render Components::FlashBanner.new(container_class: "mx-auto grid w-full max-w-[1040px] gap-2 px-5 pt-4")
+      render Components::FlashBanner.new(container_class: "#{Components::Owner::Panel::CONTENT} grid gap-2 pt-4")
       render Components::Owner::FormCard.new(title: form_title, subtitle: SUBTITLE) { render_form }
     end
   end
