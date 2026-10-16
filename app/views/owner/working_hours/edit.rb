@@ -32,7 +32,7 @@ class Views::Owner::WorkingHours::Edit < Views::Base
   ADD_CLASS = "hidden min-h-10 items-center gap-1.5 self-start justify-self-start rounded-lg border border-dashed border-brand-600 bg-surface px-3 text-[13px] leading-[normal] font-bold text-brand-600".freeze
   COPY_CLASS = "hidden min-h-10 items-center gap-1.5 self-start justify-self-start px-1 text-[13px] leading-[normal] font-bold text-brand-600".freeze
   GROUP_CLASS = "w-full min-w-0 rounded-xl border border-line bg-surface".freeze
-  SUMMARY_CLASS = "flex min-h-11 cursor-pointer list-none items-center gap-3 px-4 py-3.5".freeze
+  SUMMARY_CLASS = "flex min-h-11 cursor-pointer list-none items-center gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden".freeze
   SUMMARY_NAMES_CLASS = "grow text-[14px] font-bold leading-[normal] text-ink-subtle".freeze
   SUMMARY_SUFFIX_CLASS = "flex-none whitespace-nowrap text-[12px] font-semibold leading-[normal] text-ink-subtle".freeze
   GROUP_BODY_CLASS = "grid min-w-0 gap-2.5 px-4 pb-4".freeze
@@ -80,7 +80,7 @@ class Views::Owner::WorkingHours::Edit < Views::Base
   def render_heading
     render Components::Owner::SettingsBackLink.new
     h1(class: "mt-2 text-xl font-extrabold tracking-tight text-ink") { TITLE }
-    p(class: "text-sm text-ink-muted") { SUBTITLE }
+    p(class: "text-[13px] leading-[normal] text-ink-muted") { SUBTITLE }
   end
 
   def render_invite
@@ -109,14 +109,14 @@ class Views::Owner::WorkingHours::Edit < Views::Base
   def render_day(weekday, first_open:)
     section(data: { day: weekday }, class: "#{DAY_CLASS} #{@schedule.errors_for(weekday).any? ? 'border-danger' : 'border-line'}") do
       input(type: "checkbox", id: toggle_id(weekday), name: "working_hours[#{weekday}][active]", value: "1",
-        checked: @schedule.marked?(weekday), class: "peer sr-only")
+        checked: @schedule.marked?(weekday), aria_label: WorkingHour::WEEKDAY_LABELS[weekday], class: "peer sr-only")
       render_header_row(weekday)
-      render Components::Form::Errors.new(messages: @schedule.errors_for(weekday))
       div(class: FIELDS_CLASS) do
         render_hours_row(weekday)
         render_break_block(weekday)
         render_copy_button if first_open
       end
+      render Components::Form::Errors.new(messages: @schedule.errors_for(weekday))
     end
   end
 
@@ -182,6 +182,6 @@ class Views::Owner::WorkingHours::Edit < Views::Base
   end
 
   def hours_value(weekday, key, fallback)
-    @schedule.marked?(weekday) ? @schedule.public_send(key, weekday).presence || fallback : fallback
+    @schedule.marked?(weekday) ? @schedule.public_send(key, weekday) : fallback
   end
 end

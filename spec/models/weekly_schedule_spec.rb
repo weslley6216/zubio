@@ -107,6 +107,18 @@ RSpec.describe WeeklySchedule do
       expect(schedule.break_rejected?(4)).to be(true)
     end
 
+    it "refuses a break with only its start filled, flagging the break and writing nothing" do
+      tenant = create(:tenant)
+      professional = create(:professional, :without_user, tenant: tenant)
+
+      schedule = described_class.new(professional: professional, days: { "4" => { "active" => "1", "opens_at" => "09:00", "closes_at" => "18:00", "break_starts_at" => "12:00", "break_ends_at" => "" } })
+      saved = ActsAsTenant.with_tenant(tenant) { schedule.save }
+
+      expect(saved).to be(false)
+      expect(schedule.break_rejected?(4)).to be(true)
+      expect(schedule.errors_for(4)).to eq([ WeeklySchedule::INCOMPLETE_BREAK_MESSAGE ])
+    end
+
     it "accepts a break that fits inside the expediente" do
       tenant = create(:tenant)
       professional = create(:professional, :without_user, tenant: tenant)

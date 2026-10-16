@@ -4,6 +4,7 @@ class WeeklySchedule
   DEFAULT_OPENS_AT = "09:00".freeze
   DEFAULT_CLOSES_AT = "18:00".freeze
   INVERTED_MESSAGE = "O fim precisa ser depois do início. Nada foi salvo.".freeze
+  INCOMPLETE_BREAK_MESSAGE = "Preencha o começo e o fim do intervalo. Nada foi salvo.".freeze
 
   attr_accessor :professional, :days
 
@@ -72,6 +73,8 @@ class WeeklySchedule
   end
 
   def validate_day(weekday)
+    return reject(weekday, :break, INCOMPLETE_BREAK_MESSAGE) if break_half_filled?(weekday)
+
     case WorkingHour.break_violation(opens_at(weekday), closes_at(weekday), break_starts_at(weekday), break_ends_at(weekday))
     when WorkingHour::BREAK_OUT_OF_BOUNDS then return reject(weekday, :break, break_bounds_message(weekday))
     when WorkingHour::BREAK_INVERTED then return reject(weekday, :break, INVERTED_MESSAGE)
@@ -79,6 +82,8 @@ class WeeklySchedule
 
     validate_segments(weekday)
   end
+
+  def break_half_filled?(weekday) = break_starts_at(weekday).present? ^ break_ends_at(weekday).present?
 
   def validate_segments(weekday)
     WorkingHour.day_segments(opens_at(weekday), closes_at(weekday), break_starts_at(weekday), break_ends_at(weekday)).each do |from, to|

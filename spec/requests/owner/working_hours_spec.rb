@@ -76,6 +76,29 @@ RSpec.describe "Owner working hours", type: :request do
       expect(submit["class"].split).not_to include("font-medium")
     end
 
+    it "renders the copy and add-break controls hidden and the break block visible for the no-JS fallback" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!(2 => [ [ "09:00", "18:00" ] ]) }
+      sign_in_owner(owner)
+
+      get edit_owner_working_hours_path
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("[data-day='2'] [data-copy]")["class"].split).to include("hidden")
+      expect(document.at_css("[data-day='2'] [data-add-break]")["class"].split).to include("hidden")
+      expect(document.at_css("[data-day='2'] [data-break]")["class"].split).not_to include("hidden")
+    end
+
+    it "gives the day toggle checkbox an accessible name" do
+      create(:professional, tenant: tenant, user: owner)
+      sign_in_owner(owner)
+
+      get edit_owner_working_hours_path
+
+      checkbox = Nokogiri::HTML5(response.body).at_css(%(input[name="working_hours[2][active]"]))
+      expect(checkbox["aria-label"]).to eq("Terça")
+    end
+
     it "shows the Salvar minha semana button and its note" do
       create(:professional, tenant: tenant, user: owner)
       sign_in_owner(owner)
@@ -229,7 +252,7 @@ RSpec.describe "Owner working hours", type: :request do
 
       document = Nokogiri::HTML5(response.body)
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(document.at_css("[data-day='4'] .text-danger").text).to eq(WeeklySchedule::INVERTED_MESSAGE)
+      expect(document.at_css("[data-day='4'] p.text-danger").text).to eq(WeeklySchedule::INVERTED_MESSAGE)
       expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.ordered.map(&:weekday) }).to eq([ 2 ])
     end
 
@@ -253,8 +276,43 @@ RSpec.describe "Owner working hours", type: :request do
 
       document = Nokogiri::HTML5(response.body)
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(document.at_css("[data-day='4'] .text-danger").text).to eq("O intervalo precisa caber entre 09:00 e 18:00. Nada foi salvo.")
+      expect(document.at_css("[data-day='4'] p.text-danger").text).to eq("O intervalo precisa caber entre 09:00 e 18:00. Nada foi salvo.")
       expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.to_a }).to be_empty
+    end
+
+    it "refuses a break with only its start filled, flags the break and writes nothing" do
+      professional = create(:professional, tenant: tenant, user: owner)
+      sign_in_owner(owner)
+
+      patch owner_working_hours_path, params: { working_hours: { "4" => { active: "1", opens_at: "09:00", closes_at: "18:00", break_starts_at: "12:00", break_ends_at: "" } } }
+
+      document = Nokogiri::HTML5(response.body)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(document.at_css("[data-day='4'] p.text-danger").text).to eq(WeeklySchedule::INCOMPLETE_BREAK_MESSAGE)
+      expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.to_a }).to be_empty
+    end
+
+    it "draws the rejected day's error below its fields and paints the guilty break fields" do
+      create(:professional, tenant: tenant, user: owner)
+      sign_in_owner(owner)
+
+      patch owner_working_hours_path, params: { working_hours: { "4" => { active: "1", opens_at: "09:00", closes_at: "18:00", break_starts_at: "17:30", break_ends_at: "18:30" } } }
+
+      day = Nokogiri::HTML5(response.body).at_css("[data-day='4']")
+      expect(day.element_children.last.name).to eq("p")
+      expect(day["class"].split).to include("border-danger")
+      expect(day.at_css("input[name='working_hours[4][break_starts_at]']")["class"].split).to include("border-danger")
+    end
+
+    it "keeps a rejected blank closing empty on re-render instead of showing the default" do
+      create(:professional, tenant: tenant, user: owner)
+      sign_in_owner(owner)
+
+      patch owner_working_hours_path, params: { working_hours: { "2" => { active: "1", opens_at: "09:00", closes_at: "" } } }
+
+      field = Nokogiri::HTML5(response.body).at_css(%(input[name="working_hours[2][closes_at]"]))
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(field["value"].to_s).to eq("")
     end
 
     it "shortening the week warns about the appointment left outside, with its date and time" do

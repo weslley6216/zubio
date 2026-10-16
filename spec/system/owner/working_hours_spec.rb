@@ -35,6 +35,7 @@ RSpec.describe "Owner working hours", type: :system, js: true do
     find("[data-day='3'] [name='working_hours[3][closes_at]']")
     click_button Views::Owner::WorkingHours::Edit::SUBMIT_LABEL
 
+    expect(page).to have_text(Owner::WorkingHoursController::SAVED)
     expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.ordered.count }).to eq(1)
   end
 
@@ -51,6 +52,7 @@ RSpec.describe "Owner working hours", type: :system, js: true do
     find("[data-day='2'] [data-copy]").click
     click_button Views::Owner::WorkingHours::Edit::SUBMIT_LABEL
 
+    expect(page).to have_text(Owner::WorkingHoursController::SAVED)
     wednesday = ActsAsTenant.with_tenant(tenant) { professional.working_hours.for_weekday(3).ordered.to_a }.map { |working_hour| [ working_hour.opens_at.strftime("%H:%M"), working_hour.closes_at.strftime("%H:%M") ] }
     expect(wednesday).to eq([ [ "09:00", "12:00" ], [ "13:00", "18:00" ] ])
     expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.for_weekday(0).count }).to eq(0)
@@ -68,10 +70,11 @@ RSpec.describe "Owner working hours", type: :system, js: true do
     find("[data-day='0'] label").click
     click_button Views::Owner::WorkingHours::Edit::SUBMIT_LABEL
 
+    expect(page).to have_text(Owner::WorkingHoursController::SAVED)
     expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.for_weekday(0).count }).to eq(1)
   end
 
-  it "keeps the add, remove and toggle controls as 44px touch targets on a phone" do
+  it "keeps the day controls tall enough to tap on a phone" do
     tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
     owner = create(:user, tenant: tenant)
     professional = create(:professional, tenant: tenant, user: owner)
