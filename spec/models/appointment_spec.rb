@@ -244,7 +244,6 @@ RSpec.describe Appointment, type: :model do
       expect(result.value.client.phone).to eq("11988771234")
     end
 
-
     it "registers the client in the tenant" do
       travel_to Time.zone.local(2026, 9, 8, 7, 0)
       tenant = create(:tenant)
