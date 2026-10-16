@@ -54,7 +54,7 @@ class Views::Owner::Sessions::New < Views::Base
   end
 
   def render_card
-    div(class: CARD_CLASS) do
+    div(class: CARD_CLASS, data: { surface: true }) do
       form_with(url: owner_session_path, method: :post, class: "contents") do |form|
         render_email_field(form)
         render_password_field(form)

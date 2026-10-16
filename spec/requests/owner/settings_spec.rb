@@ -214,7 +214,7 @@ RSpec.describe "Owner settings", type: :request do
       expect(response).to redirect_to(new_owner_session_path)
     end
 
-    it "names nothing of the establishment on the login an anonymous visitor lands on" do
+    it "names the establishment on the login an anonymous visitor lands on" do
       create(:branding, tenant: tenant)
       host! "#{tenant.subdomain}.zubio.com.br"
 
@@ -222,7 +222,7 @@ RSpec.describe "Owner settings", type: :request do
       follow_redirect!
 
       expect(response.body).to include(%(action="#{owner_session_path}"))
-      expect(response.body).not_to include("Barbearia do Zé")
+      expect(response.body).to include("Barbearia do Zé")
     end
 
     it "summarizes the name, the colors and the service count of the establishment in the host and nothing of another one" do

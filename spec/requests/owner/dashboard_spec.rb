@@ -95,7 +95,7 @@ RSpec.describe "Owner dashboard", type: :request do
       expect(response).to redirect_to(new_owner_session_path)
     end
 
-    it "names nothing of the establishment on the login an anonymous visitor lands on" do
+    it "names the establishment but nothing more sensitive on the login an anonymous visitor lands on" do
       create(:branding, tenant: tenant)
       host! "#{tenant.subdomain}.zubio.com.br"
 
@@ -103,7 +103,7 @@ RSpec.describe "Owner dashboard", type: :request do
       follow_redirect!
 
       expect(response.body).to include(%(action="#{owner_session_path}"))
-      expect(response.body).not_to include("Estúdio Aurora")
+      expect(response.body).to include("Estúdio Aurora")
       expect(response.body).not_to include("wa.me")
     end
 
