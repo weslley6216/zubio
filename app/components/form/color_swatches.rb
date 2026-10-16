@@ -9,6 +9,7 @@ class Components::Form::ColorSwatches < Components::Base
   CUSTOMIZE_LABEL = "Personalizar".freeze
   INVALID_HEX_MESSAGE = "não é uma cor válida".freeze
 
+  FIELDSET_CLASS = "min-w-0".freeze
   LEGEND_CLASS = "flex w-full flex-nowrap items-baseline gap-1.5 #{SECTION_LABEL} text-ink-subtle".freeze
   TEXT_GROUP_CLASS = "flex min-w-0 items-baseline gap-1.5".freeze
   HINT_CLASS = "min-w-0 truncate".freeze
@@ -37,7 +38,7 @@ class Components::Form::ColorSwatches < Components::Base
   end
 
   def view_template
-    fieldset(aria_label: @label) do
+    fieldset(aria_label: @label, class: FIELDSET_CLASS) do
       legend(class: LEGEND_CLASS) do
         div(class: TEXT_GROUP_CLASS) do
           span { @label }

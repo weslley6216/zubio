@@ -18,7 +18,7 @@ class Components::Owner::BrandQuestion::Colors < Components::Base
 
   TITLE_CLASS = "text-[26px] leading-[1.2] font-extrabold tracking-tight text-ink".freeze
   SUBTITLE_CLASS = "mt-1 text-sm text-ink-muted".freeze
-  GROUP_CLASS = "mt-4 grid gap-4".freeze
+  GROUP_CLASS = "mt-4 grid grid-cols-1 gap-4".freeze
   HELP_CLASS = "mt-1.5 text-xs leading-snug text-ink-subtle".freeze
   PREVIEW_CARD_CLASS = "mt-4 overflow-hidden rounded-2xl border border-line bg-surface".freeze
   PREVIEW_STRIP_CLASS = "#{SECTION_LABEL} border-b border-line bg-surface-2 px-3.5 py-[9px] text-ink-subtle".freeze
