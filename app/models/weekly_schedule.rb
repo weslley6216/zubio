@@ -1,10 +1,9 @@
 class WeeklySchedule
   include ActiveModel::Model
 
-  DAY_PARAM_KEYS = %i[active opens_at_0 closes_at_0 opens_at_1 closes_at_1].freeze
-  NO_RANGE_MESSAGE = "marque ao menos uma faixa neste dia".freeze
-  INCOMPLETE_RANGE_MESSAGE = "informe abertura e fechamento".freeze
-  OVERLAP_MESSAGE = "as faixas deste dia se sobrepõem".freeze
+  DEFAULT_OPENS_AT = "09:00".freeze
+  DEFAULT_CLOSES_AT = "18:00".freeze
+  INVERTED_MESSAGE = "O fim precisa ser depois do início. Nada foi salvo.".freeze
 
   attr_accessor :professional, :days
 
@@ -12,11 +11,10 @@ class WeeklySchedule
 
   def self.from_professional(professional)
     days = professional.working_hours.ordered.group_by(&:weekday).transform_values do |day_hours|
-      ranges = day_hours.map { |working_hour| [ working_hour.opens_at, working_hour.closes_at ] }
-      slots = { "active" => "1" }
-      ranges.first(2).each_with_index do |(opens_at, closes_at), index|
-        slots["opens_at_#{index}"] = opens_at.strftime("%H:%M")
-        slots["closes_at_#{index}"] = closes_at.strftime("%H:%M")
+      slots = { "active" => "1", "opens_at" => day_hours.first.opens_at.strftime("%H:%M"), "closes_at" => day_hours.last.closes_at.strftime("%H:%M") }
+      if day_hours.size > 1
+        slots["break_starts_at"] = day_hours.first.closes_at.strftime("%H:%M")
+        slots["break_ends_at"] = day_hours.last.opens_at.strftime("%H:%M")
       end
       slots
     end
@@ -32,14 +30,24 @@ class WeeklySchedule
 
   def any_marked? = WorkingHour::WEEKDAYS.any? { |weekday| marked?(weekday) }
 
-  def ranges_for(weekday)
-    [ 0, 1 ].map { |index| [ value(weekday, "opens_at_#{index}"), value(weekday, "closes_at_#{index}") ] }
-  end
+  def opens_at(weekday) = value(weekday, "opens_at")
+
+  def closes_at(weekday) = value(weekday, "closes_at")
+
+  def break_starts_at(weekday) = value(weekday, "break_starts_at")
+
+  def break_ends_at(weekday) = value(weekday, "break_ends_at")
+
+  def break?(weekday) = break_starts_at(weekday).present? || break_ends_at(weekday).present?
 
   def errors_for(weekday) = errors[day_key(weekday)]
 
+  def hours_rejected?(weekday) = rejected_fields[weekday] == :hours
+
+  def break_rejected?(weekday) = rejected_fields[weekday] == :break
+
   def declaration
-    active_weekdays.index_with { |weekday| complete_ranges(weekday) }
+    active_weekdays.index_with { |weekday| WorkingHour.day_segments(opens_at(weekday), closes_at(weekday), break_starts_at(weekday), break_ends_at(weekday)) }
   end
 
   def save
@@ -55,43 +63,41 @@ class WeeklySchedule
 
   def value(weekday, key) = @days.dig(weekday.to_s, key).to_s
 
-  def raw_ranges(weekday)
-    ranges_for(weekday).reject { |opens_at, closes_at| opens_at.blank? && closes_at.blank? }
-  end
-
-  def complete_ranges(weekday)
-    raw_ranges(weekday).select { |opens_at, closes_at| opens_at.present? && closes_at.present? }
-  end
-
   def day_key(weekday) = :"day_#{weekday}"
 
-  def days_follow_working_hour_rules
-    active_weekdays.each do |weekday|
-      ranges = raw_ranges(weekday)
-      next errors.add(day_key(weekday), NO_RANGE_MESSAGE) if ranges.empty?
+  def rejected_fields = @rejected_fields ||= {}
 
-      validate_each_range(weekday, ranges)
-      errors.add(day_key(weekday), OVERLAP_MESSAGE) if overlapping?(weekday)
-    end
+  def days_follow_working_hour_rules
+    active_weekdays.each { |weekday| validate_day(weekday) }
   end
 
-  def validate_each_range(weekday, ranges)
-    ranges.each do |opens_at, closes_at|
-      next errors.add(day_key(weekday), INCOMPLETE_RANGE_MESSAGE) if opens_at.blank? || closes_at.blank?
+  def validate_day(weekday)
+    case WorkingHour.break_violation(opens_at(weekday), closes_at(weekday), break_starts_at(weekday), break_ends_at(weekday))
+    when WorkingHour::BREAK_OUT_OF_BOUNDS then return reject(weekday, :break, break_bounds_message(weekday))
+    when WorkingHour::BREAK_INVERTED then return reject(weekday, :break, INVERTED_MESSAGE)
+    end
 
-      candidate = WorkingHour.new(professional: professional, weekday: weekday, opens_at: opens_at, closes_at: closes_at)
-      candidate.valid?
+    validate_segments(weekday)
+  end
+
+  def validate_segments(weekday)
+    WorkingHour.day_segments(opens_at(weekday), closes_at(weekday), break_starts_at(weekday), break_ends_at(weekday)).each do |from, to|
+      candidate = WorkingHour.new(professional: professional, weekday: weekday, opens_at: from, closes_at: to)
+      next if candidate.valid?
+
       candidate.errors.each do |error|
         next unless error.attribute.in?(%i[opens_at closes_at])
         next if error.type == :overlaps
 
-        errors.add(day_key(weekday), error.message) unless errors.added?(day_key(weekday), error.message)
+        reject(weekday, :hours, error.type == :on_or_before_opening ? INVERTED_MESSAGE : error.message)
       end
     end
   end
 
-  def overlapping?(weekday)
-    complete = complete_ranges(weekday).sort_by(&:first)
-    complete.each_cons(2).any? { |(_, earlier_closes), (later_opens, _)| later_opens < earlier_closes }
+  def reject(weekday, field, message)
+    rejected_fields[weekday] ||= field
+    errors.add(day_key(weekday), message) unless errors.added?(day_key(weekday), message)
   end
+
+  def break_bounds_message(weekday) = "O intervalo precisa caber entre #{opens_at(weekday)} e #{closes_at(weekday)}. Nada foi salvo."
 end
