@@ -19,6 +19,7 @@ RSpec.describe Components::Service::Card, type: :component do
 
     expect(html).to include("Desativado")
     expect(html).to include("Preço oculto")
+    expect(html).to include(%(<div class="#{described_class::NAME_ROW_CLASS}"><a href="/x"))
   end
 
   it "renders no badge when the list is empty" do
@@ -46,11 +47,52 @@ RSpec.describe Components::Service::Card, type: :component do
     expect(html).to include("R$ 90,00")
   end
 
-  it "renders no clock or chevron icon in the panel variant" do
+  it "places the name straight in the identity column when there is no badge" do
+    html = described_class.new(service: service, href: "/x").call
+
+    expect(html).to include(%(<div class="#{described_class::IDENTITY_CLASS}"><a href="/x"))
+    expect(html).not_to include(described_class::NAME_ROW_CLASS)
+  end
+
+  it "renders the panel variant's duration in minutes with a clock icon" do
+    long_service = build(:service, tenant: tenant, name: "Micropigmentação", duration_minutes: 120)
+
+    html = described_class.new(service: long_service, href: "/x").call
+
+    expect(html).to include(%(<span class="#{described_class::DURATION_CLASS}">120 min</span>))
+    expect(html).to include(%(d="M12 7v5l3 2"))
+  end
+
+  it "renders no chevron icon in the panel variant" do
     html = described_class.new(service: service, href: "/x").call
 
     expect(html).not_to include(%(d="m9 6 6 6-6 6"))
-    expect(html).not_to include(%(d="M12 7v5l3 2"))
+  end
+
+  it "renders an active service on a solid card with its name in ink" do
+    html = described_class.new(service: service, href: "/x").call
+
+    expect(html).to include(%(<li class="#{described_class::CARD_CLASS}">))
+    expect(html).to include(%(<a href="/x" class="#{described_class::NAME_CLASS}">Corte feminino</a>))
+    expect(html).to include(%(<span class="#{described_class::DURATION_CLASS}">45 min</span>))
+  end
+
+  it "renders a disabled service on a dashed card with its name and duration faded" do
+    disabled_service = build(:service, tenant: tenant, name: "Micropigmentação", duration_minutes: 120, active: false)
+
+    html = described_class.new(service: disabled_service, href: "/x").call
+
+    expect(html).to include(%(<li class="#{described_class::DISABLED_CARD_CLASS}">))
+    expect(html).to include(%(<a href="/x" class="#{described_class::DISABLED_NAME_CLASS}">Micropigmentação</a>))
+    expect(html).to include(%(<span class="#{described_class::DISABLED_DURATION_CLASS}">120 min</span>))
+  end
+
+  it "renders the description with the same class in both variants" do
+    showcase = described_class.new(service: service, href: "/x", variant: :showcase, description: "Inclui lavagem.").call
+    panel = described_class.new(service: service, href: "/x", description: "Inclui lavagem.").call
+
+    expect(showcase).to include(%(<span class="#{described_class::DESCRIPTION_CLASS}" data-description>))
+    expect(panel).to include(%(<span class="#{described_class::DESCRIPTION_CLASS}" data-description>))
   end
 
   it "renders the showcase variant's name and duration in minutes with a clock icon" do
@@ -66,15 +108,6 @@ RSpec.describe Components::Service::Card, type: :component do
 
     expect(html).to include("data-description")
     expect(html).to include("Inclui lavagem.")
-  end
-
-  it "sets the description line height to normal only in the showcase variant" do
-    showcase = described_class.new(service: service, href: "/x", variant: :showcase, description: "Inclui lavagem.").call
-    panel = described_class.new(service: service, href: "/x", description: "Inclui lavagem.").call
-
-    expect(showcase).to include(%(<span class="#{described_class::SHOWCASE_DESCRIPTION_CLASS}" data-description>))
-    expect(panel).to include(%(<span class="#{described_class::DESCRIPTION_CLASS}" data-description>))
-    expect(panel).not_to include("leading-[normal]")
   end
 
   it "wraps the caller's aside with a chevron in the showcase variant" do
