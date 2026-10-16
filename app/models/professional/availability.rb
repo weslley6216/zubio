@@ -36,6 +36,17 @@ class Professional::Availability
     closing if opening <= moment && moment < closing
   end
 
+  def offers?(moment)
+    return false unless moment
+
+    future_candidates(moment.to_date).include?(moment)
+  end
+
+  def nearest_free(moment)
+    @dates ||= moment.to_date..moment.to_date
+    slots_for(moment.to_date).min_by { |slot| (slot - moment).abs }
+  end
+
   private
 
   def future_appointments
