@@ -18,17 +18,21 @@ RSpec.describe "Onboarding viewport", type: :system, js: true do
       click_on "Começar"
       find_button("Continuar")
       taller_than_screen["colors"] = page.evaluate_script("document.documentElement.scrollHeight > window.innerHeight")
+      scroll_width["colors"] = page.evaluate_script("document.documentElement.scrollWidth")
       find("[data-swatch-row] [data-swatch]", match: :first).click
       click_on "Continuar"
       find_field("Nome da marca")
       taller_than_screen["name"] = page.evaluate_script("document.documentElement.scrollHeight > window.innerHeight")
+      scroll_width["name"] = page.evaluate_script("document.documentElement.scrollWidth")
       fill_in "Nome da marca", with: "Barbearia do Zé"
       click_on "Continuar"
       find_button("Pular por enquanto")
       taller_than_screen["logo"] = page.evaluate_script("document.documentElement.scrollHeight > window.innerHeight")
+      scroll_width["logo"] = page.evaluate_script("document.documentElement.scrollWidth")
       click_on "Pular por enquanto"
       find_button("Adicionar à lista")
       taller_than_screen["services"] = page.evaluate_script("document.documentElement.scrollHeight > window.innerHeight")
+      scroll_width["services"] = page.evaluate_script("document.documentElement.scrollWidth")
       fill_in "Nome", with: "Corte"
       fill_in "Duração (minutos)", with: "45"
       fill_in "Preço (R$, opcional)", with: "90,00"
@@ -36,6 +40,7 @@ RSpec.describe "Onboarding viewport", type: :system, js: true do
       click_on "Continuar com 1 serviço"
       find_button("Ver minha página")
       taller_than_screen["working_hours"] = page.evaluate_script("document.documentElement.scrollHeight > window.innerHeight")
+      scroll_width["working_hours"] = page.evaluate_script("document.documentElement.scrollWidth")
       %w[Ter Qua Qui Sex Sáb].each { |weekday| find("label", text: weekday, exact_text: true).click }
       fill_in "working_hours_opens_at", with: "09:00"
       fill_in "working_hours_closes_at", with: "18:00"
@@ -49,7 +54,10 @@ RSpec.describe "Onboarding viewport", type: :system, js: true do
         "welcome" => false, "colors" => false, "name" => false, "logo" => false,
         "services" => false, "working_hours" => false, "final" => false
       )
-      expect(scroll_width).to eq("welcome" => 390, "final" => 390)
+      expect(scroll_width).to eq(
+        "welcome" => 390, "colors" => 390, "name" => 390, "logo" => 390,
+        "services" => 390, "working_hours" => 390, "final" => 390
+      )
       expect(without_floating_card).to eq("welcome" => true, "final" => true)
     end
   end
