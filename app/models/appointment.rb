@@ -15,6 +15,33 @@ class Appointment < ApplicationRecord
   scope :within, ->(range) { where(starts_at: range) }
   scope :for_professional, ->(professional) { where(professional: professional) }
 
+  def self.book(professional:, service:, starts_at:, client_name:, client_phone:)
+    return Result::Failure.new(:off_grid) unless offered?(professional, service, starts_at)
+
+    client = nil
+    appointment = transaction do
+      client = Client.register(name: client_name, phone: client_phone)
+      raise ActiveRecord::Rollback unless client.persisted?
+
+      create!(professional: professional, service: service, client: client, starts_at: starts_at)
+    end
+
+    return Result::Failure.new(:invalid_client, record: client) if appointment.nil?
+
+    Result::Success.new(appointment)
+  rescue ActiveRecord::StatementInvalid => invalid
+    raise unless invalid.cause.is_a?(PG::ExclusionViolation)
+
+    Result::Failure.new(:taken)
+  end
+
+  def self.offered?(professional, service, starts_at)
+    return false unless starts_at
+
+    Professional::Availability.new(professional: professional, service: service, dates: starts_at.to_date..starts_at.to_date).offers?(starts_at)
+  end
+  private_class_method :offered?
+
   private
 
   def derive_ends_at

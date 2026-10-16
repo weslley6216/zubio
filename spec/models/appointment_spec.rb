@@ -227,4 +227,176 @@ RSpec.describe Appointment, type: :model do
       expect(results).to contain_exactly(own)
     end
   end
+
+  describe ".book" do
+    it "creates a confirmed appointment for the chosen service, professional and time and returns success" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      result = ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: nine, client_name: "Ana Paula Ribeiro", client_phone: "(11) 98877-1234") }
+
+      expect(result.success?).to be(true)
+      expect([ result.value.service, result.value.professional, result.value.starts_at, result.value.confirmed? ]).to eq([ service, professional, nine, true ])
+      expect(result.value.client.phone).to eq("11988771234")
+    end
+
+
+    it "registers the client in the tenant" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: nine, client_name: "Ana Paula Ribeiro", client_phone: "11988771234") }
+
+      expect(ActsAsTenant.with_tenant(tenant) { Client.where(phone: "11988771234").count }).to eq(1)
+    end
+
+    it "reuses an existing client with the same phone instead of creating a second" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      existing = create(:client, tenant: tenant, name: "Ana", phone: "11988771234")
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      result = ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: nine, client_name: "Ana Paula Ribeiro", client_phone: "11988771234") }
+
+      expect(ActsAsTenant.with_tenant(tenant) { Client.count }).to eq(1)
+      expect(result.value.client).to eq(existing)
+    end
+
+    it "fails with :off_grid for a time outside the working hours and creates nothing" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      dawn = Date.new(2026, 9, 8).in_time_zone.change(hour: 3)
+
+      result = ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: dawn, client_name: "Ana", client_phone: "11988771234") }
+
+      expect(result.reason).to eq(:off_grid)
+      expect(ActsAsTenant.with_tenant(tenant) { [ Appointment.count, Client.count ] }).to eq([ 0, 0 ])
+    end
+
+    it "fails with :off_grid for a time in the past" do
+      travel_to Time.zone.local(2026, 9, 8, 15, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      result = ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: nine, client_name: "Ana", client_phone: "11988771234") }
+
+      expect(result.reason).to eq(:off_grid)
+    end
+
+    it "fails with :off_grid for a nil time" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+
+      result = ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: nil, client_name: "Ana", client_phone: "11988771234") }
+
+      expect(result.reason).to eq(:off_grid)
+    end
+
+    it "fails with :invalid_client carrying the record when the name is blank, creating no appointment" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      result = ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: nine, client_name: "", client_phone: "11988771234") }
+
+      expect(result.reason).to eq(:invalid_client)
+      expect(result.record.errors[:name]).to be_present
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
+    it "fails with :invalid_client for a phone that is not a phone" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      result = ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: nine, client_name: "Ana", client_phone: "1198877") }
+
+      expect(result.reason).to eq(:invalid_client)
+      expect(result.record.errors[:phone]).to be_present
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
+    it "fails with :taken when the slot was booked first, creating no second appointment" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: nine)
+
+      result = ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: nine, client_name: "Ana", client_phone: "11988771234") }
+
+      expect(result.reason).to eq(:taken)
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.occupying.count }).to eq(1)
+    end
+
+    it "rolls back the new client when the slot was taken, leaving no orphan" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: nine)
+
+      ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: nine, client_name: "Ana", client_phone: "11999990000") }
+
+      expect(ActsAsTenant.with_tenant(tenant) { Client.where(phone: "11999990000").count }).to eq(0)
+    end
+
+    it "does not swallow another database error as :taken" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+      other_error = ActiveRecord::StatementInvalid.new("boom")
+      allow(other_error).to receive(:cause).and_return(PG::UndefinedColumn.new)
+      allow(Appointment).to receive(:create!).and_raise(other_error)
+
+      expect { ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: nine, client_name: "Ana", client_phone: "11988771234") } }.to raise_error(ActiveRecord::StatementInvalid)
+      expect(ActsAsTenant.with_tenant(tenant) { Client.where(phone: "11988771234").count }).to eq(0)
+    end
+
+    it "books inside the request tenant and nothing in another" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      aurora = create(:tenant, name: "Estúdio Aurora")
+      aurora_professional = create(:professional, tenant: aurora)
+      aurora_service = create(:service, tenant: aurora, duration_minutes: 45)
+      create(:working_hour, tenant: aurora, professional: aurora_professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      ze = create(:tenant, name: "Barbearia do Zé")
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      ActsAsTenant.with_tenant(aurora) { described_class.book(professional: aurora_professional, service: aurora_service, starts_at: nine, client_name: "Ana", client_phone: "11988771234") }
+
+      expect(ActsAsTenant.with_tenant(aurora) { Appointment.count }).to eq(1)
+      expect(ActsAsTenant.with_tenant(ze) { [ Appointment.count, Client.count ] }).to eq([ 0, 0 ])
+    end
+  end
 end
