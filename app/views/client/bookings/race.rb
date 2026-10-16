@@ -28,11 +28,11 @@ class Views::Client::Bookings::Race < Views::Base
   LEFTOVERS_CLASS = "flex flex-col gap-2.5".freeze
   LEFTOVERS_LABEL_CLASS = "text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted".freeze
   GRID_CLASS = "grid grid-cols-4 gap-2".freeze
-  SLOT_BASE_CLASS = "grid min-h-12 place-items-center rounded-xl text-[15px] font-bold tabular-nums".freeze
+  SLOT_BASE_CLASS = "grid min-h-[50px] place-items-center rounded-xl text-[15px] font-bold tabular-nums".freeze
   SLOT_FREE_CLASS = "border border-line bg-surface aria-pressed:border-transparent aria-pressed:bg-brand-600 aria-pressed:text-on-brand aria-pressed:shadow-[0_2px_6px_color-mix(in_srgb,var(--brand-600)_20%,transparent)]".freeze
   SLOT_TAKEN_CLASS = "border border-dashed border-line-strong bg-surface-3 text-ink-subtle line-through".freeze
   HINT_CLASS = "text-[12px] text-ink-subtle".freeze
-  BAR_CLASS = "flex flex-col gap-2.5 px-5 pb-[calc(24px+env(safe-area-inset-bottom,0px))] pt-1".freeze
+  BAR_CLASS = "flex flex-col gap-2.5 px-5 pb-[calc(24px+env(safe-area-inset-bottom,0px))]".freeze
   BUTTON_CLASS = "flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-[15px] font-extrabold text-on-brand disabled:bg-surface-3 disabled:text-ink-muted".freeze
   ANOTHER_DAY_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-xl border border-line bg-surface text-[14px] font-bold text-ink-muted".freeze
 
