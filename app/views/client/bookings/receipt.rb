@@ -89,8 +89,8 @@ class Views::Client::Bookings::Receipt < Views::Base
   end
 
   def render_detail_card
-    div(class: DETAIL_CARD_CLASS) do
-      render_detail_row(WHEN_LABEL, when_label, data: { when: true })
+    div(class: DETAIL_CARD_CLASS, data: { when: true }) do
+      render_detail_row(WHEN_LABEL, when_label)
       render_divider
       render_detail_row(SERVICE_LABEL, @service.name)
       render_divider
@@ -100,10 +100,10 @@ class Views::Client::Bookings::Receipt < Views::Base
     end
   end
 
-  def render_detail_row(label, value, data: {})
+  def render_detail_row(label, value)
     div(class: DETAIL_ROW_CLASS) do
       span(class: DETAIL_LABEL_CLASS) { label }
-      span(class: "#{DETAIL_VALUE_CLASS} tabular-nums", data: data) { value }
+      span(class: "#{DETAIL_VALUE_CLASS} tabular-nums") { value }
     end
   end
 

@@ -18,6 +18,7 @@ class Client::BookingsController < Client::BaseController
       client_name: params[:name].to_s, client_phone: params[:phone].to_s)
 
     return render_receipt(service, professional, result.value) if result.success?
+    return render_race(service, professional, starts_at) if result.reason == :taken
 
     render_schedule(
       service: service,
@@ -31,6 +32,17 @@ class Client::BookingsController < Client::BaseController
   private
 
   def current_professional = ActsAsTenant.current_tenant.professionals.active.first
+
+  def render_race(service, professional, starts_at)
+    day = starts_at.to_date
+    availability = Professional::Availability.new(professional: professional, service: service, dates: day..day)
+    render Views::Client::Bookings::Race.new(
+      tenant: ActsAsTenant.current_tenant, branding: current_branding, service: service, professional: professional,
+      selected_day: day, slots: availability.slots_by_date.fetch(day), taken_slots: availability.taken_slots_by_date.fetch(day),
+      nearest: availability.nearest_free(starts_at), client_name: params[:name].to_s, client_phone: params[:phone].to_s,
+      lost_time: starts_at
+    ), status: :unprocessable_entity
+  end
 
   def render_schedule(service:, selected_day: nil, selected_slot: nil, client_name: nil, client_phone: nil, client: nil, status: :ok)
     tenant = ActsAsTenant.current_tenant

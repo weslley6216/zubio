@@ -170,4 +170,84 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
     expect(page).to have_field("phone", with: "1198877")
     expect(page).to have_css("[data-slot][data-time='09:45'][aria-pressed='true']")
   end
+
+  it "loses the race, strikes the taken slot, keeps the data and marks the nearest free" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant, display_name: "Mary")
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: Time.zone.local(2026, 9, 8, 9, 0))
+
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: "2026-09-08")}"
+    find("[data-slot][data-time='09:45']").click
+    fill_in "name", with: "Ana Paula Ribeiro"
+    fill_in "phone", with: "11988771234"
+    create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
+    click_button "Confirmar 09:45"
+
+    expect(page).to have_text("Alguém marcou 09:45 antes de você")
+    expect(page).to have_css("[data-slot-taken][data-time='09:45']")
+    expect(page).to have_css("[data-slot][data-time='10:30'][aria-pressed='true']")
+    expect(page).to have_field("name", with: "Ana Paula Ribeiro", type: :hidden)
+    expect(page).to have_css("[data-confirm-bar]", text: "Confirmar 10:30")
+  end
+
+  %w[light dark].each do |scheme|
+    it "keeps the receipt readable in #{scheme}" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45, price_cents: 6_000)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      emulate_color_scheme(scheme)
+      visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: "2026-09-08")}"
+      find("[data-slot][data-time='09:00']").click
+      fill_in "name", with: "Ana Paula Ribeiro"
+      fill_in "phone", with: "11988771234"
+
+      click_button "Confirmar 09:00"
+
+      expect(page).to have_text("Horário confirmado")
+      expect(contrast_ratio("[data-when]")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(page).to fit_the_phone_width
+    end
+
+    it "keeps the race screen readable in #{scheme}" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      emulate_color_scheme(scheme)
+      visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: "2026-09-08")}"
+      find("[data-slot][data-time='09:45']").click
+      fill_in "name", with: "Ana"
+      fill_in "phone", with: "11988771234"
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
+
+      click_button "Confirmar 09:45"
+
+      expect(contrast_ratio("[data-alert]")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(page).to fit_the_phone_width
+    end
+  end
+
+  it "degrades to no free slot when the race empties the day" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant, display_name: "Mary")
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "09:45")
+
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: "2026-09-08")}"
+    find("[data-slot][data-time='09:00']").click
+    fill_in "name", with: "Ana"
+    fill_in "phone", with: "11988771234"
+    create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: Time.zone.local(2026, 9, 8, 9, 0))
+
+    click_button "Confirmar 09:00"
+
+    expect(page).to have_css("[data-confirm-bar][disabled]")
+  end
 end

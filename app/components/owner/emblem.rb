@@ -7,7 +7,8 @@ class Components::Owner::Emblem < Components::Base
     address: "h-11 w-11 rounded-[13px] text-[19px]",
     row: "h-6.5 w-6.5 rounded-lg text-xs",
     showcase: "h-14 w-14 rounded-[16px] text-[24px] leading-[normal]",
-    login: "h-16 w-16 rounded-[18px] text-[28px] leading-[normal]"
+    login: "h-16 w-16 rounded-[18px] text-[28px] leading-[normal]",
+    client: "h-10 w-10 rounded-[10px] text-base"
   }.freeze
   TONES = {
     accent: "bg-brand-accent text-on-brand-accent",

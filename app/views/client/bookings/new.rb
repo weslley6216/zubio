@@ -5,6 +5,7 @@ class Views::Client::Bookings::New < Views::Base
   WEEKDAY_ABBR = %w[DOM SEG TER QUA QUI SEX SÁB].freeze
   WEEKDAY_NAMES = %w[Domingo Segunda Terça Quarta Quinta Sexta Sábado].freeze
   MONTH_ABBR = %w[jan fev mar abr mai jun jul ago set out nov dez].freeze
+  MONTH_NAMES = %w[janeiro fevereiro março abril maio junho julho agosto setembro outubro novembro dezembro].freeze
 
   BACK_LABEL = "Voltar".freeze
   SERVICE_STEP = "Serviço".freeze
@@ -138,7 +139,7 @@ class Views::Client::Bookings::New < Views::Base
   end
 
   def render_published
-    form_with(url: client_service_booking_path(@service), method: :post, class: "contents", data: { turbo_frame: "_top", controller: "slot-selector" }) do
+    form_with(url: client_service_booking_path(@service), method: :post, class: "contents", data: { turbo: false, controller: "slot-selector" }) do
       main(class: MAIN_CLASS) do
         render_service_step
         render_schedule_steps
@@ -178,7 +179,7 @@ class Views::Client::Bookings::New < Views::Base
     selected = date == @selected_day
     a(href: new_client_service_booking_path(@service, day: date.iso8601),
       class: [ DAY_BASE_CLASS, selected ? DAY_SELECTED_CLASS : DAY_FREE_CLASS ],
-      data: { day: date.iso8601, day_selector_target: selected ? "selected" : nil },
+      data: { day: date.iso8601, day_selector_target: selected ? "selected" : nil, turbo: true },
       aria_current: selected ? "date" : nil) do
       span(class: [ DAY_WEEKDAY_CLASS, (DAY_WEEKDAY_FREE_CLASS unless selected) ]) { WEEKDAY_ABBR[date.wday] }
       span(class: DAY_NUMBER_CLASS) { date.strftime("%d") }
