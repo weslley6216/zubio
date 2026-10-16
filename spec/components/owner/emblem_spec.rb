@@ -49,6 +49,15 @@ RSpec.describe Components::Owner::Emblem, type: :component do
     expect(medium).not_to include("leading-[normal]")
   end
 
+  it "gives the login size the entry screen's square, initial, and normal line height" do
+    login = described_class.new(tenant: tenant, branding: branding, size: :login).call
+
+    expect(login).to include("h-16 w-16")
+    expect(login).to include("rounded-[18px]")
+    expect(login).to include("text-[28px]")
+    expect(login).to include("leading-[normal]")
+  end
+
   it "paints the initial with the brand accent tone by default" do
     html = described_class.new(tenant: tenant, branding: branding, size: :medium).call
 
