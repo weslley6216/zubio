@@ -31,7 +31,9 @@ class Client::BookingsController < Client::BaseController
 
   private
 
-  def current_professional = ActsAsTenant.current_tenant.professionals.active.first
+  def current_professional
+    @current_professional ||= ActsAsTenant.current_tenant.professionals.active.first
+  end
 
   def render_race(service, professional, starts_at)
     day = starts_at.to_date
