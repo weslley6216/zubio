@@ -54,8 +54,52 @@ RSpec.describe "Owner session", type: :request do
       get new_owner_session_path
 
       expect(response.body).to include(branding.stylesheet_digest)
+      expect(response.body).to include(tenant.name)
       expect(response.body).not_to include(other_branding.stylesheet_digest)
       expect(response.body).not_to include("Barbearia do Zé")
+    end
+
+    it "renders the brand mark, the panel title and the establishment name" do
+      mary = create(:tenant, name: "Mary Sombracelhas", subdomain: "mary-sombracelhas")
+      create(:branding, tenant: mary, brand_600: "#8E4B6B")
+      host! "mary-sombracelhas.zubio.com.br"
+
+      get new_owner_session_path
+
+      expect(response.body).to include("data-brand-initial")
+      expect(response.body).to include(">M<")
+      expect(response.body).to include("Entrar no painel")
+      expect(response.body).to include("Mary Sombracelhas")
+    end
+
+    it "shows the logo in place of the initial when a logo is attached" do
+      create(:branding, :with_logo, tenant: tenant)
+
+      get new_owner_session_path
+
+      expect(response.body).to include("<img")
+      expect(response.body).not_to include("data-brand-initial")
+    end
+
+    it "keeps the password masked and the reveal button hidden without JavaScript" do
+      get new_owner_session_path
+
+      document = Nokogiri::HTML5(response.body)
+      password_field = document.at_css("input[type='password']")
+      toggle_button = document.at_css("button[data-password-visibility-target='toggle']")
+
+      expect(password_field).not_to be_nil
+      expect(toggle_button.has_attribute?("hidden")).to be(true)
+    end
+
+    it "links out to the platform login form for someone on the wrong establishment" do
+      get new_owner_session_path
+
+      document = Nokogiri::HTML5(response.body)
+      link = document.at_css("a[href='#{new_login_link_url(host: Tenant::PLATFORM_HOST)}']")
+
+      expect(response.body).to include("Não é este estabelecimento?")
+      expect(link.text).to eq("zubio.com.br")
     end
   end
 

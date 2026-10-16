@@ -5,7 +5,9 @@ class Owner::SessionsController < ApplicationController
     with: -> { redirect_to new_owner_session_path, alert: "Muitas tentativas. Tente de novo em alguns minutos." }
 
   def new
-    render Views::Owner::Sessions::New.new(branding: current_branding, email: params[:email])
+    render Views::Owner::Sessions::New.new(
+      tenant: ActsAsTenant.current_tenant, branding: current_branding, email: params[:email]
+    )
   end
 
   def create
@@ -15,8 +17,9 @@ class Owner::SessionsController < ApplicationController
       start_owner_session(user)
     else
       flash.now[:alert] = "E-mail ou senha inválidos."
-      render Views::Owner::Sessions::New.new(branding: current_branding, email: params[:email]),
-        status: :unprocessable_entity
+      render Views::Owner::Sessions::New.new(
+        tenant: ActsAsTenant.current_tenant, branding: current_branding, email: params[:email]
+      ), status: :unprocessable_entity
     end
   end
 
