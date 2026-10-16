@@ -64,6 +64,17 @@ RSpec.describe Components::Owner::BrandQuestion::Name, type: :component do
     expect(counter["class"]).to include("text-ink-subtle")
   end
 
+  it "keeps the brand border and drops the outer focus ring on the name field" do
+    tenant = Tenant.new(name: "Barbearia do Zé")
+    branding = ActsAsTenant.with_tenant(tenant) { Branding.new(tenant: tenant, brand_600: "#2C6CB0") }
+
+    html = described_class.new(tenant: tenant, branding: branding, deriving: true).call
+
+    field = Nokogiri::HTML5.fragment(html).at_css("#tenant_name")
+    expect(field["class"].split).to include("border-brand-600")
+    expect(field["class"].split).to include("focus-visible:outline-none")
+  end
+
   it "gives the address card a white background and the section-label eyebrow" do
     document = Nokogiri::HTML5.fragment(described_class.new(tenant: tenant, branding: build(:branding, tenant: tenant)).call)
 
