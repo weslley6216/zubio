@@ -1,7 +1,11 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "shown", "hidden"]
+  static targets = ["input", "shown", "hidden", "toggle"]
+
+  connect() {
+    if (this.hasToggleTarget) this.toggleTarget.hidden = false
+  }
 
   toggle() {
     const visible = this.inputTarget.type === "text"
