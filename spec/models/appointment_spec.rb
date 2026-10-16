@@ -339,6 +339,22 @@ RSpec.describe Appointment, type: :model do
       expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
     end
 
+    it "fails with :invalid_client for a blank name even when the phone belongs to an existing client" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      create(:client, tenant: tenant, name: "Ana", phone: "11988771234")
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      result = ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: nine, client_name: "", client_phone: "11988771234") }
+
+      expect(result.reason).to eq(:invalid_client)
+      expect(result.record.errors[:name]).to be_present
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
     it "fails with :taken when the slot was booked first, creating no second appointment" do
       travel_to Time.zone.local(2026, 9, 8, 7, 0)
       tenant = create(:tenant)

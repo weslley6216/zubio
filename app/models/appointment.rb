@@ -21,7 +21,7 @@ class Appointment < ApplicationRecord
     client = nil
     appointment = transaction do
       client = Client.register(name: client_name, phone: client_phone)
-      raise ActiveRecord::Rollback unless client.persisted?
+      raise ActiveRecord::Rollback if client.errors.any?
 
       create!(professional: professional, service: service, client: client, starts_at: starts_at)
     end
