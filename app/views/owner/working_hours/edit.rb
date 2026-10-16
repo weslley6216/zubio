@@ -1,6 +1,4 @@
 class Views::Owner::WorkingHours::Edit < Views::Base
-  include Components::Form::Styles
-
   TITLE = "Horários da semana".freeze
   SUBTITLE = "Vale para toda semana. Feriado e folga você marca em Folgas e feriados.".freeze
   INVITE = "Você ainda não declarou seu expediente. Ligue os dias em que atende.".freeze
@@ -18,28 +16,28 @@ class Views::Owner::WorkingHours::Edit < Views::Base
   JOINER = Components::Owner::WorkingHours::Fields::RANGE_JOINER
 
   DAY_CLASS = "group grid min-w-0 gap-2.5 rounded-xl border bg-surface px-4 py-3.5".freeze
-  NAME_CLASS = "grow text-sm font-extrabold text-ink bg-surface".freeze
+  NAME_CLASS = "grow text-[14px] font-extrabold leading-[normal] text-ink bg-surface".freeze
   TOGGLE_TRACK_CLASS = "relative inline-flex h-[26px] w-[46px] flex-none cursor-pointer items-center rounded-full bg-line p-[3px] group-has-checked:bg-brand-600".freeze
   TOGGLE_THUMB_CLASS = "h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgba(14,26,36,0.2)] transition-transform group-has-checked:translate-x-5".freeze
   FIELDS_CLASS = "hidden min-w-0 gap-2.5 group-has-checked:grid".freeze
   ROW_CLASS = "flex min-w-0 items-center gap-2".freeze
-  FIELD_CLASS = "min-h-11 min-w-0 grow rounded-lg px-3 text-[15px] font-bold tabular-nums text-ink".freeze
+  FIELD_CLASS = "min-h-11 min-w-0 grow rounded-lg px-3 text-[15px] leading-[normal] font-bold tabular-nums text-ink".freeze
   FIELD_BORDER = "border border-line-strong".freeze
   FIELD_GUILTY_BORDER = "border border-danger".freeze
-  JOINER_CLASS = "text-[13px] text-ink-muted".freeze
+  JOINER_CLASS = "text-[13px] leading-[normal] text-ink-muted".freeze
   SPACER_CLASS = "w-11 flex-none".freeze
   BREAK_CLASS = "grid min-w-0 gap-1.5".freeze
-  BREAK_LABEL_CLASS = "#{SECTION_LABEL} tracking-[0.06em] text-ink-muted".freeze
+  BREAK_LABEL_CLASS = "text-[11px] font-bold uppercase tracking-[0.06em] leading-[normal] text-ink-muted".freeze
   REMOVE_CLASS = "grid h-11 w-11 flex-none place-items-center rounded-lg border border-line bg-surface".freeze
-  ADD_CLASS = "hidden min-h-10 items-center gap-1.5 self-start rounded-lg border border-dashed border-brand-600 bg-surface px-3 text-[13px] font-bold text-brand-600".freeze
-  COPY_CLASS = "hidden min-h-10 items-center gap-1.5 self-start px-1 text-[13px] font-bold text-brand-600".freeze
+  ADD_CLASS = "hidden min-h-10 items-center gap-1.5 self-start justify-self-start rounded-lg border border-dashed border-brand-600 bg-surface px-3 text-[13px] leading-[normal] font-bold text-brand-600".freeze
+  COPY_CLASS = "hidden min-h-10 items-center gap-1.5 self-start justify-self-start px-1 text-[13px] leading-[normal] font-bold text-brand-600".freeze
   GROUP_CLASS = "w-full min-w-0 rounded-xl border border-line bg-surface".freeze
   SUMMARY_CLASS = "flex min-h-11 cursor-pointer list-none items-center gap-3 px-4 py-3.5".freeze
-  SUMMARY_NAMES_CLASS = "grow text-sm font-bold text-ink-subtle".freeze
-  SUMMARY_SUFFIX_CLASS = "flex-none whitespace-nowrap text-xs font-semibold text-ink-subtle".freeze
+  SUMMARY_NAMES_CLASS = "grow text-[14px] font-bold leading-[normal] text-ink-subtle".freeze
+  SUMMARY_SUFFIX_CLASS = "flex-none whitespace-nowrap text-[12px] font-semibold leading-[normal] text-ink-subtle".freeze
   GROUP_BODY_CLASS = "grid min-w-0 gap-2.5 px-4 pb-4".freeze
-  SUBMIT_CLASS = "h-12 w-full cursor-pointer rounded-[10px] bg-brand-600 text-[15px] font-extrabold text-on-brand".freeze
-  NOTE_CLASS = "text-center text-xs text-ink-muted".freeze
+  SUBMIT_CLASS = "h-12 w-full cursor-pointer rounded-[10px] bg-brand-600 text-[15px] leading-[normal] font-extrabold text-on-brand".freeze
+  NOTE_CLASS = "text-center text-[12px] leading-[normal] text-ink-muted".freeze
   INVITE_CLASS = "mt-3 rounded-lg border border-line bg-surface-2 p-3 text-sm text-ink-muted".freeze
 
   def initialize(tenant:, branding:, schedule:, conflicts:, current_section:, subtitle:)
