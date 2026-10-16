@@ -15,6 +15,7 @@ RSpec.describe "Owner working hours", type: :system, js: true do
       expect(page).to have_css("[data-day='2'] input[name='working_hours[2][active]'][checked]", visible: :all)
       expect(contrast_ratio("[data-day='2'] label")).to be >= Branding::ColorScale::MIN_CONTRAST
       expect(contrast_ratio("[data-day='3'] label")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(page).to fit_the_phone_width
     end
   end
 
