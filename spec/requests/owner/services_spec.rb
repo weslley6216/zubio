@@ -17,28 +17,18 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(back.text).to include(Components::Owner::SettingsBackLink::LABEL)
     end
 
-    it "lists every service of the establishment with its duration and its price" do
-      create(:service, tenant: tenant, name: "Corte feminino", duration_minutes: 45, price_cents: 9_000)
-      create(:service, tenant: tenant, name: "Coloração completa", duration_minutes: 120, price_cents: 25_000)
+    it "lists every service with its duration in minutes beside a clock and its price" do
+      create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45, price_cents: 6_000)
+      create(:service, tenant: tenant, name: "Design com henna", duration_minutes: 60, price_cents: 8_500)
+      create(:service, tenant: tenant, name: "Micropigmentação", duration_minutes: 120, price_cents: 45_000)
       sign_in_owner(owner)
 
       get owner_services_path
 
       document = Nokogiri::HTML5(response.body)
-      expect(response.body).to include("Corte feminino")
-      expect(document.css("[data-catalog] span").map(&:text)).to include("45 min", "R$ 90,00")
-      expect(response.body).to include("Coloração completa")
-      expect(document.css("[data-catalog] span").map(&:text)).to include("2 h", "R$ 250,00")
-    end
-
-    it "renders a sixty-minute service as 1 h and its price in full" do
-      create(:service, tenant: tenant, name: "Corte", duration_minutes: 60, price_cents: 8_000)
-      sign_in_owner(owner)
-
-      get owner_services_path
-
-      document = Nokogiri::HTML5(response.body)
-      expect(document.css("[data-catalog] span").map(&:text)).to include("1 h", "R$ 80,00")
+      expect(document.css("[data-catalog] span").map(&:text)).to include("45 min", "60 min", "120 min")
+      expect(document.css("[data-catalog] [data-price]").map(&:text)).to contain_exactly("R$ 60,00", "R$ 85,00", "R$ 450,00")
+      expect(document.css("[data-catalog] li").map { |row| row.css(%(path[d="M12 7v5l3 2"])).size }).to eq([ 1, 1, 1 ])
     end
 
     it "shows the description of a service that has one" do
@@ -81,6 +71,29 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response.body).not_to include(Views::Owner::Services::Index::DISABLED_LABEL)
     end
 
+    it "pills the price of an active service in the light pair of the brand" do
+      create(:service, tenant: tenant, name: "Design de sobrancelhas", price_cents: 6_000)
+      sign_in_owner(owner)
+
+      get owner_services_path
+
+      price = Nokogiri::HTML5(response.body).at_css("[data-catalog] [data-price]")
+      expect(price["class"]).to eq(Views::Owner::Services::Index::PRICE_CLASS)
+      expect(price.text).to eq("R$ 60,00")
+    end
+
+    it "greys out the price of a disabled service, even one whose price is hidden from clients" do
+      create(:service, :price_hidden, tenant: tenant, name: "Micropigmentação", price_cents: 45_000, active: false)
+      sign_in_owner(owner)
+
+      get owner_services_path
+
+      price = Nokogiri::HTML5(response.body).at_css("[data-catalog] [data-price]")
+      expect(price["class"]).to eq(Views::Owner::Services::Index::DISABLED_PRICE_CLASS)
+      expect(price.text).to eq("R$ 450,00")
+      expect(response.body).to include(Views::Owner::Services::Index::DISABLED_LABEL, Views::Owner::Services::Index::HIDDEN_PRICE_LABEL)
+    end
+
     it "invites the first registration when there is no service yet" do
       sign_in_owner(owner)
 
@@ -102,13 +115,17 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response.body).not_to include(Views::Owner::Services::Index::EMPTY_TITLE)
     end
 
-    it "offers the registration from the heading once the catalog has a service" do
+    it "offers the registration beside the title once the catalog has a service" do
       create(:service, tenant: tenant, name: "Corte feminino")
       sign_in_owner(owner)
 
       get owner_services_path
 
-      expect(response.body).to include(%(<a href="#{new_owner_service_path}" class="#{Views::Owner::Services::Index::ACTION_CLASS}">#{Views::Owner::Services::Index::NEW_LABEL}</a>))
+      action = Nokogiri::HTML5(response.body).at_css("h1 + a[href='#{new_owner_service_path}']")
+      expect(action["class"]).to eq(Views::Owner::Services::Index::ACTION_CLASS)
+      expect(action["aria-label"]).to eq(Views::Owner::Services::Index::NEW_ACCESSIBLE_LABEL)
+      expect(action.text.strip).to eq(Views::Owner::Services::Index::NEW_LABEL)
+      expect(action.at_css(%(svg path[d="M12 5v14M5 12h14"]))).to be_present
       expect(response.body.scan(%(href="#{new_owner_service_path}")).size).to eq(1)
       expect(response.body).not_to include(Views::Owner::Services::Index::FIRST_LABEL)
     end
@@ -120,7 +137,7 @@ RSpec.describe "Owner services catalog", type: :request do
 
       expect(response.body).to include(%(<a href="#{new_owner_service_path}" class="#{Views::Owner::Services::Index::ACTION_CLASS}">#{Views::Owner::Services::Index::FIRST_LABEL}</a>))
       expect(response.body.scan(%(href="#{new_owner_service_path}")).size).to eq(1)
-      expect(response.body).not_to include(Views::Owner::Services::Index::NEW_LABEL)
+      expect(response.body).not_to include(%(aria-label="#{Views::Owner::Services::Index::NEW_ACCESSIBLE_LABEL}"))
     end
 
     it "opens the edit form from the name of every service" do
