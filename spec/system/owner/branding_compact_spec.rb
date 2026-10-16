@@ -20,15 +20,22 @@ RSpec.describe "Owner branding on one screen", type: :system, js: true do
     )
   end
 
-  it "keeps the brand row inside the narrowest phone" do
+  it "keeps every brand question inside the narrowest phone" do
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
     create(:branding, tenant: tenant, brand_600: "#4F46E5")
     emulate_phone(width: 320, height: 800)
     sign_in_owner(create(:user, tenant: tenant))
 
-    visit "http://estudio-aurora.zubio.com.br#{edit_owner_brand_colors_path}"
+    scroll_width = [ edit_owner_brand_colors_path, edit_owner_brand_name_path, edit_owner_brand_logo_path ].to_h do |path|
+      visit "http://estudio-aurora.zubio.com.br#{path}"
+      [ path, page.evaluate_script("document.documentElement.scrollWidth") ]
+    end
 
-    expect(page.evaluate_script("document.documentElement.scrollWidth")).to eq(320)
+    expect(scroll_width).to eq(
+      edit_owner_brand_colors_path => 320,
+      edit_owner_brand_name_path => 320,
+      edit_owner_brand_logo_path => 320
+    )
   end
 
   { "light" => 600, "dark" => 400 }.each do |scheme, step|
