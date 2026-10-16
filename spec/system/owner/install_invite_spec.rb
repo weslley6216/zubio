@@ -15,6 +15,7 @@ RSpec.describe "Owner install invite", type: :system, js: true do
 
     expect(page).to have_button(Components::Owner::InstallInvite::INSTALL_LABEL)
     expect(page).to have_css("[data-controller='pwa-install']:not([hidden])")
+    expect(page).to fit_the_phone_width
   end
 
   it "fires the native prompt when the owner taps install" do
@@ -74,6 +75,7 @@ RSpec.describe "Owner install invite", type: :system, js: true do
 
     click_on Components::Owner::InstallInvite::DISMISS_LABEL
     visit "http://#{tenant.subdomain}.zubio.com.br#{owner_settings_path}"
+    expect(page).to fit_the_phone_width
     visit dashboard_url
     fire_before_install_prompt
     page.evaluate_async_script("setTimeout(arguments[0], 0)")
