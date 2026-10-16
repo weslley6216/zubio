@@ -16,7 +16,7 @@ class Components::Owner::Menu < Components::Base
   end
 
   def view_template
-    details(class: "group relative sm:hidden") do
+    details(class: "group relative sm:hidden", data: { owner_menu: true }) do
       render_summary
       div(class: "absolute right-0 top-full z-30 mt-2 w-64 divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface shadow-lg") do
         @items.each { |label, href, current| render_item(label, href, current) }

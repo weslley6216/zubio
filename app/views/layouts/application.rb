@@ -11,6 +11,7 @@ class Views::Layouts::Application < Views::Base
 
   SURFACE_CLASS = "bg-canvas text-ink [color-scheme:light_dark]".freeze
   FLASH_CLASS = "mx-auto grid w-full max-w-6xl gap-2 px-6 pt-4".freeze
+  BODY_CLASS = "min-h-dvh font-sans [&:has([data-owner-menu][open])>:not(header)]:opacity-45".freeze
 
   def initialize(title:, branding:, page_stylesheet: nil, view_transition: false, social: nil, flash_in_content: false)
     @title = title
@@ -25,7 +26,7 @@ class Views::Layouts::Application < Views::Base
     doctype
     html(lang: "pt-BR", class: SURFACE_CLASS) do
       head { render_head }
-      body(class: "min-h-dvh font-sans") do
+      body(class: BODY_CLASS) do
         render Components::FlashBanner.new(container_class: FLASH_CLASS) unless @flash_in_content
         yield if block
       end
