@@ -19,16 +19,17 @@ class Views::Owner::Services::Index < Views::Base
   EMPTY_TITLE_CLASS = "text-lg font-bold text-ink".freeze
   EMPTY_BODY_CLASS = "text-sm text-ink-muted".freeze
 
-  def initialize(tenant:, branding:, services:, current_section:)
+  def initialize(tenant:, branding:, services:, current_section:, subtitle:)
     @tenant = tenant
     @branding = branding
     @services = services
     @current_section = current_section
+    @subtitle = subtitle
   end
 
   def view_template
     render Views::Layouts::Application.new(title: "#{TITLE} · #{@tenant.name}", branding: @branding) do
-      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
+      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
       main(class: PAGE_CLASS) do
         render Components::Owner::SettingsBackLink.new
         render_heading

@@ -8,10 +8,11 @@ class Components::Owner::Header < Components::Base
   CURRENT_CLASS = "border-secondary-mark text-brand-ink".freeze
   RESTING_CLASS = "border-transparent text-ink-muted hover:text-ink".freeze
 
-  def initialize(tenant:, branding:, current_section:)
+  def initialize(tenant:, branding:, current_section:, subtitle: PANEL_SUBTITLE)
     @tenant = tenant
     @branding = branding
     @current_section = current_section
+    @subtitle = subtitle
   end
 
   def view_template
@@ -39,7 +40,7 @@ class Components::Owner::Header < Components::Base
       render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :medium)
       span(class: "grid min-w-0") do
         span(class: "truncate") { @tenant.name }
-        span(class: "text-[11px] font-normal text-ink-muted", data: { panel_subtitle: true }) { PANEL_SUBTITLE }
+        span(class: "min-w-0 truncate text-[11px] font-normal text-ink-muted", data: { panel_subtitle: true }) { @subtitle }
       end
     end
   end

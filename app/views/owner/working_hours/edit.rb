@@ -13,17 +13,18 @@ class Views::Owner::WorkingHours::Edit < Views::Base
   TOGGLE_LABEL_CLASS = "relative inline-flex h-11 w-[72px] flex-none cursor-pointer items-center justify-start rounded-full bg-line p-1 transition-colors group-has-checked:justify-end group-has-checked:bg-brand-600".freeze
   TOGGLE_THUMB_CLASS = "h-9 w-9 rounded-full bg-white shadow-sm".freeze
 
-  def initialize(tenant:, branding:, schedule:, conflicts:, current_section:)
+  def initialize(tenant:, branding:, schedule:, conflicts:, current_section:, subtitle:)
     @tenant = tenant
     @branding = branding
     @schedule = schedule
     @conflicts = conflicts
+    @subtitle = subtitle
     @current_section = current_section
   end
 
   def view_template
     render Views::Layouts::Application.new(title: "#{TITLE} · #{@tenant.name}", branding: @branding) do
-      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
+      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
       main(class: Components::Owner::FormCard::PAGE_CLASS) do
         render_heading
         render Components::Owner::OutsideHoursNotice.new(conflicts: @conflicts)

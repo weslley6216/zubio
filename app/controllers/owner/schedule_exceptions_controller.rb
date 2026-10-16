@@ -1,5 +1,6 @@
 class Owner::ScheduleExceptionsController < Owner::BaseController
   self.panel_section = :settings
+  self.panel_subtitle = "Horários · Exceções"
 
   SAVED = "Folga registrada.".freeze
   REFUSED = "Não foi possível registrar. Confira os campos destacados.".freeze
@@ -43,7 +44,8 @@ class Owner::ScheduleExceptionsController < Owner::BaseController
       exceptions: exceptions.upcoming.to_a,
       exception: exception,
       conflicts: conflicts,
-      current_section: panel_section
+      current_section: panel_section,
+      subtitle: panel_subtitle
     )
   end
 

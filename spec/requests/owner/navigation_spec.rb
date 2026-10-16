@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Owner panel navigation", type: :request do
   let(:tenant) { create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora") }
-  let(:owner) { create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123") }
+  let(:owner) { create(:user, :with_professional, tenant: tenant, name: "Ana Lima", email: "ana@example.com", password: "s3cr3t123") }
 
   it "offers settings from the panel, in the band and in the menu, with the identity as the current page" do
     create(:branding, tenant: tenant)
@@ -82,6 +82,24 @@ RSpec.describe "Owner panel navigation", type: :request do
     expect(response.body).not_to include(Components::Owner::Header::SETTINGS_LABEL)
     expect(response.body).not_to include(Components::Owner::Menu::LABEL)
     expect(response.body).not_to include(%(aria-current="page"))
+  end
+
+  it "names the current section under the establishment name" do
+    create(:branding, tenant: tenant)
+    sign_in_owner(owner)
+
+    expectations = {
+      owner_dashboard_path => "Painel",
+      owner_services_path => "Serviços",
+      edit_owner_working_hours_path => "Horários",
+      owner_schedule_exceptions_path => "Horários · Exceções",
+      edit_owner_brand_name_path => "Minha marca"
+    }
+
+    expectations.each do |path, subtitle|
+      get path
+      expect(Nokogiri::HTML5(response.body).at_css("[data-panel-subtitle]").text).to eq(subtitle)
+    end
   end
 
   it "names the establishment in the host on the navigation and never another one" do

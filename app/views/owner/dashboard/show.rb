@@ -2,16 +2,17 @@ class Views::Owner::Dashboard::Show < Views::Base
   SHARE_LABEL = "Seu link".freeze
   SHARE_HELPER = "Mande esse endereço para suas clientes. É por ele que elas escolhem o horário.".freeze
 
-  def initialize(tenant:, branding:, owner:, current_section:)
+  def initialize(tenant:, branding:, owner:, current_section:, subtitle:)
     @tenant = tenant
     @branding = branding
     @owner = owner
     @current_section = current_section
+    @subtitle = subtitle
   end
 
   def view_template
     render Views::Layouts::Application.new(title: "Painel · #{@tenant.name}", branding: @branding) do
-      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
+      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
       div(class: "mx-auto grid w-full max-w-6xl gap-6 px-6 py-10") do
         render_greeting
         render_share_link

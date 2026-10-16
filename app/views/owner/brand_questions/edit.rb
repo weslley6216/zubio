@@ -3,10 +3,11 @@ class Views::Owner::BrandQuestions::Edit < Views::Base
 
   SUBMIT_LABEL = "Salvar".freeze
 
-  def initialize(tenant:, branding:, current_section:, body:, url:, page_stylesheet:)
+  def initialize(tenant:, branding:, current_section:, subtitle:, body:, url:, page_stylesheet:)
     @tenant = tenant
     @branding = branding
     @current_section = current_section
+    @subtitle = subtitle
     @body = body
     @url = url
     @page_stylesheet = page_stylesheet
@@ -14,7 +15,7 @@ class Views::Owner::BrandQuestions::Edit < Views::Base
 
   def view_template
     render Views::Layouts::Application.new(title: "Marca · #{@tenant.name}", branding: @branding, page_stylesheet: @page_stylesheet) do
-      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section)
+      render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
       main(class: Components::Owner::FormCard::PAGE_CLASS) do
         render Components::Owner::SettingsBackLink.new
         section(aria_labelledby: @body::HEADING_ID, data: preview_data, class: Components::Owner::FormCard::CARD_CLASS) do

@@ -3,6 +3,7 @@ class Owner::WorkingHoursController < Owner::BaseController
   SAVED = "Horários atualizados.".freeze
 
   self.panel_section = :settings
+  self.panel_subtitle = "Horários"
 
   def edit
     render screen(WeeklySchedule.from_professional(current_owner.professional))
@@ -27,7 +28,8 @@ class Owner::WorkingHoursController < Owner::BaseController
       branding: current_branding,
       schedule: schedule,
       conflicts: conflicts,
-      current_section: panel_section
+      current_section: panel_section,
+      subtitle: panel_subtitle
     )
   end
 

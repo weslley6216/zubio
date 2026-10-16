@@ -3,6 +3,7 @@ class Owner::BrandQuestionsController < Owner::BaseController
   NOTICE = "Marca atualizada.".freeze
 
   self.panel_section = :settings
+  self.panel_subtitle = "Minha marca"
 
   class_attribute :question_body, instance_writer: false
 
@@ -27,6 +28,7 @@ class Owner::BrandQuestionsController < Owner::BaseController
       tenant: ActsAsTenant.current_tenant,
       branding: branding,
       current_section: panel_section,
+      subtitle: panel_subtitle,
       body: question_body,
       url: submit_path,
       page_stylesheet: page_stylesheet
