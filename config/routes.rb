@@ -41,7 +41,7 @@ Rails.application.routes.draw do
     root to: "client/establishments#show", as: :establishment
     scope module: :client, as: :client do
       resources :services, only: [] do
-        resource :booking, only: :new
+        resource :booking, only: %i[new create]
       end
     end
   end
