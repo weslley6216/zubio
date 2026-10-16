@@ -14,10 +14,11 @@ class Views::Owner::Sessions::New < Views::Base
   CARD_CLASS = "flex flex-col gap-[14px] rounded-2xl border border-line bg-surface p-5".freeze
   FIELD_CLASS = "flex flex-col gap-1.5".freeze
   LABEL_CLASS = "text-[11px] leading-[normal] font-bold uppercase tracking-[0.06em] text-ink-muted".freeze
-  EMAIL_CONTROL_CLASS = "min-h-12 w-full rounded-[10px] border border-line-strong bg-surface px-3.5 text-[15px] leading-[normal] font-bold tabular-nums text-ink".freeze
-  PASSWORD_BOX_CLASS = "flex min-h-12 items-center gap-2 rounded-[10px] border-2 border-brand-600 bg-surface pl-3.5 pr-1.5".freeze
+  EMAIL_CONTROL_CLASS = "min-h-[50px] w-full rounded-[10px] border border-line-strong bg-surface px-3.5 text-[15px] leading-[normal] font-bold tabular-nums text-ink".freeze
+  PASSWORD_BOX_CLASS = "flex min-h-[52px] items-center gap-2 rounded-[10px] border-2 border-brand-600 bg-surface pl-3.5 pr-1.5".freeze
   PASSWORD_CONTROL_CLASS = "w-full border-0 bg-transparent p-0 text-[18px] leading-[normal] tracking-[0.2em] text-ink focus:outline-none".freeze
-  TOGGLE_CLASS = "min-h-9 flex-none cursor-pointer border-0 bg-transparent px-2.5 text-[13px] leading-[normal] font-bold text-brand-600".freeze
+  TOGGLE_CLASS = "flex min-h-9 flex-none cursor-pointer border-0 bg-transparent text-[13px] leading-[normal] font-bold text-brand-600".freeze
+  TOGGLE_LABEL_CLASS = "flex items-center px-2.5".freeze
   SUBMIT_CLASS = "flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-[15px] leading-[normal] font-extrabold text-on-brand".freeze
   FORGOT_CLASS = "self-center p-1.5 text-[14px] leading-[normal] font-bold text-brand-600".freeze
   FOOTER_CLASS = "px-6 pb-7 text-center text-[13px] leading-[1.55] text-ink-muted".freeze
@@ -79,8 +80,8 @@ class Views::Owner::Sessions::New < Views::Base
           data: { "password-visibility-target": "input" }
         button(type: "button", class: TOGGLE_CLASS, hidden: true,
           data: { "password-visibility-target": "toggle", action: "password-visibility#toggle" }) do
-          span(data: { "password-visibility-target": "hidden" }) { "Mostrar" }
-          span(data: { "password-visibility-target": "shown" }, hidden: true) { "Ocultar" }
+          span(class: TOGGLE_LABEL_CLASS, data: { "password-visibility-target": "hidden" }) { "Mostrar" }
+          span(class: TOGGLE_LABEL_CLASS, data: { "password-visibility-target": "shown" }, hidden: true) { "Ocultar" }
         end
       end
     end
