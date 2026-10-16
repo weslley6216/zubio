@@ -127,7 +127,7 @@ class Views::Client::Bookings::Receipt < Views::Base
         span(class: LINK_TITLE_CLASS) { KEEP_LINK_TITLE }
       end
       p(class: LINK_BODY_CLASS) { KEEP_LINK_BODY }
-      div(class: LINK_BOX_CLASS) { cancel_url }
+      div(class: LINK_BOX_CLASS) { cancel_display }
       div(class: LINK_ACTIONS_CLASS) do
         render_copy_button
         render_save_button
@@ -143,7 +143,11 @@ class Views::Client::Bookings::Receipt < Views::Base
     end
   end
 
-  def cancel_url = "#{@tenant.canonical_host}/a/#{@appointment.cancel_token}"
+  def cancel_path = "/a/#{@appointment.cancel_token}"
+
+  def cancel_display = "#{@tenant.canonical_host}#{cancel_path}"
+
+  def cancel_url = "https://#{cancel_display}"
 
   def render_copy_button
     button(type: "button", class: COPY_BUTTON_CLASS,
@@ -180,7 +184,7 @@ class Views::Client::Bookings::Receipt < Views::Base
   def render_actions
     div(class: ACTIONS_CLASS) do
       a(href: new_client_service_booking_path(@service), class: REBOOK_LINK_CLASS) { REBOOK_LABEL }
-      a(href: "/a/#{@appointment.cancel_token}", class: CANCEL_LINK_CLASS, data: { cancel_link: true }) { CANCEL_LABEL }
+      a(href: cancel_path, class: CANCEL_LINK_CLASS, data: { cancel_link: true }) { CANCEL_LABEL }
     end
   end
 end
