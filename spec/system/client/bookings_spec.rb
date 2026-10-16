@@ -249,5 +249,7 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
     click_button "Confirmar 09:00"
 
     expect(page).to have_css("[data-confirm-bar][disabled]")
+    expect(page).to have_text("Não sobrou nenhum horário livre neste dia.")
+    expect(page).to have_link("Escolher outro dia", href: new_client_service_booking_path(service))
   end
 end

@@ -5,9 +5,11 @@ class Views::Client::Bookings::Race < Views::Base
   DAY_LABEL = "Dia".freeze
   LEFTOVERS_LABEL = "Horários que sobraram".freeze
   NEAREST_HINT = "Já deixamos o mais perto marcado.".freeze
+  NO_SLOTS_HINT = "Não sobrou nenhum horário livre neste dia.".freeze
   NAME_LABEL = "Nome".freeze
   PHONE_LABEL = "Celular".freeze
   CONFIRM_LABEL = "Confirmar".freeze
+  ANOTHER_DAY_LABEL = "Escolher outro dia".freeze
 
   PAGE_CLASS = "mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-surface-2 leading-[normal] text-ink".freeze
   HEADER_CLASS = "flex items-center gap-3 bg-brand-600 px-5 py-3.5 text-on-brand".freeze
@@ -30,8 +32,9 @@ class Views::Client::Bookings::Race < Views::Base
   SLOT_FREE_CLASS = "border border-line bg-surface aria-pressed:border-transparent aria-pressed:bg-brand-600 aria-pressed:text-on-brand aria-pressed:shadow-[0_2px_6px_color-mix(in_srgb,var(--brand-600)_20%,transparent)]".freeze
   SLOT_TAKEN_CLASS = "border border-dashed border-line-strong bg-surface-3 text-ink-subtle line-through".freeze
   HINT_CLASS = "text-[12px] text-ink-subtle".freeze
-  BAR_CLASS = "px-5 pb-[calc(24px+env(safe-area-inset-bottom,0px))] pt-1".freeze
+  BAR_CLASS = "flex flex-col gap-2.5 px-5 pb-[calc(24px+env(safe-area-inset-bottom,0px))] pt-1".freeze
   BUTTON_CLASS = "flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-[15px] font-extrabold text-on-brand disabled:bg-surface-3 disabled:text-ink-muted".freeze
+  ANOTHER_DAY_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-xl border border-line bg-surface text-[14px] font-bold text-ink-muted".freeze
 
   def initialize(tenant:, branding:, service:, professional:, selected_day:, slots:, taken_slots:, nearest:, client_name:, client_phone:, lost_time:)
     @tenant = tenant
@@ -48,7 +51,7 @@ class Views::Client::Bookings::Race < Views::Base
   end
 
   def view_template
-    render Views::Layouts::Application.new(title: "#{@tenant.name}", branding: @branding) do
+    render Views::Layouts::Application.new(title: @tenant.name, branding: @branding) do
       div(class: PAGE_CLASS) do
         render_header
         form_with(url: client_service_booking_path(@service), method: :post, class: "contents", data: { turbo: false, controller: "slot-selector" }) do
@@ -119,7 +122,7 @@ class Views::Client::Bookings::Race < Views::Base
       div(class: GRID_CLASS) do
         (@slots + @taken_slots).sort.each { |slot| @taken_slots.include?(slot) ? render_taken_slot(slot) : render_free_slot(slot) }
       end
-      span(class: HINT_CLASS) { NEAREST_HINT }
+      span(class: HINT_CLASS) { @nearest ? NEAREST_HINT : NO_SLOTS_HINT }
     end
   end
 
@@ -146,6 +149,7 @@ class Views::Client::Bookings::Race < Views::Base
       button(type: "submit", disabled: @nearest.nil?, class: BUTTON_CLASS, data: { confirm_bar: true, slot_selector_target: "submit" }) do
         @nearest ? "#{CONFIRM_LABEL} #{@nearest.strftime("%H:%M")}" : CONFIRM_LABEL
       end
+      a(href: new_client_service_booking_path(@service), class: ANOTHER_DAY_LINK_CLASS, data: { another_day: true }) { ANOTHER_DAY_LABEL } unless @nearest
     end
   end
 end
