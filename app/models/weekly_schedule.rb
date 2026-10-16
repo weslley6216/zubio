@@ -3,6 +3,7 @@ class WeeklySchedule
 
   DEFAULT_OPENS_AT = "09:00".freeze
   DEFAULT_CLOSES_AT = "18:00".freeze
+  PARAM_KEYS = %i[active opens_at closes_at break_starts_at break_ends_at].freeze
   INVERTED_MESSAGE = "O fim precisa ser depois do início. Nada foi salvo.".freeze
   INCOMPLETE_BREAK_MESSAGE = "Preencha o começo e o fim do intervalo. Nada foi salvo.".freeze
 
