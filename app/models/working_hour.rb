@@ -3,6 +3,9 @@ class WorkingHour < ApplicationRecord
 
   WEEKDAYS = (0..6).to_a.freeze
   WEEKDAY_NAMES = %w[Domingo Segunda-feira Terça-feira Quarta-feira Quinta-feira Sexta-feira Sábado].freeze
+  WEEKDAY_LABELS = WEEKDAY_NAMES.map { |name| name.sub("-feira", "") }.freeze
+  BREAK_INVERTED = :break_inverted
+  BREAK_OUT_OF_BOUNDS = :break_out_of_bounds
 
   belongs_to :professional
   acts_as_tenant :tenant
@@ -18,6 +21,17 @@ class WorkingHour < ApplicationRecord
     return [ [ opens_at, closes_at ] ] if break_starts_at.blank? || break_ends_at.blank?
 
     [ [ opens_at, break_starts_at ], [ break_ends_at, closes_at ] ]
+  end
+
+  def self.break_violation(opens_at, closes_at, break_starts_at, break_ends_at)
+    return if break_starts_at.blank? || break_ends_at.blank?
+
+    starts, ends, opening, closing = [ break_starts_at, break_ends_at, opens_at, closes_at ].map { |value| ActiveModel::Type::Time.new.cast(value) }
+    return if starts.nil? || ends.nil?
+    return BREAK_INVERTED if ends <= starts
+    return BREAK_OUT_OF_BOUNDS if opening.present? && closing.present? && (starts < opening || ends > closing)
+
+    nil
   end
 
   private

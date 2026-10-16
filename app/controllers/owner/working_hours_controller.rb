@@ -38,7 +38,7 @@ class Owner::WorkingHoursController < Owner::BaseController
   end
 
   def schedule_params
-    permitted = WorkingHour::WEEKDAYS.index_with { WeeklySchedule::DAY_PARAM_KEYS }.transform_keys(&:to_s)
+    permitted = WorkingHour::WEEKDAYS.index_with { WeeklySchedule::PARAM_KEYS }.transform_keys(&:to_s)
     params.fetch(:working_hours, {}).permit(permitted).to_h
   end
 end

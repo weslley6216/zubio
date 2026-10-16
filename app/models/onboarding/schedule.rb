@@ -14,7 +14,7 @@ class Onboarding::Schedule
 
   validate :at_least_one_weekday
   validate :hours_follow_working_hour_rules
-  validate :break_ends_after_it_starts
+  validate :break_fits_the_working_day
 
   def marked?(weekday) = Array(weekdays).include?(weekday)
 
@@ -39,10 +39,7 @@ class Onboarding::Schedule
     end
   end
 
-  def break_ends_after_it_starts
-    starts, ends = [ break_starts_at, break_ends_at ].map { |value| ActiveModel::Type::Time.new.cast(value) }
-    return if starts.nil? || ends.nil?
-
-    errors.add(:break_ends_at, BREAK_INVERTED_MESSAGE) if ends <= starts
+  def break_fits_the_working_day
+    errors.add(:break_ends_at, BREAK_INVERTED_MESSAGE) if WorkingHour.break_violation(opens_at, closes_at, break_starts_at, break_ends_at) == WorkingHour::BREAK_INVERTED
   end
 end
