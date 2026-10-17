@@ -513,4 +513,74 @@ RSpec.describe Appointment, type: :model do
       expect(appointment.reload).to be_cancelled
     end
   end
+
+  describe "#visit_number" do
+    it "counts the client's earlier non-cancelled appointments" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
+      current = ActsAsTenant.with_tenant(tenant) do
+        current = create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
+        create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 8, 25, 9, 45))
+        create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 8, 11, 9, 45))
+        current
+      end
+
+      visit_number = ActsAsTenant.with_tenant(tenant) { current.visit_number }
+
+      expect(visit_number).to eq(3)
+    end
+
+    it "skips the client's cancelled appointments" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
+      current = ActsAsTenant.with_tenant(tenant) do
+        current = create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
+        create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 8, 25, 9, 45))
+        create(:appointment, :cancelled, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 8, 11, 9, 45))
+        current
+      end
+
+      visit_number = ActsAsTenant.with_tenant(tenant) { current.visit_number }
+
+      expect(visit_number).to eq(2)
+    end
+
+    it "ignores later appointments and other clients" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
+      another_client = create(:client, tenant: tenant)
+      current = ActsAsTenant.with_tenant(tenant) do
+        create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 22, 9, 45))
+        create(:appointment, tenant: tenant, professional: professional, service: service, client: another_client, starts_at: Time.zone.local(2026, 8, 25, 9, 45))
+        create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
+      end
+
+      visit_number = ActsAsTenant.with_tenant(tenant) { current.visit_number }
+
+      expect(visit_number).to eq(1)
+    end
+
+    it "counts only within the current tenant" do
+      ze = create(:tenant, name: "Barbearia do Zé")
+      ze_professional = create(:professional, tenant: ze)
+      ze_service = create(:service, tenant: ze, duration_minutes: 45)
+      ze_client = create(:client, tenant: ze, phone: "11988771234")
+      ActsAsTenant.with_tenant(ze) { create(:appointment, tenant: ze, professional: ze_professional, service: ze_service, client: ze_client, starts_at: Time.zone.local(2026, 8, 25, 9, 45)) }
+      aurora = create(:tenant, name: "Estúdio Aurora")
+      aurora_professional = create(:professional, tenant: aurora)
+      aurora_service = create(:service, tenant: aurora, duration_minutes: 45)
+      aurora_client = create(:client, tenant: aurora, phone: "11988771234")
+      current = ActsAsTenant.with_tenant(aurora) { create(:appointment, tenant: aurora, professional: aurora_professional, service: aurora_service, client: aurora_client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+
+      visit_number = ActsAsTenant.with_tenant(aurora) { current.visit_number }
+
+      expect(visit_number).to eq(1)
+    end
+  end
 end

@@ -32,6 +32,10 @@ class Client < ApplicationRecord
 
   def tel_href = "tel:+#{COUNTRY_CODE}#{phone}"
 
+  def whatsapp_url = "https://wa.me/#{COUNTRY_CODE}#{phone}"
+
+  def initials = name.split.first(2).map { |word| word[0] }.join.upcase
+
   private
 
   def normalize_phone

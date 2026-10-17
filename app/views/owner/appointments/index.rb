@@ -1,20 +1,24 @@
 class Views::Owner::Appointments::Index < Views::Base
+  include Phlex::Rails::Helpers::TurboFrameTag
+
   WEEKDAY_ABBR = Views::Client::Bookings::New::WEEKDAY_ABBR
-  WEEKDAY_NAMES = Views::Client::Bookings::New::WEEKDAY_NAMES
-  MONTH_NAMES = Views::Client::Bookings::New::MONTH_NAMES
+  FRAME_ID = Components::Owner::AppointmentDetail::FRAME_ID
 
   TODAY_LABEL = "HOJE".freeze
   EMPTY_TITLE = "Nenhum agendamento neste dia.".freeze
   SHARE_LABEL = "Seu link".freeze
   SHARE_HELPER = "Mande esse endereço para suas clientes. É por ele que elas escolhem o horário.".freeze
+  SELECT_HINT = "Selecione um agendamento para ver os detalhes.".freeze
 
-  def initialize(tenant:, branding:, day:, appointments:, current_section:, subtitle:)
+  def initialize(tenant:, branding:, day:, appointments:, current_section:, subtitle:, selected: nil, selected_visit_number: nil)
     @tenant = tenant
     @branding = branding
     @day = day
     @appointments = appointments
     @current_section = current_section
     @subtitle = subtitle
+    @selected = selected
+    @selected_visit_number = selected_visit_number
   end
 
   def view_template
@@ -22,15 +26,35 @@ class Views::Owner::Appointments::Index < Views::Base
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
       render_day_selector_bar
       render Components::FlashBanner.new(container_class: "#{Components::Owner::Panel::CONTENT_WIDE} grid gap-2 pt-4")
-      main(class: "#{Components::Owner::Panel::CONTENT_WIDE} grid gap-3.5 py-5") do
-        render_title_row
-        @appointments.any? ? render_list : render_empty_state
-        render_install_invite
+      turbo_frame_tag(FRAME_ID, class: "grid lg:grid-cols-[minmax(0,1fr)_440px]") do
+        render_main
+        render_aside
       end
     end
   end
 
   private
+
+  def render_main
+    main(class: "#{Components::Owner::Panel::CONTENT_WIDE} grid content-start gap-3.5 py-5") do
+      render_title_row
+      @appointments.any? ? render_list : render_empty_state
+      render_install_invite
+    end
+  end
+
+  def render_aside
+    aside(class: "lg:border-l lg:border-line lg:bg-surface") do
+      @selected ? render(Components::Owner::AppointmentDetail.new(appointment: @selected, visit_number: @selected_visit_number)) : render_placeholder
+    end
+  end
+
+  def render_placeholder
+    div(class: "hidden lg:grid lg:place-content-center lg:justify-items-center lg:gap-2 lg:p-8 lg:text-center") do
+      render_calendar_icon
+      span(class: "text-[13px] text-ink-muted") { SELECT_HINT }
+    end
+  end
 
   def render_day_selector_bar
     div(class: "border-b border-line bg-surface") do
@@ -56,12 +80,10 @@ class Views::Owner::Appointments::Index < Views::Base
 
   def render_title_row
     div(class: "flex items-baseline gap-2.5") do
-      h1(class: "flex-grow text-[20px] font-extrabold tracking-[-0.02em] text-ink") { day_title }
+      h1(class: "flex-grow text-[20px] font-extrabold tracking-[-0.02em] text-ink") { render Components::LongDate.new(date: @day) }
       span(class: "text-[13px] font-bold tabular-nums text-ink-muted") { count_label }
     end
   end
-
-  def day_title = "#{WEEKDAY_NAMES[@day.wday]}, #{@day.day} de #{MONTH_NAMES[@day.month - 1]}"
 
   def count_label
     count = @appointments.count { |appointment| !appointment.cancelled? }
@@ -70,7 +92,7 @@ class Views::Owner::Appointments::Index < Views::Base
 
   def render_list
     div(class: "grid gap-2.5") do
-      @appointments.each { |appointment| render Components::Owner::AppointmentRow.new(appointment: appointment) }
+      @appointments.each { |appointment| render Components::Owner::AppointmentRow.new(appointment: appointment, selected: appointment == @selected) }
     end
   end
 
