@@ -101,7 +101,10 @@ class Views::Client::Bookings::Race < Views::Base
     div(class: CARD_CLASS) do
       render_card_row(SERVICE_LABEL, @service.name)
       div(class: CARD_DIVIDER_CLASS)
-      render_card_row(DAY_LABEL, day_label)
+      div(class: CARD_ROW_CLASS) do
+        span(class: CARD_LABEL_CLASS) { DAY_LABEL }
+        span(class: CARD_VALUE_CLASS) { render Components::LongDate.new(date: @selected_day) }
+      end
     end
   end
 
@@ -110,10 +113,6 @@ class Views::Client::Bookings::Race < Views::Base
       span(class: CARD_LABEL_CLASS) { label }
       span(class: CARD_VALUE_CLASS) { value }
     end
-  end
-
-  def day_label
-    "#{Views::Client::Bookings::New::WEEKDAY_NAMES[@selected_day.wday]}, #{@selected_day.day} de #{Views::Client::Bookings::New::MONTH_NAMES[@selected_day.month - 1]}"
   end
 
   def render_leftovers

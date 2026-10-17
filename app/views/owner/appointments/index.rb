@@ -1,7 +1,5 @@
 class Views::Owner::Appointments::Index < Views::Base
   WEEKDAY_ABBR = Views::Client::Bookings::New::WEEKDAY_ABBR
-  WEEKDAY_NAMES = Views::Client::Bookings::New::WEEKDAY_NAMES
-  MONTH_NAMES = Views::Client::Bookings::New::MONTH_NAMES
 
   TODAY_LABEL = "HOJE".freeze
   EMPTY_TITLE = "Nenhum agendamento neste dia.".freeze
@@ -56,12 +54,10 @@ class Views::Owner::Appointments::Index < Views::Base
 
   def render_title_row
     div(class: "flex items-baseline gap-2.5") do
-      h1(class: "flex-grow text-[20px] font-extrabold tracking-[-0.02em] text-ink") { day_title }
+      h1(class: "flex-grow text-[20px] font-extrabold tracking-[-0.02em] text-ink") { render Components::LongDate.new(date: @day) }
       span(class: "text-[13px] font-bold tabular-nums text-ink-muted") { count_label }
     end
   end
-
-  def day_title = "#{WEEKDAY_NAMES[@day.wday]}, #{@day.day} de #{MONTH_NAMES[@day.month - 1]}"
 
   def count_label
     count = @appointments.count { |appointment| !appointment.cancelled? }
