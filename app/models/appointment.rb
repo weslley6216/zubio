@@ -44,6 +44,8 @@ class Appointment < ApplicationRecord
 
   def cancellable? = confirmed? && !past?
 
+  def visit_number = self.class.occupying.where(client_id: client_id, starts_at: ...starts_at).count + 1
+
   def past? = starts_at < Time.current
 
   def self.offered?(professional, service, starts_at)
