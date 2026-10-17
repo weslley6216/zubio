@@ -12,5 +12,9 @@ FactoryBot.define do
     trait :cancelled do
       status { "cancelled" }
     end
+
+    trait :past do
+      starts_at { 2.days.ago.change(hour: 9, min: 0, sec: 0) }
+    end
   end
 end
