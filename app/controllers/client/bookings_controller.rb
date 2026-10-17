@@ -66,15 +66,21 @@ class Client::BookingsController < Client::BaseController
     reasons = availability.reasons_by_date
     slots = availability.slots_by_date
     chosen = resolve_day(reasons, selected_day)
+    resolved_slot = (selected_slot if selected_slot && selected_slot.to_date == chosen)
+
+    if turbo_frame_request?
+      return render Components::Client::Bookings::Grid.new(
+        service: service, slots: slots.fetch(chosen), taken_slots: availability.taken_slots_by_date.fetch(chosen),
+        reason: reasons.fetch(chosen), selected_slot: resolved_slot
+      ), status: status
+    end
 
     render Views::Client::Bookings::New.new(
       service: service, tenant: tenant, branding: current_branding, published: true,
       days: window.to_a, reasons: reasons, selected_day: chosen,
       slots: slots.fetch(chosen), taken_slots: availability.taken_slots_by_date.fetch(chosen), reason: reasons.fetch(chosen),
-      selected_slot: (selected_slot if selected_slot && selected_slot.to_date == chosen),
-      client_name: client_name, client_phone: client_phone,
-      name_errors: client ? client.errors[:name] : [],
-      phone_errors: client ? client.errors[:phone] : []
+      selected_slot: resolved_slot, client_name: client_name, client_phone: client_phone,
+      name_errors: client ? client.errors[:name] : [], phone_errors: client ? client.errors[:phone] : []
     ), status: status
   end
 

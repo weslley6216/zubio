@@ -156,7 +156,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
     get new_client_service_booking_path(service, day: monday.iso8601)
 
     expect(Nokogiri::HTML5(response.body).css("[data-slots] [data-slot]").map { |slot| slot.text.strip }).to be_empty
-    expect(response.body).to include(Views::Client::Bookings::New::NO_SERVICE_MESSAGE)
+    expect(response.body).to include(Components::Client::Bookings::Grid::NO_SERVICE_MESSAGE)
   end
 
   it "explains a day off instead of an empty grid" do
@@ -170,7 +170,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
     get new_client_service_booking_path(service, day: tuesday.iso8601)
 
     expect(Nokogiri::HTML5(response.body).css("[data-slots] [data-slot]").map { |slot| slot.text.strip }).to be_empty
-    expect(response.body).to include(Views::Client::Bookings::New::NO_SERVICE_MESSAGE)
+    expect(response.body).to include(Components::Client::Bookings::Grid::NO_SERVICE_MESSAGE)
   end
 
   it "explains a fully booked day instead of an empty grid" do
@@ -184,7 +184,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
     get new_client_service_booking_path(service, day: tuesday.iso8601)
 
     expect(Nokogiri::HTML5(response.body).css("[data-slots] [data-slot]").map { |slot| slot.text.strip }).to be_empty
-    expect(response.body).to include(Views::Client::Bookings::New::FULLY_BOOKED_MESSAGE)
+    expect(response.body).to include(Components::Client::Bookings::Grid::FULLY_BOOKED_MESSAGE)
   end
 
   it "tells an establishment with no published hours has no grid" do
@@ -255,7 +255,66 @@ RSpec.describe "Public booking day and time selection", type: :request do
 
     document = Nokogiri::HTML5(response.body)
     expect(document.at_css("[data-day='#{tuesday.iso8601}']")["aria-disabled"]).to eq("true")
-    expect(response.body).to include(Views::Client::Bookings::New::FULLY_BOOKED_MESSAGE)
+    expect(response.body).to include(Components::Client::Bookings::Grid::FULLY_BOOKED_MESSAGE)
+  end
+
+  it "answers only the grid to a frame request" do
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    tuesday = Date.current.next_week(:tuesday)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service, day: tuesday.iso8601), headers: { "Turbo-Frame" => Components::Client::Bookings::Grid::FRAME_ID }
+
+    document = Nokogiri::HTML5(response.body)
+    expect(document.css("[data-slots] [data-slot]").map { |slot| slot.text.strip }).to eq([ "09:00", "09:45", "10:30", "11:15" ])
+    expect(document.at_css("turbo-frame#booking-grid")).to be_present
+    expect(document.at_css("[data-day-selector]")).to be_nil
+    expect(document.at_css("header")).to be_nil
+    expect(document.at_css("input[name='name']")).to be_nil
+  end
+
+  it "answers the whole page to a request without the frame header" do
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    tuesday = Date.current.next_week(:tuesday)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service, day: tuesday.iso8601)
+
+    document = Nokogiri::HTML5(response.body)
+    expect(document.at_css("header")).to be_present
+    expect(document.at_css("[data-day-selector]")).to be_present
+    expect(document.at_css("input[name='name']")).to be_present
+  end
+
+  it "answers not found to a frame request for another tenant's service" do
+    other_tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    other_service = create(:service, tenant: other_tenant, name: "Barba do Zé")
+    host! "#{tenant.subdomain}.zubio.com.br"
+    allow(Rails.application).to receive(:env_config).and_wrap_original do |env_config|
+      env_config.call.merge("action_dispatch.show_detailed_exceptions" => false)
+    end
+
+    get new_client_service_booking_path(other_service), headers: { "Turbo-Frame" => Components::Client::Bookings::Grid::FRAME_ID }
+
+    expect(response).to have_http_status(:not_found)
+    expect(response.body).not_to include("Barba do Zé")
+  end
+
+  it "answers ok to a frame request for the request tenant's own service" do
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    tuesday = Date.current.next_week(:tuesday)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service, day: tuesday.iso8601), headers: { "Turbo-Frame" => Components::Client::Bookings::Grid::FRAME_ID }
+
+    expect(response).to have_http_status(:ok)
+    expect(Nokogiri::HTML5(response.body).at_css("[data-slots]")).to be_present
   end
 
   it "answers not found for another establishment's service, with none of its data" do

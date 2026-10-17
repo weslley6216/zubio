@@ -1,7 +1,4 @@
 class Views::Client::Bookings::New < Views::Base
-  include Phlex::Rails::Helpers::TurboFrameTag
-
-  FRAME_ID = "booking-grid".freeze
   WEEKDAY_ABBR = %w[DOM SEG TER QUA QUI SEX SÁB].freeze
   WEEKDAY_NAMES = %w[Domingo Segunda Terça Quarta Quinta Sexta Sábado].freeze
   MONTH_ABBR = %w[jan fev mar abr mai jun jul ago set out nov dez].freeze
@@ -13,10 +10,6 @@ class Views::Client::Bookings::New < Views::Base
   TIME_STEP = "Horário".freeze
   DAYS_OFF_HINT = "Dias em cinza: sem horário livre.".freeze
   DAY_OFF_HINT = "%<weekday>s está em cinza: sem horário livre.".freeze
-  GRID_HINT = "A grade anda de %<minutes>d em %<minutes>d porque o serviço dura %<minutes>d.".freeze
-  TAKEN_LABEL = "ocupado".freeze
-  NO_SERVICE_MESSAGE = "Não há atendimento nesse dia.".freeze
-  FULLY_BOOKED_MESSAGE = "Não há mais horários livres nesse dia.".freeze
   UNPUBLISHED_MESSAGE = "Este estabelecimento ainda não publicou horários.".freeze
   CONFIRM_LABEL = "Confirmar".freeze
   SUMMARY_SEPARATOR = " · ".freeze
@@ -27,19 +20,12 @@ class Views::Client::Bookings::New < Views::Base
   PHONE_PLACEHOLDER = "(11) 90000-0000".freeze
   DATA_HINT = "Sem senha, sem cadastro.".freeze
 
-  REASON_MESSAGES = {
-    no_working_day: NO_SERVICE_MESSAGE,
-    day_off: NO_SERVICE_MESSAGE,
-    fully_booked: FULLY_BOOKED_MESSAGE
-  }.freeze
-
   PAGE_CLASS = "mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-surface-2 leading-[normal] text-ink".freeze
   HEADER_CLASS = "flex items-center gap-3 bg-brand-600 px-5 py-3.5 text-on-brand".freeze
   BACK_CLASS = "grid h-10 w-10 flex-none place-items-center rounded-[10px] bg-white/18".freeze
   BACK_ICON_CLASS = "h-5 w-5".freeze
   NAME_CLASS = "min-w-0 flex-grow truncate text-[15px] font-extrabold tracking-[-0.01em]".freeze
   MAIN_CLASS = "flex min-w-0 flex-grow flex-col gap-[22px] px-5 pt-[22px] pb-[120px]".freeze
-  FRAME_CLASS = "contents".freeze
   STEP_CLASS = "flex min-w-0 flex-col gap-2.5".freeze
   STEP_LABEL_ROW_CLASS = "flex items-center gap-2.5".freeze
   STEP_NUMBER_CLASS = "grid h-6 w-6 place-items-center rounded-full bg-brand-100 text-[12px] font-extrabold text-brand-800".freeze
@@ -59,11 +45,6 @@ class Views::Client::Bookings::New < Views::Base
   DAY_NUMBER_CLASS = Components::DayPill::NUMBER
   HINT_CLASS = "text-[12px] text-ink-subtle".freeze
   DATA_HINT_CLASS = "text-[12px] text-ink-muted".freeze
-  GRID_CLASS = "grid grid-cols-4 gap-2".freeze
-  SLOT_BASE_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] text-[13px] font-bold tabular-nums".freeze
-  SLOT_FREE_CLASS = "border border-line bg-surface aria-pressed:border-transparent aria-pressed:bg-brand-600 aria-pressed:text-on-brand aria-pressed:shadow-[0_2px_6px_color-mix(in_srgb,var(--brand-600)_20%,transparent)]".freeze
-  SLOT_TAKEN_CLASS = "border border-dashed border-line-strong bg-surface-3 text-ink-subtle line-through".freeze
-  REASON_CLASS = "rounded-xl border border-line bg-surface p-6 text-[14px] text-ink-muted".freeze
   UNPUBLISHED_CLASS = "rounded-xl border border-line bg-surface p-6 text-[14px] text-ink-muted".freeze
   CONFIRM_BAR_CLASS = "sticky bottom-0 -mt-[100px] flex items-center gap-3 border-t border-line bg-surface px-5 pt-3.5 pb-[calc(18px+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_16px_rgba(14,26,36,0.06)]".freeze
   CONFIRM_SUMMARY_CLASS = "flex min-w-0 flex-grow flex-col gap-0.5".freeze
@@ -95,9 +76,7 @@ class Views::Client::Bookings::New < Views::Base
     render Views::Layouts::Application.new(title: @tenant.name, branding: @branding) do
       div(class: PAGE_CLASS) do
         render_header
-        turbo_frame_tag(FRAME_ID, class: FRAME_CLASS) do
-          @published ? render_published : render_unpublished_main
-        end
+        @published ? render_published : render_unpublished_main
       end
     end
   end
@@ -163,14 +142,21 @@ class Views::Client::Bookings::New < Views::Base
       render_day_selector
       p(class: HINT_CLASS, data: { days_off_hint: true }) { days_off_hint } if disabled_days.any?
     end
-    render_step("3", TIME_STEP) { render_grid_or_reason }
+    render_step("3", TIME_STEP) do
+      render Components::Client::Bookings::Grid.new(
+        service: @service, slots: @slots, taken_slots: @taken_slots, reason: @reason, selected_slot: @selected_slot
+      )
+    end
     render_data_step
   end
 
   def render_day_selector
-    div(class: SELECTOR_CLASS, data: { day_selector: true, controller: "day-selector" }) do
-      @days.each { |date| render_day(date) }
-    end
+    div(class: SELECTOR_CLASS, data: {
+      day_selector: true, controller: "day-selector",
+      day_selector_selected_class: DAY_SELECTED_CLASS,
+      day_selector_resting_class: DAY_FREE_CLASS,
+      day_selector_weekday_resting_class: DAY_WEEKDAY_FREE_CLASS
+    }) { @days.each { |date| render_day(date) } }
   end
 
   def render_day(date)
@@ -181,7 +167,9 @@ class Views::Client::Bookings::New < Views::Base
     selected = date == @selected_day
     a(href: new_client_service_booking_path(@service, day: date.iso8601),
       class: [ DAY_BASE_CLASS, selected ? DAY_SELECTED_CLASS : DAY_FREE_CLASS ],
-      data: { day: date.iso8601, day_selector_target: selected ? "selected" : nil, turbo: true },
+      data: { day: date.iso8601, day_selector_target: selected ? "selected" : nil, turbo: true,
+              turbo_frame: Components::Client::Bookings::Grid::FRAME_ID, turbo_action: "advance",
+              day_label: day_label_for(date), action: "day-selector#mark slot-selector#resetDay" },
       aria_current: selected ? "date" : nil) do
       span(class: [ DAY_WEEKDAY_CLASS, (DAY_WEEKDAY_FREE_CLASS unless selected) ]) { WEEKDAY_ABBR[date.wday] }
       span(class: DAY_NUMBER_CLASS) { date.strftime("%d") }
@@ -202,36 +190,6 @@ class Views::Client::Bookings::New < Views::Base
   def days_off_hint
     days = disabled_days
     days.one? ? Kernel.format(DAY_OFF_HINT, weekday: WEEKDAY_NAMES[days.first.wday]) : DAYS_OFF_HINT
-  end
-
-  def render_grid_or_reason
-    @reason == :bookable ? render_grid : render_reason
-  end
-
-  def render_grid
-    div(class: GRID_CLASS, data: { slots: true }) do
-      (@slots + @taken_slots).sort.each { |slot| @taken_slots.include?(slot) ? render_taken_slot(slot) : render_free_slot(slot) }
-    end
-    p(class: HINT_CLASS, data: { grid_hint: true }) { grid_hint }
-  end
-
-  def render_free_slot(slot)
-    button(type: "button", aria_pressed: (slot == @selected_slot).to_s,
-      data: { slot: true, starts_at: slot.iso8601, time: slot.strftime("%H:%M"), slot_selector_target: "slot", action: "slot-selector#select" },
-      class: [ SLOT_BASE_CLASS, SLOT_FREE_CLASS ]) { slot.strftime("%H:%M") }
-  end
-
-  def render_taken_slot(slot)
-    time = slot.strftime("%H:%M")
-    span(class: [ SLOT_BASE_CLASS, SLOT_TAKEN_CLASS ], data: { slot_taken: true }, aria_label: "#{time}, #{TAKEN_LABEL}") { time }
-  end
-
-  def grid_hint
-    Kernel.format(GRID_HINT, minutes: @service.duration_minutes)
-  end
-
-  def render_reason
-    p(class: REASON_CLASS) { REASON_MESSAGES.fetch(@reason) }
   end
 
   def render_unpublished
@@ -265,13 +223,17 @@ class Views::Client::Bookings::New < Views::Base
   end
 
   def render_summary
-    plain "#{day_label}#{SUMMARY_SEPARATOR}"
+    span(data: { slot_selector_target: "day" }) { "#{day_label}#{SUMMARY_SEPARATOR}" }
     span(data: { slot_selector_target: "time" }) { "#{@selected_slot.strftime("%H:%M")}#{SUMMARY_SEPARATOR}" if @selected_slot }
     plain price_label
   end
 
   def day_label
-    "#{WEEKDAY_ABBR[@selected_day.wday].capitalize}, #{@selected_day.day} #{MONTH_ABBR[@selected_day.month - 1]}"
+    day_label_for(@selected_day)
+  end
+
+  def day_label_for(date)
+    "#{WEEKDAY_ABBR[date.wday].capitalize}, #{date.day} #{MONTH_ABBR[date.month - 1]}"
   end
 
   def confirm_label
