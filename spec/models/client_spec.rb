@@ -100,6 +100,28 @@ RSpec.describe Client, type: :model do
     end
   end
 
+  describe "#phone_display" do
+    it "formats an eleven-digit mobile number" do
+      client = build(:client, phone: "11988771234")
+
+      expect(client.phone_display).to eq("(11) 98877-1234")
+    end
+
+    it "formats a ten-digit landline number" do
+      client = build(:client, phone: "1133224455")
+
+      expect(client.phone_display).to eq("(11) 3322-4455")
+    end
+  end
+
+  describe "#tel_href" do
+    it "builds a call link with the country code" do
+      client = build(:client, phone: "11988771234")
+
+      expect(client.tel_href).to eq("tel:+5511988771234")
+    end
+  end
+
   describe "tenant isolation" do
     it "a scoped query brings the tenant's own client and not another's" do
       aurora = create(:tenant, name: "Estúdio Aurora")

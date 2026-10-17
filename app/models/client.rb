@@ -25,6 +25,13 @@ class Client < ApplicationRecord
     digits
   end
 
+  def phone_display
+    local = phone.length == 11 ? "#{phone[2, 5]}-#{phone[7, 4]}" : "#{phone[2, 4]}-#{phone[6, 4]}"
+    "(#{phone[0, 2]}) #{local}"
+  end
+
+  def tel_href = "tel:+#{COUNTRY_CODE}#{phone}"
+
   private
 
   def normalize_phone
