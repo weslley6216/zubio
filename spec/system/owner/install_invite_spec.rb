@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "Owner install invite", type: :system, js: true do
   let(:tenant) { create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora") }
   let(:owner) { create(:user, tenant: tenant, name: "Ana Lima") }
-  let(:dashboard_url) { "http://#{tenant.subdomain}.zubio.com.br#{owner_dashboard_path}" }
+  let(:dashboard_url) { "http://#{tenant.subdomain}.zubio.com.br#{owner_appointments_path}" }
 
   it "shows the action card on a browser that offers installation" do
     create(:branding, tenant: tenant)

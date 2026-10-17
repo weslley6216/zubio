@@ -130,7 +130,7 @@ class OwnerMailer < ApplicationMailer
 
       Veja no painel do seu estabelecimento:
 
-      #{owner_dashboard_url(host: tenant.canonical_host)}
+      #{owner_appointments_url(host: tenant.canonical_host)}
     TEXT
   end
 

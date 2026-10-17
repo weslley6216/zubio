@@ -35,7 +35,7 @@ class Components::Owner::Header < Components::Base
   end
 
   def render_identity
-    a(href: owner_dashboard_path, aria_current: @current_section == :dashboard ? "page" : nil,
+    a(href: owner_appointments_path, aria_current: @current_section == :agenda ? "page" : nil,
       class: "flex min-h-11 min-w-0 items-center gap-3 font-extrabold text-ink") do
       render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :header)
       span(class: "grid min-w-0 gap-px leading-[normal]") do
@@ -45,7 +45,7 @@ class Components::Owner::Header < Components::Base
     end
   end
 
-  def content_width = @current_section == :dashboard ? Components::Owner::Panel::CONTENT_WIDE : Components::Owner::Panel::CONTENT
+  def content_width = @current_section == :agenda ? Components::Owner::Panel::CONTENT_WIDE : Components::Owner::Panel::CONTENT
 
   def items = sections.map { |key, label, href| [ label, href, key == @current_section ] }
 

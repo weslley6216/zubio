@@ -484,7 +484,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
 
     expect(page).to have_content("Sua página está no ar, Ana")
     expect([ welcome_color, gallery_color, add_service_color ]).to all(eq("#4F46E5"))
-    expect(computed_hex("main a[href='#{owner_dashboard_path}']", "backgroundColor")).to eq("#4F46E5")
+    expect(computed_hex("main a[href='#{owner_appointments_path}']", "backgroundColor")).to eq("#4F46E5")
   end
 
   it "repaints the screen from a code typed behind the plus" do

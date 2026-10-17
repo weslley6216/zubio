@@ -6,20 +6,19 @@ RSpec.describe "Owner base controller authentication", type: :request do
   before { host! "#{tenant.subdomain}.zubio.com.br" }
 
   it "redirects to login when there is no active session" do
-    get owner_dashboard_path
+    get owner_appointments_path
 
     expect(response).to redirect_to(new_owner_session_path)
   end
 
-  it "renders the dashboard for an authenticated owner" do
+  it "renders the agenda for an authenticated owner" do
     owner = create(:user, tenant: tenant, name: "Ana Lima", email: "owner@example.com", password: "s3cr3t123")
     post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
 
-    get owner_dashboard_path
+    get owner_appointments_path
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Olá, Ana")
-    expect(response.body).to include("Este é o painel de #{tenant.name}.")
+    expect(response.body).to include(tenant.name)
   end
 
   it "sends an owner mid-onboarding to the onboarding document instead of the dashboard" do
@@ -40,7 +39,7 @@ RSpec.describe "Owner base controller authentication", type: :request do
     post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
     host! "#{tenant.subdomain}.zubio.com.br"
 
-    get owner_dashboard_path
+    get owner_appointments_path
 
     expect(response).to redirect_to(new_owner_session_path)
   end

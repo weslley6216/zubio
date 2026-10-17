@@ -8,10 +8,10 @@ RSpec.describe "Owner panel navigation", type: :request do
     create(:branding, tenant: tenant)
     sign_in_owner(owner)
 
-    get owner_dashboard_path
+    get owner_appointments_path
 
     document = Nokogiri::HTML5(response.body)
-    expect(document.at_css("header a[href='#{owner_dashboard_path}']")["aria-current"]).to eq("page")
+    expect(document.at_css("header a[href='#{owner_appointments_path}']")["aria-current"]).to eq("page")
     expect(document.at_css("header nav a[href='#{owner_settings_path}']")["aria-current"]).to be_nil
     expect(document.at_css("header nav a[href='#{owner_settings_path}']")["class"]).to eq("#{Components::Owner::Header::ITEM_CLASS} #{Components::Owner::Header::RESTING_CLASS}")
     expect(document.at_css("header details a[href='#{owner_settings_path}']")["aria-current"]).to be_nil
@@ -24,7 +24,7 @@ RSpec.describe "Owner panel navigation", type: :request do
     get owner_settings_path
 
     document = Nokogiri::HTML5(response.body)
-    expect(document.at_css("a[href='#{owner_dashboard_path}']")).to be_present
+    expect(document.at_css("a[href='#{owner_appointments_path}']")).to be_present
     expect(document.at_css("header nav")).to be_nil
     expect(document.at_css("header details")).to be_nil
     expect(response.body).not_to include(Components::Owner::Menu::LABEL)
@@ -42,14 +42,14 @@ RSpec.describe "Owner panel navigation", type: :request do
     expect(documents.map { |document| document.at_css("header nav a[href='#{owner_settings_path}']")["aria-current"] }).to all(eq("page"))
     expect(documents.map { |document| document.at_css("header nav a[href='#{owner_settings_path}']")["class"] }).to all(eq("#{Components::Owner::Header::ITEM_CLASS} #{Components::Owner::Header::CURRENT_CLASS}"))
     expect(documents.map { |document| document.at_css("header details a[href='#{owner_settings_path}']")["aria-current"] }).to all(eq("page"))
-    expect(documents.map { |document| document.at_css("header a[href='#{owner_dashboard_path}']")["aria-current"] }).to all(be_nil)
+    expect(documents.map { |document| document.at_css("header a[href='#{owner_appointments_path}']")["aria-current"] }).to all(be_nil)
   end
 
   it "leaves the old sections and every destination without a screen out of the band and the menu" do
     create(:branding, tenant: tenant)
     sign_in_owner(owner)
 
-    get owner_dashboard_path
+    get owner_appointments_path
 
     expect(Nokogiri::HTML5(response.body).at_css("header nav a[href='#{owner_settings_path}']")).to be_present
     expect(response.body).to include(%(action="#{owner_session_path}"))
@@ -64,7 +64,7 @@ RSpec.describe "Owner panel navigation", type: :request do
     create(:branding, tenant: tenant)
     sign_in_owner(owner)
 
-    get owner_dashboard_path
+    get owner_appointments_path
 
     expect(response.body).to include(Components::Owner::Menu::LABEL)
     expect(response.body.scan(%(data-action="theme#toggle")).size).to eq(2)
@@ -75,7 +75,7 @@ RSpec.describe "Owner panel navigation", type: :request do
     create(:branding, tenant: tenant)
     host! "#{tenant.subdomain}.zubio.com.br"
 
-    get owner_dashboard_path
+    get owner_appointments_path
     follow_redirect!
 
     expect(response.body).to include(%(action="#{owner_session_path}"))
@@ -89,7 +89,7 @@ RSpec.describe "Owner panel navigation", type: :request do
     sign_in_owner(owner)
 
     expectations = {
-      owner_dashboard_path => "Painel",
+      owner_appointments_path => "Agenda",
       owner_services_path => "Serviços",
       edit_owner_working_hours_path => "Horários",
       owner_schedule_exceptions_path => "Horários · Exceções",
@@ -108,7 +108,7 @@ RSpec.describe "Owner panel navigation", type: :request do
     create(:branding, tenant: tenant)
     sign_in_owner(owner)
 
-    get owner_dashboard_path
+    get owner_appointments_path
 
     expect(response.body).to include("Estúdio Aurora")
     expect(response.body).not_to include("Barbearia do Zé")

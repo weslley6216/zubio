@@ -40,7 +40,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
       get owner_onboarding_path
 
-      expect(response).to redirect_to(owner_dashboard_path)
+      expect(response).to redirect_to(owner_appointments_path)
     end
 
     it "redirects an anonymous visitor to login" do

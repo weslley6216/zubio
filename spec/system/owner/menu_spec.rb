@@ -24,7 +24,7 @@ RSpec.describe "Owner phone menu", type: :system, js: true do
     page.driver.browser.mouse.click(x: whatsapp[0], y: whatsapp[1])
 
     expect(page).to have_no_css("details[open]")
-    expect(page).to have_current_path(owner_dashboard_path)
+    expect(page).to have_current_path(owner_appointments_path)
     expect(page.driver.browser.targets.size).to eq(1)
   end
 

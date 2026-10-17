@@ -202,12 +202,12 @@ RSpec.describe OwnerMailer, type: :mailer do
       expect(mail.mime_type).to eq("text/plain")
     end
 
-    it "points to the owner dashboard on the establishment's host" do
+    it "points to the owner agenda on the establishment's host" do
       owner
 
       mail = described_class.new_appointment(tenant.id, appointment.id)
 
-      expect(mail.body.to_s).to include("estudio-aurora.zubio.com.br/owner/dashboard")
+      expect(mail.body.to_s).to include("estudio-aurora.zubio.com.br/owner/appointments")
     end
 
     it "addresses only the appointment tenant's owner, never another tenant's" do

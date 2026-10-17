@@ -119,7 +119,7 @@ RSpec.describe "Owner session", type: :request do
 
       post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
 
-      expect(response).to redirect_to(owner_dashboard_path)
+      expect(response).to redirect_to(owner_appointments_path)
       expect(session[:user_id]).to eq(owner.id)
     end
 
@@ -184,7 +184,7 @@ RSpec.describe "Owner session", type: :request do
       post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
 
       delete owner_session_path
-      get owner_dashboard_path
+      get owner_appointments_path
 
       expect(response).to redirect_to(new_owner_session_path)
     end
