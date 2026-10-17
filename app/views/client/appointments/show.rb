@@ -29,11 +29,10 @@ class Views::Client::Appointments::Show < Views::Base
   REBOOK_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-line-strong bg-surface text-[14px] font-bold text-ink".freeze
   CANCEL_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-danger bg-surface text-[14px] font-bold text-danger".freeze
 
-  SHEET_CLASS = "fixed inset-x-0 top-auto bottom-0 mx-auto w-full max-w-[430px] rounded-t-[20px] border-0 bg-surface px-6 pt-3 pb-7 backdrop:bg-ink/45".freeze
-  SHEET_INNER_CLASS = "flex flex-col gap-3.5".freeze
+  SHEET_CLASS = "fixed inset-x-0 top-auto bottom-0 mx-auto w-full max-w-[430px] open:flex flex-col gap-3.5 rounded-t-[20px] border-0 bg-surface px-6 pt-3 pb-7 backdrop:bg-ink/45".freeze
   GRABBER_CLASS = "h-1 w-10 self-center rounded-full bg-line-strong".freeze
   SHEET_TEXT_CLASS = "flex flex-col gap-1.5".freeze
-  SHEET_TITLE_CLASS = "text-[20px] font-extrabold tracking-[-0.02em]".freeze
+  SHEET_TITLE_CLASS = "text-[20px] font-extrabold tracking-[-0.02em] text-ink".freeze
   SHEET_NOTE_CLASS = "text-[14px] leading-[1.5] text-ink-muted".freeze
   CONFIRM_CLASS = "min-h-[50px] rounded-xl border-0 bg-danger text-[15px] font-extrabold text-white".freeze
   KEEP_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-line-strong bg-surface text-[14px] font-bold text-ink".freeze
@@ -111,17 +110,15 @@ class Views::Client::Appointments::Show < Views::Base
 
   def render_sheet
     dialog(class: SHEET_CLASS, data: { dialog_target: "sheet" }) do
-      div(class: SHEET_INNER_CLASS) do
-        div(class: GRABBER_CLASS)
-        div(class: SHEET_TEXT_CLASS) do
-          span(class: SHEET_TITLE_CLASS) { confirm_prompt }
-          span(class: SHEET_NOTE_CLASS) { CONFIRM_NOTE }
-        end
-        form_with(url: client_cancellation_path(@appointment.cancel_token), method: :post, class: "contents") do
-          button(type: "submit", class: CONFIRM_CLASS) { CONFIRM_LABEL }
-        end
-        button(type: "button", class: KEEP_CLASS, data: { action: "dialog#close" }) { KEEP_LABEL }
+      div(class: GRABBER_CLASS)
+      div(class: SHEET_TEXT_CLASS) do
+        span(class: SHEET_TITLE_CLASS) { confirm_prompt }
+        span(class: SHEET_NOTE_CLASS) { CONFIRM_NOTE }
       end
+      form_with(url: client_cancellation_path(@appointment.cancel_token), method: :post, class: "contents") do
+        button(type: "submit", class: CONFIRM_CLASS) { CONFIRM_LABEL }
+      end
+      button(type: "button", class: KEEP_CLASS, data: { action: "dialog#close" }) { KEEP_LABEL }
     end
   end
 
