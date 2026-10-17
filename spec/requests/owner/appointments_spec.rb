@@ -154,6 +154,183 @@ RSpec.describe "Owner appointments", type: :request do
     end
   end
 
+  describe "GET /owner/appointments/:id" do
+    it "shows the time range, badge, long date, client, phone, service, price and duration" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45, price_cents: 6000)
+      client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+      appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+      sign_in_owner(owner)
+
+      get owner_appointment_path(appointment)
+
+      expect(response.body).to include("09:45")
+      expect(response.body).to include("10:30")
+      expect(response.body).to include("Confirmado")
+      expect(response.body).to include("Terça, 8 de setembro")
+      expect(response.body).to include("Ana Paula Ribeiro")
+      expect(response.body).to include("(11) 98877-1234")
+      expect(response.body).to include("Design de sobrancelhas")
+      expect(response.body).to include("R$ 60,00")
+      expect(response.body).to include("45 min")
+    end
+
+    it "shows the third visit after two earlier non-cancelled appointments" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+      appointment = ActsAsTenant.with_tenant(tenant) do
+        create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 8, 11, 9, 45))
+        create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 8, 25, 9, 45))
+        create(:appointment, :cancelled, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 1, 9, 45))
+        create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
+      end
+      sign_in_owner(owner)
+
+      get owner_appointment_path(appointment)
+
+      expect(response.body).to include("3ª visita")
+    end
+
+    it "links the WhatsApp conversation to wa.me with the E.164 number" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant, phone: "11988771234")
+      appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+      sign_in_owner(owner)
+
+      get owner_appointment_path(appointment)
+
+      expect(response.body).to include(%(href="https://wa.me/5511988771234"))
+      detail = Nokogiri::HTML5(response.body).at_css("turbo-frame#appointment_detail section")
+      expect(detail.at_css("form")).to be_nil
+    end
+
+    it "dials the client through tel: in E.164" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant, phone: "11988771234")
+      appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+      sign_in_owner(owner)
+
+      get owner_appointment_path(appointment)
+
+      detail = Nokogiri::HTML5(response.body).at_css("turbo-frame#appointment_detail section")
+      expect(detail.at_css(%(a[href="tel:+5511988771234"]))).to be_present
+    end
+
+    it "keeps the day's list next to the detail" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      ana = create(:client, tenant: tenant, name: "Ana Paula Ribeiro")
+      juliana = create(:client, tenant: tenant, name: "Juliana Prado")
+      appointment = ActsAsTenant.with_tenant(tenant) do
+        create(:appointment, tenant: tenant, professional: professional, service: service, client: juliana, starts_at: Time.zone.local(2026, 9, 8, 14, 0))
+        create(:appointment, tenant: tenant, professional: professional, service: service, client: ana, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
+      end
+      sign_in_owner(owner)
+
+      get owner_appointment_path(appointment)
+
+      expect(response.body).to include("Juliana Prado")
+      detail = Nokogiri::HTML5(response.body).at_css("turbo-frame#appointment_detail")
+      expect(detail.at_css(%(a[aria-current="true"]))).to be_present
+    end
+
+    it "sends an anonymous visitor to the login without any client name or phone" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+      appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+      host! "#{tenant.subdomain}.zubio.com.br"
+
+      get owner_appointment_path(appointment)
+      expect(response).to redirect_to(new_owner_session_path)
+      follow_redirect!
+
+      expect(response.body).not_to include("Ana Paula Ribeiro")
+      expect(response.body).not_to include(client.phone_display)
+      expect(response.body).not_to include(client.phone)
+    end
+
+    it "answers not found for another establishment's appointment, with none of its data" do
+      ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      ze_professional = create(:professional, tenant: ze)
+      ze_service = create(:service, tenant: ze)
+      ze_client = create(:client, tenant: ze, name: "Carlos Zé", phone: "11977776666")
+      ze_appointment = ActsAsTenant.with_tenant(ze) { create(:appointment, tenant: ze, professional: ze_professional, service: ze_service, client: ze_client, starts_at: Time.current.change(hour: 9)) }
+      create(:branding, tenant: tenant)
+      sign_in_owner(owner)
+      allow(Rails.application).to receive(:env_config).and_wrap_original do |env_config|
+        env_config.call.merge("action_dispatch.show_detailed_exceptions" => false)
+      end
+
+      get owner_appointment_path(ze_appointment)
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.body).not_to include("Carlos Zé")
+      expect(response.body).not_to include("(11) 97777-6666")
+      expect(response.body).not_to include("11977776666")
+      expect(response.body).not_to include("Barbearia do Zé")
+    end
+
+    it "shows its own appointment's detail" do
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant, name: "Ana Aurora")
+      appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.current.change(hour: 9)) }
+      sign_in_owner(owner)
+
+      get owner_appointment_path(appointment)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Ana Aurora")
+    end
+
+    it "shows the cancelled appointment's detail with its badge and no cancel button" do
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant)
+      appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, :cancelled, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.current.change(hour: 9)) }
+      sign_in_owner(owner)
+
+      get owner_appointment_path(appointment)
+
+      expect(response.body).to include("Desmarcado")
+      expect(response.body).not_to include("Desmarcar este horário")
+    end
+  end
+
+  describe "GET /owner/appointments without a selected appointment" do
+    it "opens the agenda without a selected appointment showing the select hint" do
+      create(:branding, tenant: tenant)
+      sign_in_owner(owner)
+
+      get owner_appointments_path
+
+      expect(response.body).to include(Views::Owner::Appointments::Index::SELECT_HINT)
+      expect(Nokogiri::HTML5(response.body).at_css("turbo-frame#appointment_detail section")).to be_nil
+    end
+
+    it "opens the appointment's show without the select hint" do
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant)
+      appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.current.change(hour: 9)) }
+      sign_in_owner(owner)
+
+      get owner_appointment_path(appointment)
+
+      expect(response.body).not_to include(Views::Owner::Appointments::Index::SELECT_HINT)
+    end
+  end
+
   describe "POST /owner/session" do
     it "leads into the day's agenda after entering the panel" do
       create(:branding, tenant: tenant)
