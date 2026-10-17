@@ -44,6 +44,7 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
     expect(page.evaluate_script(<<~JS)).to be(true)
       Object.values(window.__kept).every((node) => document.contains(node))
     JS
+    expect(page).to fit_the_phone_width
   end
 
   it "marks the tapped visible day without moving the strip" do
