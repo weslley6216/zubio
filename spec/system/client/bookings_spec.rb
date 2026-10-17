@@ -19,6 +19,62 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
     expect(page.evaluate_script("window.__noReload")).to be(true)
   end
 
+  it "swaps only the grid, keeping every other node" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, name: "Corte", duration_minutes: 60)
+    tuesday = Date.current.next_week(:tuesday)
+    wednesday = tuesday + 1
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "11:00")
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 3, opens_at: "14:00", closes_at: "16:00")
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: tuesday.iso8601)}"
+    page.execute_script(<<~JS)
+      window.__kept = {
+        header: document.querySelector("header"),
+        days: document.querySelector("[data-day-selector]"),
+        field: document.querySelector("[data-field='name']"),
+        bar: document.querySelector("[data-confirm-bar]")
+      }
+    JS
+
+    find("[data-day='#{wednesday.iso8601}']").trigger("click")
+
+    expect(page).to have_css("[data-slots] [data-slot]", text: "14:00")
+    expect(page.all("[data-slots] [data-slot]").map(&:text)).to eq([ "14:00", "15:00" ])
+    expect(page.evaluate_script(<<~JS)).to be(true)
+      Object.values(window.__kept).every((node) => document.contains(node))
+    JS
+  end
+
+  it "marks the tapped visible day without moving the strip" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 60)
+    (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "18:00") }
+    fourth_day = Date.current + 3
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service)}"
+
+    find("[data-day='#{fourth_day.iso8601}']").trigger("click")
+
+    expect(page).to have_css("[data-day='#{fourth_day.iso8601}'][aria-current='date']")
+    expect(page.evaluate_script("document.querySelector('[data-day-selector]').scrollLeft")).to eq(0)
+  end
+
+  it "keeps the strip scroll where the client left it" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 60)
+    (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "18:00") }
+    third_day = Date.current + 2
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service)}"
+    page.execute_script("document.querySelector('[data-day-selector]').scrollLeft = 40")
+    scroll_before = page.evaluate_script("document.querySelector('[data-day-selector]').scrollLeft")
+
+    find("[data-day='#{third_day.iso8601}']").trigger("click")
+
+    expect(page.evaluate_script("document.querySelector('[data-day-selector]').scrollLeft")).to eq(scroll_before)
+  end
+
   it "carries the picked day into the confirmation bar" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
