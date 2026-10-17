@@ -194,6 +194,41 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
     end
   end
 
+  it "keeps the typed name and phone across a day change" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 60)
+    tuesday = Date.current.next_week(:tuesday)
+    wednesday = tuesday + 1
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "11:00")
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 3, opens_at: "14:00", closes_at: "16:00")
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: tuesday.iso8601)}"
+    fill_in "name", with: "Ana Paula Ribeiro"
+    fill_in "phone", with: "11988771234"
+
+    find("[data-day='#{wednesday.iso8601}']").trigger("click")
+
+    expect(page).to have_field("name", with: "Ana Paula Ribeiro")
+    expect(page).to have_field("phone", with: "11988771234")
+  end
+
+  it "a day change clears the picked time and the summary" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45, price_cents: 6_000)
+    [ 2, 4 ].each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "12:00") }
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: "2026-09-08")}"
+    find("[data-slot][data-time='09:45']").click
+    expect(page).to have_css("[data-confirm-bar]:not([disabled])")
+
+    find("[data-day='2026-09-10']").trigger("click")
+
+    expect(page).to have_no_css("[data-slot][aria-pressed='true']")
+    expect(page).to have_css("[data-confirm-bar][disabled]")
+    expect(page).to have_css("[data-summary]", exact_text: "Qui, 10 set · R$ 60")
+  end
+
   it "enables the confirm button and names the time once a slot is picked" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
