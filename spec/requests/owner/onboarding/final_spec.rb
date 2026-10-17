@@ -71,7 +71,7 @@ RSpec.describe "Owner onboarding final", type: :request do
       tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
       sign_in_owner(create(:user, tenant: tenant, name: "Ana Lima"))
 
-      get owner_dashboard_path
+      get owner_appointments_path
 
       expect(response).to have_http_status(:ok)
       expect(response.body).not_to include(owner_onboarding_path)

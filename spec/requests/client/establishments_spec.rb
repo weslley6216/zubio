@@ -96,7 +96,7 @@ RSpec.describe "Public establishment showcase", type: :request do
   it "keeps the owner dashboard reachable" do
     sign_in_owner(create(:user, tenant: tenant))
 
-    get owner_dashboard_path
+    get owner_appointments_path
 
     expect(response).to have_http_status(:ok)
   end
@@ -237,7 +237,7 @@ RSpec.describe "Public establishment showcase", type: :request do
   it "announces nothing to share on the owner's authenticated screens" do
     sign_in_owner(create(:user, tenant: tenant))
 
-    get owner_dashboard_path
+    get owner_appointments_path
 
     expect(response).to have_http_status(:ok)
     expect(Nokogiri::HTML5(response.body).css('meta[property^="og:"]')).to be_empty

@@ -9,7 +9,7 @@ RSpec.describe "Content Security Policy", type: :request do
       create(:branding, tenant: tenant)
       sign_in_owner(owner)
 
-      get owner_dashboard_path
+      get owner_appointments_path
 
       expect(response.headers["Content-Security-Policy-Report-Only"]).to be_nil
       expect(response.headers["Content-Security-Policy"]).to include("default-src 'self'")
@@ -20,7 +20,7 @@ RSpec.describe "Content Security Policy", type: :request do
       create(:branding, tenant: tenant)
       sign_in_owner(owner)
 
-      get owner_dashboard_path
+      get owner_appointments_path
 
       nonce = response.headers["Content-Security-Policy"][/script-src [^;]*'nonce-([^']+)'/, 1]
       expect(nonce).to be_present
@@ -35,7 +35,7 @@ RSpec.describe "Content Security Policy", type: :request do
       create(:branding, tenant: tenant)
       sign_in_owner(owner)
 
-      get owner_dashboard_path
+      get owner_appointments_path
 
       expect(response.headers["Content-Security-Policy"]).to include("connect-src 'self' https://abcxyz.storage.supabase.co")
     end
@@ -45,7 +45,7 @@ RSpec.describe "Content Security Policy", type: :request do
       create(:branding, tenant: tenant)
       sign_in_owner(owner)
 
-      get owner_dashboard_path
+      get owner_appointments_path
 
       expect(response.headers["Content-Security-Policy"]).to include("connect-src 'self'")
       expect(response.headers["Content-Security-Policy"]).not_to include("storage.supabase.co")
@@ -57,7 +57,7 @@ RSpec.describe "Content Security Policy", type: :request do
       create(:branding, tenant: tenant)
       sign_in_owner(owner)
 
-      get owner_dashboard_path
+      get owner_appointments_path
 
       expect(response.headers["Content-Security-Policy"]).to include("img-src 'self' blob:")
     end

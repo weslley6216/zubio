@@ -192,7 +192,7 @@ RSpec.describe "Owner password reset", type: :request do
 
       patch owner_password_reset_path, params: { token: token, password: "an0th3rpass" }
 
-      expect(response).to redirect_to(owner_dashboard_path)
+      expect(response).to redirect_to(owner_appointments_path)
     end
 
     it "reaches the dashboard without asking for the password again" do
@@ -222,7 +222,7 @@ RSpec.describe "Owner password reset", type: :request do
 
       post owner_session_path, params: { email: "ze@example.com", password: "an0th3rpass" }
 
-      expect(response).to redirect_to(owner_dashboard_path)
+      expect(response).to redirect_to(owner_appointments_path)
     end
 
     it "refuses the previous password after the change" do
@@ -250,7 +250,7 @@ RSpec.describe "Owner password reset", type: :request do
 
       post owner_session_path, params: { email: "ze@example.com", password: "s3cr3t123" }
 
-      expect(response).to redirect_to(owner_dashboard_path)
+      expect(response).to redirect_to(owner_appointments_path)
     end
 
     it "keeps the link usable after a password that is too short" do
@@ -259,7 +259,7 @@ RSpec.describe "Owner password reset", type: :request do
 
       patch owner_password_reset_path, params: { token: token, password: "an0th3rpass" }
 
-      expect(response).to redirect_to(owner_dashboard_path)
+      expect(response).to redirect_to(owner_appointments_path)
     end
 
     it "refuses a blank password without opening a session" do

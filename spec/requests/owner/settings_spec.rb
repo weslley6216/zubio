@@ -13,7 +13,7 @@ RSpec.describe "Owner settings", type: :request do
 
       document = Nokogiri::HTML5(response.body)
       title = document.at_css("[data-top-bar] [data-top-title]")
-      expect(document.at_css("[data-top-bar] a")["href"]).to eq(owner_dashboard_path)
+      expect(document.at_css("[data-top-bar] a")["href"]).to eq(owner_appointments_path)
       expect(title.text).to eq(Views::Owner::Settings::Show::TITLE)
       expect(title["class"]).to include("text-[16px]", "font-extrabold")
       expect(response.body).not_to include(Components::Owner::Menu::LABEL)

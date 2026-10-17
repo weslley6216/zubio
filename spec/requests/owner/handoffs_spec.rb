@@ -104,7 +104,7 @@ RSpec.describe "Owner handoff", type: :request do
 
       get owner_handoff_path(token: onboarding_owner.handoff_token)
 
-      expect(response).to redirect_to(owner_dashboard_path)
+      expect(response).to redirect_to(owner_appointments_path)
     end
   end
 end
