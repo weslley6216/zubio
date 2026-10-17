@@ -64,13 +64,31 @@ RSpec.describe "Owner appointment detail", type: :system, js: true do
     emulate_desktop_screen
     sign_in_owner(professional_user)
 
-    expect(page).to have_text("Selecione um agendamento para ver os detalhes.")
-
     click_on "Ana Paula Ribeiro"
 
-    expect(page).to have_text("Juliana Prado")
+    expect(page).to have_css("turbo-frame#appointment_detail section", text: "Chamar no WhatsApp")
     main_right = page.evaluate_script("document.querySelector('main').getBoundingClientRect().right")
-    detail_left = page.evaluate_script("document.querySelector('turbo-frame#appointment_detail aside').getBoundingClientRect().left")
+    detail_left = page.evaluate_script("document.querySelector('turbo-frame#appointment_detail section').getBoundingClientRect().left")
+    juliana_right = page.evaluate_script("[...document.querySelectorAll('main a')].find((link) => link.textContent.includes('Juliana Prado')).getBoundingClientRect().right")
     expect(detail_left).to be >= main_right
+    expect(juliana_right).to be <= main_right
+  end
+
+  it "shows the select hint beside the list before any appointment is chosen on a 1280px desktop" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    ana = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+    ActsAsTenant.with_tenant(tenant) do
+      create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: ana, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
+    end
+    emulate_desktop_screen
+
+    sign_in_owner(professional_user)
+
+    expect(page).to have_text("Selecione um agendamento para ver os detalhes.")
+    expect(page).to have_no_css("turbo-frame#appointment_detail section")
   end
 end
