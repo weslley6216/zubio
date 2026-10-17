@@ -17,7 +17,10 @@ class Client::BookingsController < Client::BaseController
     result = Appointment.book(professional: professional, service: service, starts_at: starts_at,
       client_name: params[:name].to_s, client_phone: params[:phone].to_s)
 
-    return render_receipt(service, professional, result.value) if result.success?
+    if result.success?
+      notify_owner(result.value)
+      return render_receipt(service, professional, result.value)
+    end
     return render_race(service, professional, starts_at) if result.reason == :taken
 
     render_schedule(
@@ -33,6 +36,12 @@ class Client::BookingsController < Client::BaseController
 
   def current_professional
     @current_professional ||= ActsAsTenant.current_tenant.professionals.active.first
+  end
+
+  def notify_owner(appointment)
+    OwnerMailer.new_appointment(ActsAsTenant.current_tenant.id, appointment.id).deliver_later
+  rescue StandardError => error
+    Rails.logger.error("Owner notification failed for appointment #{appointment.id}: #{error.message}")
   end
 
   def render_race(service, professional, starts_at)

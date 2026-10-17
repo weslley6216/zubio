@@ -501,5 +501,63 @@ RSpec.describe "Public booking day and time selection", type: :request do
       expect(document.at_css("[data-field='name'] input[name='name']")).to be_present
       expect(document.css("[data-slots] button[data-slot]").first["data-starts-at"]).to be_present
     end
+
+    it "confirming enqueues the owner notice for the request tenant and the new appointment" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      expect { post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: starts_at.iso8601 } }
+        .to have_enqueued_mail(OwnerMailer, :new_appointment).with(tenant.id, a_kind_of(Integer))
+    end
+
+    it "a failing owner notice leaves the booking created and the receipt shown" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+      allow(OwnerMailer).to receive(:new_appointment).and_raise(StandardError.new("resend down"))
+
+      post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: starts_at.iso8601 }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Horário confirmado")
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.occupying.count }).to eq(1)
+    end
+
+    it "cancelling a booked appointment enqueues no new-appointment notice" do
+      appointment = create(:appointment, tenant: tenant)
+      host! "#{tenant.subdomain}.zubio.com.br"
+
+      expect { post client_cancellation_path(appointment.cancel_token) }
+        .not_to have_enqueued_mail(OwnerMailer, :new_appointment)
+    end
+
+    it "re-saving an appointment enqueues no second notice" do
+      appointment = create(:appointment, tenant: tenant)
+
+      expect {
+        ActsAsTenant.with_tenant(tenant) do
+          appointment.update!(starts_at: appointment.starts_at + 1.hour, ends_at: appointment.ends_at + 1.hour)
+        end
+      }.not_to have_enqueued_mail(OwnerMailer, :new_appointment)
+    end
+
+    it "a rejected booking enqueues no owner notice" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      expect { post client_service_booking_path(service), params: { name: "", phone: "11988771234", starts_at: starts_at.iso8601 } }
+        .not_to have_enqueued_mail(OwnerMailer, :new_appointment)
+    end
   end
 end
