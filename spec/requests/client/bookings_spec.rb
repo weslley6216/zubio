@@ -540,7 +540,6 @@ RSpec.describe "Public booking day and time selection", type: :request do
 
     it "re-saving an appointment enqueues no second notice" do
       appointment = create(:appointment, tenant: tenant)
-      host! "#{tenant.subdomain}.zubio.com.br"
 
       expect {
         ActsAsTenant.with_tenant(tenant) do
