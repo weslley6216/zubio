@@ -112,6 +112,7 @@
   --ink-muted: #9baebc;
   --ink-subtle: #75899a;
   --danger: #fda29b;
+  --on-danger: #08121a;
   --success: #75e0a7;
 
   --brand-accent: var(--brand-400);

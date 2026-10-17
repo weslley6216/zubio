@@ -25,4 +25,33 @@ RSpec.describe "Public appointment cancellation", type: :system, js: true do
     expect(page).to fit_the_phone_width
     expect(ActsAsTenant.with_tenant(tenant) { appointment.reload }).to be_cancelled
   end
+
+  %w[light dark].each do |scheme|
+    it "keeps the confirm button legible when the system asks for #{scheme}" do
+      tenant = create(:tenant, subdomain: "mary", name: "Mary Sombracelhas")
+      appointment = create(:appointment, tenant: tenant, starts_at: 2.days.from_now.change(hour: 9, min: 45))
+      emulate_color_scheme(scheme)
+
+      visit "http://mary.zubio.com.br#{client_appointment_path(appointment.cancel_token)}"
+      click_link "Desmarcar este horário"
+      find("dialog[open]")
+
+      expect(contrast_ratio("dialog button[type='submit']")).to be >= Branding::ColorScale::MIN_CONTRAST
+    end
+  end
+
+  it "keeps the confirm button legible when the visitor toggled dark on a light system" do
+    tenant = create(:tenant, subdomain: "mary", name: "Mary Sombracelhas")
+    appointment = create(:appointment, tenant: tenant, starts_at: 2.days.from_now.change(hour: 9, min: 45))
+    emulate_color_scheme("light")
+
+    visit "http://mary.zubio.com.br#{client_appointment_path(appointment.cancel_token)}"
+    page.execute_script("localStorage.setItem('theme', 'dark')")
+    visit "http://mary.zubio.com.br#{client_appointment_path(appointment.cancel_token)}"
+    find("html[data-theme='dark']")
+    click_link "Desmarcar este horário"
+    find("dialog[open]")
+
+    expect(contrast_ratio("dialog button[type='submit']")).to be >= Branding::ColorScale::MIN_CONTRAST
+  end
 end
