@@ -19,6 +19,63 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
     expect(page.evaluate_script("window.__noReload")).to be(true)
   end
 
+  it "swaps only the grid, keeping every other node" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, name: "Corte", duration_minutes: 60)
+    tuesday = Date.current.next_week(:tuesday)
+    wednesday = tuesday + 1
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "11:00")
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 3, opens_at: "14:00", closes_at: "16:00")
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: tuesday.iso8601)}"
+    page.execute_script(<<~JS)
+      window.__kept = {
+        header: document.querySelector("header"),
+        days: document.querySelector("[data-day-selector]"),
+        field: document.querySelector("[data-field='name']"),
+        bar: document.querySelector("[data-confirm-bar]")
+      }
+    JS
+
+    find("[data-day='#{wednesday.iso8601}']").trigger("click")
+
+    expect(page).to have_css("[data-slots] [data-slot]", text: "14:00")
+    expect(page.all("[data-slots] [data-slot]").map(&:text)).to eq([ "14:00", "15:00" ])
+    expect(page.evaluate_script(<<~JS)).to be(true)
+      Object.values(window.__kept).every((node) => document.contains(node))
+    JS
+    expect(page).to fit_the_phone_width
+  end
+
+  it "marks the tapped visible day without moving the strip" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 60)
+    (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "18:00") }
+    fourth_day = Date.current + 3
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service)}"
+
+    find("[data-day='#{fourth_day.iso8601}']").trigger("click")
+
+    expect(page).to have_css("[data-day='#{fourth_day.iso8601}'][aria-current='date']")
+    expect(page.evaluate_script("document.querySelector('[data-day-selector]').scrollLeft")).to eq(0)
+  end
+
+  it "keeps the strip scroll where the client left it" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 60)
+    (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "18:00") }
+    third_day = Date.current + 2
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service)}"
+    page.execute_script("document.querySelector('[data-day-selector]').scrollLeft = 40")
+    scroll_before = page.evaluate_script("document.querySelector('[data-day-selector]').scrollLeft")
+
+    find("[data-day='#{third_day.iso8601}']").trigger("click")
+
+    expect(page.evaluate_script("document.querySelector('[data-day-selector]').scrollLeft")).to eq(scroll_before)
+  end
+
   it "carries the picked day into the confirmation bar" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
@@ -136,6 +193,82 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
       expect(opaque?("[data-confirm-bar]")).to be(true)
       expect(contrast_ratio("[data-confirm-bar]")).to be >= Branding::ColorScale::MIN_NON_TEXT_CONTRAST
     end
+  end
+
+  it "keeps the typed name and phone across a day change" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 60)
+    tuesday = Date.current.next_week(:tuesday)
+    wednesday = tuesday + 1
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "11:00")
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 3, opens_at: "14:00", closes_at: "16:00")
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: tuesday.iso8601)}"
+    fill_in "name", with: "Ana Paula Ribeiro"
+    fill_in "phone", with: "11988771234"
+
+    find("[data-day='#{wednesday.iso8601}']").trigger("click")
+
+    expect(page).to have_field("name", with: "Ana Paula Ribeiro")
+    expect(page).to have_field("phone", with: "11988771234")
+  end
+
+  it "a day change clears the picked time and the summary" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45, price_cents: 6_000)
+    [ 2, 4 ].each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "12:00") }
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: "2026-09-08")}"
+    find("[data-slot][data-time='09:45']").click
+    expect(page).to have_css("[data-confirm-bar]:not([disabled])")
+
+    find("[data-day='2026-09-10']").trigger("click")
+
+    expect(page).to have_no_css("[data-slot][aria-pressed='true']")
+    expect(page).to have_css("[data-confirm-bar][disabled]")
+    expect(page).to have_css("[data-summary]", exact_text: "Qui, 10 set · R$ 60")
+  end
+
+  it "advances the url with the day and restores the previous day on back" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, name: "Corte", duration_minutes: 60)
+    tuesday = Date.current.next_week(:tuesday)
+    wednesday = tuesday + 1
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "11:00")
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 3, opens_at: "14:00", closes_at: "16:00")
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: tuesday.iso8601)}"
+
+    find("[data-day='#{wednesday.iso8601}']").click
+
+    expect(page).to have_css("[data-slots] [data-slot]", text: "14:00")
+    expect(page).to have_current_path(new_client_service_booking_path(service, day: wednesday.iso8601))
+    sleep 0.3
+    page.go_back
+
+    expect(page).to have_css("[data-slots] [data-slot]", text: "09:00")
+    expect(page).to have_current_path(new_client_service_booking_path(service, day: tuesday.iso8601))
+    expect(page.all("[data-slots] [data-slot]").map(&:text)).to eq([ "09:00", "10:00" ])
+  end
+
+  it "brings a day opened far down the strip into view" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 60)
+    (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "18:00") }
+    last_day = Date.current + 13
+
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: last_day.iso8601)}"
+
+    expect(page).to have_css("[data-day='#{last_day.iso8601}'][aria-current='date']")
+    expect(page.evaluate_script(<<~JS)).to be(true)
+      (() => {
+        const strip = document.querySelector('[data-day-selector]').getBoundingClientRect();
+        const day = document.querySelector('[aria-current=date]').getBoundingClientRect();
+        return day.left >= strip.left && day.right <= strip.right;
+      })()
+    JS
   end
 
   it "enables the confirm button and names the time once a slot is picked" do
