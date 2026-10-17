@@ -48,6 +48,12 @@ class Views::Client::Appointments::Show < Views::Base
   REBOOK_PRIMARY_CLASS = "grid min-h-[50px] place-items-center rounded-xl bg-brand-600 text-[15px] font-extrabold text-on-brand".freeze
   FOOTER_CLASS = "px-6 pb-7 text-center text-[12px] leading-[1.6] text-ink-subtle".freeze
 
+  def self.confirm_prompt(appointment)
+    date = appointment.starts_at.to_date
+    Kernel.format(CONFIRM_PROMPT, weekday: Views::Client::Bookings::New::WEEKDAY_NAMES[date.wday].downcase, day: date.day,
+      month: Views::Client::Bookings::New::MONTH_ABBR[date.month - 1], time: appointment.starts_at.strftime("%H:%M"))
+  end
+
   def initialize(tenant:, branding:, appointment:, service:, professional:)
     @tenant = tenant
     @branding = branding
@@ -155,11 +161,7 @@ class Views::Client::Appointments::Show < Views::Base
     "#{Views::Client::Bookings::New::WEEKDAY_ABBR[date.wday].capitalize}, #{date.day} #{Views::Client::Bookings::New::MONTH_ABBR[date.month - 1]} · #{@appointment.starts_at.strftime("%H:%M")}"
   end
 
-  def confirm_prompt
-    date = @appointment.starts_at.to_date
-    Kernel.format(CONFIRM_PROMPT, weekday: Views::Client::Bookings::New::WEEKDAY_NAMES[date.wday].downcase, day: date.day,
-      month: Views::Client::Bookings::New::MONTH_ABBR[date.month - 1], time: @appointment.starts_at.strftime("%H:%M"))
-  end
+  def confirm_prompt = self.class.confirm_prompt(@appointment)
 
   def cancelled_subtitle = Kernel.format(CANCELLED_SUBTITLE, professional: @professional.display_name.split.first)
 

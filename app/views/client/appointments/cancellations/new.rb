@@ -39,9 +39,5 @@ class Views::Client::Appointments::Cancellations::New < Views::Base
     end
   end
 
-  def confirm_prompt
-    date = @appointment.starts_at.to_date
-    Kernel.format(SHOW::CONFIRM_PROMPT, weekday: Views::Client::Bookings::New::WEEKDAY_NAMES[date.wday].downcase, day: date.day,
-      month: Views::Client::Bookings::New::MONTH_ABBR[date.month - 1], time: @appointment.starts_at.strftime("%H:%M"))
-  end
+  def confirm_prompt = SHOW.confirm_prompt(@appointment)
 end
