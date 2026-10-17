@@ -133,6 +133,95 @@ RSpec.describe OwnerMailer, type: :mailer do
     end
   end
 
+  describe "#new_appointment" do
+    let(:tenant) { create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora") }
+    let(:owner) { create(:user, tenant: tenant, name: "Ana Lima", email: "ana@example.com", role: "owner") }
+    let(:appointment) do
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, name: "Design de sobrancelhas")
+      client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+      create(:appointment, tenant: tenant, professional: professional, service: service, client: client,
+        starts_at: Time.zone.local(2026, 11, 10, 9, 0))
+    end
+
+    it "is addressed to the establishment's owner" do
+      owner
+      mail = described_class.new_appointment(tenant.id, appointment.id)
+
+      expect(mail.to).to eq([ "ana@example.com" ])
+    end
+
+    it "names the client and her phone number" do
+      owner
+      mail = described_class.new_appointment(tenant.id, appointment.id)
+
+      expect(mail.body.to_s).to include("Ana Paula Ribeiro")
+      expect(mail.body.to_s).to include("11988771234")
+    end
+
+    it "carries the day and time of the appointment" do
+      owner
+      mail = described_class.new_appointment(tenant.id, appointment.id)
+
+      expect(mail.body.to_s).to include("10/11/2026")
+      expect(mail.body.to_s).to include("09:00")
+    end
+
+    it "names the booked service" do
+      owner
+      mail = described_class.new_appointment(tenant.id, appointment.id)
+
+      expect(mail.body.to_s).to include("Design de sobrancelhas")
+    end
+
+    it "greets the owner by name" do
+      owner
+      mail = described_class.new_appointment(tenant.id, appointment.id)
+
+      expect(mail.body.to_s).to include("Ana Lima")
+    end
+
+    it "does not name the client in the subject" do
+      owner
+      mail = described_class.new_appointment(tenant.id, appointment.id)
+
+      expect(mail.subject).to eq("Novo agendamento")
+    end
+
+    it "is delivered as plain text" do
+      owner
+      mail = described_class.new_appointment(tenant.id, appointment.id)
+
+      expect(mail.mime_type).to eq("text/plain")
+    end
+
+    it "points to the owner dashboard on the establishment's host" do
+      owner
+      mail = described_class.new_appointment(tenant.id, appointment.id)
+
+      expect(mail.body.to_s).to include("estudio-aurora.zubio.com.br/owner/dashboard")
+    end
+
+    it "addresses only the appointment tenant's owner, never another tenant's" do
+      owner
+      ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      create(:user, tenant: ze, email: "ze@example.com", role: "owner")
+
+      mail = described_class.new_appointment(tenant.id, appointment.id)
+
+      expect(mail.to).to eq([ "ana@example.com" ])
+    end
+
+    it "cannot be built from an appointment id outside the given tenant" do
+      owner
+      ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      ze_appointment = create(:appointment, tenant: ze)
+
+      expect { described_class.new_appointment(tenant.id, ze_appointment.id).message }
+        .to raise_error(ActiveRecord::RecordNotFound)
+    end
+  end
+
   describe "#login_links" do
     it "is addressed to the queried email and delivered as plain text" do
       tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")

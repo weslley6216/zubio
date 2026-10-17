@@ -44,6 +44,22 @@ class OwnerMailer < ApplicationMailer
     end
   end
 
+  def new_appointment(tenant_id, appointment_id)
+    tenant = Tenant.find(tenant_id)
+
+    ActsAsTenant.with_tenant(tenant) do
+      appointment = Appointment.find(appointment_id)
+      owner = User.owner.first
+
+      mail(
+        to: owner.email,
+        subject: "Novo agendamento",
+        body: new_appointment_body(tenant, owner, appointment),
+        content_type: "text/plain"
+      )
+    end
+  end
+
   def login_links(email)
     targets = User.login_targets_for(email)
     return if targets.empty?
@@ -96,6 +112,25 @@ class OwnerMailer < ApplicationMailer
       https://#{tenant.canonical_host}
 
       Mande esse link pra quem você quiser: é por ele que seus clientes marcam horário.
+    TEXT
+  end
+
+  def new_appointment_body(tenant, owner, appointment)
+    client = appointment.client
+
+    <<~TEXT
+      Olá, #{owner.name}!
+
+      Você tem um novo agendamento:
+
+      - Serviço: #{appointment.service.name}
+      - Quando: #{appointment.starts_at.strftime("%d/%m/%Y")} às #{appointment.starts_at.strftime("%H:%M")}
+      - Cliente: #{client.name}
+      - Telefone: #{client.phone}
+
+      Veja no painel do seu estabelecimento:
+
+      #{owner_dashboard_url(host: tenant.canonical_host)}
     TEXT
   end
 
