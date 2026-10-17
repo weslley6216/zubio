@@ -206,6 +206,35 @@ RSpec.describe Appointment, type: :model do
 
       expect(results).to contain_exactly(mine)
     end
+
+    it "for_day brings the day's appointments in time order" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
+      day = Time.current.next_week(:tuesday).to_date
+      fourteen = ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, client: client, starts_at: day.in_time_zone.change(hour: 14)) }
+      nine = ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, client: client, starts_at: day.in_time_zone.change(hour: 9)) }
+      ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, client: client, starts_at: (day + 1.day).in_time_zone.change(hour: 9)) }
+
+      results = ActsAsTenant.with_tenant(tenant) { Appointment.for_day(day).to_a }
+
+      expect(results).to eq([ nine, fourteen ])
+    end
+
+    it "for_day includes the cancelled appointment" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
+      day = Time.current.next_week(:tuesday).to_date
+      confirmed = ActsAsTenant.with_tenant(tenant) { Appointment.create!(professional: professional, service: service, client: client, starts_at: day.in_time_zone.change(hour: 9)) }
+      cancelled = ActsAsTenant.with_tenant(tenant) { create(:appointment, :cancelled, tenant: tenant, professional: professional, service: service, starts_at: day.in_time_zone.change(hour: 14)) }
+
+      results = ActsAsTenant.with_tenant(tenant) { Appointment.for_day(day).to_a }
+
+      expect(results).to contain_exactly(confirmed, cancelled)
+    end
   end
 
   describe "tenant isolation" do
@@ -223,6 +252,24 @@ RSpec.describe Appointment, type: :model do
       ActsAsTenant.with_tenant(ze) { Appointment.create!(professional: ze_professional, service: ze_service, client: ze_client, starts_at: nine) }
 
       results = ActsAsTenant.with_tenant(aurora) { Appointment.occupying.to_a }
+
+      expect(results).to contain_exactly(own)
+    end
+
+    it "for_day brings the own tenant's appointment and not another tenant's" do
+      day = Time.current.next_week(:tuesday).to_date
+      ze = create(:tenant, name: "Barbearia do Zé")
+      ze_professional = create(:professional, tenant: ze)
+      ze_service = create(:service, tenant: ze, duration_minutes: 45)
+      ze_client = create(:client, tenant: ze)
+      ActsAsTenant.with_tenant(ze) { Appointment.create!(professional: ze_professional, service: ze_service, client: ze_client, starts_at: day.in_time_zone.change(hour: 9)) }
+      aurora = create(:tenant, name: "Estúdio Aurora")
+      aurora_professional = create(:professional, tenant: aurora)
+      aurora_service = create(:service, tenant: aurora, duration_minutes: 45)
+      aurora_client = create(:client, tenant: aurora)
+      own = ActsAsTenant.with_tenant(aurora) { Appointment.create!(professional: aurora_professional, service: aurora_service, client: aurora_client, starts_at: day.in_time_zone.change(hour: 9)) }
+
+      results = ActsAsTenant.with_tenant(aurora) { Appointment.for_day(day).to_a }
 
       expect(results).to contain_exactly(own)
     end
