@@ -120,6 +120,52 @@ RSpec.describe Client, type: :model do
 
       expect(client.tel_href).to eq("tel:+5511988771234")
     end
+
+    it "dials the masked phone in E.164" do
+      client = create(:client, phone: "(11) 98877-1234")
+
+      expect(client.tel_href).to eq("tel:+5511988771234")
+    end
+  end
+
+  describe "#whatsapp_url" do
+    it "builds the WhatsApp address in E.164 with the 55 country code" do
+      client = create(:client, phone: "11988771234")
+
+      expect(client.whatsapp_url).to eq("https://wa.me/5511988771234")
+    end
+
+    it "builds the same WhatsApp address from a masked phone" do
+      client = create(:client, phone: "(11) 98877-1234")
+
+      expect(client.whatsapp_url).to eq("https://wa.me/5511988771234")
+    end
+
+    it "builds the WhatsApp address from a phone typed with the country code" do
+      client = create(:client, phone: "+55 11 98877-1234")
+
+      expect(client.whatsapp_url).to eq("https://wa.me/5511988771234")
+    end
+
+    it "builds the WhatsApp address for a ten-digit landline" do
+      client = create(:client, phone: "1133334444")
+
+      expect(client.whatsapp_url).to eq("https://wa.me/551133334444")
+    end
+  end
+
+  describe "#initials" do
+    it "takes the initials of the first two names" do
+      client = build(:client, name: "Ana Paula Ribeiro")
+
+      expect(client.initials).to eq("AP")
+    end
+
+    it "takes a single initial for a one-word name" do
+      client = build(:client, name: "maria")
+
+      expect(client.initials).to eq("M")
+    end
   end
 
   describe "tenant isolation" do
