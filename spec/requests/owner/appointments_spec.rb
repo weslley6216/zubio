@@ -101,7 +101,7 @@ RSpec.describe "Owner appointments", type: :request do
       expect(response.body).not_to include("Nenhum agendamento neste dia.")
     end
 
-    it "sends an anonymous visitor to the login without any client name or phone in the response" do
+    it "sends an anonymous visitor to the login" do
       create(:branding, tenant: tenant)
       service = create(:service, tenant: tenant)
       client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
@@ -109,7 +109,18 @@ RSpec.describe "Owner appointments", type: :request do
       host! "#{tenant.subdomain}.zubio.com.br"
 
       get owner_appointments_path
+
       expect(response).to redirect_to(new_owner_session_path)
+    end
+
+    it "shows no client name or phone on the login the anonymous visitor is sent to" do
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+      ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Date.current.in_time_zone.change(hour: 9)) }
+      host! "#{tenant.subdomain}.zubio.com.br"
+
+      get owner_appointments_path
       follow_redirect!
 
       expect(response.body).not_to include("Ana Paula Ribeiro")
@@ -239,10 +250,10 @@ RSpec.describe "Owner appointments", type: :request do
 
       expect(response.body).to include("Juliana Prado")
       detail = Nokogiri::HTML5(response.body).at_css("turbo-frame#appointment_detail")
-      expect(detail.at_css(%(a[aria-current="true"]))).to be_present
+      expect(detail.at_css(%(a[aria-current="true"])).text).to eq("Ana Paula Ribeiro")
     end
 
-    it "sends an anonymous visitor to the login without any client name or phone" do
+    it "sends an anonymous visitor to the login" do
       travel_to Time.zone.local(2026, 9, 8, 7, 0)
       create(:branding, tenant: tenant)
       service = create(:service, tenant: tenant)
@@ -251,7 +262,19 @@ RSpec.describe "Owner appointments", type: :request do
       host! "#{tenant.subdomain}.zubio.com.br"
 
       get owner_appointment_path(appointment)
+
       expect(response).to redirect_to(new_owner_session_path)
+    end
+
+    it "shows no client name or phone on the login the anonymous visitor is sent to" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+      appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+      host! "#{tenant.subdomain}.zubio.com.br"
+
+      get owner_appointment_path(appointment)
       follow_redirect!
 
       expect(response.body).not_to include("Ana Paula Ribeiro")

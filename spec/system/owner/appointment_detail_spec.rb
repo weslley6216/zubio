@@ -27,6 +27,25 @@ RSpec.describe "Owner appointment detail", type: :system, js: true do
     end
   end
 
+  it "opens the detail from the agenda on the phone" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    ana = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+    juliana = create(:client, tenant: tenant, name: "Juliana Prado")
+    ActsAsTenant.with_tenant(tenant) do
+      create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: ana, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
+      create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: juliana, starts_at: Time.zone.local(2026, 9, 8, 14, 0))
+    end
+    sign_in_owner(professional_user)
+
+    click_on "Ana Paula Ribeiro"
+
+    expect(page).to have_link("Chamar no WhatsApp")
+  end
+
   it "goes back to the agenda from the detail on the phone" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
@@ -41,7 +60,6 @@ RSpec.describe "Owner appointment detail", type: :system, js: true do
     end
     sign_in_owner(professional_user)
     click_on "Ana Paula Ribeiro"
-    expect(page).to have_link("Chamar no WhatsApp")
 
     click_on "Voltar para a agenda"
 
