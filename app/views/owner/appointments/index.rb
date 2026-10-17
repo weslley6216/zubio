@@ -10,7 +10,7 @@ class Views::Owner::Appointments::Index < Views::Base
   SHARE_HELPER = "Mande esse endereço para suas clientes. É por ele que elas escolhem o horário.".freeze
   SELECT_HINT = "Selecione um agendamento para ver os detalhes.".freeze
 
-  def initialize(tenant:, branding:, day:, appointments:, current_section:, subtitle:, selected: nil)
+  def initialize(tenant:, branding:, day:, appointments:, current_section:, subtitle:, selected: nil, selected_visit_number: nil)
     @tenant = tenant
     @branding = branding
     @day = day
@@ -18,6 +18,7 @@ class Views::Owner::Appointments::Index < Views::Base
     @current_section = current_section
     @subtitle = subtitle
     @selected = selected
+    @selected_visit_number = selected_visit_number
   end
 
   def view_template
@@ -44,7 +45,7 @@ class Views::Owner::Appointments::Index < Views::Base
 
   def render_aside
     aside(class: "lg:border-l lg:border-line lg:bg-surface") do
-      @selected ? render(Components::Owner::AppointmentDetail.new(appointment: @selected)) : render_placeholder
+      @selected ? render(Components::Owner::AppointmentDetail.new(appointment: @selected, visit_number: @selected_visit_number)) : render_placeholder
     end
   end
 

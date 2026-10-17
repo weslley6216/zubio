@@ -15,8 +15,9 @@ class Components::Owner::AppointmentDetail < Components::Base
   CANCELLED_LABEL = Components::Owner::AppointmentRow::CANCELLED_LABEL
   VISIT_LABEL = "%dª visita".freeze
 
-  def initialize(appointment:)
+  def initialize(appointment:, visit_number:)
     @appointment = appointment
+    @visit_number = visit_number
   end
 
   def view_template
@@ -102,7 +103,7 @@ class Components::Owner::AppointmentDetail < Components::Base
       span(class: "grid h-11 w-11 flex-none place-items-center rounded-full bg-brand-soft text-[15px] font-extrabold text-brand-ink") { client.initials }
       div(class: "grid flex-grow gap-0.5") do
         span(class: "text-[16px] font-bold text-ink") { client.name }
-        span(class: "text-[13px] tabular-nums text-ink-muted") { "#{client.phone_display} · #{Kernel.format(VISIT_LABEL, @appointment.visit_number)}" }
+        span(class: "text-[13px] tabular-nums text-ink-muted") { "#{client.phone_display} · #{Kernel.format(VISIT_LABEL, @visit_number)}" }
       end
     end
   end

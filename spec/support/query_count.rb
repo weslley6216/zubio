@@ -18,4 +18,5 @@ end
 RSpec.configure do |config|
   config.include QueryCount, type: :request
   config.include QueryCount, type: :model
+  config.include QueryCount, type: :component
 end
