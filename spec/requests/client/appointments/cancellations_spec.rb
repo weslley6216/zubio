@@ -77,6 +77,17 @@ RSpec.describe "Public appointment cancellation", type: :request do
     expect(response).to have_http_status(:not_found)
   end
 
+  it "does not cancel another tenant's appointment from this host" do
+    aurora = create(:tenant, subdomain: "aurora", name: "Estúdio Aurora")
+    aurora_appointment = create(:appointment, tenant: aurora)
+    host! "mary.zubio.com.br"
+
+    post client_cancellation_path(aurora_appointment.cancel_token)
+
+    expect(response).to have_http_status(:not_found)
+    expect(ActsAsTenant.with_tenant(aurora) { aurora_appointment.reload }).to be_confirmed
+  end
+
   it "keeps the token out of the redirect log" do
     appointment = create(:appointment, tenant: tenant)
     host! "mary.zubio.com.br"
