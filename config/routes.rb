@@ -43,6 +43,10 @@ Rails.application.routes.draw do
       resources :services, only: [] do
         resource :booking, only: %i[new create]
       end
+      get "a/:token", to: "appointments#show", as: :appointment
+      scope "a/:token", module: :appointments do
+        resource :cancellation, only: %i[new create]
+      end
     end
   end
 

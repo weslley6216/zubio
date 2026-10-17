@@ -414,4 +414,56 @@ RSpec.describe Appointment, type: :model do
       expect(ActsAsTenant.with_tenant(ze) { [ Appointment.count, Client.count ] }).to eq([ 0, 0 ])
     end
   end
+
+  describe "cancellation" do
+    it "past? is true for a start before now and false for a future one" do
+      past = create(:appointment, :past)
+      future = create(:appointment)
+
+      expect(past.past?).to be(true)
+      expect(future.past?).to be(false)
+    end
+
+    it "cancellable? is true for a future confirmed appointment" do
+      appointment = create(:appointment)
+
+      expect(appointment.cancellable?).to be(true)
+    end
+
+    it "cancellable? is false once the start has passed" do
+      appointment = create(:appointment, :past)
+
+      expect(appointment.cancellable?).to be(false)
+    end
+
+    it "cancellable? is false for an already cancelled appointment" do
+      appointment = create(:appointment, :cancelled)
+
+      expect(appointment.cancellable?).to be(false)
+    end
+
+    it "cancel! moves a cancellable appointment to cancelled" do
+      appointment = create(:appointment)
+
+      ActsAsTenant.with_tenant(appointment.tenant) { appointment.cancel! }
+
+      expect(appointment.reload).to be_cancelled
+    end
+
+    it "cancel! leaves a past appointment confirmed" do
+      appointment = create(:appointment, :past)
+
+      ActsAsTenant.with_tenant(appointment.tenant) { appointment.cancel! }
+
+      expect(appointment.reload).to be_confirmed
+    end
+
+    it "cancel! leaves an already cancelled appointment cancelled" do
+      appointment = create(:appointment, :cancelled)
+
+      ActsAsTenant.with_tenant(appointment.tenant) { appointment.cancel! }
+
+      expect(appointment.reload).to be_cancelled
+    end
+  end
 end

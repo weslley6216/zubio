@@ -22,6 +22,7 @@
   --ink-muted: #68798a;
   --ink-subtle: #94a6b4;
   --danger: #b42318;
+  --on-danger: #ffffff;
   --success: #067647;
   --zubio: #4f46e5;
   --on-zubio: #ffffff;
@@ -70,6 +71,7 @@
     --ink-muted: #9baebc;
     --ink-subtle: #75899a;
     --danger: #fda29b;
+    --on-danger: #08121a;
     --success: #75e0a7;
 
     --brand-accent: var(--brand-400);
@@ -110,6 +112,7 @@
   --ink-muted: #9baebc;
   --ink-subtle: #75899a;
   --danger: #fda29b;
+  --on-danger: #08121a;
   --success: #75e0a7;
 
   --brand-accent: var(--brand-400);
@@ -208,5 +211,6 @@
   --color-ink-muted: var(--ink-muted);
   --color-ink-subtle: var(--ink-subtle);
   --color-danger: var(--danger);
+  --color-on-danger: var(--on-danger);
   --color-success: var(--success);
 }

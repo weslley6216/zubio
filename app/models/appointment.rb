@@ -35,6 +35,16 @@ class Appointment < ApplicationRecord
     Result::Failure.new(:taken)
   end
 
+  def cancel!
+    return unless cancellable?
+
+    cancelled!
+  end
+
+  def cancellable? = confirmed? && !past?
+
+  def past? = starts_at < Time.current
+
   def self.offered?(professional, service, starts_at)
     return false unless starts_at
 
