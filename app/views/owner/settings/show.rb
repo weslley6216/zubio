@@ -63,7 +63,7 @@ class Views::Owner::Settings::Show < Views::Base
 
   def render_top_bar
     header(class: TOP_BAR_CLASS, data: { top_bar: true }) do
-      a(href: owner_dashboard_path, class: BACK_CLASS, aria_label: BACK_LABEL) do
+      a(href: owner_appointments_path, class: BACK_CLASS, aria_label: BACK_LABEL) do
         svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.2", stroke_linecap: "round",
           stroke_linejoin: "round", aria_hidden: "true", class: "h-5 w-5 text-ink") { |icon| icon.path(d: BACK_ICON) }
       end

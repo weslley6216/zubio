@@ -131,7 +131,7 @@ class Views::Owner::Onboarding::Final < Views::Base
 
   def render_footer
     div(class: FOOTER_CLASS) do
-      a(href: owner_dashboard_path, class: DASHBOARD_LINK_CLASS) { DASHBOARD_LABEL }
+      a(href: owner_appointments_path, class: DASHBOARD_LINK_CLASS) { DASHBOARD_LABEL }
       a(href: new_owner_service_path, class: ADD_SERVICE_CLASS) { ADD_SERVICE_LABEL } if @services.empty?
     end
   end

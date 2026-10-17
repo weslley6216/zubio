@@ -25,6 +25,6 @@ class Owner::HandoffsController < ApplicationController
   end
 
   def post_handoff_path
-    ActsAsTenant.current_tenant&.onboarding_completed? ? owner_onboarding_final_path : owner_dashboard_path
+    ActsAsTenant.current_tenant&.onboarding_completed? ? owner_onboarding_final_path : owner_appointments_path
   end
 end

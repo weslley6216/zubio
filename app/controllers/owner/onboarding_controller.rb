@@ -6,7 +6,7 @@ class Owner::OnboardingController < Owner::BaseController
   skip_before_action :enforce_onboarding_gate
 
   def show
-    return redirect_to owner_dashboard_path if ActsAsTenant.current_tenant.onboarding_completed?
+    return redirect_to owner_appointments_path if ActsAsTenant.current_tenant.onboarding_completed?
 
     render document
   end
