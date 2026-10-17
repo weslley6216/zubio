@@ -68,6 +68,7 @@ module Zubio
     # The handoff token rides in the query string of the redirect, and
     # filter_parameters does not reach the logged Location header.
     config.filter_redirect += [ "owner/handoff" ]
+    config.filter_redirect += [ "/a/" ]
 
     config.i18n.default_locale = :"pt-BR"
     config.i18n.available_locales = [ :"pt-BR" ]
