@@ -54,5 +54,6 @@ RSpec.describe Views::Client::Appointments::Show, type: :component do
     expect(markup).to include("text-ink")
     expect(markup).not_to match(/#[0-9a-f]{6}/i)
     expect(markup).not_to include("rgb(")
+    expect(markup).not_to include("text-white")
   end
 end

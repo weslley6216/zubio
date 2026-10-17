@@ -34,7 +34,7 @@ class Views::Client::Appointments::Show < Views::Base
   SHEET_TEXT_CLASS = "flex flex-col gap-1.5".freeze
   SHEET_TITLE_CLASS = "text-[20px] font-extrabold tracking-[-0.02em] text-ink".freeze
   SHEET_NOTE_CLASS = "text-[14px] leading-[1.5] text-ink-muted".freeze
-  CONFIRM_CLASS = "min-h-[50px] rounded-xl border-0 bg-danger text-[15px] font-extrabold text-white".freeze
+  CONFIRM_CLASS = "min-h-[50px] rounded-xl border-0 bg-danger text-[15px] font-extrabold text-on-danger".freeze
   KEEP_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-line-strong bg-surface text-[14px] font-bold text-ink".freeze
 
   CANCELLED_ICON_WRAP_CLASS = "flex flex-col items-center gap-3.5 px-6 pt-11 pb-7 text-center".freeze
