@@ -1,5 +1,4 @@
 class Client::BookingsController < Client::BaseController
-  WINDOW_DAYS = 14
   RATE_LIMIT_ALERT = "Muitas tentativas. Tente novamente em instantes.".freeze
 
   rate_limit to: 10, within: 1.minute, only: :create, name: "booking",
@@ -57,7 +56,7 @@ class Client::BookingsController < Client::BaseController
 
   def render_schedule(service:, selected_day: nil, selected_slot: nil, client_name: nil, client_phone: nil, client: nil, status: :ok)
     tenant = ActsAsTenant.current_tenant
-    availability = current_professional && Professional::Availability.new(professional: current_professional, service: service, dates: window)
+    availability = current_professional && Professional::Availability.new(professional: current_professional, service: service, dates: Appointment.booking_window)
 
     unless availability&.schedule_published?
       return render Views::Client::Bookings::New.new(service: service, tenant: tenant, branding: current_branding, published: false), status: status
@@ -77,7 +76,7 @@ class Client::BookingsController < Client::BaseController
 
     render Views::Client::Bookings::New.new(
       service: service, tenant: tenant, branding: current_branding, published: true,
-      days: window.to_a, reasons: reasons, selected_day: chosen,
+      days: Appointment.booking_window.to_a, reasons: reasons, selected_day: chosen,
       slots: slots.fetch(chosen), taken_slots: availability.taken_slots_by_date.fetch(chosen), reason: reasons.fetch(chosen),
       selected_slot: resolved_slot, client_name: client_name, client_phone: client_phone,
       name_errors: client ? client.errors[:name] : [], phone_errors: client ? client.errors[:phone] : []
@@ -91,12 +90,10 @@ class Client::BookingsController < Client::BaseController
     )
   end
 
-  def window = Date.current..(Date.current + (WINDOW_DAYS - 1))
-
   def resolve_day(reasons, requested)
     return requested if requested && reasons.key?(requested)
 
-    reasons.find { |_date, reason| reason == :bookable }&.first || window.first
+    reasons.find { |_date, reason| reason == :bookable }&.first || Appointment.booking_window.first
   end
 
   def parsed_day
