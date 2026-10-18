@@ -82,7 +82,7 @@ class Components::Owner::AppointmentDetail < Components::Base
     div(class: "flex flex-col gap-1.5 rounded-2xl border border-line bg-surface p-5 shadow-[0_1px_2px_rgba(14,26,36,0.04)] lg:border-0 lg:p-0 lg:shadow-none") do
       div(class: "flex items-center gap-2.5") do
         span(class: "flex-grow text-[30px] font-extrabold tracking-[-0.02em] tabular-nums text-ink") { time_range }
-        span(class: "flex-none rounded-full px-[9px] py-1 text-[11px] font-extrabold #{Components::Badge::TONES.fetch(badge_tone)}") { badge_label }
+        span(class: "flex-none rounded-full px-[9px] py-1 text-[11px] font-extrabold #{Components::Badge::TONES.fetch(badge.fetch(:tone))}") { badge.fetch(:label) }
       end
       span(class: "text-[14px] text-ink-muted") { render Components::LongDate.new(date: @appointment.starts_at.to_date) }
     end
@@ -90,9 +90,7 @@ class Components::Owner::AppointmentDetail < Components::Base
 
   def time_range = "#{@appointment.starts_at.strftime('%H:%M')} – #{@appointment.ends_at.strftime('%H:%M')}"
 
-  def badge_label = Components::Owner::AppointmentRow::STATUS_BADGES.fetch(@appointment.status).fetch(:label)
-
-  def badge_tone = Components::Owner::AppointmentRow::STATUS_BADGES.fetch(@appointment.status).fetch(:tone)
+  def badge = Components::Owner::AppointmentRow::STATUS_BADGES.fetch(@appointment.status)
 
   def render_client_card
     div(class: "flex flex-col gap-3.5 rounded-2xl border border-line bg-surface px-5 py-[18px] lg:border-0 lg:gap-5 lg:px-0 lg:py-0") do
