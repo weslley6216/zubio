@@ -92,6 +92,48 @@ RSpec.describe "Owner appointment detail", type: :system, js: true do
     expect(juliana_right).to be <= main_right
   end
 
+  it "marks the tapped row active and keeps the list node when a detail opens" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    ana = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+    juliana = create(:client, tenant: tenant, name: "Juliana Prado")
+    ActsAsTenant.with_tenant(tenant) do
+      create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: ana, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
+      create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: juliana, starts_at: Time.zone.local(2026, 9, 8, 14, 0))
+    end
+    sign_in_owner(professional_user)
+    page.execute_script("window.__list = document.querySelector('main')")
+
+    click_on "Juliana Prado"
+
+    expect(page).to have_link("Chamar no WhatsApp")
+    expect(page.evaluate_script("document.contains(window.__list)")).to be(true)
+    active_links = page.all("a[aria-current='true']").map(&:text)
+    expect(active_links).to eq([ "Juliana Prado" ])
+  end
+
+  it "clears the active row and keeps the list node when the detail closes" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    ana = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+    ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: ana, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+    sign_in_owner(professional_user)
+    click_on "Ana Paula Ribeiro"
+    page.execute_script("window.__list = document.querySelector('main')")
+    expect(page).to have_css("a[aria-current='true']", text: "Ana Paula Ribeiro")
+
+    click_on "Voltar para a agenda"
+
+    expect(page).to have_no_css("[aria-current='true']")
+    expect(page.evaluate_script("document.contains(window.__list)")).to be(true)
+  end
+
   it "shows the select hint beside the list before any appointment is chosen on a 1280px desktop" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")

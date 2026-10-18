@@ -21,7 +21,8 @@ class Components::Owner::AppointmentDetail < Components::Base
   end
 
   def view_template
-    section(class: "fixed inset-0 z-30 flex flex-col overflow-y-auto bg-canvas text-ink leading-[normal] lg:static lg:z-auto lg:gap-5 lg:overflow-visible lg:bg-surface lg:p-8") do
+    section(class: "fixed inset-0 z-30 flex flex-col overflow-y-auto bg-canvas text-ink leading-[normal] lg:static lg:z-auto lg:gap-5 lg:overflow-visible lg:bg-surface lg:p-8",
+      data: { appointment_id: @appointment.id }) do
       render_phone_header
       render_desktop_header
       render_body
