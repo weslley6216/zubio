@@ -9,7 +9,6 @@ class Views::Client::Bookings::Receipt < Views::Base
   KEEP_LINK_BODY = "É por ele que você desmarca, se precisar. Ele não chega por mensagem — salve agora.".freeze
   COPY_LABEL = "Copiar link".freeze
   COPIED_LABEL = "Link copiado".freeze
-  SAVE_LABEL = "Salvar na tela".freeze
   REBOOK_LABEL = "Marcar outro horário".freeze
   CANCEL_LABEL = "Desmarcar este horário".freeze
   FOOTER_NOTE = "Nada é enviado por e-mail ou WhatsApp nesta versão. Esta tela é o comprovante.".freeze
@@ -33,9 +32,7 @@ class Views::Client::Bookings::Receipt < Views::Base
   LINK_TITLE_CLASS = "text-[14px] font-extrabold".freeze
   LINK_BODY_CLASS = "text-[13px] leading-[1.55] text-ink-muted".freeze
   LINK_BOX_CLASS = "break-all rounded-lg border border-line bg-surface-2 px-3 py-2.5 text-[12px] font-bold text-ink-muted".freeze
-  LINK_ACTIONS_CLASS = "flex gap-2".freeze
   COPY_BUTTON_CLASS = "flex min-h-11 flex-grow items-center justify-center gap-2 rounded-[10px] bg-brand-600 text-[14px] font-bold text-on-brand".freeze
-  SAVE_BUTTON_CLASS = "flex min-h-11 flex-grow items-center justify-center gap-2 rounded-[10px] border border-line-strong bg-surface text-[14px] font-bold text-ink".freeze
   BUTTON_ICON_CLASS = "h-[17px] w-[17px]".freeze
   ACTIONS_CLASS = "flex flex-col gap-2.5".freeze
   REBOOK_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-line bg-surface text-[14px] font-bold text-ink-muted".freeze
@@ -128,10 +125,7 @@ class Views::Client::Bookings::Receipt < Views::Base
       end
       p(class: LINK_BODY_CLASS) { KEEP_LINK_BODY }
       div(class: LINK_BOX_CLASS) { cancel_display }
-      div(class: LINK_ACTIONS_CLASS) do
-        render_copy_button
-        render_save_button
-      end
+      render_copy_button
     end
   end
 
@@ -162,22 +156,6 @@ class Views::Client::Bookings::Receipt < Views::Base
       stroke_linejoin: "round", aria_hidden: "true", class: BUTTON_ICON_CLASS) do |icon|
       icon.rect(x: "9", y: "9", width: "11", height: "11", rx: "2")
       icon.path(d: "M15 5H6a2 2 0 0 0-2 2v9")
-    end
-  end
-
-  def render_save_button
-    button(type: "button", class: SAVE_BUTTON_CLASS, data: { controller: "print", action: "print#run" }) do
-      render_save_icon
-      span { SAVE_LABEL }
-    end
-  end
-
-  def render_save_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: BUTTON_ICON_CLASS) do |icon|
-      icon.path(d: "M12 3v12")
-      icon.path(d: "m7 10 5 5 5-5")
-      icon.path(d: "M5 21h14")
     end
   end
 
