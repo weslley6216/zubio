@@ -96,9 +96,39 @@ RSpec.describe "Owner appointments", type: :system, js: true do
     end
     sign_in_owner(professional_user)
     click_on "Ana Terça"
+    expect(page).to have_link("Chamar no WhatsApp")
 
     find("[data-day='#{wednesday.iso8601}']").trigger("click")
 
+    expect(page).to have_text("Bia Quarta")
     expect(page).to have_no_link("Chamar no WhatsApp")
+  end
+
+  it "keeps the fourteen days in a single scrolling row of seven on a 1280px desktop" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    last_day = Date.new(2026, 9, 21)
+    emulate_desktop_screen
+
+    sign_in_owner(professional_user)
+
+    expect(page.evaluate_script(<<~JS)).to eq({ "rows" => 1, "visible" => 7, "total" => 14 })
+      (() => {
+        const strip = document.querySelector('[data-day-selector]').getBoundingClientRect();
+        const days = [...document.querySelectorAll('[data-day-selector] [data-day]')].map((day) => day.getBoundingClientRect());
+        return {
+          rows: new Set(days.map((day) => Math.round(day.top))).size,
+          visible: days.filter((day) => day.left >= strip.left - 0.5 && day.right <= strip.right + 0.5).length,
+          total: days.length
+        };
+      })()
+    JS
+
+    page.execute_script("document.querySelector('[data-day-selector]').scrollLeft = 10000")
+    find("[data-day='#{last_day.iso8601}']").click
+
+    expect(page).to have_css("[data-day='#{last_day.iso8601}'][aria-current='date']")
   end
 end

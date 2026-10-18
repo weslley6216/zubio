@@ -30,7 +30,7 @@ class Views::Owner::Appointments::Index < Views::Base
   def render_day_selector_bar
     div(class: "border-b border-line bg-surface") do
       div(class: "#{Components::Owner::Panel::CONTENT_WIDE} py-4") do
-        div(class: Components::DayPill::STRIP, data: {
+        div(class: Components::DayPill::SCROLLER, data: {
           day_selector: true, controller: "day-selector",
           day_selector_selected_class: Components::DayPill::SELECTED,
           day_selector_resting_class: Components::DayPill::RESTING,
@@ -43,7 +43,7 @@ class Views::Owner::Appointments::Index < Views::Base
   def render_day_pill(date)
     selected = date == @day
     a(href: owner_appointments_path(day: date.iso8601),
-      class: [ "#{Components::DayPill::ITEM} #{Components::DayPill::FRAME}", (selected ? Components::DayPill::SELECTED : Components::DayPill::RESTING) ],
+      class: [ "#{Components::DayPill::WEEK_ITEM} #{Components::DayPill::FRAME}", (selected ? Components::DayPill::SELECTED : Components::DayPill::RESTING) ],
       data: { day: date.iso8601, day_selector_target: (selected ? "selected" : nil),
               turbo_frame: Components::Owner::AgendaDay::FRAME_ID, turbo_action: "advance", action: "day-selector#mark" },
       aria_current: selected ? "date" : nil) do
