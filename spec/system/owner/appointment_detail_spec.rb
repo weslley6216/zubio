@@ -134,6 +134,35 @@ RSpec.describe "Owner appointment detail", type: :system, js: true do
     expect(page.evaluate_script("document.contains(window.__list)")).to be(true)
   end
 
+  it "advances the url with the day and the appointment and returns to the day without a detail on back" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant)
+    tuesday_client = create(:client, tenant: tenant, name: "Ana Terça", phone: "11988771234")
+    wednesday_client = create(:client, tenant: tenant, name: "Bia Quarta")
+    tuesday = Date.new(2026, 9, 8)
+    wednesday = tuesday + 1
+    tuesday_appointment = nil
+    ActsAsTenant.with_tenant(tenant) do
+      create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: wednesday_client, starts_at: wednesday.in_time_zone.change(hour: 9))
+      tuesday_appointment = create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: tuesday_client, starts_at: tuesday.in_time_zone.change(hour: 9))
+    end
+    sign_in_owner(professional_user)
+    visit "http://#{tenant.subdomain}.zubio.com.br#{owner_appointments_path(day: tuesday.iso8601)}"
+
+    find("a", text: "Ana Terça").click
+
+    expect(page).to have_current_path(owner_appointment_path(tuesday_appointment))
+    sleep 0.3
+    page.go_back
+
+    expect(page).to have_current_path(owner_appointments_path(day: tuesday.iso8601))
+    expect(page).to have_text("Ana Terça")
+    expect(page).to have_no_link("Chamar no WhatsApp")
+  end
+
   it "shows the select hint beside the list before any appointment is chosen on a 1280px desktop" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")

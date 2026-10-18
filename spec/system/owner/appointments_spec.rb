@@ -52,4 +52,53 @@ RSpec.describe "Owner appointments", type: :system, js: true do
       })()
     JS
   end
+
+  it "swaps only the day's list on a day tap, keeping the header and strip nodes" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant)
+    tuesday_client = create(:client, tenant: tenant, name: "Ana Terça")
+    wednesday_client = create(:client, tenant: tenant, name: "Bia Quarta")
+    tuesday = Date.new(2026, 9, 8)
+    wednesday = tuesday + 1
+    ActsAsTenant.with_tenant(tenant) do
+      create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: tuesday_client, starts_at: tuesday.in_time_zone.change(hour: 9))
+      create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: wednesday_client, starts_at: wednesday.in_time_zone.change(hour: 9))
+    end
+    sign_in_owner(professional_user)
+    page.execute_script("window.__kept = { header: document.querySelector('header'), strip: document.querySelector('[data-day-selector]') }")
+
+    find("[data-day='#{wednesday.iso8601}']").trigger("click")
+
+    expect(page).to have_text("Bia Quarta")
+    expect(page).not_to have_text("Ana Terça")
+    expect(page).to have_text(Components::LongDate.new(date: wednesday).call)
+    expect(page.evaluate_script("Object.values(window.__kept).every((node) => document.contains(node))")).to be(true)
+    expect(page).to have_css("[data-day='#{wednesday.iso8601}'][aria-current='date']")
+    expect(page).to fit_the_phone_width
+  end
+
+  it "closes the open detail when the day changes" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant)
+    tuesday_client = create(:client, tenant: tenant, name: "Ana Terça", phone: "11988771234")
+    wednesday_client = create(:client, tenant: tenant, name: "Bia Quarta")
+    tuesday = Date.new(2026, 9, 8)
+    wednesday = tuesday + 1
+    ActsAsTenant.with_tenant(tenant) do
+      create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: tuesday_client, starts_at: tuesday.in_time_zone.change(hour: 9))
+      create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: wednesday_client, starts_at: wednesday.in_time_zone.change(hour: 9))
+    end
+    sign_in_owner(professional_user)
+    click_on "Ana Terça"
+
+    find("[data-day='#{wednesday.iso8601}']").trigger("click")
+
+    expect(page).to have_no_link("Chamar no WhatsApp")
+  end
 end
