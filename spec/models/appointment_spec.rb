@@ -679,6 +679,23 @@ RSpec.describe Appointment, type: :model do
       expect(visit_number).to eq(2)
     end
 
+    it "skips the client's no-shows and keeps her completed visits" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
+      current = ActsAsTenant.with_tenant(tenant) do
+        current = create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
+        create(:appointment, :completed, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 8, 25, 9, 45))
+        create(:appointment, :no_show, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 8, 11, 9, 45))
+        current
+      end
+
+      visit_number = ActsAsTenant.with_tenant(tenant) { current.visit_number }
+
+      expect(visit_number).to eq(2)
+    end
+
     it "ignores later appointments and other clients" do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
