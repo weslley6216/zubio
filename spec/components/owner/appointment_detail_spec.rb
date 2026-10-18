@@ -102,24 +102,34 @@ RSpec.describe Components::Owner::AppointmentDetail, type: :component do
     phone_link = fragment.at_css(%(a[href="tel:+5511988771234"]))
     expect(whatsapp_link.text).to include("Chamar no WhatsApp")
     expect(phone_link.text).to include("Ligar")
-    expect(fragment.at_css("form")).to be_nil
+    expect(whatsapp_link.ancestors("form")).to be_empty
+    expect(phone_link.ancestors("form")).to be_empty
   end
 
-  it "offers the inert cancel button with the neutral note on a future confirmed appointment" do
+  it "offers the cancel trigger and a confirmation sheet posting to the agenda frame" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant)
     professional = create(:professional, tenant: tenant)
     service = create(:service, tenant: tenant, duration_minutes: 45)
-    client = create(:client, tenant: tenant)
+    client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro")
     appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
 
     html = ActsAsTenant.with_tenant(tenant) { render_phlex(described_class.new(appointment: appointment, visit_number: 1)) }
     fragment = Nokogiri::HTML5.fragment(html)
 
-    button = fragment.at_css(%(button[type="button"]))
-    expect(button.text).to include("Desmarcar este horário")
-    expect(html).to include(described_class::CANCEL_NOTE)
-    expect(fragment.at_css("form")).to be_nil
+    trigger = fragment.at_css(%(button[type="button"][data-action="dialog#open"]))
+    expect(trigger.text).to include("Desmarcar este horário")
+    expect(html).to include("O horário volta a aparecer livre na sua página. A Ana não é avisada sozinha: mande uma mensagem para ela.")
+    sheet = fragment.at_css(%(dialog[data-dialog-target="sheet"]))
+    expect(sheet.text).to include("Desmarcar terça, 8 set, às 09:45?")
+    expect(sheet.text).to include("O horário volta a ficar livre para outras pessoas. Não dá para desfazer.")
+    form = fragment.at_css("dialog form")
+    expect(form["action"]).to eq("/owner/appointments/#{appointment.id}/cancellation")
+    expect(form["method"]).to eq("post")
+    expect(form["data-turbo-frame"]).to eq("agenda_day")
+    expect(form["data-turbo-action"]).to eq("advance")
+    expect(form.at_css(%(button[type="submit"])).text).to include("Sim, desmarcar")
+    expect(fragment.at_css(%(dialog button[data-action="dialog#close"])).text).to include("Manter agendamento")
   end
 
   it "marks a cancelled appointment and drops the cancel button" do
@@ -134,6 +144,7 @@ RSpec.describe Components::Owner::AppointmentDetail, type: :component do
 
     expect(html).to include("Desmarcado")
     expect(html).not_to include("Desmarcar este horário")
+    expect(html).not_to include("<dialog")
   end
 
   it "drops the cancel button on a past appointment" do
@@ -147,6 +158,7 @@ RSpec.describe Components::Owner::AppointmentDetail, type: :component do
     html = ActsAsTenant.with_tenant(tenant) { render_phlex(described_class.new(appointment: appointment, visit_number: 1)) }
 
     expect(html).not_to include("Desmarcar este horário")
+    expect(html).not_to include("<dialog")
   end
 
   it "points back and close to the appointment's day inside the detail frame" do

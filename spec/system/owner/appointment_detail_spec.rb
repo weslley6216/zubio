@@ -35,6 +35,30 @@ RSpec.describe "Owner appointment detail", type: :system, js: true do
     end
   end
 
+  it "keeps the time range on a single line beside the badge on the 390px phone" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro")
+    ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+    sign_in_owner(professional_user)
+
+    click_on "Ana Paula Ribeiro"
+
+    find("turbo-frame#appointment_detail section", text: "09:45 – 10:30")
+    line_count = page.evaluate_script(<<~JS)
+      (() => {
+        const time = [ ...document.querySelectorAll('turbo-frame#appointment_detail section span') ].find((span) => span.textContent.trim() === '09:45 – 10:30');
+        const range = document.createRange();
+        range.selectNodeContents(time);
+        return new Set([ ...range.getClientRects() ].map((rect) => Math.round(rect.top))).size;
+      })()
+    JS
+    expect(line_count).to eq(1)
+  end
+
   it "opens the detail from the agenda on the phone" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")

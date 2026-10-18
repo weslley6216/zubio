@@ -1,4 +1,8 @@
 class Components::Owner::AppointmentDetail < Components::Base
+  include Phlex::Rails::Helpers::ButtonTo
+
+  SHEET = Views::Client::Appointments::Show
+
   FRAME_ID = "appointment_detail".freeze
 
   TITLE = "Agendamento".freeze
@@ -10,7 +14,8 @@ class Components::Owner::AppointmentDetail < Components::Base
   WHATSAPP_LABEL = "Chamar no WhatsApp".freeze
   CALL_LABEL = "Ligar".freeze
   CANCEL_LABEL = "Desmarcar este horário".freeze
-  CANCEL_NOTE = "O horário volta a aparecer livre na sua página. Ninguém avisa a cliente sozinho: mande uma mensagem.".freeze
+  CANCEL_NOTE = "O horário volta a aparecer livre na sua página. A %<name>s não é avisada sozinha: mande uma mensagem para ela.".freeze
+  KEEP_LABEL = "Manter agendamento".freeze
   CONFIRMED_LABEL = Components::Owner::AppointmentRow::CONFIRMED_LABEL
   CANCELLED_LABEL = Components::Owner::AppointmentRow::CANCELLED_LABEL
   VISIT_LABEL = "%dª visita".freeze
@@ -75,7 +80,7 @@ class Components::Owner::AppointmentDetail < Components::Base
     div(class: "flex flex-col gap-1.5 rounded-2xl border border-line bg-surface p-5 shadow-[0_1px_2px_rgba(14,26,36,0.04)] lg:border-0 lg:p-0 lg:shadow-none") do
       div(class: "flex items-center gap-2.5") do
         span(class: "flex-grow text-[30px] font-extrabold tracking-[-0.02em] tabular-nums text-ink") { time_range }
-        render Components::Badge.new(text: badge_label, tone: badge_tone)
+        span(class: "flex-none rounded-full px-[9px] py-1 text-[11px] font-extrabold #{Components::Badge::TONES.fetch(badge_tone)}") { badge_label }
       end
       span(class: "text-[14px] text-ink-muted") { render Components::LongDate.new(date: @appointment.starts_at.to_date) }
     end
@@ -152,10 +157,24 @@ class Components::Owner::AppointmentDetail < Components::Base
   end
 
   def render_cancel_footer
-    div(class: "mt-auto flex flex-col gap-2.5") do
-      button(type: "button",
+    div(class: "mt-auto flex flex-col gap-2.5", data: { controller: "dialog" }) do
+      button(type: "button", data: { action: "dialog#open" },
         class: "min-h-[46px] rounded-[10px] border border-danger bg-surface text-[14px] font-bold text-danger lg:min-h-11") { CANCEL_LABEL }
-      span(class: "text-center text-[12px] leading-[1.5] text-ink-subtle lg:text-left") { CANCEL_NOTE }
+      span(class: "text-center text-[12px] leading-[1.5] text-ink-subtle lg:text-left") { Kernel.format(CANCEL_NOTE, name: @appointment.client.name.split.first) }
+      render_sheet
+    end
+  end
+
+  def render_sheet
+    dialog(class: SHEET::SHEET_CLASS, data: { dialog_target: "sheet" }) do
+      div(class: SHEET::GRABBER_CLASS)
+      div(class: SHEET::SHEET_TEXT_CLASS) do
+        span(class: SHEET::SHEET_TITLE_CLASS) { SHEET.confirm_prompt(@appointment) }
+        span(class: SHEET::SHEET_NOTE_CLASS) { SHEET::CONFIRM_NOTE }
+      end
+      button_to(SHEET::CONFIRM_LABEL, owner_appointment_cancellation_path(@appointment), class: SHEET::CONFIRM_CLASS,
+        form: { class: "contents", data: { turbo_frame: Components::Owner::AgendaDay::FRAME_ID, turbo_action: "advance" } })
+      button(type: "button", class: SHEET::KEEP_CLASS, data: { action: "dialog#close" }) { KEEP_LABEL }
     end
   end
 end
