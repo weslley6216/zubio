@@ -80,7 +80,7 @@ class Components::Owner::AppointmentDetail < Components::Base
     div(class: "flex flex-col gap-1.5 rounded-2xl border border-line bg-surface p-5 shadow-[0_1px_2px_rgba(14,26,36,0.04)] lg:border-0 lg:p-0 lg:shadow-none") do
       div(class: "flex items-center gap-2.5") do
         span(class: "flex-grow text-[30px] font-extrabold tracking-[-0.02em] tabular-nums text-ink") { time_range }
-        render Components::Badge.new(text: badge_label, tone: badge_tone)
+        span(class: "flex-none rounded-full px-[9px] py-1 text-[11px] font-extrabold #{Components::Badge::TONES.fetch(badge_tone)}") { badge_label }
       end
       span(class: "text-[14px] text-ink-muted") { render Components::LongDate.new(date: @appointment.starts_at.to_date) }
     end

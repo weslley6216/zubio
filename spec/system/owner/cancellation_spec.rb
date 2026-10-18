@@ -51,7 +51,7 @@ RSpec.describe "Owner appointment cancellation", type: :system, js: true do
     click_on "Ana Paula Ribeiro"
     click_button "Desmarcar este horário"
     click_button "Sim, desmarcar"
-    find("turbo-frame#appointment_detail section", text: "DESMARCADO")
+    find("turbo-frame#appointment_detail section", text: "Desmarcado")
     click_on "Voltar para a agenda"
 
     expect(page).to have_css(".line-through", text: "Ana Paula Ribeiro")
