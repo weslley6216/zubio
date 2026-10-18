@@ -147,6 +147,94 @@ RSpec.describe Components::Owner::AppointmentDetail, type: :component do
     expect(html).not_to include("<dialog")
   end
 
+  it "offers both settlements on a past confirmed appointment posting to the agenda frame" do
+    travel_to Time.zone.local(2026, 9, 8, 19, 0)
+    tenant = create(:tenant)
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    client = create(:client, tenant: tenant)
+    appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+
+    html = ActsAsTenant.with_tenant(tenant) { render_phlex(described_class.new(appointment: appointment, visit_number: 1)) }
+    fragment = Nokogiri::HTML5.fragment(html)
+
+    completion_form = fragment.at_css(%(form[action="/owner/appointments/#{appointment.id}/completion"]))
+    no_show_form = fragment.at_css(%(form[action="/owner/appointments/#{appointment.id}/no_show"]))
+    expect(completion_form["data-turbo-frame"]).to eq("agenda_day")
+    expect(completion_form["data-turbo-action"]).to eq("advance")
+    expect(completion_form["method"]).to eq("post")
+    expect(no_show_form["data-turbo-frame"]).to eq("agenda_day")
+    expect(no_show_form["data-turbo-action"]).to eq("advance")
+    expect(no_show_form["method"]).to eq("post")
+    expect(completion_form.at_css(%(button[type="submit"])).text).to include("Atendi")
+    expect(no_show_form.at_css(%(button[type="submit"])).text).to include("Não veio")
+    expect(html).not_to include("Desmarcar este horário")
+  end
+
+  it "offers only the correction on a no-show" do
+    travel_to Time.zone.local(2026, 9, 8, 19, 0)
+    tenant = create(:tenant)
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    client = create(:client, tenant: tenant)
+    appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, :no_show, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+
+    html = ActsAsTenant.with_tenant(tenant) { render_phlex(described_class.new(appointment: appointment, visit_number: 1)) }
+    fragment = Nokogiri::HTML5.fragment(html)
+
+    expect(fragment.at_css(%(form[action="/owner/appointments/#{appointment.id}/completion"]))).not_to be_nil
+    expect(fragment.at_css(%(form[action="/owner/appointments/#{appointment.id}/no_show"]))).to be_nil
+    expect(html).to include("Falta")
+  end
+
+  it "offers only the correction on a completed appointment" do
+    travel_to Time.zone.local(2026, 9, 8, 19, 0)
+    tenant = create(:tenant)
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    client = create(:client, tenant: tenant)
+    appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, :completed, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+
+    html = ActsAsTenant.with_tenant(tenant) { render_phlex(described_class.new(appointment: appointment, visit_number: 1)) }
+    fragment = Nokogiri::HTML5.fragment(html)
+
+    expect(fragment.at_css(%(form[action="/owner/appointments/#{appointment.id}/no_show"]))).not_to be_nil
+    expect(fragment.at_css(%(form[action="/owner/appointments/#{appointment.id}/completion"]))).to be_nil
+    expect(html).to include("Concluído")
+  end
+
+  it "offers no settlement on a future appointment" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant)
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    client = create(:client, tenant: tenant)
+    appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+
+    html = ActsAsTenant.with_tenant(tenant) { render_phlex(described_class.new(appointment: appointment, visit_number: 1)) }
+    fragment = Nokogiri::HTML5.fragment(html)
+
+    expect(fragment.at_css(%(form[action$="/completion"]))).to be_nil
+    expect(fragment.at_css(%(form[action$="/no_show"]))).to be_nil
+    expect(html).to include("Desmarcar este horário")
+  end
+
+  it "offers no settlement on a cancelled appointment" do
+    travel_to Time.zone.local(2026, 9, 8, 19, 0)
+    tenant = create(:tenant)
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    client = create(:client, tenant: tenant)
+    appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, :cancelled, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+
+    html = ActsAsTenant.with_tenant(tenant) { render_phlex(described_class.new(appointment: appointment, visit_number: 1)) }
+    fragment = Nokogiri::HTML5.fragment(html)
+
+    expect(fragment.at_css(%(form[action$="/completion"]))).to be_nil
+    expect(fragment.at_css(%(form[action$="/no_show"]))).to be_nil
+    expect(html).to include("Desmarcado")
+  end
+
   it "drops the cancel button on a past appointment" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant)

@@ -16,6 +16,9 @@ class Components::Owner::AppointmentDetail < Components::Base
   CANCEL_LABEL = "Desmarcar este horário".freeze
   CANCEL_NOTE = "O horário volta a aparecer livre na sua página. A %<name>s não é avisada sozinha: mande uma mensagem para ela.".freeze
   KEEP_LABEL = "Manter agendamento".freeze
+  ATTEND_LABEL = "Atendi".freeze
+  NO_SHOW_ACTION_LABEL = "Não veio".freeze
+  SETTLE_BUTTON_CLASS = "min-h-[46px] flex-1 rounded-[10px] border border-line-strong bg-surface text-[14px] font-bold text-ink lg:min-h-11".freeze
   VISIT_LABEL = "%dª visita".freeze
 
   def initialize(appointment:, visit_number:)
@@ -71,6 +74,7 @@ class Components::Owner::AppointmentDetail < Components::Base
       render_client_card
       render_actions
       render_cancel_footer if @appointment.cancellable?
+      render_settle_footer if @appointment.settleable?
     end
   end
 
@@ -170,9 +174,17 @@ class Components::Owner::AppointmentDetail < Components::Base
         span(class: SHEET::SHEET_TITLE_CLASS) { SHEET.confirm_prompt(@appointment) }
         span(class: SHEET::SHEET_NOTE_CLASS) { SHEET::CONFIRM_NOTE }
       end
-      button_to(SHEET::CONFIRM_LABEL, owner_appointment_cancellation_path(@appointment), class: SHEET::CONFIRM_CLASS,
-        form: { class: "contents", data: { turbo_frame: Components::Owner::AgendaDay::FRAME_ID, turbo_action: "advance" } })
+      button_to(SHEET::CONFIRM_LABEL, owner_appointment_cancellation_path(@appointment), class: SHEET::CONFIRM_CLASS, form: agenda_frame_form)
       button(type: "button", class: SHEET::KEEP_CLASS, data: { action: "dialog#close" }) { KEEP_LABEL }
+    end
+  end
+
+  def agenda_frame_form = { class: "contents", data: { turbo_frame: Components::Owner::AgendaDay::FRAME_ID, turbo_action: "advance" } }
+
+  def render_settle_footer
+    div(class: "mt-auto flex gap-2.5") do
+      button_to(ATTEND_LABEL, owner_appointment_completion_path(@appointment), class: SETTLE_BUTTON_CLASS, form: agenda_frame_form) unless @appointment.completed?
+      button_to(NO_SHOW_ACTION_LABEL, owner_appointment_no_show_path(@appointment), class: SETTLE_BUTTON_CLASS, form: agenda_frame_form) unless @appointment.no_show?
     end
   end
 end
