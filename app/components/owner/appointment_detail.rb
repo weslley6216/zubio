@@ -16,8 +16,6 @@ class Components::Owner::AppointmentDetail < Components::Base
   CANCEL_LABEL = "Desmarcar este horário".freeze
   CANCEL_NOTE = "O horário volta a aparecer livre na sua página. A %<name>s não é avisada sozinha: mande uma mensagem para ela.".freeze
   KEEP_LABEL = "Manter agendamento".freeze
-  CONFIRMED_LABEL = Components::Owner::AppointmentRow::CONFIRMED_LABEL
-  CANCELLED_LABEL = Components::Owner::AppointmentRow::CANCELLED_LABEL
   VISIT_LABEL = "%dª visita".freeze
 
   def initialize(appointment:, visit_number:)
@@ -88,9 +86,9 @@ class Components::Owner::AppointmentDetail < Components::Base
 
   def time_range = "#{@appointment.starts_at.strftime('%H:%M')} – #{@appointment.ends_at.strftime('%H:%M')}"
 
-  def badge_label = @appointment.cancelled? ? CANCELLED_LABEL : CONFIRMED_LABEL
+  def badge_label = Components::Owner::AppointmentRow::STATUS_BADGES.fetch(@appointment.status).fetch(:label)
 
-  def badge_tone = @appointment.cancelled? ? :muted : :brand
+  def badge_tone = Components::Owner::AppointmentRow::STATUS_BADGES.fetch(@appointment.status).fetch(:tone)
 
   def render_client_card
     div(class: "flex flex-col gap-3.5 rounded-2xl border border-line bg-surface px-5 py-[18px] lg:border-0 lg:gap-5 lg:px-0 lg:py-0") do

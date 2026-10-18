@@ -66,6 +66,56 @@ RSpec.describe Components::Owner::AppointmentRow, type: :component do
     expect(html).not_to include(%(href="/owner/appointments/))
   end
 
+  it "shows the completed badge on the active row with its phone" do
+    tenant = create(:tenant)
+    client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    appointment = ActsAsTenant.with_tenant(tenant) do
+      create(:appointment, :completed, tenant: tenant, client: client, service: service, starts_at: Time.current.change(hour: 9, min: 45))
+    end
+
+    html = render_phlex(described_class.new(appointment: appointment))
+
+    expect(html).to include("Concluído")
+    expect(html).to include("bg-success-soft")
+    expect(html).to include("text-success")
+    expect(html).to include(%(href="tel:+5511988771234"))
+    expect(html).not_to include("line-through")
+  end
+
+  it "shows the no-show badge on the active row with its phone" do
+    tenant = create(:tenant)
+    client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    appointment = ActsAsTenant.with_tenant(tenant) do
+      create(:appointment, :no_show, tenant: tenant, client: client, service: service, starts_at: Time.current.change(hour: 9, min: 45))
+    end
+
+    html = render_phlex(described_class.new(appointment: appointment))
+
+    expect(html).to include("Falta")
+    expect(html).to include("bg-danger-soft")
+    expect(html).to include("text-danger")
+    expect(html).to include(%(href="tel:+5511988771234"))
+    expect(html).not_to include("line-through")
+  end
+
+  it "links the no-show row to its detail inside the detail frame" do
+    tenant = create(:tenant)
+    client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    appointment = ActsAsTenant.with_tenant(tenant) do
+      create(:appointment, :no_show, tenant: tenant, client: client, service: service, starts_at: Time.current.change(hour: 9, min: 45))
+    end
+
+    html = render_phlex(described_class.new(appointment: appointment))
+    fragment = Nokogiri::HTML5.fragment(html)
+    link = fragment.at_css(%(a[href="/owner/appointments/#{appointment.id}"]))
+
+    expect(link["data-turbo-frame"]).to eq("appointment_detail")
+    expect(link["data-turbo-action"]).to eq("advance")
+  end
+
   it "highlights the selected row" do
     tenant = create(:tenant)
     client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")

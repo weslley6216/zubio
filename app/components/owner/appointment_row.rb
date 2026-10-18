@@ -1,6 +1,10 @@
 class Components::Owner::AppointmentRow < Components::Base
-  CONFIRMED_LABEL = "Confirmado".freeze
-  CANCELLED_LABEL = "Desmarcado".freeze
+  STATUS_BADGES = {
+    "confirmed" => { label: "Confirmado", tone: :brand },
+    "cancelled" => { label: "Desmarcado", tone: :muted },
+    "completed" => { label: "Concluído", tone: :success },
+    "no_show" => { label: "Falta", tone: :danger }
+  }.freeze
   ACTIVE_CLASS = "border-2 border-brand-600 shadow-[0_2px_6px_var(--tw-shadow-color)] shadow-brand-600/12 bg-surface".freeze
   RESTING_CLASS = "border border-line bg-surface shadow-[0_1px_2px_rgba(14,26,36,0.04)]".freeze
 
@@ -30,7 +34,7 @@ class Components::Owner::AppointmentRow < Components::Base
           class: "text-[14px] font-bold text-ink after:absolute after:inset-0 after:content-['']") { @appointment.client.name }
         span(class: "text-[12px] text-ink-muted") { @appointment.service.name }
         div(class: "mt-0.5 flex items-center gap-1.5") do
-          render Components::Badge.new(text: CONFIRMED_LABEL, tone: :brand)
+          render Components::Badge.new(text: badge.fetch(:label), tone: badge.fetch(:tone))
           a(href: @appointment.client.tel_href, class: "relative z-10 text-[12px] font-bold text-brand-600") { @appointment.client.phone_display }
         end
       end
@@ -39,7 +43,11 @@ class Components::Owner::AppointmentRow < Components::Base
 
   def active_border_class = @selected ? ACTIVE_CLASS : RESTING_CLASS
 
+  def badge = STATUS_BADGES.fetch(@appointment.status)
+
   def render_cancelled
+    cancelled_badge = STATUS_BADGES.fetch("cancelled")
+
     div(class: "flex gap-3 rounded-xl border border-dashed border-line-strong bg-surface-2 px-4 py-3.5") do
       div(class: "flex w-12 flex-none flex-col items-center") do
         span(class: "text-[16px] font-extrabold leading-[1.2] tabular-nums text-ink-subtle line-through") { @appointment.starts_at.strftime("%H:%M") }
@@ -47,7 +55,7 @@ class Components::Owner::AppointmentRow < Components::Base
       div(class: "w-px flex-none bg-line")
       div(class: "flex min-w-0 flex-grow flex-col gap-1") do
         span(class: "text-[14px] font-bold text-ink-subtle line-through") { @appointment.client.name }
-        render Components::Badge.new(text: CANCELLED_LABEL, tone: :muted)
+        render Components::Badge.new(text: cancelled_badge.fetch(:label), tone: cancelled_badge.fetch(:tone))
       end
     end
   end
