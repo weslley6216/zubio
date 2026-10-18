@@ -134,7 +134,7 @@ class Components::Owner::AppointmentDetail < Components::Base
         plain WHATSAPP_LABEL
       end
       a(href: client.tel_href,
-        class: "flex min-h-[46px] w-full items-center justify-center gap-2 rounded-[10px] border border-line-strong bg-surface text-[14px] font-bold lg:min-h-11 lg:w-auto lg:px-4") do
+        class: "flex min-h-[46px] w-full items-center justify-center gap-2 rounded-[10px] border border-line-strong bg-surface text-[14px] font-bold lg:hidden") do
         render_phone_icon
         plain CALL_LABEL
       end
