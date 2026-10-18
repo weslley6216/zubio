@@ -14,16 +14,25 @@ class Owner::AppointmentsController < Owner::BaseController
   private
 
   def render_agenda(day:, selected: nil, selected_visit_number: nil)
-    render Views::Owner::Appointments::Index.new(
-      tenant: ActsAsTenant.current_tenant,
-      branding: current_branding,
-      day: day,
-      appointments: Appointment.for_day(day),
-      selected: selected,
-      selected_visit_number: selected_visit_number,
-      current_section: panel_section,
-      subtitle: panel_subtitle
-    )
+    case turbo_frame_request_id
+    when Components::Owner::AgendaDay::FRAME_ID
+      render Components::Owner::AgendaDay.new(tenant: ActsAsTenant.current_tenant, branding: current_branding, day: day,
+        appointments: Appointment.for_day(day), selected: selected, selected_visit_number: selected_visit_number)
+    when Components::Owner::AppointmentDetail::FRAME_ID
+      render Components::Owner::AppointmentDetailFrame.new(selected: selected, selected_visit_number: selected_visit_number)
+    else
+      render Views::Owner::Appointments::Index.new(
+        tenant: ActsAsTenant.current_tenant,
+        branding: current_branding,
+        day: day,
+        days: Appointment.booking_window.to_a,
+        appointments: Appointment.for_day(day),
+        selected: selected,
+        selected_visit_number: selected_visit_number,
+        current_section: panel_section,
+        subtitle: panel_subtitle
+      )
+    end
   end
 
   def selected_day

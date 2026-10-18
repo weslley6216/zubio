@@ -249,8 +249,8 @@ RSpec.describe "Owner appointments", type: :request do
       get owner_appointment_path(appointment)
 
       expect(response.body).to include("Juliana Prado")
-      detail = Nokogiri::HTML5(response.body).at_css("turbo-frame#appointment_detail")
-      expect(detail.at_css(%(a[aria-current="true"])).text).to eq("Ana Paula Ribeiro")
+      agenda = Nokogiri::HTML5(response.body).at_css("turbo-frame#agenda_day")
+      expect(agenda.at_css(%(a[aria-current="true"])).text).to eq("Ana Paula Ribeiro")
     end
 
     it "sends an anonymous visitor to the login" do
@@ -337,7 +337,7 @@ RSpec.describe "Owner appointments", type: :request do
 
       get owner_appointments_path
 
-      expect(response.body).to include(Views::Owner::Appointments::Index::SELECT_HINT)
+      expect(response.body).to include(Components::Owner::AppointmentDetailFrame::SELECT_HINT)
       expect(Nokogiri::HTML5(response.body).at_css("turbo-frame#appointment_detail section")).to be_nil
     end
 
@@ -350,7 +350,87 @@ RSpec.describe "Owner appointments", type: :request do
 
       get owner_appointment_path(appointment)
 
-      expect(response.body).not_to include(Views::Owner::Appointments::Index::SELECT_HINT)
+      expect(response.body).not_to include(Components::Owner::AppointmentDetailFrame::SELECT_HINT)
+    end
+  end
+
+  describe "frame responses" do
+    it "responds to the day frame with only the day's list, without the header or the day strip" do
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      other_day = Date.current + 1.day
+      client = create(:client, tenant: tenant, name: "Bia Amanhã")
+      ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: other_day.in_time_zone.change(hour: 9)) }
+      sign_in_owner(owner)
+
+      get owner_appointments_path(day: other_day.iso8601), headers: { "Turbo-Frame" => "agenda_day" }
+
+      document = Nokogiri::HTML5(response.body)
+      expect(response.body).to include("Bia Amanhã")
+      expect(response.body).to include(Components::LongDate.new(date: other_day).call)
+      expect(document.at_css("turbo-frame#agenda_day")).to be_present
+      expect(document.at_css("header")).to be_nil
+      expect(document.at_css("[data-day-selector]")).to be_nil
+    end
+
+    it "responds to the detail frame with only the detail, without the list" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro")
+      appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+      sign_in_owner(owner)
+
+      get owner_appointment_path(appointment), headers: { "Turbo-Frame" => "appointment_detail" }
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("turbo-frame#appointment_detail section")).to be_present
+      expect(document.at_css("main")).to be_nil
+    end
+
+    it "renders the whole page with the header and the strip without a frame header" do
+      create(:branding, tenant: tenant)
+      sign_in_owner(owner)
+
+      get owner_appointments_path
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("header")).to be_present
+      expect(document.at_css("[data-day-selector]")).to be_present
+    end
+
+    it "answers not found for another establishment's appointment requested through the detail frame, with none of its data" do
+      ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      ze_professional = create(:professional, tenant: ze)
+      ze_service = create(:service, tenant: ze)
+      ze_client = create(:client, tenant: ze, name: "Carlos Zé", phone: "11977776666")
+      ze_appointment = ActsAsTenant.with_tenant(ze) { create(:appointment, tenant: ze, professional: ze_professional, service: ze_service, client: ze_client, starts_at: Time.current.change(hour: 9)) }
+      create(:branding, tenant: tenant)
+      sign_in_owner(owner)
+      allow(Rails.application).to receive(:env_config).and_wrap_original do |env_config|
+        env_config.call.merge("action_dispatch.show_detailed_exceptions" => false)
+      end
+
+      get owner_appointment_path(ze_appointment), headers: { "Turbo-Frame" => "appointment_detail" }
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.body).not_to include("Carlos Zé")
+      expect(response.body).not_to include("(11) 97777-6666")
+      expect(response.body).not_to include("11977776666")
+      expect(response.body).not_to include("Barbearia do Zé")
+    end
+
+    it "shows its own appointment's detail through the detail frame" do
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant, name: "Ana Aurora")
+      appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.current.change(hour: 9)) }
+      sign_in_owner(owner)
+
+      get owner_appointment_path(appointment), headers: { "Turbo-Frame" => "appointment_detail" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Ana Aurora")
     end
   end
 

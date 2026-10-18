@@ -1,6 +1,8 @@
 class Components::Owner::AppointmentRow < Components::Base
   CONFIRMED_LABEL = "Confirmado".freeze
   CANCELLED_LABEL = "Desmarcado".freeze
+  ACTIVE_CLASS = "border-2 border-brand-600 shadow-[0_2px_6px_var(--tw-shadow-color)] shadow-brand-600/12 bg-surface".freeze
+  RESTING_CLASS = "border border-line bg-surface shadow-[0_1px_2px_rgba(14,26,36,0.04)]".freeze
 
   def initialize(appointment:, selected: false)
     @appointment = appointment
@@ -34,9 +36,7 @@ class Components::Owner::AppointmentRow < Components::Base
     end
   end
 
-  def active_border_class
-    @selected ? "border-2 border-brand-600 shadow-[0_2px_6px_var(--tw-shadow-color)] shadow-brand-600/12 bg-surface" : "border border-line bg-surface shadow-[0_1px_2px_rgba(14,26,36,0.04)]"
-  end
+  def active_border_class = @selected ? ACTIVE_CLASS : RESTING_CLASS
 
   def render_cancelled
     div(class: "flex gap-3 rounded-xl border border-dashed border-line-strong bg-surface-2 px-4 py-3.5") do
