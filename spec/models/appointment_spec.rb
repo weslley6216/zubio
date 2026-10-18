@@ -514,6 +514,16 @@ RSpec.describe Appointment, type: :model do
     end
   end
 
+  describe ".booking_window" do
+    it "spans fourteen days from today" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+
+      booking_window = Appointment.booking_window
+
+      expect([ booking_window.first, booking_window.last, booking_window.count ]).to eq([ Date.current, Date.current + 13, 14 ])
+    end
+  end
+
   describe "#visit_number" do
     it "counts the client's earlier non-cancelled appointments" do
       tenant = create(:tenant)

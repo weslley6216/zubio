@@ -35,8 +35,8 @@ class Views::Client::Bookings::New < Views::Base
   SERVICE_NAME_CLASS = "text-[14px] font-bold".freeze
   SERVICE_META_CLASS = "text-[12px] tabular-nums text-ink-muted".freeze
   SERVICE_PRICE_CLASS = "flex-none rounded-full bg-brand-600 px-3 py-[7px] text-[13px] font-extrabold tabular-nums text-on-brand".freeze
-  SELECTOR_CLASS = "flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain [scrollbar-width:none] sm:grid sm:grid-cols-7 sm:overflow-visible [&::-webkit-scrollbar]:hidden".freeze
-  DAY_BASE_CLASS = "flex shrink-0 basis-[calc((100%-1.5rem)/4)] snap-start #{Components::DayPill::FRAME}".freeze
+  SELECTOR_CLASS = Components::DayPill::STRIP
+  DAY_BASE_CLASS = "#{Components::DayPill::ITEM} #{Components::DayPill::FRAME}".freeze
   DAY_SELECTED_CLASS = Components::DayPill::SELECTED
   DAY_FREE_CLASS = Components::DayPill::RESTING
   DAY_DISABLED_CLASS = Components::DayPill::DISABLED

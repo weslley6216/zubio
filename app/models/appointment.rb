@@ -1,4 +1,6 @@
 class Appointment < ApplicationRecord
+  WINDOW_DAYS = 14
+
   belongs_to :professional
   belongs_to :service
   belongs_to :client
@@ -15,6 +17,8 @@ class Appointment < ApplicationRecord
   scope :within, ->(range) { where(starts_at: range) }
   scope :for_professional, ->(professional) { where(professional: professional) }
   scope :for_day, ->(date) { within(date.in_time_zone.all_day).includes(:client, :service).order(:starts_at) }
+
+  def self.booking_window = Date.current..(Date.current + (WINDOW_DAYS - 1))
 
   def self.book(professional:, service:, starts_at:, client_name:, client_phone:)
     return Result::Failure.new(:off_grid) unless offered?(professional, service, starts_at)

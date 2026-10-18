@@ -86,7 +86,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
     get new_client_service_booking_path(service)
 
     document = Nokogiri::HTML5(response.body)
-    expect(document.css("[data-day-selector] a[data-day]").size).to eq(Client::BookingsController::WINDOW_DAYS)
+    expect(document.css("[data-day-selector] a[data-day]").size).to eq(Appointment::WINDOW_DAYS)
     expect(document.at_css("[data-days-off-hint]")).to be_nil
   end
 
@@ -112,7 +112,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
 
     document = Nokogiri::HTML5(response.body)
     days = document.css("[data-day-selector] [data-day]")
-    expect(days.size).to eq(Client::BookingsController::WINDOW_DAYS)
+    expect(days.size).to eq(Appointment::WINDOW_DAYS)
     expect(days.first["data-day"]).to eq(Date.current.iso8601)
     expect(days.any? { |day| day["aria-disabled"] == "true" }).to be(true)
     expect(days.any? { |day| day.name == "a" }).to be(true)
