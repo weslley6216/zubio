@@ -24,6 +24,14 @@ RSpec.describe "Owner appointment detail", type: :system, js: true do
       expect(page).to have_text("3ª visita")
       expect(page).to fit_the_phone_width
       expect(page).to have_current_path(owner_appointment_path(current))
+      viewport = page.evaluate_script("({ width: window.innerWidth, height: window.innerHeight })")
+      detail_box = page.evaluate_script(<<~JS)
+        (() => {
+          const box = document.querySelector('turbo-frame#appointment_detail section').getBoundingClientRect();
+          return { width: box.width, height: box.height };
+        })()
+      JS
+      expect([ detail_box["width"], detail_box["height"] ]).to eq([ viewport["width"], viewport["height"] ])
     end
   end
 
