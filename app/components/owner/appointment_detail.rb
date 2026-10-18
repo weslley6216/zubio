@@ -16,8 +16,9 @@ class Components::Owner::AppointmentDetail < Components::Base
   CANCEL_LABEL = "Desmarcar este horário".freeze
   CANCEL_NOTE = "O horário volta a aparecer livre na sua página. A %<name>s não é avisada sozinha: mande uma mensagem para ela.".freeze
   KEEP_LABEL = "Manter agendamento".freeze
-  CONFIRMED_LABEL = Components::Owner::AppointmentRow::CONFIRMED_LABEL
-  CANCELLED_LABEL = Components::Owner::AppointmentRow::CANCELLED_LABEL
+  ATTEND_LABEL = "Atendi".freeze
+  NO_SHOW_ACTION_LABEL = "Não veio".freeze
+  SETTLE_BUTTON_CLASS = "min-h-[46px] flex-1 rounded-[10px] border border-line-strong bg-surface text-[14px] font-bold text-ink lg:min-h-11".freeze
   VISIT_LABEL = "%dª visita".freeze
 
   def initialize(appointment:, visit_number:)
@@ -73,6 +74,7 @@ class Components::Owner::AppointmentDetail < Components::Base
       render_client_card
       render_actions
       render_cancel_footer if @appointment.cancellable?
+      render_settle_footer if @appointment.settleable?
     end
   end
 
@@ -80,7 +82,7 @@ class Components::Owner::AppointmentDetail < Components::Base
     div(class: "flex flex-col gap-1.5 rounded-2xl border border-line bg-surface p-5 shadow-[0_1px_2px_rgba(14,26,36,0.04)] lg:border-0 lg:p-0 lg:shadow-none") do
       div(class: "flex items-center gap-2.5") do
         span(class: "flex-grow text-[30px] font-extrabold tracking-[-0.02em] tabular-nums text-ink") { time_range }
-        span(class: "flex-none rounded-full px-[9px] py-1 text-[11px] font-extrabold #{Components::Badge::TONES.fetch(badge_tone)}") { badge_label }
+        span(class: "flex-none rounded-full px-[9px] py-1 text-[11px] font-extrabold #{Components::Badge::TONES.fetch(badge.fetch(:tone))}") { badge.fetch(:label) }
       end
       span(class: "text-[14px] text-ink-muted") { render Components::LongDate.new(date: @appointment.starts_at.to_date) }
     end
@@ -88,9 +90,7 @@ class Components::Owner::AppointmentDetail < Components::Base
 
   def time_range = "#{@appointment.starts_at.strftime('%H:%M')} – #{@appointment.ends_at.strftime('%H:%M')}"
 
-  def badge_label = @appointment.cancelled? ? CANCELLED_LABEL : CONFIRMED_LABEL
-
-  def badge_tone = @appointment.cancelled? ? :muted : :brand
+  def badge = Components::Owner::AppointmentRow::STATUS_BADGES.fetch(@appointment.status)
 
   def render_client_card
     div(class: "flex flex-col gap-3.5 rounded-2xl border border-line bg-surface px-5 py-[18px] lg:border-0 lg:gap-5 lg:px-0 lg:py-0") do
@@ -172,9 +172,17 @@ class Components::Owner::AppointmentDetail < Components::Base
         span(class: SHEET::SHEET_TITLE_CLASS) { SHEET.confirm_prompt(@appointment) }
         span(class: SHEET::SHEET_NOTE_CLASS) { SHEET::CONFIRM_NOTE }
       end
-      button_to(SHEET::CONFIRM_LABEL, owner_appointment_cancellation_path(@appointment), class: SHEET::CONFIRM_CLASS,
-        form: { class: "contents", data: { turbo_frame: Components::Owner::AgendaDay::FRAME_ID, turbo_action: "advance" } })
+      button_to(SHEET::CONFIRM_LABEL, owner_appointment_cancellation_path(@appointment), class: SHEET::CONFIRM_CLASS, form: agenda_frame_form)
       button(type: "button", class: SHEET::KEEP_CLASS, data: { action: "dialog#close" }) { KEEP_LABEL }
+    end
+  end
+
+  def agenda_frame_form = { class: "contents", data: { turbo_frame: Components::Owner::AgendaDay::FRAME_ID, turbo_action: "advance" } }
+
+  def render_settle_footer
+    div(class: "mt-auto flex gap-2.5") do
+      button_to(ATTEND_LABEL, owner_appointment_completion_path(@appointment), class: SETTLE_BUTTON_CLASS, form: agenda_frame_form) unless @appointment.completed?
+      button_to(NO_SHOW_ACTION_LABEL, owner_appointment_no_show_path(@appointment), class: SETTLE_BUTTON_CLASS, form: agenda_frame_form) unless @appointment.no_show?
     end
   end
 end

@@ -35,6 +35,20 @@ RSpec.describe Components::Badge, type: :component do
     expect(shapes.size).to eq(described_class::TONES.size)
   end
 
+  it "paints the success tone with the soft success pair" do
+    html = described_class.new(text: "Concluído", tone: :success).call
+
+    expect(html).to include("bg-success-soft")
+    expect(html).to include("text-success")
+  end
+
+  it "paints the danger tone with the soft danger pair" do
+    html = described_class.new(text: "Falta", tone: :danger).call
+
+    expect(html).to include("bg-danger-soft")
+    expect(html).to include("text-danger")
+  end
+
   it "refuses a tone with no palette behind it" do
     expect { described_class.new(text: "Novo cliente", tone: :warning).call }.to raise_error(KeyError)
   end

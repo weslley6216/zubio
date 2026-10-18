@@ -128,6 +128,18 @@ RSpec.describe Appointment, type: :model do
       expect(replacement).to be_persisted
     end
 
+    it "rejects an appointment overlapping a no-show" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
+      nine = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
+      ActsAsTenant.with_tenant(tenant) { create(:appointment, :no_show, tenant: tenant, professional: professional, service: service, starts_at: nine) }
+      overlapping = ActsAsTenant.with_tenant(tenant) { Appointment.new(professional: professional, service: service, client: client, starts_at: nine + 30.minutes) }
+
+      expect { ActsAsTenant.with_tenant(tenant) { overlapping.save! } }.to raise_error(ActiveRecord::StatementInvalid)
+    end
+
     it "accepts the same time for a different professional" do
       tenant = create(:tenant)
       professional = create(:professional, tenant: tenant)
@@ -170,6 +182,21 @@ RSpec.describe Appointment, type: :model do
       results = ActsAsTenant.with_tenant(tenant) { Appointment.occupying.to_a }
 
       expect(results).to contain_exactly(confirmed)
+    end
+
+    it "occupying keeps the completed and the no-show appointments" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      nine = Time.current.next_week(:tuesday).change(hour: 9, min: 0, sec: 0)
+      confirmed = create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: nine)
+      completed = create(:appointment, :completed, tenant: tenant, professional: professional, service: service, starts_at: nine + 2.hours)
+      no_show = create(:appointment, :no_show, tenant: tenant, professional: professional, service: service, starts_at: nine + 4.hours)
+      create(:appointment, :cancelled, tenant: tenant, professional: professional, service: service, starts_at: nine + 6.hours)
+
+      results = ActsAsTenant.with_tenant(tenant) { Appointment.occupying.to_a }
+
+      expect(results).to contain_exactly(confirmed, completed, no_show)
     end
 
     it "within returns the appointments inside the range and excludes those outside" do
@@ -514,6 +541,99 @@ RSpec.describe Appointment, type: :model do
     end
   end
 
+  describe "settlement" do
+    it "accepts the four statuses" do
+      expect(Appointment.statuses.keys).to eq(%w[confirmed cancelled completed no_show])
+    end
+
+    it "settleable? is true for a past confirmed appointment" do
+      appointment = create(:appointment, :past)
+
+      expect(appointment.settleable?).to be(true)
+    end
+
+    it "settleable? is true once the start has just passed" do
+      appointment = create(:appointment, starts_at: 1.minute.ago)
+
+      expect(appointment.settleable?).to be(true)
+    end
+
+    it "settleable? is false for a future appointment" do
+      appointment = create(:appointment)
+
+      expect(appointment.settleable?).to be(false)
+    end
+
+    it "settleable? is false for a cancelled appointment" do
+      appointment = create(:appointment, :past, :cancelled)
+
+      expect(appointment.settleable?).to be(false)
+    end
+
+    it "settleable? stays true for a completed or no-show appointment" do
+      completed = create(:appointment, :past, :completed)
+      no_show = create(:appointment, :past, :no_show)
+
+      expect([ completed, no_show ].map(&:settleable?)).to eq([ true, true ])
+    end
+
+    it "settle! moves a past confirmed appointment to completed" do
+      appointment = create(:appointment, :past)
+
+      ActsAsTenant.with_tenant(appointment.tenant) { appointment.settle!(:completed) }
+
+      expect(appointment.reload).to be_completed
+    end
+
+    it "settle! moves a past confirmed appointment to no_show" do
+      appointment = create(:appointment, :past)
+
+      ActsAsTenant.with_tenant(appointment.tenant) { appointment.settle!(:no_show) }
+
+      expect(appointment.reload).to be_no_show
+    end
+
+    it "settle! corrects a no-show to completed" do
+      appointment = create(:appointment, :past, :no_show)
+
+      ActsAsTenant.with_tenant(appointment.tenant) { appointment.settle!(:completed) }
+
+      expect(appointment.reload).to be_completed
+    end
+
+    it "settle! keeps a completed appointment completed when repeated" do
+      appointment = create(:appointment, :past, :completed)
+
+      ActsAsTenant.with_tenant(appointment.tenant) { appointment.settle!(:completed) }
+
+      expect(appointment.reload).to be_completed
+    end
+
+    it "settle! leaves a future appointment confirmed" do
+      appointment = create(:appointment)
+
+      ActsAsTenant.with_tenant(appointment.tenant) { appointment.settle!(:completed) }
+
+      expect(appointment.reload).to be_confirmed
+    end
+
+    it "settle! leaves a cancelled appointment cancelled" do
+      appointment = create(:appointment, :past, :cancelled)
+
+      ActsAsTenant.with_tenant(appointment.tenant) { appointment.settle!(:no_show) }
+
+      expect(appointment.reload).to be_cancelled
+    end
+
+    it "settle! ignores an outcome outside completion and no-show" do
+      appointment = create(:appointment, :past)
+
+      ActsAsTenant.with_tenant(appointment.tenant) { appointment.settle!(:cancelled) }
+
+      expect(appointment.reload).to be_confirmed
+    end
+  end
+
   describe ".booking_window" do
     it "spans fourteen days from today" do
       travel_to Time.zone.local(2026, 9, 8, 7, 0)
@@ -551,6 +671,23 @@ RSpec.describe Appointment, type: :model do
         current = create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
         create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 8, 25, 9, 45))
         create(:appointment, :cancelled, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 8, 11, 9, 45))
+        current
+      end
+
+      visit_number = ActsAsTenant.with_tenant(tenant) { current.visit_number }
+
+      expect(visit_number).to eq(2)
+    end
+
+    it "skips the client's no-shows and keeps her completed visits" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
+      current = ActsAsTenant.with_tenant(tenant) do
+        current = create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
+        create(:appointment, :completed, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 8, 25, 9, 45))
+        create(:appointment, :no_show, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 8, 11, 9, 45))
         current
       end
 

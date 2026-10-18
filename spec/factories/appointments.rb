@@ -13,6 +13,14 @@ FactoryBot.define do
       status { "cancelled" }
     end
 
+    trait :completed do
+      status { "completed" }
+    end
+
+    trait :no_show do
+      status { "no_show" }
+    end
+
     trait :past do
       starts_at { 2.days.ago.change(hour: 9, min: 0, sec: 0) }
     end

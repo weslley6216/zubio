@@ -9,7 +9,9 @@ class Appointment < ApplicationRecord
 
   has_secure_token :cancel_token
 
-  enum :status, { confirmed: "confirmed", cancelled: "cancelled" }
+  enum :status, { confirmed: "confirmed", cancelled: "cancelled", completed: "completed", no_show: "no_show" }
+
+  SETTLE_OUTCOMES = %i[completed no_show].freeze
 
   before_validation :derive_ends_at
 
@@ -48,7 +50,15 @@ class Appointment < ApplicationRecord
 
   def cancellable? = confirmed? && !past?
 
-  def visit_number = self.class.occupying.where(client_id: client_id, starts_at: ...starts_at).count + 1
+  def settleable? = past? && !cancelled?
+
+  def settle!(outcome)
+    return unless settleable? && SETTLE_OUTCOMES.include?(outcome)
+
+    update!(status: outcome)
+  end
+
+  def visit_number = self.class.occupying.where.not(status: :no_show).where(client_id: client_id, starts_at: ...starts_at).count + 1
 
   def past? = starts_at < Time.current
 
