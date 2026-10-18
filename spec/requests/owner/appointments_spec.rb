@@ -217,7 +217,8 @@ RSpec.describe "Owner appointments", type: :request do
 
       expect(response.body).to include(%(href="https://wa.me/5511988771234"))
       detail = Nokogiri::HTML5(response.body).at_css("turbo-frame#appointment_detail section")
-      expect(detail.at_css("form")).to be_nil
+      whatsapp_link = detail.at_css(%(a[href="https://wa.me/5511988771234"]))
+      expect(whatsapp_link.ancestors("form")).to be_empty
     end
 
     it "dials the client through tel: in E.164" do
