@@ -29,6 +29,8 @@ Rails.application.routes.draw do
     resource :password_reset, only: %i[new create edit update]
     resources :appointments, only: %i[index show] do
       resource :cancellation, only: :create, module: :appointments
+      resource :completion, only: :create, module: :appointments
+      resource :no_show, only: :create, module: :appointments
     end
     resources :services, only: %i[index new create edit update]
     resource :brand_colors, only: %i[edit update]
