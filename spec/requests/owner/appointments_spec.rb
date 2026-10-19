@@ -44,6 +44,7 @@ RSpec.describe "Owner appointments", type: :request do
       service = create(:service, tenant: tenant)
       confirmed_client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro")
       cancelled_client = create(:client, tenant: tenant, name: "Bruna Salles")
+      create(:working_hour, tenant: tenant, professional: professional, weekday: Date.current.wday, opens_at: "08:00", closes_at: "20:00")
       ActsAsTenant.with_tenant(tenant) do
         create(:appointment, tenant: tenant, professional: professional, service: service, client: confirmed_client, starts_at: Date.current.in_time_zone.change(hour: 9))
         create(:appointment, :cancelled, tenant: tenant, professional: professional, service: service, client: cancelled_client, starts_at: Date.current.in_time_zone.change(hour: 15, min: 30))
@@ -162,6 +163,109 @@ RSpec.describe "Owner appointments", type: :request do
 
       expect(single).to be_positive
       expect(many).to eq(single)
+    end
+
+    it "frames the out-of-hours appointment in the day's list" do
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant, name: "Camila Nunes")
+      friday = Date.current.next_week(:friday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 5, opens_at: "09:00", closes_at: "18:00")
+      ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: friday.in_time_zone.change(hour: 18, min: 30)) }
+      sign_in_owner(owner)
+
+      get owner_appointments_path(day: friday.iso8601)
+
+      expect(response.body).to include("Fora do expediente")
+      expect(response.body).to include("border-danger")
+    end
+
+    it "leaves the in-hours appointment unframed" do
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro")
+      friday = Date.current.next_week(:friday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 5, opens_at: "09:00", closes_at: "18:00")
+      ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: friday.in_time_zone.change(hour: 14)) }
+      sign_in_owner(owner)
+
+      get owner_appointments_path(day: friday.iso8601)
+
+      expect(response.body).to include("Confirmado")
+      expect(response.body).not_to include("Fora do expediente")
+    end
+
+    it "frames every appointment of a day off" do
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      first_client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro")
+      second_client = create(:client, tenant: tenant, name: "Juliana Prado")
+      tuesday = Date.current.next_week(:tuesday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+      create(:schedule_exception, tenant: tenant, professional: professional, occurs_on: tuesday)
+      ActsAsTenant.with_tenant(tenant) do
+        create(:appointment, tenant: tenant, professional: professional, service: service, client: first_client, starts_at: tuesday.in_time_zone.change(hour: 10))
+        create(:appointment, tenant: tenant, professional: professional, service: service, client: second_client, starts_at: tuesday.in_time_zone.change(hour: 14))
+      end
+      sign_in_owner(owner)
+
+      get owner_appointments_path(day: tuesday.iso8601)
+
+      expect(response.body.scan("Fora do expediente").count).to eq(2)
+    end
+
+    it "does not frame the slot once the hours cover it" do
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant, name: "Camila Nunes")
+      friday = Date.current.next_week(:friday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 5, opens_at: "09:00", closes_at: "20:00")
+      ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: friday.in_time_zone.change(hour: 18, min: 30)) }
+      sign_in_owner(owner)
+
+      get owner_appointments_path(day: friday.iso8601)
+
+      expect(response.body).not_to include("Fora do expediente")
+    end
+
+    it "frames by the signed-in tenant's hours only" do
+      ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      ze_professional = create(:professional, tenant: ze)
+      create(:working_hour, tenant: ze, professional: ze_professional, weekday: 5, opens_at: "09:00", closes_at: "20:00")
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant, name: "Camila Nunes")
+      friday = Date.current.next_week(:friday)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 5, opens_at: "09:00", closes_at: "18:00")
+      ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: friday.in_time_zone.change(hour: 18, min: 30)) }
+      sign_in_owner(owner)
+
+      get owner_appointments_path(day: friday.iso8601)
+
+      expect(response.body).to include("Fora do expediente")
+      expect(response.body).not_to include("Barbearia do Zé")
+    end
+
+    it "queries the database the same number of times for many out-of-hours appointments as for one" do
+      friday = Date.current.next_week(:friday)
+      travel_to(friday.in_time_zone.change(hour: 7)) do
+        create(:branding, tenant: tenant)
+        service = create(:service, tenant: tenant)
+        client = create(:client, tenant: tenant)
+        create(:working_hour, tenant: tenant, professional: professional, weekday: 5, opens_at: "09:00", closes_at: "18:00")
+        ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: friday.in_time_zone.change(hour: 18, min: 30)) }
+        sign_in_owner(owner)
+
+        single = count_queries { get owner_appointments_path(day: friday.iso8601) }
+
+        ActsAsTenant.with_tenant(tenant) do
+          create(:appointment, tenant: tenant, professional: professional, service: service, client: create(:client, tenant: tenant), starts_at: friday.in_time_zone.change(hour: 19, min: 30))
+          create(:appointment, tenant: tenant, professional: professional, service: service, client: create(:client, tenant: tenant), starts_at: friday.in_time_zone.change(hour: 20, min: 30))
+        end
+        many = count_queries { get owner_appointments_path(day: friday.iso8601) }
+
+        expect(many).to eq(single)
+      end
     end
   end
 
