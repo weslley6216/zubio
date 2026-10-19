@@ -18,8 +18,10 @@ export default class extends Controller {
   }
 
   paint(row, active) {
-    row.classList.remove(...(active ? this.restingClasses : this.activeClasses))
-    row.classList.add(...(active ? this.activeClasses : this.restingClasses))
+    if (!row.dataset.outOfHours) {
+      row.classList.remove(...(active ? this.restingClasses : this.activeClasses))
+      row.classList.add(...(active ? this.activeClasses : this.restingClasses))
+    }
     const link = row.querySelector("a[data-action~='active-row#select']")
     if (active) link.setAttribute("aria-current", "true")
     else link.removeAttribute("aria-current")

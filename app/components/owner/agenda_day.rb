@@ -7,11 +7,12 @@ class Components::Owner::AgendaDay < Components::Base
   SHARE_LABEL = "Seu link".freeze
   SHARE_HELPER = "Mande esse endereço para suas clientes. É por ele que elas escolhem o horário.".freeze
 
-  def initialize(tenant:, branding:, day:, appointments:, selected: nil, selected_visit_number: nil)
+  def initialize(tenant:, branding:, day:, appointments:, out_of_hours: Set.new, selected: nil, selected_visit_number: nil)
     @tenant = tenant
     @branding = branding
     @day = day
     @appointments = appointments
+    @out_of_hours = out_of_hours
     @selected = selected
     @selected_visit_number = selected_visit_number
   end
@@ -58,7 +59,7 @@ class Components::Owner::AgendaDay < Components::Base
 
   def render_list
     div(class: "grid gap-2.5") do
-      @appointments.each { |appointment| render Components::Owner::AppointmentRow.new(appointment: appointment, selected: appointment == @selected) }
+      @appointments.each { |appointment| render Components::Owner::AppointmentRow.new(appointment: appointment, selected: appointment == @selected, out_of_hours: @out_of_hours.include?(appointment)) }
     end
   end
 
