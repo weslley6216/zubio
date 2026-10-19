@@ -36,7 +36,7 @@ class Components::Owner::AppointmentRow < Components::Base
           aria_current: (@selected ? "true" : nil),
           class: "text-[14px] font-bold text-ink after:absolute after:inset-0 after:content-['']") { @appointment.client.name }
         span(class: "text-[12px] text-ink-muted") { @appointment.service.name }
-        div(class: "mt-0.5 flex items-center gap-1.5") do
+        div(class: "mt-0.5 flex flex-wrap items-center gap-1.5") do
           render badge
           a(href: @appointment.client.tel_href, class: "relative z-10 text-[12px] font-bold text-brand-600") { @appointment.client.phone_display }
         end

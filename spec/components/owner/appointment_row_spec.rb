@@ -198,4 +198,17 @@ RSpec.describe Components::Owner::AppointmentRow, type: :component do
     expect(html).not_to include("border-2 border-brand-600")
     expect(fragment.at_css(%([data-out-of-hours="true"]))).to be_present
   end
+
+  it "lets the long out-of-hours badge drop to its own line instead of wrapping its words" do
+    tenant = create(:tenant)
+    client = create(:client, tenant: tenant, name: "Camila Nunes", phone: "11988771234")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    appointment = ActsAsTenant.with_tenant(tenant) do
+      create(:appointment, tenant: tenant, client: client, service: service, starts_at: Time.current.change(hour: 18, min: 30))
+    end
+
+    html = render_phlex(described_class.new(appointment: appointment, out_of_hours: true))
+
+    expect(html).to include("flex-wrap")
+  end
 end
