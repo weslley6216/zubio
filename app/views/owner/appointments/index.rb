@@ -3,12 +3,13 @@ class Views::Owner::Appointments::Index < Views::Base
 
   TODAY_LABEL = "HOJE".freeze
 
-  def initialize(tenant:, branding:, day:, days:, appointments:, current_section:, subtitle:, selected: nil, selected_visit_number: nil)
+  def initialize(tenant:, branding:, day:, days:, appointments:, current_section:, subtitle:, out_of_hours: Set.new, selected: nil, selected_visit_number: nil)
     @tenant = tenant
     @branding = branding
     @day = day
     @days = days
     @appointments = appointments
+    @out_of_hours = out_of_hours
     @current_section = current_section
     @subtitle = subtitle
     @selected = selected
@@ -21,7 +22,7 @@ class Views::Owner::Appointments::Index < Views::Base
       render_day_selector_bar
       render Components::FlashBanner.new(container_class: "#{Components::Owner::Panel::CONTENT_WIDE} grid gap-2 pt-4")
       render Components::Owner::AgendaDay.new(tenant: @tenant, branding: @branding, day: @day, appointments: @appointments,
-        selected: @selected, selected_visit_number: @selected_visit_number)
+        out_of_hours: @out_of_hours, selected: @selected, selected_visit_number: @selected_visit_number)
     end
   end
 
