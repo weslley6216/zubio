@@ -17,7 +17,7 @@ RSpec.describe Components::Owner::AgendaDay, type: :component do
     end
 
     html = render_phlex(described_class.new(tenant: tenant, branding: branding, day: day,
-      appointments: [ in_hours_appointment, out_of_hours_appointment ], out_of_hours: Set[ out_of_hours_appointment ]))
+      appointments: [ in_hours_appointment, out_of_hours_appointment ], out_of_hours: Set[out_of_hours_appointment]))
     fragment = Nokogiri::HTML5.fragment(html)
     in_hours_row = fragment.at_css(%(div[data-appointment-id="#{in_hours_appointment.id}"]))
     out_of_hours_row = fragment.at_css(%(div[data-appointment-id="#{out_of_hours_appointment.id}"]))
