@@ -264,6 +264,7 @@ RSpec.describe "Owner appointments", type: :request do
         end
         many = count_queries { get owner_appointments_path(day: friday.iso8601) }
 
+        expect(single).to be_positive
         expect(many).to eq(single)
       end
     end
