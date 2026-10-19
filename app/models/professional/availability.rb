@@ -26,6 +26,10 @@ class Professional::Availability
     future_appointments.reject { |appointment| within_hours?(appointment) }
   end
 
+  def outside_hours(appointments)
+    appointments.reject { |appointment| appointment.cancelled? || appointment.past? || within_hours?(appointment) }
+  end
+
   def open_until(moment)
     @dates ||= moment.to_date..moment.to_date
     windows = open_windows(moment.to_date)
