@@ -7,10 +7,13 @@ class Components::Owner::AppointmentRow < Components::Base
   }.freeze
   ACTIVE_CLASS = "border-2 border-brand-600 shadow-[0_2px_6px_var(--tw-shadow-color)] shadow-brand-600/12 bg-surface".freeze
   RESTING_CLASS = "border border-line bg-surface shadow-[0_1px_2px_rgba(14,26,36,0.04)]".freeze
+  OUT_OF_HOURS_LABEL = "Fora do expediente".freeze
+  OUT_OF_HOURS_CLASS = "border border-danger bg-surface".freeze
 
-  def initialize(appointment:, selected: false)
+  def initialize(appointment:, selected: false, out_of_hours: false)
     @appointment = appointment
     @selected = selected
+    @out_of_hours = out_of_hours
   end
 
   def view_template
@@ -21,12 +24,12 @@ class Components::Owner::AppointmentRow < Components::Base
 
   def render_active
     div(class: "relative flex gap-3 rounded-xl px-4 py-3.5 #{active_border_class}",
-      data: { active_row_target: "row", appointment_id: @appointment.id }) do
+      data: { active_row_target: "row", appointment_id: @appointment.id, out_of_hours: (@out_of_hours ? "true" : nil) }) do
       div(class: "flex w-12 flex-none flex-col items-center") do
-        span(class: "text-[16px] font-extrabold leading-[1.2] tabular-nums text-ink") { @appointment.starts_at.strftime("%H:%M") }
+        span(class: "text-[16px] font-extrabold leading-[1.2] tabular-nums #{@out_of_hours ? 'text-danger' : 'text-ink'}") { @appointment.starts_at.strftime("%H:%M") }
         span(class: "text-[11px] tabular-nums text-ink-muted") { ::Service::Duration.minutes_label(@appointment.service.duration_minutes) }
       end
-      div(class: "w-px flex-none bg-line")
+      div(class: "w-px flex-none #{@out_of_hours ? 'bg-danger' : 'bg-line'}")
       div(class: "flex min-w-0 flex-grow flex-col gap-1") do
         a(href: owner_appointment_path(@appointment),
           data: { turbo_frame: Components::Owner::AppointmentDetail::FRAME_ID, turbo_action: "advance", action: "active-row#select" },
@@ -34,16 +37,21 @@ class Components::Owner::AppointmentRow < Components::Base
           class: "text-[14px] font-bold text-ink after:absolute after:inset-0 after:content-['']") { @appointment.client.name }
         span(class: "text-[12px] text-ink-muted") { @appointment.service.name }
         div(class: "mt-0.5 flex items-center gap-1.5") do
-          render Components::Badge.new(text: badge.fetch(:label), tone: badge.fetch(:tone))
+          render badge
           a(href: @appointment.client.tel_href, class: "relative z-10 text-[12px] font-bold text-brand-600") { @appointment.client.phone_display }
         end
       end
     end
   end
 
-  def active_border_class = @selected ? ACTIVE_CLASS : RESTING_CLASS
+  def active_border_class = @out_of_hours ? OUT_OF_HOURS_CLASS : (@selected ? ACTIVE_CLASS : RESTING_CLASS)
 
-  def badge = STATUS_BADGES.fetch(@appointment.status)
+  def badge
+    return Components::Badge.new(text: OUT_OF_HOURS_LABEL, tone: :danger) if @out_of_hours
+
+    status_badge = STATUS_BADGES.fetch(@appointment.status)
+    Components::Badge.new(text: status_badge.fetch(:label), tone: status_badge.fetch(:tone))
+  end
 
   def render_cancelled
     cancelled_badge = STATUS_BADGES.fetch("cancelled")

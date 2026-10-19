@@ -147,4 +147,55 @@ RSpec.describe Components::Owner::AppointmentRow, type: :component do
     expect(link["aria-current"]).to be_nil
     expect(html).not_to include("border-2 border-brand-600")
   end
+
+  it "frames the out-of-hours row in danger with the notice badge and the danger time" do
+    tenant = create(:tenant)
+    client = create(:client, tenant: tenant, name: "Camila Nunes", phone: "11988771234")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    appointment = ActsAsTenant.with_tenant(tenant) do
+      create(:appointment, tenant: tenant, client: client, service: service, starts_at: Time.current.change(hour: 18, min: 30))
+    end
+
+    html = render_phlex(described_class.new(appointment: appointment, out_of_hours: true))
+
+    expect(html).to include("border-danger")
+    expect(html).to include("text-danger")
+    expect(html).to include("bg-danger-soft")
+    expect(html).to include("Fora do expediente")
+    expect(html).not_to include("Confirmado")
+    expect(html).not_to include("border-line")
+  end
+
+  it "leaves an in-hours row without the danger frame or notice" do
+    tenant = create(:tenant)
+    client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    appointment = ActsAsTenant.with_tenant(tenant) do
+      create(:appointment, tenant: tenant, client: client, service: service, starts_at: Time.current.change(hour: 9, min: 45))
+    end
+
+    html = render_phlex(described_class.new(appointment: appointment, out_of_hours: false))
+
+    expect(html).to include("Confirmado")
+    expect(html).not_to include("Fora do expediente")
+    expect(html).not_to include("border-danger")
+  end
+
+  it "keeps the danger frame on the selected out-of-hours row and marks it current" do
+    tenant = create(:tenant)
+    client = create(:client, tenant: tenant, name: "Camila Nunes", phone: "11988771234")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    appointment = ActsAsTenant.with_tenant(tenant) do
+      create(:appointment, tenant: tenant, client: client, service: service, starts_at: Time.current.change(hour: 18, min: 30))
+    end
+
+    html = render_phlex(described_class.new(appointment: appointment, out_of_hours: true, selected: true))
+    fragment = Nokogiri::HTML5.fragment(html)
+    link = fragment.at_css(%(a[href="/owner/appointments/#{appointment.id}"]))
+
+    expect(link["aria-current"]).to eq("true")
+    expect(html).to include("border-danger")
+    expect(html).not_to include("border-2 border-brand-600")
+    expect(fragment.at_css(%([data-out-of-hours="true"]))).to be_present
+  end
 end
