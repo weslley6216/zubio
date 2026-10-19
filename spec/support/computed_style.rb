@@ -7,9 +7,7 @@ module ComputedStyle
   end
 
   def computed(selector, property)
-    page.evaluate_script(
-      "getComputedStyle(document.querySelector(#{selector.to_json})).#{property}"
-    )
+    first(selector, visible: :all).evaluate_script("getComputedStyle(this).#{property}")
   end
 
   def computed_hex(selector, property)
