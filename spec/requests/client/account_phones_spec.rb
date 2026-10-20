@@ -6,9 +6,9 @@ RSpec.describe "Client account phone", type: :request do
 
   before { host! "#{tenant.subdomain}.zubio.com.br" }
 
-  def identity_token(uid: "g-1", email: "ana@gmail.com", name: "Ana Paula Ribeiro", service_id: service.id)
+  let(:identity_token) do
     Rails.application.message_verifier(:client_google_identity).generate(
-      { "uid" => uid, "email" => email, "name" => name, "service" => service_id }, expires_in: 15.minutes
+      { "uid" => "g-1", "email" => "ana@gmail.com", "name" => "Ana Paula Ribeiro", "service" => service.id }, expires_in: 15.minutes
     )
   end
 
@@ -38,8 +38,11 @@ RSpec.describe "Client account phone", type: :request do
 
   it "refuses a WhatsApp already linked to another Google account" do
     ActsAsTenant.with_tenant(tenant) { Client.link_google!(uid: "g-A", email: "a@gmail.com", name: "A", phone: "11988771234") }
+    other_account_token = Rails.application.message_verifier(:client_google_identity).generate(
+      { "uid" => "g-B", "email" => "b@gmail.com", "name" => "B", "service" => service.id }, expires_in: 15.minutes
+    )
 
-    post client_account_phone_path, params: { token: identity_token(uid: "g-B"), phone: "(11) 98877-1234" }
+    post client_account_phone_path, params: { token: other_account_token, phone: "(11) 98877-1234" }
 
     expect(response).to have_http_status(:unprocessable_entity)
     expect(response.body).to include(Client::PHONE_TAKEN_MESSAGE)

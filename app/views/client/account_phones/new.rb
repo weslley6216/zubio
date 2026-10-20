@@ -15,7 +15,7 @@ class Views::Client::AccountPhones::New < Views::Base
   MAIN_CLASS = "flex grow flex-col gap-5 px-5 py-6".freeze
   HEADING_BLOCK_CLASS = "flex flex-col gap-1.5".freeze
   HEADING_CLASS = "text-[22px] leading-[normal] font-extrabold tracking-[-0.02em]".freeze
-  SUBTITLE_CLASS = "text-[14px] leading-[1.5] text-ink-muted".freeze
+  SUBTITLE_CLASS = "text-[14px] leading-[1.5] text-pretty text-ink-muted".freeze
   CARD_CLASS = "flex flex-col gap-3.5 rounded-2xl border border-line bg-surface p-5".freeze
   NAME_ROW_CLASS = "flex items-baseline justify-between gap-4".freeze
   NAME_ROW_LABEL_CLASS = "flex-none text-[13px] text-ink-muted".freeze
@@ -23,7 +23,7 @@ class Views::Client::AccountPhones::New < Views::Base
   DIVIDER_CLASS = "h-px bg-line".freeze
   FIELD_WRAPPER_CLASS = "flex flex-col gap-1.5".freeze
   FIELD_LABEL_CLASS = "text-[11px] font-bold uppercase tracking-[0.06em] text-ink-muted".freeze
-  FIELD_CLASS = "flex min-h-[44px] items-center rounded-lg border-2 border-brand-600 bg-surface px-3 text-[15px] font-bold tabular-nums".freeze
+  FIELD_CLASS = "flex min-h-[48px] items-center rounded-lg border-2 border-brand-600 bg-surface px-3 text-[15px] font-bold tabular-nums".freeze
   SUBMIT_CLASS = "flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-[15px] font-extrabold text-on-brand".freeze
 
   def initialize(tenant:, branding:, name:, token:, client: nil)

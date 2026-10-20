@@ -11,9 +11,9 @@ RSpec.describe "Client Google OAuth", type: :request do
     )
   end
 
-  def signed_state(for_tenant: tenant, for_service: service)
+  let(:signed_state) do
     Rails.application.message_verifier(:client_oauth_state).generate(
-      { "tenant" => for_tenant.subdomain, "service" => for_service.id }, expires_in: 10.minutes
+      { "tenant" => tenant.subdomain, "service" => service.id }, expires_in: 10.minutes
     )
   end
 

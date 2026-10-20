@@ -15,11 +15,11 @@ class Views::Client::Sessions::New < Views::Base
   IDENTITY_CLASS = "flex flex-col items-center gap-3.5 text-center".freeze
   HEADING_BLOCK_CLASS = "flex flex-col gap-1.5".freeze
   HEADING_CLASS = "text-[24px] leading-[normal] font-extrabold tracking-[-0.02em]".freeze
-  SUBTITLE_CLASS = "text-[14px] leading-[1.5] text-ink-muted".freeze
+  SUBTITLE_CLASS = "text-[14px] leading-[1.5] text-pretty text-ink-muted".freeze
   CARD_CLASS = "flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5".freeze
   GOOGLE_CLASS = "flex min-h-[44px] w-full items-center justify-center gap-2.5 rounded-[10px] border border-[#747775] bg-white px-4 font-[Roboto,_system-ui,_sans-serif] text-[14px] font-medium text-[#1f1f1f]".freeze
   GOOGLE_ICON_CLASS = "h-[18px] w-[18px] flex-none".freeze
-  GUEST_CLASS = "min-h-[44px] w-full rounded-[10px] bg-surface text-[14px] font-bold text-ink-muted".freeze
+  GUEST_CLASS = "flex min-h-[44px] w-full items-center justify-center rounded-[10px] bg-surface text-[14px] font-bold text-ink-muted".freeze
   NOTE_CLASS = "text-center text-[12px] leading-[1.5] text-ink-muted".freeze
 
   def initialize(tenant:, branding:, service:)
@@ -72,11 +72,11 @@ class Views::Client::Sessions::New < Views::Base
 
   def render_card
     div(class: CARD_CLASS) do
-      a(href: google_sign_in_href, class: GOOGLE_CLASS, data: { turbo: false }) do
+      a(href: google_sign_in_href, class: GOOGLE_CLASS, data: { turbo: false, google_button: true }) do
         render_google_icon
         plain GOOGLE_LABEL
       end
-      a(href: new_client_service_booking_path(@service), class: GUEST_CLASS) { GUEST_LABEL }
+      a(href: new_client_service_booking_path(@service), class: GUEST_CLASS, data: { guest_button: true }) { GUEST_LABEL }
       p(class: NOTE_CLASS) { NOTE }
     end
   end
