@@ -5,10 +5,12 @@ abort("The Rails environment is running in production mode!") if Rails.env.produ
 require 'rspec/rails'
 
 require_relative "support/capybara"
+require_relative "support/client_session"
 require_relative "support/computed_style"
 require_relative "support/legible_roles"
 require_relative "support/log_capture"
 require_relative "support/neutral_mirror"
+require_relative "support/omniauth"
 require_relative "support/owner_session"
 require_relative "support/phlex_component"
 require_relative "support/phone"

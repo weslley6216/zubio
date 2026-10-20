@@ -7,7 +7,8 @@ class Client::EstablishmentsController < Client::BaseController
       tenant: tenant,
       branding: tenant.branding_or_default,
       services: Service.active.ordered.to_a,
-      open_until: professional && Professional::Availability.new(professional: professional).open_until(Time.current)
+      open_until: professional && Professional::Availability.new(professional: professional).open_until(Time.current),
+      authenticated: current_client.present?
     )
   end
 end

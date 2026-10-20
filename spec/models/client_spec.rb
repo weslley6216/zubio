@@ -168,6 +168,106 @@ RSpec.describe Client, type: :model do
     end
   end
 
+  describe ".link_google!" do
+    it "links a brand-new account to a brand-new phone and stamps account_linked_at" do
+      tenant = create(:tenant)
+
+      client = ActsAsTenant.with_tenant(tenant) do
+        Client.link_google!(uid: "g-1", email: "ana@gmail.com", name: "Ana Paula Ribeiro", phone: "(11) 98877-1234")
+      end
+
+      expect(client).to be_persisted
+      expect(client.google_uid).to eq("g-1")
+      expect(client.account_linked_at).to be_present
+      expect(client.phone).to eq("11988771234")
+    end
+
+    it "reuses the phone-only client and attaches the Google account" do
+      tenant = create(:tenant)
+      existing = create(:client, tenant: tenant, name: "Ana", phone: "11988771234")
+
+      client = ActsAsTenant.with_tenant(tenant) do
+        Client.link_google!(uid: "g-1", email: "ana@gmail.com", name: "Ana Paula Ribeiro", phone: "11988771234")
+      end
+
+      expect(client.id).to eq(existing.id)
+      expect(client.name).to eq("Ana Paula Ribeiro")
+      expect(ActsAsTenant.with_tenant(tenant) { Client.count }).to eq(1)
+    end
+
+    it "refuses a phone already linked to a different Google account" do
+      tenant = create(:tenant)
+      ActsAsTenant.with_tenant(tenant) { Client.link_google!(uid: "g-A", email: "a@gmail.com", name: "A", phone: "11988771234") }
+
+      client = ActsAsTenant.with_tenant(tenant) do
+        Client.link_google!(uid: "g-B", email: "b@gmail.com", name: "B", phone: "11988771234")
+      end
+
+      expect(client).not_to be_persisted
+      expect(client.errors[:phone]).to include(Client::PHONE_TAKEN_MESSAGE)
+      expect(ActsAsTenant.with_tenant(tenant) { Client.where(google_uid: "g-B") }).to be_empty
+    end
+
+    it "allows the same google_uid in a different tenant as a separate link" do
+      aurora = create(:tenant, name: "Estúdio Aurora")
+      ze = create(:tenant, name: "Barbearia do Zé")
+      ActsAsTenant.with_tenant(aurora) { Client.link_google!(uid: "g-1", email: "ana@gmail.com", name: "Ana", phone: "11988771234") }
+
+      ze_client = ActsAsTenant.with_tenant(ze) { Client.link_google!(uid: "g-1", email: "ana@gmail.com", name: "Ana", phone: "21977665544") }
+
+      expect(ze_client).to be_persisted
+      expect(ze_client.tenant).to eq(ze)
+      own_tenant_uids = ActsAsTenant.with_tenant(ze) { Client.pluck(:google_uid) }
+      expect(own_tenant_uids).to include("g-1")
+    end
+
+    it "is invalid with two clients sharing a google_uid in the same tenant" do
+      tenant = create(:tenant)
+      create(:client, tenant: tenant, phone: "11988771234", google_uid: "g-1")
+      duplicate = build(:client, tenant: tenant, phone: "21977665544", google_uid: "g-1")
+
+      duplicate.valid?
+
+      expect(duplicate.errors[:google_uid]).to be_present
+    end
+
+    it "is valid with two clients both lacking a google_uid in the same tenant" do
+      tenant = create(:tenant)
+      create(:client, tenant: tenant, phone: "11988771234")
+      other = build(:client, tenant: tenant, phone: "21977665544")
+
+      expect(other).to be_valid
+    end
+  end
+
+  describe "handoff token" do
+    it "mints a one-time handoff token the second use rejects" do
+      tenant = create(:tenant)
+      client = create(:client, tenant: tenant)
+
+      token = client.handoff_token
+      found = ActsAsTenant.with_tenant(tenant) { Client.find_by_handoff_token(token) }
+      client.consume_handoff_token!
+      found_again = ActsAsTenant.with_tenant(tenant) { Client.find_by_handoff_token(token) }
+
+      expect(found).to eq(client)
+      expect(found_again).to be_nil
+    end
+
+    it "does not find a handoff token minted in another tenant" do
+      aurora = create(:tenant, name: "Estúdio Aurora")
+      ze = create(:tenant, name: "Barbearia do Zé")
+      client = create(:client, tenant: aurora)
+      token = client.handoff_token
+
+      found_in_aurora = ActsAsTenant.with_tenant(aurora) { Client.find_by_handoff_token(token) }
+      found_in_ze = ActsAsTenant.with_tenant(ze) { Client.find_by_handoff_token(token) }
+
+      expect(found_in_aurora).to eq(client)
+      expect(found_in_ze).to be_nil
+    end
+  end
+
   describe "tenant isolation" do
     it "a scoped query brings the tenant's own client and not another's" do
       aurora = create(:tenant, name: "Estúdio Aurora")

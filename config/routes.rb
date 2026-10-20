@@ -18,6 +18,10 @@ Rails.application.routes.draw do
   resource :signup, only: %i[new create]
   resource :login_link, only: %i[new create]
 
+  get "/entrar/google", to: "client/auth/omniauth#new", as: :google_entry
+  get "/auth/:provider/callback", to: "client/auth/omniauth#callback"
+  get "/auth/failure", to: "client/auth/omniauth#failure"
+
   namespace :owner do
     resource :onboarding, only: %i[show create], controller: "onboarding"
     namespace :onboarding do
@@ -44,6 +48,9 @@ Rails.application.routes.draw do
   constraints TenantHost do
     root to: "client/establishments#show", as: :establishment
     scope module: :client, as: :client do
+      resource :session, only: %i[new destroy]
+      resource :handoff, only: :show
+      resource :account_phone, only: %i[new create]
       resources :services, only: [] do
         resource :booking, only: %i[new create]
       end
