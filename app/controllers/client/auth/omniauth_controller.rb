@@ -1,6 +1,6 @@
 class Client::Auth::OmniauthController < ApplicationController
   skip_before_action :resolve_tenant
-  before_action :redirect_to_platform_host, unless: :platform_root_host?
+  before_action :redirect_to_platform_root, unless: :platform_root_host?
 
   def new
     state = Rails.application.message_verifier(:client_oauth_state).generate(
@@ -22,7 +22,7 @@ class Client::Auth::OmniauthController < ApplicationController
       redirect_to client_handoff_url(host: tenant.canonical_host, token: client.handoff_token, service: data["service"]), allow_other_host: true
     else
       identity = Rails.application.message_verifier(:client_google_identity).generate(
-        { "uid" => auth.uid, "email" => auth.info.email, "name" => auth.info.name, "service" => data["service"] }, expires_in: 15.minutes
+        { "tenant" => tenant.subdomain, "uid" => auth.uid, "email" => auth.info.email, "name" => auth.info.name, "service" => data["service"] }, expires_in: 15.minutes
       )
       redirect_to new_client_account_phone_url(host: tenant.canonical_host, token: identity), allow_other_host: true
     end
@@ -35,10 +35,6 @@ class Client::Auth::OmniauthController < ApplicationController
   end
 
   private
-
-  def redirect_to_platform_host
-    redirect_to_platform_root
-  end
 
   def signed_state
     request.env["omniauth.origin"].presence || params[:state]

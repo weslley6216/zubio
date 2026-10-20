@@ -75,7 +75,7 @@ RSpec.describe "Client Google sign-in", type: :system, js: true do
 
     it "keeps the WhatsApp step readable in #{scheme}" do
       token = Rails.application.message_verifier(:client_google_identity).generate(
-        { "uid" => "g-1", "email" => "ana@gmail.com", "name" => "Ana Paula Ribeiro", "service" => service.id }, expires_in: 15.minutes
+        { "tenant" => tenant.subdomain, "uid" => "g-1", "email" => "ana@gmail.com", "name" => "Ana Paula Ribeiro", "service" => service.id }, expires_in: 15.minutes
       )
       emulate_color_scheme(scheme)
 

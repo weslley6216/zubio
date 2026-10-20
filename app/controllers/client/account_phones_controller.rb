@@ -23,6 +23,7 @@ class Client::AccountPhonesController < Client::BaseController
 
   def decode_identity
     @identity = Rails.application.message_verifier(:client_google_identity).verify(params[:token])
+    redirect_to establishment_path unless @identity["tenant"] == ActsAsTenant.current_tenant.subdomain
   rescue ActiveSupport::MessageVerifier::InvalidSignature
     redirect_to establishment_path
   end

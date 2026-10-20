@@ -8,7 +8,7 @@ RSpec.describe "Client account phone", type: :request do
 
   let(:identity_token) do
     Rails.application.message_verifier(:client_google_identity).generate(
-      { "uid" => "g-1", "email" => "ana@gmail.com", "name" => "Ana Paula Ribeiro", "service" => service.id }, expires_in: 15.minutes
+      { "tenant" => tenant.subdomain, "uid" => "g-1", "email" => "ana@gmail.com", "name" => "Ana Paula Ribeiro", "service" => service.id }, expires_in: 15.minutes
     )
   end
 
@@ -39,7 +39,7 @@ RSpec.describe "Client account phone", type: :request do
   it "refuses a WhatsApp already linked to another Google account" do
     ActsAsTenant.with_tenant(tenant) { Client.link_google!(uid: "g-A", email: "a@gmail.com", name: "A", phone: "11988771234") }
     other_account_token = Rails.application.message_verifier(:client_google_identity).generate(
-      { "uid" => "g-B", "email" => "b@gmail.com", "name" => "B", "service" => service.id }, expires_in: 15.minutes
+      { "tenant" => tenant.subdomain, "uid" => "g-B", "email" => "b@gmail.com", "name" => "B", "service" => service.id }, expires_in: 15.minutes
     )
 
     post client_account_phone_path, params: { token: other_account_token, phone: "(11) 98877-1234" }
@@ -68,6 +68,19 @@ RSpec.describe "Client account phone", type: :request do
     expect(ze_client.id).not_to eq(aurora_client.id)
     expect(ze_client.phone).to eq("11988771234")
     expect(aurora_client.reload.phone).to eq("21977665544")
+  end
+
+  it "refuses an identity token minted for another tenant" do
+    other_tenant = create(:tenant, name: "Estúdio Aurora")
+    foreign_token = Rails.application.message_verifier(:client_google_identity).generate(
+      { "tenant" => other_tenant.subdomain, "uid" => "g-1", "email" => "ana@gmail.com", "name" => "Ana Paula Ribeiro", "service" => service.id },
+      expires_in: 15.minutes
+    )
+
+    post client_account_phone_path, params: { token: foreign_token, phone: "(11) 98877-1234" }
+
+    expect(response).to redirect_to(establishment_path)
+    expect(ActsAsTenant.with_tenant(tenant) { Client.where(google_uid: "g-1") }).to be_empty
   end
 
   it "refuses an identity token with a tampered signature" do
