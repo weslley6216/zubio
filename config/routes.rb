@@ -18,6 +18,10 @@ Rails.application.routes.draw do
   resource :signup, only: %i[new create]
   resource :login_link, only: %i[new create]
 
+  get "/entrar/google", to: "client/auth/omniauth#new", as: :google_entry
+  get "/auth/:provider/callback", to: "client/auth/omniauth#callback"
+  get "/auth/failure", to: "client/auth/omniauth#failure"
+
   namespace :owner do
     resource :onboarding, only: %i[show create], controller: "onboarding"
     namespace :onboarding do

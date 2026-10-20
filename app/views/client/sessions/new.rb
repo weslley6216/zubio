@@ -81,7 +81,9 @@ class Views::Client::Sessions::New < Views::Base
     end
   end
 
-  def google_sign_in_href = "#"
+  def google_sign_in_href
+    google_entry_url(host: Tenant::PLATFORM_HOST, tenant: @tenant.subdomain, service: @service.id)
+  end
 
   def render_google_icon
     svg(viewBox: "0 0 48 48", class: GOOGLE_ICON_CLASS, aria_hidden: "true") do |icon|
