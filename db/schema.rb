@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_174512) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_20_171000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "citext"
@@ -74,11 +74,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_174512) do
   end
 
   create_table "clients", force: :cascade do |t|
+    t.datetime "account_linked_at"
     t.datetime "created_at", null: false
+    t.string "email"
+    t.string "google_uid"
+    t.integer "handoff_generation", default: 0, null: false
     t.string "name", null: false
     t.string "phone", null: false
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["tenant_id", "google_uid"], name: "index_clients_on_tenant_id_and_google_uid", unique: true, where: "(google_uid IS NOT NULL)"
     t.index ["tenant_id", "phone"], name: "index_clients_on_tenant_id_and_phone", unique: true
   end
 
