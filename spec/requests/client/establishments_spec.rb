@@ -63,15 +63,24 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(response.body).not_to include("data-catalog")
   end
 
-  it "links each service to the booking entry for that service" do
-    corte = create(:service, tenant: tenant, name: "Corte feminino")
-    coloracao = create(:service, tenant: tenant, name: "Coloração completa")
+  it "links a service card to the sign-in gate for a visitor" do
+    service = create(:service, tenant: tenant, name: "Corte feminino")
     host! "#{tenant.subdomain}.zubio.com.br"
 
     get root_path
 
-    expect(response.body).to include(%(href="#{new_client_service_booking_path(corte)}"))
-    expect(response.body).to include(%(href="#{new_client_service_booking_path(coloracao)}"))
+    expect(response.body).to include(%(href="#{new_client_session_path(service_id: service.id)}"))
+  end
+
+  it "links a service card straight to booking for a signed-in client" do
+    service = create(:service, tenant: tenant, name: "Corte feminino")
+    client = create(:client, tenant: tenant)
+    host! "#{tenant.subdomain}.zubio.com.br"
+    sign_in_client(client)
+
+    get root_path
+
+    expect(response.body).to include(%(href="#{new_client_service_booking_path(service)}"))
   end
 
   it "answers 404 for an unknown subdomain, leaking no establishment name" do

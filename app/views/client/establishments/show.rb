@@ -27,11 +27,12 @@ class Views::Client::Establishments::Show < Views::Base
   PRICE_CLASS = "text-[15px] leading-[normal] font-extrabold tabular-nums text-ink".freeze
   UNPRICED_CLASS = "text-xs leading-[normal] font-bold text-ink-muted".freeze
 
-  def initialize(tenant:, branding:, services:, open_until: nil)
+  def initialize(tenant:, branding:, services:, open_until: nil, authenticated: false)
     @tenant = tenant
     @branding = branding
     @services = services
     @open_until = open_until
+    @authenticated = authenticated
   end
 
   def view_template
@@ -86,11 +87,15 @@ class Views::Client::Establishments::Show < Views::Base
     end
     ul(class: LIST_CLASS, data: { catalog: true }) do
       @services.each do |service|
-        render Components::Service::Card.new(service: service, href: new_client_service_booking_path(service), variant: :showcase, description: service.description) do
+        render Components::Service::Card.new(service: service, href: service_href(service), variant: :showcase, description: service.description) do
           render_price(service)
         end
       end
     end
+  end
+
+  def service_href(service)
+    @authenticated ? new_client_service_booking_path(service) : new_client_session_path(service_id: service.id)
   end
 
   def render_price(service)

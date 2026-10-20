@@ -44,6 +44,8 @@ Rails.application.routes.draw do
   constraints TenantHost do
     root to: "client/establishments#show", as: :establishment
     scope module: :client, as: :client do
+      resource :session, only: %i[new destroy]
+      resource :handoff, only: :show
       resources :services, only: [] do
         resource :booking, only: %i[new create]
       end
