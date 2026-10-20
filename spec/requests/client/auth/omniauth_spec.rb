@@ -67,6 +67,15 @@ RSpec.describe "Client Google OAuth", type: :request do
     end
   end
 
+  describe "the real request-to-callback round trip" do
+    it "carries the signed state through the OmniAuth redirect instead of relying on a URL param" do
+      post "/auth/google_oauth2", params: { state: signed_state }
+      follow_redirect!
+
+      expect(response.location).to start_with(new_client_account_phone_url(host: tenant.canonical_host, token: "x").split("?").first)
+    end
+  end
+
   describe "failure" do
     it "returns the visitor to a safe page without a 500 when Google denies consent" do
       get "/auth/failure", params: { message: "access_denied" }

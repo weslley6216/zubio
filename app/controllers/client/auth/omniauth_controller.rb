@@ -11,7 +11,7 @@ class Client::Auth::OmniauthController < ApplicationController
 
   def callback
     auth = request.env["omniauth.auth"]
-    data = Rails.application.message_verifier(:client_oauth_state).verify(params[:state])
+    data = Rails.application.message_verifier(:client_oauth_state).verify(signed_state)
     tenant = Tenant.active.find_by(subdomain: data["tenant"])
 
     return redirect_to_platform_root if tenant.nil?
@@ -38,6 +38,10 @@ class Client::Auth::OmniauthController < ApplicationController
 
   def redirect_to_platform_host
     redirect_to_platform_root
+  end
+
+  def signed_state
+    request.env["omniauth.origin"].presence || params[:state]
   end
 
   def redirect_to_platform_root(alert: nil)
