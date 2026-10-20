@@ -67,6 +67,24 @@ RSpec.describe "Client Google OAuth", type: :request do
     end
   end
 
+  describe "logging" do
+    it "keeps the identity token of a brand-new account out of the log" do
+      log = capture_request_log { get "/auth/google_oauth2/callback", params: { state: signed_state } }
+
+      expect(log).to include("token=[FILTERED]")
+      expect(log).not_to match(/token=(?!\[FILTERED\])/)
+    end
+
+    it "keeps the handoff token of a linked account out of the log" do
+      ActsAsTenant.with_tenant(tenant) { Client.link_google!(uid: "g-1", email: "ana@gmail.com", name: "Ana", phone: "11988771234") }
+
+      log = capture_request_log { get "/auth/google_oauth2/callback", params: { state: signed_state } }
+
+      expect(log).to include("token=[FILTERED]")
+      expect(log).not_to match(/token=(?!\[FILTERED\])/)
+    end
+  end
+
   describe "the real request-to-callback round trip" do
     it "carries the signed state through the OmniAuth redirect instead of relying on a URL param" do
       post "/auth/google_oauth2", params: { state: signed_state }
