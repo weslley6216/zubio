@@ -1,11 +1,11 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.1.3", ">= 8.1.3.1"
+gem "rails", "~> 8.1.4"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use postgresql as the database for Active Record
-gem "pg", "~> 1.1"
+gem "pg", "~> 1.7"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
@@ -48,15 +48,15 @@ gem "bootsnap", require: false
 gem "thruster", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-gem "image_processing", "~> 2.1"
+gem "image_processing", "~> 2.2"
 gem "ruby-vips", "~> 2.2"
 
 # S3 client required by Active Storage's S3 service, used against Supabase
 # Storage's S3-compatible endpoint [https://guides.rubyonrails.org/active_storage_overview.html]
-gem "aws-sdk-s3", "~> 1.232", require: false
+gem "aws-sdk-s3", "~> 1.233", require: false
 
 # Transactional email over HTTP API [https://github.com/resend/resend-ruby]
-gem "resend", "~> 1.16"
+gem "resend", "~> 1.18"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
