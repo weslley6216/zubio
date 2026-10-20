@@ -20,8 +20,11 @@ RSpec.describe "Client Google OAuth", type: :request do
   describe "GET /entrar/google" do
     it "renders a self-posting form carrying the signed state to the OAuth request" do
       ActionController::Base.allow_forgery_protection = true
-      get google_entry_path(tenant: "mary", service: service.id)
-      ActionController::Base.allow_forgery_protection = false
+      begin
+        get google_entry_path(tenant: "mary", service: service.id)
+      ensure
+        ActionController::Base.allow_forgery_protection = false
+      end
 
       expect(response.body).to include(%(action="/auth/google_oauth2"), %(data-turbo="false"), %(name="state"), %(name="authenticity_token"))
     end

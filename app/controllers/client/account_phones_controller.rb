@@ -11,7 +11,7 @@ class Client::AccountPhonesController < Client::BaseController
     client = Client.link_google!(uid: @identity["uid"], email: @identity["email"], name: @identity["name"], phone: params[:phone])
 
     if client.errors.empty?
-      start_client_session(client, destination: new_client_service_booking_path(@identity["service"]))
+      start_client_session(client, destination: destination)
     else
       render Views::Client::AccountPhones::New.new(
         tenant: ActsAsTenant.current_tenant, branding: current_branding, name: @identity["name"], token: params[:token], client: client
@@ -20,6 +20,10 @@ class Client::AccountPhonesController < Client::BaseController
   end
 
   private
+
+  def destination
+    @identity["service"].present? ? new_client_service_booking_path(@identity["service"]) : establishment_path
+  end
 
   def decode_identity
     @identity = Rails.application.message_verifier(:client_google_identity).verify(params[:token])
