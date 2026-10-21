@@ -110,6 +110,17 @@ RSpec.describe "Client Google OAuth", type: :request do
       expect(log).not_to match(/token=(?!\[FILTERED\])/)
     end
 
+    it "keeps the signed state carrying the appointment token out of the log" do
+      state = Rails.application.message_verifier(:client_oauth_state).generate(
+        { "tenant" => tenant.subdomain, "service" => service.id, "appointment_token" => "cancel-token-b7f3q9" }, expires_in: 10.minutes
+      )
+
+      log = capture_request_log { get "/auth/google_oauth2/callback", params: { state: state } }
+
+      expect(log).to include("state=[FILTERED]")
+      expect(log).not_to include(state.split("--").first)
+    end
+
     it "keeps the handoff token of a linked account out of the log" do
       ActsAsTenant.with_tenant(tenant) { Client.link_google!(uid: "g-1", email: "ana@gmail.com", name: "Ana", phone: "11988771234") }
 
