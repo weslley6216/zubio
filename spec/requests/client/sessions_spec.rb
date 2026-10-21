@@ -16,6 +16,18 @@ RSpec.describe "Client session", type: :request do
     end
   end
 
+  describe "GET /session/new no modo lista" do
+    it "offers Google to see my appointments, without the guest option, when no service is tapped" do
+      get new_client_session_path
+
+      expect(response.body).to include("Entre para agendar", "Continuar com o Google")
+      expect(response.body).not_to include("Continuar sem conta")
+      google_href = Nokogiri::HTML5(response.body).at_css("[data-google-button]")["href"]
+      expect(google_href).to include("appointments=1")
+      expect(google_href).not_to include("service=")
+    end
+  end
+
   describe "DELETE /session (logout)" do
     it "clears the client session and returns to the establishment" do
       service

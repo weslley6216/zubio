@@ -1,6 +1,6 @@
 class Client::SessionsController < Client::BaseController
   def new
-    service = Service.active.find(params[:service_id])
+    service = params[:service_id].present? ? Service.active.find(params[:service_id]) : nil
     render Views::Client::Sessions::New.new(tenant: ActsAsTenant.current_tenant, branding: current_branding, service: service)
   end
 

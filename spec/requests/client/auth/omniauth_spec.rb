@@ -100,6 +100,29 @@ RSpec.describe "Client Google OAuth", type: :request do
 
       expect(response.location).not_to include("appointments=")
     end
+
+    it "sends a linked account entering for the list to the appointments handoff" do
+      ActsAsTenant.with_tenant(tenant) { Client.link_google!(uid: "g-1", email: "ana@gmail.com", name: "Ana", phone: "11988771234") }
+      state = Rails.application.message_verifier(:client_oauth_state).generate(
+        { "tenant" => tenant.subdomain, "appointments" => "1" }, expires_in: 10.minutes
+      )
+
+      get "/auth/google_oauth2/callback", params: { state: state }
+
+      expect(response.location).to include("appointments=1")
+    end
+
+    it "carries the list destination into a brand-new account's identity" do
+      state = Rails.application.message_verifier(:client_oauth_state).generate(
+        { "tenant" => tenant.subdomain, "appointments" => "1" }, expires_in: 10.minutes
+      )
+
+      get "/auth/google_oauth2/callback", params: { state: state }
+
+      identity_token = Rack::Utils.parse_query(URI(response.location).query)["token"]
+      identity = Rails.application.message_verifier(:client_google_identity).verify(identity_token)
+      expect(identity["appointments"]).to eq("1")
+    end
   end
 
   describe "logging" do

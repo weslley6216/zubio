@@ -23,7 +23,7 @@ class Client::AccountPhonesController < Client::BaseController
   private
 
   def destination
-    return client_my_appointments_path if @identity["appointment_token"].present?
+    return client_my_appointments_path if @identity["appointment_token"].present? || @identity["appointments"].present?
 
     @identity["service"].present? ? new_client_service_booking_path(@identity["service"]) : establishment_path
   end

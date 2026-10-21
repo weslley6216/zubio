@@ -4,7 +4,8 @@ class Client::Auth::OmniauthController < ApplicationController
 
   def new
     state = Rails.application.message_verifier(:client_oauth_state).generate(
-      { "tenant" => params[:tenant], "service" => params[:service], "appointment_token" => params[:appointment_token] }, expires_in: 10.minutes
+      { "tenant" => params[:tenant], "service" => params[:service], "appointment_token" => params[:appointment_token],
+        "appointments" => params[:appointments] }, expires_in: 10.minutes
     )
     render Views::Client::Auth::Redirect.new(state: state)
   end
@@ -21,12 +22,12 @@ class Client::Auth::OmniauthController < ApplicationController
     if client
       redirect_to client_handoff_url(
         host: tenant.canonical_host, token: client.handoff_token, service: data["service"],
-        appointments: ("1" if data["appointment_token"].present?)
+        appointments: ("1" if data["appointment_token"].present? || data["appointments"].present?)
       ), allow_other_host: true
     else
       identity = Rails.application.message_verifier(:client_google_identity).generate(
         { "tenant" => tenant.subdomain, "uid" => auth.uid, "email" => auth.info.email, "name" => auth.info.name,
-          "service" => data["service"], "appointment_token" => data["appointment_token"] }, expires_in: 15.minutes
+          "service" => data["service"], "appointment_token" => data["appointment_token"], "appointments" => data["appointments"] }, expires_in: 15.minutes
       )
       redirect_to new_client_account_phone_url(host: tenant.canonical_host, token: identity), allow_other_host: true
     end
