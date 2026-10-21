@@ -77,6 +77,22 @@ RSpec.describe "Public appointment screen", type: :request do
     expect(response.body).not_to include("Corte Aurora")
   end
 
+  it "opens the emailed link on another device without a session" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    professional = create(:professional, tenant: tenant, display_name: "Mary Sombracelhas")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    client = create(:client, tenant: tenant, email: "ana@gmail.com")
+    appointment = create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
+    mail = ClientMailer.booking_receipt(tenant.id, appointment.id)
+    url = mail.body.to_s[%r{http[s]?://\S+}]
+    host! "mary.zubio.com.br"
+
+    get URI(url).path
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Desmarcar")
+  end
+
   it "keeps the token out of the request log" do
     appointment = create(:appointment, tenant: tenant)
     host! "mary.zubio.com.br"
