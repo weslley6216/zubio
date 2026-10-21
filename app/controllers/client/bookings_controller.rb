@@ -94,7 +94,7 @@ class Client::BookingsController < Client::BaseController
   def render_receipt(service, professional, appointment)
     render Views::Client::Bookings::Receipt.new(
       tenant: ActsAsTenant.current_tenant, branding: current_branding, service: service,
-      professional: professional, appointment: appointment, client_name: params[:name].to_s
+      professional: professional, appointment: appointment, signed_in: current_client.present?
     )
   end
 

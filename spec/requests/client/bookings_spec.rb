@@ -480,34 +480,75 @@ RSpec.describe "Public booking day and time selection", type: :request do
       expect(ActsAsTenant.with_tenant(tenant) { Appointment.occupying.sole.client }).to eq(existing)
     end
 
-    it "shows the save-this-link block with the cancel token url" do
+    it "tells a signed-in client the receipt went to her masked email" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      client = create(:client, tenant: tenant, email: "ana@gmail.com")
+      sign_in_client(client)
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9, min: 45)
+
+      post client_service_booking_path(service), params: { starts_at: starts_at.iso8601 }
+
+      expect(response.body).to include("Comprovante enviado")
+      expect(response.body).to include("a***@gmail.com")
+      expect(response.body).to include("href=\"#{client_my_appointments_path}\"")
+      expect(response.body).to include("Esta tela também é o comprovante.")
+      expect(response.body).not_to include("Não perca este horário")
+    end
+
+    it "invites a visitor without a session to sign in with Google" do
       travel_to Time.zone.local(2026, 9, 8, 7, 0)
       professional = create(:professional, tenant: tenant, display_name: "Mary")
       service = create(:service, tenant: tenant, duration_minutes: 45)
       create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
       host! "#{tenant.subdomain}.zubio.com.br"
-      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9, min: 45)
 
       post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: starts_at.iso8601 }
 
       token = ActsAsTenant.with_tenant(tenant) { Appointment.occupying.sole.cancel_token }
-      expect(response.body).to include("/a/#{token}")
-      expect(response.body).to include("Esta tela é o comprovante.")
+      expect(response.body).to include("Não perca este horário")
+      expect(response.body).to include("Sem conta, para desmarcar você fala com a Mary.")
+      expect(response.body).to include("Continuar com o Google")
+      expect(response.body).to include("appointment_token=#{token}")
+      expect(response.body).not_to include("Comprovante enviado")
     end
 
-    it "offers to copy the cancel link and nothing to print" do
+    it "keeps the cancel button and drops the link box and copy on the guest receipt" do
       travel_to Time.zone.local(2026, 9, 8, 7, 0)
       professional = create(:professional, tenant: tenant, display_name: "Mary")
       service = create(:service, tenant: tenant, duration_minutes: 45)
       create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
       host! "#{tenant.subdomain}.zubio.com.br"
-      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9, min: 45)
 
       post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: starts_at.iso8601 }
 
-      expect(response.body).to include("Copiar link")
-      expect(response.body).not_to include("Salvar na tela")
-      expect(response.body).not_to include("print#run")
+      token = ActsAsTenant.with_tenant(tenant) { Appointment.occupying.sole.cancel_token }
+      expect(Nokogiri::HTML5(response.body).at_css("[data-cancel-link]")["href"]).to eq("/a/#{token}")
+      expect(response.body).not_to include("Copiar link")
+      expect(response.body).not_to include("Guarde este link")
+      expect(response.body).not_to include('data-controller="clipboard"')
+    end
+
+    it "keeps the cancel button and drops the link box and copy on the signed-in receipt" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      client = create(:client, tenant: tenant, email: "ana@gmail.com")
+      sign_in_client(client)
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9, min: 45)
+
+      post client_service_booking_path(service), params: { starts_at: starts_at.iso8601 }
+
+      token = ActsAsTenant.with_tenant(tenant) { Appointment.occupying.sole.cancel_token }
+      expect(Nokogiri::HTML5(response.body).at_css("[data-cancel-link]")["href"]).to eq("/a/#{token}")
+      expect(response.body).not_to include("Copiar link")
+      expect(response.body).not_to include("Guarde este link")
+      expect(response.body).not_to include('data-controller="clipboard"')
     end
 
     it "books in the request tenant and creates nothing in another" do
@@ -680,7 +721,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
       professional = create(:professional, tenant: tenant, display_name: "Mary")
       service = create(:service, tenant: tenant, duration_minutes: 45)
       create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
-      client = create(:client, tenant: tenant)
+      client = create(:client, tenant: tenant, email: "ana@gmail.com")
       sign_in_client(client)
       starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
 
@@ -694,7 +735,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
       professional = create(:professional, tenant: tenant, display_name: "Mary")
       service = create(:service, tenant: tenant, duration_minutes: 45)
       create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
-      client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+      client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234", email: "ana@gmail.com")
       sign_in_client(client)
       starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
 
