@@ -6,5 +6,6 @@ FactoryBot.define do
     tenant
     name { "Test Client" }
     sequence(:phone) { |index| "119#{format('%08d', index)}" }
+    sequence(:email) { |index| "client#{index}@gmail.com" }
   end
 end
