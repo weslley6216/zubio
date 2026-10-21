@@ -240,6 +240,20 @@ RSpec.describe Client, type: :model do
     end
   end
 
+  describe "#masked_email" do
+    it "masks the email user after its first letter" do
+      client = build(:client, email: "ana@gmail.com")
+
+      expect(client.masked_email).to eq("a***@gmail.com")
+    end
+
+    it "keeps the whole domain" do
+      client = build(:client, email: "maria.silva@empresa.com.br")
+
+      expect(client.masked_email).to eq("m***@empresa.com.br")
+    end
+  end
+
   describe "handoff token" do
     it "mints a one-time handoff token the second use rejects" do
       tenant = create(:tenant)

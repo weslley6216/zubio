@@ -19,15 +19,19 @@ class Appointment < ApplicationRecord
   scope :within, ->(range) { where(starts_at: range) }
   scope :for_professional, ->(professional) { where(professional: professional) }
   scope :for_day, ->(date) { within(date.in_time_zone.all_day).includes(:client, :service).order(:starts_at) }
+  scope :visible_to_account, ->(client) {
+    confirmed.where(client: client).where(starts_at: Time.current..)
+      .and(where(created_at: client.account_linked_at..).or(where.not(claimed_at: nil)))
+      .order(:starts_at)
+  }
 
   def self.booking_window = Date.current..(Date.current + (WINDOW_DAYS - 1))
 
-  def self.book(professional:, service:, starts_at:, client_name:, client_phone:)
+  def self.book(professional:, service:, starts_at:, client: nil, client_name: nil, client_phone: nil)
     return Result::Failure.new(:off_grid) unless offered?(professional, service, starts_at)
 
-    client = nil
     appointment = transaction do
-      client = Client.register(name: client_name, phone: client_phone)
+      client ||= Client.register(name: client_name, phone: client_phone)
       raise ActiveRecord::Rollback if client.errors.any?
 
       create!(professional: professional, service: service, client: client, starts_at: starts_at)
@@ -46,6 +50,12 @@ class Appointment < ApplicationRecord
     return unless cancellable?
 
     cancelled!
+  end
+
+  def claim!(client)
+    return unless client_id == client.id && claimed_at.nil?
+
+    update!(claimed_at: Time.current)
   end
 
   def cancellable? = confirmed? && !past?

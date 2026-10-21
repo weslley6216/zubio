@@ -65,6 +65,11 @@ class Client < ApplicationRecord
 
   def initials = name.split.first(2).map { |word| word[0] }.join.upcase
 
+  def masked_email
+    user, domain = email.split("@")
+    "#{user[0]}***@#{domain}"
+  end
+
   private
 
   def normalize_phone
