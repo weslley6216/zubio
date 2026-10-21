@@ -11,6 +11,7 @@ class Client::AccountPhonesController < Client::BaseController
     client = Client.link_google!(uid: @identity["uid"], email: @identity["email"], name: @identity["name"], phone: params[:phone])
 
     if client.errors.empty?
+      Appointment.find_by(cancel_token: @identity["appointment_token"])&.claim!(client)
       start_client_session(client, destination: destination)
     else
       render Views::Client::AccountPhones::New.new(
@@ -22,6 +23,8 @@ class Client::AccountPhonesController < Client::BaseController
   private
 
   def destination
+    return client_my_appointments_path if @identity["appointment_token"].present?
+
     @identity["service"].present? ? new_client_service_booking_path(@identity["service"]) : establishment_path
   end
 
