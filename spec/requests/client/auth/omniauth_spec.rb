@@ -68,6 +68,38 @@ RSpec.describe "Client Google OAuth", type: :request do
       expect(response.location).to include(tenant.canonical_host)
       expect(response.location).not_to include(other_tenant.canonical_host)
     end
+
+    it "carries the appointment token into the identity of a brand-new account" do
+      state = Rails.application.message_verifier(:client_oauth_state).generate(
+        { "tenant" => tenant.subdomain, "service" => service.id, "appointment_token" => "cancel-token-b7f3q9" }, expires_in: 10.minutes
+      )
+
+      get "/auth/google_oauth2/callback", params: { state: state }
+
+      identity_token = Rack::Utils.parse_query(URI(response.location).query)["token"]
+      identity = Rails.application.message_verifier(:client_google_identity).verify(identity_token)
+      expect(identity["appointment_token"]).to eq("cancel-token-b7f3q9")
+    end
+
+    it "sends a linked account coming from a receipt to the appointments list handoff" do
+      ActsAsTenant.with_tenant(tenant) { Client.link_google!(uid: "g-1", email: "ana@gmail.com", name: "Ana", phone: "11988771234") }
+      state = Rails.application.message_verifier(:client_oauth_state).generate(
+        { "tenant" => tenant.subdomain, "service" => service.id, "appointment_token" => "cancel-token-b7f3q9" }, expires_in: 10.minutes
+      )
+
+      get "/auth/google_oauth2/callback", params: { state: state }
+
+      expect(response.location).to include("appointments=1")
+      expect(response.location).not_to include("cancel-token-b7f3q9")
+    end
+
+    it "sends a linked account without a receipt to the plain handoff" do
+      ActsAsTenant.with_tenant(tenant) { Client.link_google!(uid: "g-1", email: "ana@gmail.com", name: "Ana", phone: "11988771234") }
+
+      get "/auth/google_oauth2/callback", params: { state: signed_state }
+
+      expect(response.location).not_to include("appointments=")
+    end
   end
 
   describe "logging" do
@@ -76,6 +108,17 @@ RSpec.describe "Client Google OAuth", type: :request do
 
       expect(log).to include("token=[FILTERED]")
       expect(log).not_to match(/token=(?!\[FILTERED\])/)
+    end
+
+    it "keeps the signed state carrying the appointment token out of the log" do
+      state = Rails.application.message_verifier(:client_oauth_state).generate(
+        { "tenant" => tenant.subdomain, "service" => service.id, "appointment_token" => "cancel-token-b7f3q9" }, expires_in: 10.minutes
+      )
+
+      log = capture_request_log { get "/auth/google_oauth2/callback", params: { state: state } }
+
+      expect(log).to include("state=[FILTERED]")
+      expect(log).not_to include(state.split("--").first)
     end
 
     it "keeps the handoff token of a linked account out of the log" do

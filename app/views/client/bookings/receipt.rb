@@ -5,13 +5,14 @@ class Views::Client::Bookings::Receipt < Views::Base
   SERVICE_LABEL = "Serviço".freeze
   DURATION_LABEL = "Duração".freeze
   PRICE_LABEL = "Valor".freeze
-  KEEP_LINK_TITLE = "Guarde este link".freeze
-  KEEP_LINK_BODY = "É por ele que você desmarca, se precisar. Ele não chega por mensagem — salve agora.".freeze
-  COPY_LABEL = "Copiar link".freeze
-  COPIED_LABEL = "Link copiado".freeze
+  SENT_TITLE = "Comprovante enviado".freeze
+  SENT_BODY_TAIL = ". Este horário também fica em Meus agendamentos, onde você pode desmarcar.".freeze
+  MY_APPOINTMENTS_LABEL = "Ver meus agendamentos".freeze
+  INVITE_TITLE = "Não perca este horário".freeze
+  INVITE_BODY = "Entre com o Google e ele fica salvo em Meus agendamentos, com o comprovante no seu e-mail. Sem conta, para desmarcar você fala com a %<professional>s.".freeze
   REBOOK_LABEL = "Marcar outro horário".freeze
   CANCEL_LABEL = "Desmarcar este horário".freeze
-  FOOTER_NOTE = "Nada é enviado por e-mail ou WhatsApp nesta versão. Esta tela é o comprovante.".freeze
+  FOOTER_NOTE = "Esta tela também é o comprovante.".freeze
 
   PAGE_CLASS = "mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-surface-2 leading-[normal] text-ink".freeze
   BAND_CLASS = "flex flex-col items-center gap-3.5 bg-brand-600 px-5 pt-[34px] pb-[44px] text-center text-on-brand".freeze
@@ -31,21 +32,20 @@ class Views::Client::Bookings::Receipt < Views::Base
   LINK_ICON_CLASS = "h-[17px] w-[17px] text-brand-600".freeze
   LINK_TITLE_CLASS = "text-[14px] font-extrabold".freeze
   LINK_BODY_CLASS = "text-[13px] leading-[1.55] text-ink-muted".freeze
-  LINK_BOX_CLASS = "break-all rounded-lg border border-line bg-surface-2 px-3 py-2.5 text-[12px] font-bold text-ink-muted".freeze
-  COPY_BUTTON_CLASS = "flex min-h-11 flex-grow items-center justify-center gap-2 rounded-[10px] bg-brand-600 text-[14px] font-bold text-on-brand".freeze
+  MY_APPOINTMENTS_LINK_CLASS = "flex min-h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-brand-600 text-[14px] font-bold text-on-brand".freeze
   BUTTON_ICON_CLASS = "h-[17px] w-[17px]".freeze
   ACTIONS_CLASS = "flex flex-col gap-2.5".freeze
   REBOOK_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-line bg-surface text-[14px] font-bold text-ink-muted".freeze
-  CANCEL_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-danger bg-surface text-[14px] font-bold text-danger".freeze
+  CANCEL_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-danger-line bg-surface text-[14px] font-bold text-danger".freeze
   FOOTER_CLASS = "text-center text-[12px] leading-[1.6] text-ink-subtle".freeze
 
-  def initialize(tenant:, branding:, service:, professional:, appointment:, client_name:)
+  def initialize(tenant:, branding:, service:, professional:, appointment:, signed_in:)
     @tenant = tenant
     @branding = branding
     @service = service
     @professional = professional
     @appointment = appointment
-    @client_name = client_name
+    @signed_in = signed_in
   end
 
   def view_template
@@ -82,7 +82,7 @@ class Views::Client::Bookings::Receipt < Views::Base
   end
 
   def subtitle
-    Kernel.format(SUBTITLE, professional: @professional.display_name.split.first, client: @client_name.split.first)
+    Kernel.format(SUBTITLE, professional: @professional.display_name.split.first, client: @appointment.client.name.split.first)
   end
 
   def render_detail_card
@@ -118,46 +118,60 @@ class Views::Client::Bookings::Receipt < Views::Base
   def price_label = ::Service::Price.label(@service.public_price_cents)
 
   def render_link_card
-    div(class: LINK_CARD_CLASS) do
+    div(class: LINK_CARD_CLASS, data: (@signed_in ? { receipt_sent: true } : { receipt_invite: true })) do
       div(class: LINK_HEADER_CLASS) do
-        render_link_icon
-        span(class: LINK_TITLE_CLASS) { KEEP_LINK_TITLE }
+        @signed_in ? render_envelope_icon : render_calendar_icon(LINK_ICON_CLASS)
+        span(class: LINK_TITLE_CLASS) { @signed_in ? SENT_TITLE : INVITE_TITLE }
       end
-      p(class: LINK_BODY_CLASS) { KEEP_LINK_BODY }
-      div(class: LINK_BOX_CLASS) { cancel_display }
-      render_copy_button
+      @signed_in ? render_sent_body : render_invite_body
+      @signed_in ? render_my_appointments_link : render_google_button
     end
   end
 
-  def render_link_icon
+  def render_envelope_icon
     svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
       stroke_linejoin: "round", aria_hidden: "true", class: LINK_ICON_CLASS) do |icon|
-      icon.path(d: "M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1")
-      icon.path(d: "M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1")
+      icon.rect(x: "3", y: "5", width: "18", height: "14", rx: "2")
+      icon.path(d: "m3 7 9 6 9-6")
     end
+  end
+
+  def render_calendar_icon(klass)
+    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
+      stroke_linejoin: "round", aria_hidden: "true", class: klass) do |icon|
+      icon.rect(x: "3", y: "5", width: "18", height: "16", rx: "2")
+      icon.path(d: "M3 10h18M8 3v4M16 3v4")
+    end
+  end
+
+  def render_sent_body
+    p(class: LINK_BODY_CLASS) do
+      plain "Mandamos para "
+      strong(class: "text-ink") { @appointment.client.masked_email }
+      plain SENT_BODY_TAIL
+    end
+  end
+
+  def render_invite_body
+    p(class: LINK_BODY_CLASS) { invite_body }
+  end
+
+  def invite_body
+    Kernel.format(INVITE_BODY, professional: @professional.display_name.split.first)
+  end
+
+  def render_my_appointments_link
+    a(href: client_my_appointments_path, class: MY_APPOINTMENTS_LINK_CLASS) do
+      render_calendar_icon(BUTTON_ICON_CLASS)
+      plain MY_APPOINTMENTS_LABEL
+    end
+  end
+
+  def render_google_button
+    render Components::Client::GoogleButton.new(href: google_entry_url(host: Tenant::PLATFORM_HOST, tenant: @tenant.subdomain, appointment_token: @appointment.cancel_token))
   end
 
   def cancel_path = "/a/#{@appointment.cancel_token}"
-
-  def cancel_display = "#{@tenant.canonical_host}#{cancel_path}"
-
-  def cancel_url = "https://#{cancel_display}"
-
-  def render_copy_button
-    button(type: "button", class: COPY_BUTTON_CLASS,
-      data: { controller: "clipboard", clipboard_text_value: cancel_url, clipboard_copied_value: COPIED_LABEL }) do
-      render_copy_icon
-      span(data: { clipboard_target: "label", action: "clipboard#copy" }) { COPY_LABEL }
-    end
-  end
-
-  def render_copy_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: BUTTON_ICON_CLASS) do |icon|
-      icon.rect(x: "9", y: "9", width: "11", height: "11", rx: "2")
-      icon.path(d: "M15 5H6a2 2 0 0 0-2 2v9")
-    end
-  end
 
   def render_actions
     div(class: ACTIONS_CLASS) do

@@ -17,6 +17,8 @@ class Client::HandoffsController < Client::BaseController
   private
 
   def destination
+    return client_my_appointments_path if params[:appointments].present?
+
     params[:service].present? ? new_client_service_booking_path(params[:service]) : establishment_path
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_20_171000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "citext"
@@ -55,6 +55,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_171000) do
     t.string "status", default: "confirmed", null: false
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
+    t.datetime "claimed_at"
     t.index ["cancel_token"], name: "index_appointments_on_cancel_token", unique: true
     t.index ["professional_id"], name: "index_appointments_on_professional_id"
     t.index ["service_id"], name: "index_appointments_on_service_id"

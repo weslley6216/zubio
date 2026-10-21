@@ -54,7 +54,7 @@ class Views::Client::Bookings::New < Views::Base
   FIELD_CLASS = "min-h-[46px] w-full rounded-lg border border-line-strong bg-surface px-3 text-[15px] text-ink placeholder:text-ink-subtle".freeze
 
   def initialize(service:, tenant:, branding:, published:, days: [], reasons: {}, selected_day: nil, slots: [], taken_slots: [], reason: nil,
-    selected_slot: nil, client_name: nil, client_phone: nil, name_errors: [], phone_errors: [])
+    selected_slot: nil, client_name: nil, client_phone: nil, name_errors: [], phone_errors: [], signed_in: false)
     @service = service
     @tenant = tenant
     @branding = branding
@@ -70,6 +70,7 @@ class Views::Client::Bookings::New < Views::Base
     @client_phone = client_phone
     @name_errors = name_errors
     @phone_errors = phone_errors
+    @signed_in = signed_in
   end
 
   def view_template
@@ -147,7 +148,7 @@ class Views::Client::Bookings::New < Views::Base
         service: @service, slots: @slots, taken_slots: @taken_slots, reason: @reason, selected_slot: @selected_slot
       )
     end
-    render_data_step
+    render_data_step unless @signed_in
   end
 
   def render_day_selector

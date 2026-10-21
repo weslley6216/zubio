@@ -46,4 +46,10 @@ RSpec.describe "Client handoff", type: :request do
 
     expect(response).to redirect_to(establishment_path)
   end
+
+  it "lands on the appointments list when coming from a receipt" do
+    get client_handoff_path(token: client.handoff_token, appointments: "1")
+
+    expect(response).to redirect_to(client_my_appointments_path)
+  end
 end

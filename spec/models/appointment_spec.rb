@@ -487,6 +487,158 @@ RSpec.describe Appointment, type: :model do
       expect(ActsAsTenant.with_tenant(aurora) { Appointment.count }).to eq(1)
       expect(ActsAsTenant.with_tenant(ze) { [ Appointment.count, Client.count ] }).to eq([ 0, 0 ])
     end
+
+    it "books for the given client without registering another" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      result = ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: nine, client: client) }
+
+      expect(result.value.client).to eq(client)
+      expect(ActsAsTenant.with_tenant(tenant) { Client.count }).to eq(1)
+    end
+
+    it "ignores name and phone when a client is given" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro", phone: "11988771234")
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: nine, client: client, client_name: "Other", client_phone: "11900000000") }
+
+      expect(client.reload.name).to eq("Ana Paula Ribeiro")
+      expect(ActsAsTenant.with_tenant(tenant) { Client.where(phone: "11900000000") }).to be_empty
+    end
+
+    it "still answers taken for a given client" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      client = create(:client, tenant: tenant)
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: nine)
+
+      result = ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: nine, client: client) }
+
+      expect(result.reason).to eq(:taken)
+    end
+  end
+
+  describe "#claim!" do
+    it "stamps the claim for the appointment's own client" do
+      appointment = create(:appointment)
+
+      ActsAsTenant.with_tenant(appointment.tenant) { appointment.claim!(appointment.client) }
+
+      expect(appointment.reload.claimed_at).to be_present
+    end
+
+    it "leaves another client's appointment unclaimed" do
+      appointment = create(:appointment)
+      other_client = create(:client, tenant: appointment.tenant)
+
+      ActsAsTenant.with_tenant(appointment.tenant) { appointment.claim!(other_client) }
+
+      expect(appointment.reload.claimed_at).to be_nil
+    end
+
+    it "keeps the first claim time" do
+      appointment = create(:appointment)
+      travel_to Time.zone.local(2026, 9, 8, 9, 0)
+      ActsAsTenant.with_tenant(appointment.tenant) { appointment.claim!(appointment.client) }
+      first_claim = appointment.reload.claimed_at
+
+      travel_to Time.zone.local(2026, 9, 8, 10, 0)
+      ActsAsTenant.with_tenant(appointment.tenant) { appointment.claim!(appointment.client) }
+
+      expect(appointment.reload.claimed_at).to eq(first_claim)
+    end
+  end
+
+  describe ".visible_to_account" do
+    it "includes a future confirmed appointment booked after the link" do
+      tenant = create(:tenant)
+      client = create(:client, tenant: tenant, account_linked_at: Time.zone.local(2026, 9, 8, 8, 0))
+      travel_to Time.zone.local(2026, 9, 8, 9, 0)
+      appointment = create(:appointment, tenant: tenant, client: client, starts_at: Time.zone.local(2026, 9, 15, 9, 45))
+
+      results = ActsAsTenant.with_tenant(tenant) { Appointment.visible_to_account(client).to_a }
+
+      expect(results).to contain_exactly(appointment)
+    end
+
+    it "includes a claimed appointment booked before the link" do
+      tenant = create(:tenant)
+      client = create(:client, tenant: tenant, account_linked_at: Time.zone.local(2026, 9, 8, 8, 0))
+      claimed = create(:appointment, tenant: tenant, client: client, starts_at: Time.zone.local(2026, 9, 15, 9, 45), claimed_at: Time.zone.local(2026, 9, 1, 7, 0), created_at: Time.zone.local(2026, 9, 1, 7, 0))
+      travel_to Time.zone.local(2026, 9, 8, 9, 0)
+
+      results = ActsAsTenant.with_tenant(tenant) { Appointment.visible_to_account(client).to_a }
+
+      expect(results).to contain_exactly(claimed)
+    end
+
+    it "leaves out an unclaimed appointment booked before the link" do
+      tenant = create(:tenant)
+      client = create(:client, tenant: tenant, account_linked_at: Time.zone.local(2026, 9, 8, 8, 0))
+      claimed = create(:appointment, tenant: tenant, client: client, starts_at: Time.zone.local(2026, 9, 15, 9, 45), claimed_at: Time.zone.local(2026, 9, 1, 7, 0), created_at: Time.zone.local(2026, 9, 1, 7, 0))
+      create(:appointment, tenant: tenant, client: client, starts_at: Time.zone.local(2026, 9, 16, 9, 45), created_at: Time.zone.local(2026, 9, 1, 7, 0))
+      travel_to Time.zone.local(2026, 9, 8, 9, 0)
+
+      results = ActsAsTenant.with_tenant(tenant) { Appointment.visible_to_account(client).to_a }
+
+      expect(results).to contain_exactly(claimed)
+    end
+
+    it "leaves out cancelled and past appointments" do
+      tenant = create(:tenant)
+      client = create(:client, tenant: tenant, account_linked_at: Time.zone.local(2026, 9, 8, 8, 0))
+      travel_to Time.zone.local(2026, 9, 8, 9, 0)
+      future = create(:appointment, tenant: tenant, client: client, starts_at: Time.zone.local(2026, 9, 15, 9, 45))
+      create(:appointment, :cancelled, tenant: tenant, client: client, starts_at: Time.zone.local(2026, 9, 16, 9, 45))
+      create(:appointment, tenant: tenant, client: client, starts_at: Time.zone.local(2026, 9, 1, 9, 45))
+
+      results = ActsAsTenant.with_tenant(tenant) { Appointment.visible_to_account(client).to_a }
+
+      expect(results).to contain_exactly(future)
+    end
+
+    it "leaves out another client's appointment" do
+      tenant = create(:tenant)
+      client = create(:client, tenant: tenant, account_linked_at: Time.zone.local(2026, 9, 8, 8, 0))
+      other_client = create(:client, tenant: tenant, account_linked_at: Time.zone.local(2026, 9, 8, 8, 0))
+      travel_to Time.zone.local(2026, 9, 8, 9, 0)
+      mine = create(:appointment, tenant: tenant, client: client, starts_at: Time.zone.local(2026, 9, 15, 9, 45))
+      create(:appointment, tenant: tenant, client: other_client, starts_at: Time.zone.local(2026, 9, 16, 9, 45))
+
+      results = ActsAsTenant.with_tenant(tenant) { Appointment.visible_to_account(client).to_a }
+
+      expect(results).to contain_exactly(mine)
+    end
+
+    it "never lists another tenant's appointment" do
+      ze = create(:tenant, name: "Barbearia do Zé")
+      ze_client = create(:client, tenant: ze, account_linked_at: Time.zone.local(2026, 9, 8, 8, 0))
+      travel_to Time.zone.local(2026, 9, 8, 9, 0)
+      create(:appointment, tenant: ze, client: ze_client, starts_at: Time.zone.local(2026, 9, 15, 9, 45))
+      aurora = create(:tenant, name: "Estúdio Aurora")
+      aurora_client = create(:client, tenant: aurora, account_linked_at: Time.zone.local(2026, 9, 8, 8, 0))
+      own = create(:appointment, tenant: aurora, client: aurora_client, starts_at: Time.zone.local(2026, 9, 15, 9, 45))
+
+      results = ActsAsTenant.with_tenant(aurora) { Appointment.visible_to_account(aurora_client).to_a }
+
+      expect(results).to contain_exactly(own)
+    end
   end
 
   describe "cancellation" do

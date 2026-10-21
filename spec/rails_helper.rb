@@ -41,6 +41,7 @@ RSpec.configure do |config|
   config.before(:each) { Rails.cache.clear }
   config.include ActiveJob::TestHelper, type: :request
   config.include ActiveJob::TestHelper, type: :model
+  config.include ActiveJob::TestHelper, type: :mailer
   config.include ActiveSupport::Testing::TimeHelpers
 end
 

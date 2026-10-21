@@ -326,6 +326,46 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
     expect(page).to have_css("[data-confirm-bar]", text: "Confirmar 10:30")
   end
 
+  it "books with the account without the data step and shows the emailed receipt" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant, display_name: "Mary")
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    client = create(:client, tenant: tenant, email: "ana@gmail.com")
+    sign_in_client(client)
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: "2026-09-08")}"
+    find("[data-slot][data-time='09:45']").click
+
+    expect(page).not_to have_content(Views::Client::Bookings::New::DATA_STEP)
+
+    click_button "Confirmar 09:45"
+
+    expect(page).to have_text("Comprovante enviado")
+    expect(page).to have_text("a***@gmail.com")
+    expect(page).to fit_the_phone_width
+  end
+
+  it "shows the guest receipt with the Google invite and no copy link" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant, display_name: "Mary")
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: "2026-09-08")}"
+    find("[data-slot][data-time='09:45']").click
+    fill_in "name", with: "Ana Paula Ribeiro"
+    fill_in "phone", with: "11988771234"
+
+    click_button "Confirmar 09:45"
+
+    expect(page).to have_text("Não perca este horário")
+    expect(page).to have_link("Continuar com o Google")
+    expect(page).to have_link("Desmarcar este horário")
+    expect(page).to have_no_button("Copiar link")
+    expect(page).to fit_the_phone_width
+  end
+
   %w[light dark].each do |scheme|
     it "keeps the receipt readable in #{scheme}" do
       travel_to Time.zone.local(2026, 9, 8, 7, 0)
@@ -343,6 +383,30 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
 
       expect(page).to have_text("Horário confirmado")
       expect(contrast_ratio("[data-when]")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(opaque?("[data-receipt-invite] [data-google-button]")).to be(true)
+      expect(contrast_ratio("[data-receipt-invite] [data-google-button]")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(opaque?("[data-cancel-link]")).to be(true)
+      expect(contrast_ratio("[data-cancel-link]")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(page).to fit_the_phone_width
+    end
+
+    it "keeps the signed-in receipt readable in #{scheme}" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45, price_cents: 6_000)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      client = create(:client, tenant: tenant, email: "ana@gmail.com")
+      sign_in_client(client)
+      emulate_color_scheme(scheme)
+      visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: "2026-09-08")}"
+      find("[data-slot][data-time='09:00']").click
+
+      click_button "Confirmar 09:00"
+
+      expect(page).to have_text("Comprovante enviado")
+      expect(opaque?("[data-receipt-sent] a")).to be(true)
+      expect(contrast_ratio("[data-receipt-sent] a")).to be >= Branding::ColorScale::MIN_CONTRAST
       expect(page).to fit_the_phone_width
     end
 

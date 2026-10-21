@@ -98,4 +98,60 @@ RSpec.describe "Client account phone", type: :request do
 
     expect(response).to redirect_to(establishment_path)
   end
+
+  it "claims the receipt's appointment when the WhatsApp matches" do
+    guest = create(:client, tenant: tenant, phone: "11988771234")
+    appointment = create(:appointment, tenant: tenant, client: guest)
+    token = Rails.application.message_verifier(:client_google_identity).generate(
+      { "tenant" => tenant.subdomain, "uid" => "g-1", "email" => "ana@gmail.com", "name" => "Ana Paula Ribeiro", "service" => service.id,
+        "appointment_token" => appointment.cancel_token }, expires_in: 15.minutes
+    )
+
+    post client_account_phone_path, params: { token: token, phone: "(11) 98877-1234" }
+
+    expect(appointment.reload.claimed_at).to be_present
+    expect(response).to redirect_to(client_my_appointments_path)
+  end
+
+  it "links the account but claims nothing when the WhatsApp differs" do
+    guest = create(:client, tenant: tenant, phone: "11988771234")
+    appointment = create(:appointment, tenant: tenant, client: guest)
+    token = Rails.application.message_verifier(:client_google_identity).generate(
+      { "tenant" => tenant.subdomain, "uid" => "g-1", "email" => "ana@gmail.com", "name" => "Ana Paula Ribeiro", "service" => service.id,
+        "appointment_token" => appointment.cancel_token }, expires_in: 15.minutes
+    )
+
+    post client_account_phone_path, params: { token: token, phone: "(11) 97766-5544" }
+
+    linked = ActsAsTenant.with_tenant(tenant) { Client.find_by(google_uid: "g-1") }
+    expect(linked.account_linked_at).to be_present
+    expect(appointment.reload.claimed_at).to be_nil
+  end
+
+  it "ignores an appointment token from another tenant" do
+    ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    ze_guest = create(:client, tenant: ze, phone: "11988771234")
+    ze_appointment = create(:appointment, tenant: ze, client: ze_guest)
+    guest = create(:client, tenant: tenant, phone: "11988771234")
+    create(:appointment, tenant: tenant, client: guest)
+    token = Rails.application.message_verifier(:client_google_identity).generate(
+      { "tenant" => tenant.subdomain, "uid" => "g-1", "email" => "ana@gmail.com", "name" => "Ana Paula Ribeiro", "service" => service.id,
+        "appointment_token" => ze_appointment.cancel_token }, expires_in: 15.minutes
+    )
+
+    post client_account_phone_path, params: { token: token, phone: "(11) 98877-1234" }
+
+    expect(ze_appointment.reload.claimed_at).to be_nil
+    linked = ActsAsTenant.with_tenant(tenant) { Client.find_by(google_uid: "g-1") }
+    expect(linked.account_linked_at).to be_present
+  end
+
+  it "claims nothing for an identity without an appointment token" do
+    appointment = create(:appointment, tenant: tenant, client: create(:client, tenant: tenant, phone: "11988771234"))
+
+    post client_account_phone_path, params: { token: identity_token, phone: "(11) 98877-1234" }
+
+    expect(appointment.reload.claimed_at).to be_nil
+    expect(response).to redirect_to(new_client_service_booking_path(service.id))
+  end
 end

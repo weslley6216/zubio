@@ -14,10 +14,11 @@ class Client::BookingsController < Client::BaseController
     professional = current_professional
     starts_at = parsed_starts_at
     result = Appointment.book(professional: professional, service: service, starts_at: starts_at,
-      client_name: params[:name].to_s, client_phone: params[:phone].to_s)
+      client: current_client, client_name: params[:name].to_s, client_phone: params[:phone].to_s)
 
     if result.success?
       notify_owner(result.value)
+      notify_client(result.value) if current_client
       return render_receipt(service, professional, result.value)
     end
     return render_race(service, professional, starts_at) if result.reason == :taken
@@ -43,14 +44,20 @@ class Client::BookingsController < Client::BaseController
     Rails.logger.error("Owner notification failed for appointment #{appointment.id}: #{error.message}")
   end
 
+  def notify_client(appointment)
+    ClientMailer.booking_receipt(ActsAsTenant.current_tenant.id, appointment.id).deliver_later
+  rescue StandardError => error
+    Rails.logger.error("Client receipt failed for appointment #{appointment.id}: #{error.message}")
+  end
+
   def render_race(service, professional, starts_at)
     day = starts_at.to_date
     availability = Professional::Availability.new(professional: professional, service: service, dates: day..day)
     render Views::Client::Bookings::Race.new(
       tenant: ActsAsTenant.current_tenant, branding: current_branding, service: service, professional: professional,
       selected_day: day, slots: availability.slots_by_date.fetch(day), taken_slots: availability.taken_slots_by_date.fetch(day),
-      nearest: availability.nearest_free(starts_at), client_name: params[:name].to_s, client_phone: params[:phone].to_s,
-      lost_time: starts_at
+      nearest: availability.nearest_free(starts_at), client_name: current_client&.name || params[:name].to_s,
+      client_phone: current_client&.phone_display || params[:phone].to_s, lost_time: starts_at
     ), status: :unprocessable_entity
   end
 
@@ -79,14 +86,15 @@ class Client::BookingsController < Client::BaseController
       days: Appointment.booking_window.to_a, reasons: reasons, selected_day: chosen,
       slots: slots.fetch(chosen), taken_slots: availability.taken_slots_by_date.fetch(chosen), reason: reasons.fetch(chosen),
       selected_slot: resolved_slot, client_name: client_name, client_phone: client_phone,
-      name_errors: client ? client.errors[:name] : [], phone_errors: client ? client.errors[:phone] : []
+      name_errors: client ? client.errors[:name] : [], phone_errors: client ? client.errors[:phone] : [],
+      signed_in: current_client.present?
     ), status: status
   end
 
   def render_receipt(service, professional, appointment)
     render Views::Client::Bookings::Receipt.new(
       tenant: ActsAsTenant.current_tenant, branding: current_branding, service: service,
-      professional: professional, appointment: appointment, client_name: params[:name].to_s
+      professional: professional, appointment: appointment, signed_in: current_client.present?
     )
   end
 
