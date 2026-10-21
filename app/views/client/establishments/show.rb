@@ -95,7 +95,11 @@ class Views::Client::Establishments::Show < Views::Base
 
   def my_appointments_href = @authenticated ? client_my_appointments_path : new_client_session_path
 
-  def button_aria = badge? ? "Meus agendamentos, #{@my_appointments_count} próximos" : "Meus agendamentos"
+  def button_aria
+    return "Meus agendamentos" unless badge?
+
+    "Meus agendamentos, #{@my_appointments_count} #{@my_appointments_count == 1 ? "próximo" : "próximos"}"
+  end
 
   def open_until_text
     @open_until.min.zero? ? "#{@open_until.hour}h" : Kernel.format("%dh%02d", @open_until.hour, @open_until.min)

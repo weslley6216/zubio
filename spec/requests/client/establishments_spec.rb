@@ -400,6 +400,21 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(response.body).to include(%(href="#{client_my_appointments_path}"))
   end
 
+  it "says one upcoming in the singular on the badge aria-label" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant)
+    client = create(:client, tenant: tenant, account_linked_at: Time.zone.local(2026, 9, 1, 8, 0))
+    create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 15, 9, 45))
+    host! "#{tenant.subdomain}.zubio.com.br"
+    sign_in_client(client)
+
+    get root_path
+
+    expect(response.body).to include('aria-label="Meus agendamentos, 1 próximo"')
+    expect(response.body).not_to include("1 próximos")
+  end
+
   it "shows no badge for a signed-in client with nothing upcoming" do
     client = create(:client, tenant: tenant, account_linked_at: Time.zone.local(2026, 9, 1, 8, 0))
     host! "#{tenant.subdomain}.zubio.com.br"
