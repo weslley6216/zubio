@@ -7,7 +7,8 @@ class Client::AppointmentsController < Client::BaseController
       branding: current_branding,
       appointment: @appointment,
       service: @appointment.service,
-      professional: @appointment.professional
+      professional: @appointment.professional,
+      back_to_list: params[:from] == "list"
     )
   end
 end
