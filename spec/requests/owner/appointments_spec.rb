@@ -148,6 +148,7 @@ RSpec.describe "Owner appointments", type: :request do
     end
 
     it "queries the database the same number of times for many appointments as for one" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
       create(:branding, tenant: tenant)
       service = create(:service, tenant: tenant)
       client = create(:client, tenant: tenant)
