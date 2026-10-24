@@ -17,9 +17,41 @@ RSpec.describe "Public appointment screen", type: :request do
     expect(response.body).to include("Ter, 8 set · 09:45")
     expect(response.body).to include("Design de sobrancelhas")
     expect(response.body).to include("R$ 60,00")
-    expect(response.body).to include("Este link mostra só este agendamento.")
+    expect(response.body).not_to include("Este link mostra só este agendamento.")
     expect(response.body).to include("Marcar outro horário")
     expect(response.body).to include("Desmarcar este horário")
+  end
+
+  it "points the back control to the list when coming from the list" do
+    appointment = create(:appointment, tenant: tenant)
+    host! "mary.zubio.com.br"
+
+    get client_appointment_path(appointment.cancel_token, from: "list")
+
+    back = Nokogiri::HTML5(response.body).at_css("a[aria-label='Voltar']")
+    expect(back["href"]).to eq(client_my_appointments_path)
+  end
+
+  it "points the back control to the establishment with no origin" do
+    appointment = create(:appointment, tenant: tenant)
+    host! "mary.zubio.com.br"
+
+    get client_appointment_path(appointment.cancel_token)
+
+    back = Nokogiri::HTML5(response.body).at_css("a[aria-label='Voltar']")
+    expect(back["href"]).to eq(establishment_path)
+  end
+
+  it "keeps the monogram on the cancelled screen and shows no per-link note" do
+    professional = create(:professional, tenant: tenant, display_name: "Mary Sombracelhas")
+    appointment = create(:appointment, :cancelled, tenant: tenant, professional: professional)
+    host! "mary.zubio.com.br"
+
+    get client_appointment_path(appointment.cancel_token)
+
+    expect(response.body).to include("data-brand-initial")
+    expect(response.body).not_to include("Se abrir este link de novo")
+    expect(Nokogiri::HTML5(response.body).at_css("a[aria-label='Voltar']")).to be_nil
   end
 
   it "does not change the appointment on a read" do

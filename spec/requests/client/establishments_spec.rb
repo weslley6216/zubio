@@ -371,4 +371,78 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(response.body).to include(Service::Price::UNPRICED_LABEL)
     expect(response.body).to include("R$ 90")
   end
+
+  it "shows the my-appointments button announced for screen readers to any visitor" do
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    expect(response.body).to include('aria-label="Meus agendamentos"')
+    expect(response.body).to include("Meus horários")
+    expect(response.body).to include(%(href="#{new_client_session_path}"))
+    expect(response.body).not_to include("data-my-appointments-badge")
+  end
+
+  it "badges the button with the number of upcoming appointments for a signed-in client" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant)
+    client = create(:client, tenant: tenant, account_linked_at: Time.zone.local(2026, 9, 1, 8, 0))
+    create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 15, 9, 45))
+    create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 16, 9, 45))
+    host! "#{tenant.subdomain}.zubio.com.br"
+    sign_in_client(client)
+
+    get root_path
+
+    expect(response.body).to include('aria-label="Meus agendamentos, 2 próximos"')
+    expect(Nokogiri::HTML5(response.body).at_css("[data-my-appointments-badge]").text).to eq("2")
+    expect(response.body).to include(%(href="#{client_my_appointments_path}"))
+  end
+
+  it "says one upcoming in the singular on the badge aria-label" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant)
+    client = create(:client, tenant: tenant, account_linked_at: Time.zone.local(2026, 9, 1, 8, 0))
+    create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 15, 9, 45))
+    host! "#{tenant.subdomain}.zubio.com.br"
+    sign_in_client(client)
+
+    get root_path
+
+    expect(response.body).to include('aria-label="Meus agendamentos, 1 próximo"')
+    expect(response.body).not_to include("1 próximos")
+  end
+
+  it "shows no badge for a signed-in client with nothing upcoming" do
+    client = create(:client, tenant: tenant, account_linked_at: Time.zone.local(2026, 9, 1, 8, 0))
+    host! "#{tenant.subdomain}.zubio.com.br"
+    sign_in_client(client)
+
+    get root_path
+
+    expect(response.body).not_to include("data-my-appointments-badge")
+    expect(response.body).to include(%(href="#{client_my_appointments_path}"))
+  end
+
+  it "counts only the host tenant's appointments in the badge" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    other_tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    other_professional = create(:professional, tenant: other_tenant)
+    other_service = create(:service, tenant: other_tenant)
+    other_client = create(:client, tenant: other_tenant, google_uid: "g-1", account_linked_at: Time.zone.local(2026, 9, 1, 8, 0))
+    create(:appointment, tenant: other_tenant, professional: other_professional, service: other_service, client: other_client, starts_at: Time.zone.local(2026, 9, 15, 9, 45))
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant)
+    client = create(:client, tenant: tenant, google_uid: "g-1", account_linked_at: Time.zone.local(2026, 9, 1, 8, 0))
+    create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 15, 9, 45))
+    create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 16, 9, 45))
+    host! "#{tenant.subdomain}.zubio.com.br"
+    sign_in_client(client)
+
+    get root_path
+
+    expect(Nokogiri::HTML5(response.body).at_css("[data-my-appointments-badge]").text).to eq("2")
+  end
 end

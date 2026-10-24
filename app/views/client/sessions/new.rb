@@ -19,7 +19,7 @@ class Views::Client::Sessions::New < Views::Base
   GUEST_CLASS = "flex min-h-[44px] w-full items-center justify-center rounded-[10px] bg-surface text-[14px] font-bold text-ink-muted".freeze
   NOTE_CLASS = "text-center text-[12px] leading-[1.5] text-ink-muted".freeze
 
-  def initialize(tenant:, branding:, service:)
+  def initialize(tenant:, branding:, service: nil)
     @tenant = tenant
     @branding = branding
     @service = service
@@ -70,12 +70,14 @@ class Views::Client::Sessions::New < Views::Base
   def render_card
     div(class: CARD_CLASS) do
       render Components::Client::GoogleButton.new(href: google_sign_in_href)
-      a(href: new_client_service_booking_path(@service), class: GUEST_CLASS, data: { guest_button: true }) { GUEST_LABEL }
+      a(href: new_client_service_booking_path(@service), class: GUEST_CLASS, data: { guest_button: true }) { GUEST_LABEL } if @service
       p(class: NOTE_CLASS) { NOTE }
     end
   end
 
   def google_sign_in_href
-    google_entry_url(host: Tenant::PLATFORM_HOST, tenant: @tenant.subdomain, service: @service.id)
+    return google_entry_url(host: Tenant::PLATFORM_HOST, tenant: @tenant.subdomain, service: @service.id) if @service
+
+    google_entry_url(host: Tenant::PLATFORM_HOST, tenant: @tenant.subdomain, appointments: "1")
   end
 end

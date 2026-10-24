@@ -10,7 +10,8 @@ RSpec.describe Views::Client::Appointments::Show, type: :component do
     expect(html).to include("Seu horário")
     expect(html).to include("Marcar outro horário")
     expect(html).to include("Desmarcar este horário")
-    expect(html).to include("Este link mostra só este agendamento.")
+    expect(html).not_to include("Este link mostra só este agendamento.")
+    expect(html).to include(%(aria-label="Voltar"))
   end
 
   it "renders the cancelled state struck through and without the cancel affordance" do
@@ -23,7 +24,8 @@ RSpec.describe Views::Client::Appointments::Show, type: :component do
 
     expect(html).to include("Horário desmarcado")
     expect(html).to include("A Mary já vê o horário livre na agenda dela.")
-    expect(html).to include("Se abrir este link de novo, você vê esta mesma tela.")
+    expect(html).not_to include("Se abrir este link de novo, você vê esta mesma tela.")
+    expect(html).to include("data-brand-initial")
     expect(html).to include("line-through")
     expect(html).not_to include("Desmarcar este horário")
   end

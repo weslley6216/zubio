@@ -5,17 +5,18 @@ class Views::Client::Appointments::Show < Views::Base
   WHEN_LABEL = "Quando".freeze
   SERVICE_LABEL = "Serviço".freeze
   PRICE_LABEL = "Valor".freeze
-  SCOPE_NOTE = "Este link mostra só este agendamento.".freeze
+  BACK_LABEL = "Voltar".freeze
   REBOOK_LABEL = "Marcar outro horário".freeze
   CANCEL_LABEL = "Desmarcar este horário".freeze
   CONFIRM_PROMPT = "Desmarcar %<weekday>s, %<day>d %<month>s, às %<time>s?".freeze
   CONFIRM_NOTE = "O horário volta a ficar livre para outras pessoas. Não dá para desfazer.".freeze
   CONFIRM_LABEL = "Sim, desmarcar".freeze
   KEEP_LABEL = "Manter meu horário".freeze
-  REOPEN_NOTE = "Se abrir este link de novo, você vê esta mesma tela.".freeze
 
   PAGE_CLASS = "mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-surface-2 leading-[normal] text-ink".freeze
   BAND_CLASS = "flex items-center gap-3 bg-brand-600 px-5 py-3.5 text-on-brand".freeze
+  BACK_CLASS = "grid h-10 w-10 flex-none place-items-center rounded-[10px] bg-white/18".freeze
+  BACK_ICON_CLASS = "h-5 w-5".freeze
   BAND_NAME_CLASS = "min-w-0 flex-grow truncate text-[15px] font-extrabold tracking-[-0.01em]".freeze
   CONTENT_CLASS = "flex flex-grow flex-col gap-4 px-5 py-5".freeze
   HEADING_CLASS = "text-[22px] font-extrabold tracking-[-0.02em]".freeze
@@ -24,7 +25,6 @@ class Views::Client::Appointments::Show < Views::Base
   ROW_LABEL_CLASS = "flex-none text-[13px] text-ink-muted".freeze
   ROW_VALUE_CLASS = "text-right text-[14px] font-bold tabular-nums".freeze
   DIVIDER_CLASS = "h-px bg-line".freeze
-  NOTE_CLASS = "text-[13px] leading-[1.5] text-ink-muted".freeze
   ACTIONS_CLASS = "flex flex-col gap-2.5".freeze
   REBOOK_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-line-strong bg-surface text-[14px] font-bold text-ink".freeze
   CANCEL_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-danger bg-surface text-[14px] font-bold text-danger".freeze
@@ -46,7 +46,6 @@ class Views::Client::Appointments::Show < Views::Base
   CANCELLED_CARD_CLASS = "flex flex-col gap-3 rounded-2xl border border-dashed border-line-strong bg-surface px-5 py-[18px]".freeze
   CANCELLED_VALUE_CLASS = "text-right text-[14px] font-bold tabular-nums text-ink-subtle line-through".freeze
   REBOOK_PRIMARY_CLASS = "grid min-h-[50px] place-items-center rounded-xl bg-brand-600 text-[15px] font-extrabold text-on-brand".freeze
-  FOOTER_CLASS = "px-6 pb-7 text-center text-[12px] leading-[1.6] text-ink-subtle".freeze
 
   def self.confirm_prompt(appointment)
     date = appointment.starts_at.to_date
@@ -54,12 +53,13 @@ class Views::Client::Appointments::Show < Views::Base
       month: Views::Client::Bookings::New::MONTH_ABBR[date.month - 1], time: appointment.starts_at.strftime("%H:%M"))
   end
 
-  def initialize(tenant:, branding:, appointment:, service:, professional:)
+  def initialize(tenant:, branding:, appointment:, service:, professional:, back_to_list: false)
     @tenant = tenant
     @branding = branding
     @appointment = appointment
     @service = service
     @professional = professional
+    @back_to_list = back_to_list
   end
 
   def view_template
@@ -77,16 +77,32 @@ class Views::Client::Appointments::Show < Views::Base
 
   def render_band
     div(class: BAND_CLASS) do
-      render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :client, tone: :translucent)
+      @appointment.cancelled? ? render_emblem : render_back_link
       span(class: BAND_NAME_CLASS) { @tenant.name }
     end
   end
+
+  def render_emblem
+    render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :client, tone: :translucent)
+  end
+
+  def render_back_link
+    a(href: back_href, class: BACK_CLASS, aria_label: BACK_LABEL) { render_back_icon }
+  end
+
+  def render_back_icon
+    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.5", stroke_linecap: "round",
+      stroke_linejoin: "round", aria_hidden: "true", class: BACK_ICON_CLASS) do |icon|
+      icon.path(d: "m15 6-6 6 6 6")
+    end
+  end
+
+  def back_href = @back_to_list ? client_my_appointments_path : establishment_path
 
   def render_scheduled
     div(class: CONTENT_CLASS, data: scheduled_data) do
       h1(class: HEADING_CLASS) { ACTIVE_TITLE }
       render_detail_card
-      span(class: NOTE_CLASS) { SCOPE_NOTE }
       div(class: ACTIONS_CLASS) do
         a(href: establishment_path, class: REBOOK_CLASS) { REBOOK_LABEL }
         a(href: new_client_cancellation_path(@appointment.cancel_token), class: CANCEL_CLASS, data: { action: "dialog#open" }) { CANCEL_LABEL } if @appointment.cancellable?
@@ -146,7 +162,6 @@ class Views::Client::Appointments::Show < Views::Base
         a(href: establishment_path, class: REBOOK_PRIMARY_CLASS) { REBOOK_LABEL }
       end
     end
-    p(class: FOOTER_CLASS) { REOPEN_NOTE }
   end
 
   def render_cross_icon

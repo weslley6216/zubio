@@ -21,7 +21,8 @@ RSpec.describe "Signing in from the guest receipt", type: :system, js: true do
     fill_in "phone", with: "11988771234"
     click_on "Continuar"
 
-    expect(page).to have_css("[data-my-appointment]", text: "Ter, 8 set · 09:45")
+    expect(page).to have_css("[data-my-appointment]", text: "Ter, 8 set")
+    expect(page).to have_css("[data-my-appointment]", text: "09:45")
     expect(page).to fit_the_phone_width
   end
 end

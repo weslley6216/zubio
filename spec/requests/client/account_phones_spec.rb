@@ -36,6 +36,16 @@ RSpec.describe "Client account phone", type: :request do
     expect(response).to redirect_to(establishment_path)
   end
 
+  it "sends a brand-new account that came for the list straight to my appointments" do
+    list_token = Rails.application.message_verifier(:client_google_identity).generate(
+      { "tenant" => tenant.subdomain, "uid" => "g-1", "email" => "ana@gmail.com", "name" => "Ana Paula Ribeiro", "appointments" => "1" }, expires_in: 15.minutes
+    )
+
+    post client_account_phone_path, params: { token: list_token, phone: "(11) 98877-1234" }
+
+    expect(response).to redirect_to(client_my_appointments_path)
+  end
+
   it "reuses a phone-only client without claiming its past appointments" do
     create(:client, tenant: tenant, phone: "11988771234")
 

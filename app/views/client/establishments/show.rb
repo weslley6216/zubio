@@ -8,12 +8,20 @@ class Views::Client::Establishments::Show < Views::Base
   OPEN_UNTIL_LABEL = "Aberto até %s".freeze
   CONFIRMATION_LABEL = "Confirmação na hora".freeze
 
+  MY_APPOINTMENTS_LABEL = "Meus horários".freeze
+
   BAR_CLASS = "bg-brand-600 px-5 pt-7 pb-10 text-on-brand".freeze
   BAR_COLUMN_CLASS = "mx-auto flex w-full max-w-2xl flex-col gap-3.5".freeze
   IDENTITY_ROW_CLASS = "flex items-center gap-3.5".freeze
-  NAME_CLASS = "text-[21px] leading-[normal] font-extrabold tracking-[-0.02em]".freeze
-  BADGES_ROW_CLASS = "flex flex-wrap gap-1.5".freeze
+  NAME_CLASS = "flex-grow text-[21px] leading-[normal] font-extrabold tracking-[-0.02em]".freeze
+  BADGES_ROW_CLASS = "flex flex-wrap items-center gap-1.5".freeze
   BADGE_CLASS = "rounded-full bg-on-brand/20 px-3 py-1.5 text-[11px] leading-[normal] font-bold text-on-brand".freeze
+  MY_APPOINTMENTS_MOBILE_CLASS = "flex md:hidden flex-none flex-col items-center gap-1 leading-[normal]".freeze
+  MY_APPOINTMENTS_DESKTOP_CLASS = "hidden md:flex ml-1.5 flex-none flex-col items-center gap-1 leading-[normal]".freeze
+  MY_APPOINTMENTS_ICON_WRAP_CLASS = "relative grid h-11 w-11 place-items-center rounded-full bg-on-brand/18".freeze
+  MY_APPOINTMENTS_ICON_CLASS = "h-5 w-5".freeze
+  MY_APPOINTMENTS_BADGE_CLASS = "absolute top-[-3px] right-[-3px] min-w-[18px] h-[18px] rounded-full bg-on-brand px-[5px] text-center text-[11px] leading-[18px] font-extrabold text-brand-600 tabular-nums".freeze
+  MY_APPOINTMENTS_CAPTION_CLASS = "text-[11px] font-bold".freeze
   LIST_CLASS = "grid gap-2.5".freeze
   SHEET_CLASS = "mx-auto -mt-5 grid w-full max-w-2xl gap-4 rounded-t-3xl bg-canvas px-5 py-6".freeze
   TITLE_BLOCK_CLASS = "grid gap-1".freeze
@@ -27,12 +35,13 @@ class Views::Client::Establishments::Show < Views::Base
   PRICE_CLASS = "text-[15px] leading-[normal] font-extrabold tabular-nums text-ink".freeze
   UNPRICED_CLASS = "text-xs leading-[normal] font-bold text-ink-muted".freeze
 
-  def initialize(tenant:, branding:, services:, open_until: nil, authenticated: false)
+  def initialize(tenant:, branding:, services:, open_until: nil, authenticated: false, my_appointments_count: nil)
     @tenant = tenant
     @branding = branding
     @services = services
     @open_until = open_until
     @authenticated = authenticated
+    @my_appointments_count = my_appointments_count
   end
 
   def view_template
@@ -53,13 +62,43 @@ class Views::Client::Establishments::Show < Views::Base
         div(class: IDENTITY_ROW_CLASS) do
           render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :showcase, tone: :translucent)
           h1(class: NAME_CLASS) { @tenant.name }
+          render_my_appointments_button(MY_APPOINTMENTS_MOBILE_CLASS)
         end
         div(class: BADGES_ROW_CLASS) do
           span(class: BADGE_CLASS) { OPEN_UNTIL_LABEL % open_until_text } if @open_until
           span(class: BADGE_CLASS) { CONFIRMATION_LABEL }
+          render_my_appointments_button(MY_APPOINTMENTS_DESKTOP_CLASS)
         end
       end
     end
+  end
+
+  def render_my_appointments_button(visibility_class)
+    a(href: my_appointments_href, aria_label: button_aria, data: { my_appointments_button: true }, class: visibility_class) do
+      div(class: MY_APPOINTMENTS_ICON_WRAP_CLASS) do
+        render_my_appointments_icon
+        span(class: MY_APPOINTMENTS_BADGE_CLASS, data: { my_appointments_badge: true }) { @my_appointments_count.to_s } if badge?
+      end
+      span(class: MY_APPOINTMENTS_CAPTION_CLASS) { MY_APPOINTMENTS_LABEL }
+    end
+  end
+
+  def render_my_appointments_icon
+    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
+      stroke_linejoin: "round", aria_hidden: "true", class: MY_APPOINTMENTS_ICON_CLASS) do |icon|
+      icon.rect(x: "3", y: "5", width: "18", height: "16", rx: "2")
+      icon.path(d: "M3 10h18M8 3v4M16 3v4")
+    end
+  end
+
+  def badge? = @my_appointments_count.to_i.positive?
+
+  def my_appointments_href = @authenticated ? client_my_appointments_path : new_client_session_path
+
+  def button_aria
+    return "Meus agendamentos" unless badge?
+
+    "Meus agendamentos, #{@my_appointments_count} #{@my_appointments_count == 1 ? "próximo" : "próximos"}"
   end
 
   def open_until_text
