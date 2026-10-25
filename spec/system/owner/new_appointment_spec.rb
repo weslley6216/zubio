@@ -83,4 +83,26 @@ RSpec.describe "Owner books a new appointment", type: :system, js: true do
     expect(page).to have_content("Cliente nova com este telefone")
     expect(page).to have_field("name")
   end
+
+  it "shows the race alert on a 390px phone when someone books the chosen slot first" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Mary Sombracelhas")
+    owner = create(:user, :with_professional, tenant: tenant, name: "Mary Sombracelhas", email: "mary@example.com", password: "s3cr3t123")
+    create(:branding, tenant: tenant, brand_600: "#8E4B6B")
+    service = create(:service, tenant: tenant, name: "Design com henna", duration_minutes: 60)
+    create(:working_hour, tenant: tenant, professional: owner.professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    emulate_phone
+    sign_in_owner(owner)
+    visit new_owner_appointment_url(host: "#{tenant.subdomain}.zubio.com.br", service_id: service.id)
+    fill_in "phone", with: "11991234455"
+    fill_in "name", with: "Juliana Prado"
+    find("[data-slot][data-time='09:00']").click
+    ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: owner.professional, service: service, starts_at: Date.new(2026, 9, 8).in_time_zone.change(hour: 9)) }
+
+    click_button "Marcar hoje às 09:00"
+
+    expect(page).to have_content("Alguém marcou")
+    expect(page).to have_content("Juliana Prado")
+    expect(page).to fit_the_phone_width
+  end
 end
