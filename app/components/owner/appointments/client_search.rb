@@ -6,7 +6,7 @@ class Components::Owner::Appointments::ClientSearch < Components::Base
   NEW_CLIENT_LABEL = "Cliente nova com este telefone".freeze
 
   CARD_CLASS = "rounded-xl border border-line bg-surface overflow-hidden".freeze
-  MATCH_ROW_CLASS = "flex items-center gap-3 bg-brand-100 px-4 py-3".freeze
+  MATCH_ROW_CLASS = "flex w-full items-center gap-3 bg-brand-100 px-4 py-3 text-left".freeze
   AVATAR_CLASS = "grid h-9 w-9 flex-none place-items-center rounded-full bg-surface text-[13px] font-extrabold text-brand-800".freeze
   TEXT_CLASS = "flex min-w-0 flex-grow flex-col gap-0.5".freeze
   NAME_CLASS = "text-[14px] font-bold text-ink".freeze
@@ -36,15 +36,16 @@ class Components::Owner::Appointments::ClientSearch < Components::Base
   end
 
   def render_match(client)
-    div(class: MATCH_ROW_CLASS, data: { client_search_match: true }) do
+    button(type: "button", class: MATCH_ROW_CLASS, aria_pressed: "false", data: {
+      client_search_match: true, action: "client-search#choose",
+      client_id: client.id, client_name: client.name, client_phone: client.phone_display
+    }) do
       span(class: AVATAR_CLASS) { client.initials }
       div(class: TEXT_CLASS) do
         span(class: NAME_CLASS) { client.name }
         span(class: SUB_CLASS) { "#{client.phone_display} · #{MATCH_LABEL}" }
       end
-      button(type: "button", class: "flex-none", aria_pressed: "false", data: {
-        action: "client-search#choose", client_id: client.id, client_name: client.name, client_phone: client.phone_display
-      }) { render_check_icon }
+      render_check_icon
     end
   end
 

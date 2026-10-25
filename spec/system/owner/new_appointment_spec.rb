@@ -46,6 +46,23 @@ RSpec.describe "Owner books a new appointment", type: :system, js: true do
     expect(page).to have_content("11:00")
   end
 
+  it "makes the whole matched-client row tappable, not just its checkmark" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Mary Sombracelhas")
+    owner = create(:user, :with_professional, tenant: tenant, name: "Mary Sombracelhas", email: "mary@example.com", password: "s3cr3t123")
+    service = create(:service, tenant: tenant, name: "Design com henna", duration_minutes: 60)
+    create(:working_hour, tenant: tenant, professional: owner.professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    client = create(:client, tenant: tenant, name: "Juliana Prado", phone: "11991234455")
+    emulate_phone
+    sign_in_owner(owner)
+    visit new_owner_appointment_url(host: "#{tenant.subdomain}.zubio.com.br", service_id: service.id)
+    fill_in "phone", with: "11 99123"
+
+    row = find("[data-client-id='#{client.id}']")
+
+    expect(row.evaluate_script("this.getBoundingClientRect().height")).to be >= 44
+  end
+
   it "drops the chosen client when the owner types another number" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Mary Sombracelhas")
