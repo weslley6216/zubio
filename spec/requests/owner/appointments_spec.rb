@@ -541,6 +541,61 @@ RSpec.describe "Owner appointments", type: :request do
     end
   end
 
+  describe "GET /owner/appointments/new" do
+    it "offers only the free slots, the same grid the public page renders" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      service = create(:service, tenant: tenant, duration_minutes: 60)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: Date.current.in_time_zone.change(hour: 10)) }
+      sign_in_owner(owner)
+
+      get new_owner_appointment_path(service_id: service.id, day: Date.current.iso8601)
+      owner_free = Nokogiri::HTML5(response.body).css("[data-slots] [data-slot]").map { |slot| slot.text.strip }
+      get new_client_service_booking_path(service, day: Date.current.iso8601)
+      public_free = Nokogiri::HTML5(response.body).css("[data-slots] [data-slot]").map { |slot| slot.text.strip }
+
+      expect(owner_free).to eq([ "09:00", "11:00" ])
+      expect(owner_free).to eq(public_free)
+    end
+
+    it "redirects an anonymous visitor on GET new to the login and creates nothing" do
+      service = create(:service, tenant: tenant)
+      host! "#{tenant.subdomain}.zubio.com.br"
+
+      get new_owner_appointment_path(service_id: service.id)
+
+      expect(response).to redirect_to(new_owner_session_path)
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
+    it "shows the unpublished message when the schedule is empty" do
+      service = create(:service, tenant: tenant)
+      sign_in_owner(owner)
+
+      get new_owner_appointment_path(service_id: service.id)
+
+      expect(response.body).to include(Views::Client::Bookings::New::UNPUBLISHED_MESSAGE)
+      expect(response.body).not_to include("data-slots")
+    end
+
+    it "shows the unpublished message when there is no active service" do
+      sign_in_owner(owner)
+
+      get new_owner_appointment_path
+
+      expect(response.body).to include(Views::Client::Bookings::New::UNPUBLISHED_MESSAGE)
+    end
+
+    it "404s on an inactive or unknown service" do
+      inactive = create(:service, tenant: tenant, active: false)
+      sign_in_owner(owner)
+
+      get new_owner_appointment_path(service_id: inactive.id)
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   describe "POST /owner/session" do
     it "leads into the day's agenda after entering the panel" do
       create(:branding, tenant: tenant)
