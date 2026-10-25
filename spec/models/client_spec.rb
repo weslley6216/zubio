@@ -303,6 +303,16 @@ RSpec.describe Client, type: :model do
 
       expect(matches).to contain_exactly(own)
     end
+
+    it "finds no match when only another tenant has this phone" do
+      tenant = create(:tenant)
+      other = create(:tenant, name: "Barbearia do Zé")
+      create(:client, tenant: other, phone: "11991234455")
+
+      matches = ActsAsTenant.with_tenant(tenant) { Client.matching_phone("11991234455") }
+
+      expect(matches).to be_empty
+    end
   end
 
   describe "tenant isolation" do

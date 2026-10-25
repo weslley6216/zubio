@@ -675,11 +675,14 @@ RSpec.describe "Owner appointments", type: :request do
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(1)
-      expect(response.body).to include("Alguém marcou")
-      expect(response.body).to include("Juliana Prado")
-      expect(response.body).to include("(11) 99123-4455")
+      expect(response.body).to include("Alguém marcou 11:00 antes de você")
       expect(response.body).to include(service.name)
       expect(response.body).to include("setembro")
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("[data-slot-taken][data-time='11:00']")).to be_present
+      expect(document.at_css("[data-slot][data-time='10:00'][aria-pressed='true']")).to be_present
+      expect(document.at_css("input[name='name']")["value"]).to eq("Juliana Prado")
+      expect(document.at_css("input[name='phone']")["value"]).to eq("(11) 99123-4455")
     end
 
     it "keeps the existing client by id when it loses the race" do

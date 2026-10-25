@@ -83,6 +83,24 @@ RSpec.describe "Owner books a new appointment", type: :system, js: true do
     expect(foreground.contrast_against(background)).to be >= Branding::ColorScale::MIN_CONTRAST
   end
 
+  it "reloads the day pills for the newly selected service, not the one shown at page load" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Mary Sombracelhas")
+    owner = create(:user, :with_professional, tenant: tenant, name: "Mary Sombracelhas", email: "mary@example.com", password: "s3cr3t123")
+    henna = create(:service, tenant: tenant, name: "Design com henna", duration_minutes: 60)
+    manicure = create(:service, tenant: tenant, name: "Manicure", duration_minutes: 30)
+    create(:working_hour, tenant: tenant, professional: owner.professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    create(:working_hour, tenant: tenant, professional: owner.professional, weekday: 3, opens_at: "09:00", closes_at: "12:00")
+    emulate_phone
+    sign_in_owner(owner)
+    visit new_owner_appointment_url(host: "#{tenant.subdomain}.zubio.com.br", service_id: henna.id)
+
+    select "Manicure · 30 min", from: "service_id"
+    find("[data-day='2026-09-09']").click
+
+    expect(page).to have_css("[data-slot]", count: 6)
+  end
+
   it "drops the chosen client when the owner types another number" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Mary Sombracelhas")
@@ -138,7 +156,9 @@ RSpec.describe "Owner books a new appointment", type: :system, js: true do
 
     click_button "Marcar hoje às 09:00"
 
-    expect(page).to have_content("Alguém marcou")
+    expect(page).to have_content("Alguém marcou 09:00 antes de você")
+    expect(page).to have_css("[data-slot-taken][data-time='09:00']")
+    expect(page).to have_css("[data-slot][data-time='10:00'][aria-pressed='true']")
     expect(page).to have_content("Juliana Prado")
     expect(page).to fit_the_phone_width
   end
