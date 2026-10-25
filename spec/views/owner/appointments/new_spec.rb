@@ -21,4 +21,22 @@ RSpec.describe Views::Owner::Appointments::New, type: :component do
     expect(html).not_to include("rgb(")
     expect(html).not_to include("text-white")
   end
+
+  it "labels today's day pill 'HOJE' and the others by weekday abbreviation" do
+    tenant = create(:tenant, name: "Mary Sombracelhas")
+    professional = build(:professional, tenant: tenant)
+    branding = build(:branding, tenant: tenant)
+    service = create(:service, tenant: tenant, name: "Design com henna", duration_minutes: 60)
+    today = Date.current
+    tomorrow = today + 1
+
+    html = render_phlex(described_class.new(
+      tenant: tenant, branding: branding, professional: professional, services: [ service ], service: service, published: true,
+      days: [ today, tomorrow ], reasons: { today => :bookable, tomorrow => :bookable }, selected_day: today,
+      slots: [ today.in_time_zone.change(hour: 9) ], taken_slots: [], reason: :bookable
+    ))
+
+    expect(html).to include("HOJE")
+    expect(html).to include(Views::Owner::Appointments::New::WEEKDAY_ABBR[tomorrow.wday])
+  end
 end

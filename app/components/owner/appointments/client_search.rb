@@ -6,13 +6,13 @@ class Components::Owner::Appointments::ClientSearch < Components::Base
   NEW_CLIENT_LABEL = "Cliente nova com este telefone".freeze
 
   CARD_CLASS = "rounded-xl border border-line bg-surface overflow-hidden".freeze
-  MATCH_ROW_CLASS = "flex items-center gap-3 bg-brand-soft px-4 py-3".freeze
-  AVATAR_CLASS = "grid h-9 w-9 flex-none place-items-center rounded-full bg-surface text-[13px] font-extrabold text-brand-ink".freeze
+  MATCH_ROW_CLASS = "flex items-center gap-3 bg-brand-100 px-4 py-3".freeze
+  AVATAR_CLASS = "grid h-9 w-9 flex-none place-items-center rounded-full bg-surface text-[13px] font-extrabold text-brand-800".freeze
   TEXT_CLASS = "flex min-w-0 flex-grow flex-col gap-0.5".freeze
   NAME_CLASS = "text-[14px] font-bold text-ink".freeze
-  SUB_CLASS = "text-[12px] text-brand-ink".freeze
+  SUB_CLASS = "text-[12px] text-brand-800".freeze
   CHECK_ICON_CLASS = "h-5 w-5 flex-none text-brand-600".freeze
-  NEW_ROW_CLASS = "flex items-center gap-2 border-t border-line px-4 py-3 text-[14px] font-bold text-brand-700".freeze
+  NEW_ROW_CLASS = "flex w-full items-center gap-2 border-t border-line px-4 py-3 text-[14px] font-bold text-brand-600".freeze
   PLUS_ICON_CLASS = "h-5 w-5 flex-none".freeze
 
   def initialize(matches:, query:)
@@ -21,7 +21,7 @@ class Components::Owner::Appointments::ClientSearch < Components::Base
   end
 
   def view_template
-    turbo_frame_tag(FRAME_ID, class: "contents") do
+    turbo_frame_tag(FRAME_ID, class: "contents", data: { client_search_target: "results" }) do
       render_results if @query.present?
     end
   end

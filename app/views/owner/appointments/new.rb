@@ -3,6 +3,7 @@ class Views::Owner::Appointments::New < Views::Base
   UNPUBLISHED_CLASS = Views::Client::Bookings::New::UNPUBLISHED_CLASS
   WEEKDAY_NAMES = Views::Client::Bookings::New::WEEKDAY_NAMES
   WEEKDAY_ABBR = Views::Client::Bookings::New::WEEKDAY_ABBR
+  DAY_PILL_TODAY_LABEL = Views::Owner::Appointments::Index::TODAY_LABEL
 
   TITLE = "Novo agendamento".freeze
   BACK_LABEL = "Voltar".freeze
@@ -185,17 +186,19 @@ class Views::Owner::Appointments::New < Views::Base
               turbo_frame: Components::Client::Bookings::Grid::FRAME_ID, turbo_action: "advance",
               day_label: button_day_label(date), action: "day-selector#mark slot-selector#resetDay" },
       aria_current: selected ? "date" : nil) do
-      span(class: [ DAY_WEEKDAY_CLASS, (DAY_WEEKDAY_FREE_CLASS unless selected) ]) { WEEKDAY_ABBR[date.wday] }
+      span(class: [ DAY_WEEKDAY_CLASS, (DAY_WEEKDAY_FREE_CLASS unless selected) ]) { day_pill_label(date) }
       span(class: DAY_NUMBER_CLASS) { date.strftime("%d") }
     end
   end
 
   def render_disabled_day(date)
     div(class: [ DAY_BASE_CLASS, DAY_DISABLED_CLASS ], data: { day: date.iso8601 }, aria_disabled: "true") do
-      span(class: DAY_WEEKDAY_CLASS) { WEEKDAY_ABBR[date.wday] }
+      span(class: DAY_WEEKDAY_CLASS) { day_pill_label(date) }
       span(class: DAY_NUMBER_CLASS) { date.strftime("%d") }
     end
   end
+
+  def day_pill_label(date) = date == Date.current ? DAY_PILL_TODAY_LABEL : WEEKDAY_ABBR[date.wday]
 
   def render_time_section
     div(class: SECTION_CLASS) do
