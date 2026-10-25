@@ -7,6 +7,8 @@ class Client < ApplicationRecord
 
   acts_as_tenant :tenant
 
+  scope :matching_phone, ->(raw) { where("phone LIKE ?", "#{normalize(raw)}%") }
+
   before_validation :normalize_phone
 
   validates :name, presence: true
