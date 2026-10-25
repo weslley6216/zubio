@@ -6,6 +6,9 @@ class Components::Owner::AgendaDay < Components::Base
   EMPTY_TITLE = "Nenhum agendamento neste dia.".freeze
   SHARE_LABEL = "Seu link".freeze
   SHARE_HELPER = "Mande esse endereço para suas clientes. É por ele que elas escolhem o horário.".freeze
+  NEW_APPOINTMENT_LABEL = "Novo agendamento".freeze
+  NEW_APPOINTMENT_CLASS = "flex min-h-[40px] flex-none items-center gap-1.5 rounded-[10px] bg-brand-600 px-3.5 text-[13px] font-bold text-on-brand".freeze
+  NEW_APPOINTMENT_ICON_CLASS = "h-4 w-4 flex-none".freeze
 
   def initialize(tenant:, branding:, day:, appointments:, out_of_hours: Set.new, selected: nil, selected_visit_number: nil)
     @tenant = tenant
@@ -46,9 +49,24 @@ class Components::Owner::AgendaDay < Components::Base
   end
 
   def render_title_row
-    div(class: "flex items-baseline gap-2.5") do
-      h1(class: "flex-grow text-[20px] font-extrabold tracking-[-0.02em] text-ink") { render Components::LongDate.new(date: @day) }
+    div(class: "flex flex-wrap items-center gap-2.5") do
+      h1(class: "min-w-0 flex-grow truncate text-[20px] font-extrabold tracking-[-0.02em] text-ink") { render Components::LongDate.new(date: @day) }
       span(class: "text-[13px] font-bold tabular-nums text-ink-muted") { count_label }
+      render_new_appointment_link
+    end
+  end
+
+  def render_new_appointment_link
+    a(href: new_owner_appointment_path, class: NEW_APPOINTMENT_CLASS) do
+      render_plus_icon
+      plain NEW_APPOINTMENT_LABEL
+    end
+  end
+
+  def render_plus_icon
+    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.4", stroke_linecap: "round",
+      stroke_linejoin: "round", aria_hidden: "true", class: NEW_APPOINTMENT_ICON_CLASS) do |icon|
+      icon.path(d: "M12 5v14M5 12h14")
     end
   end
 

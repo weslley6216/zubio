@@ -31,12 +31,13 @@ Rails.application.routes.draw do
     resource :session, only: %i[new create destroy]
     resource :handoff, only: :show
     resource :password_reset, only: %i[new create edit update]
-    resources :appointments, only: %i[index show] do
+    resources :appointments, only: %i[index show new create] do
       resource :cancellation, only: :create, module: :appointments
       resource :completion, only: :create, module: :appointments
       resource :no_show, only: :create, module: :appointments
     end
     resources :services, only: %i[index new create edit update]
+    resources :clients, only: :index
     resource :brand_colors, only: %i[edit update]
     resource :brand_name, only: %i[edit update]
     resource :brand_logo, only: %i[edit update]

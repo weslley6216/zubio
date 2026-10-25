@@ -282,6 +282,39 @@ RSpec.describe Client, type: :model do
     end
   end
 
+  describe ".matching_phone" do
+    it "matches clients of the current tenant by a normalized phone prefix" do
+      tenant = create(:tenant)
+      julia = create(:client, tenant: tenant, phone: "11991234455")
+      create(:client, tenant: tenant, phone: "11970001111")
+
+      matches = ActsAsTenant.with_tenant(tenant) { Client.matching_phone("(11) 99123") }
+
+      expect(matches).to contain_exactly(julia)
+    end
+
+    it "does not match a client from another tenant" do
+      tenant = create(:tenant)
+      other = create(:tenant, name: "Barbearia do Zé")
+      create(:client, tenant: other, phone: "11991234455")
+      own = create(:client, tenant: tenant, phone: "11991234455")
+
+      matches = ActsAsTenant.with_tenant(tenant) { Client.matching_phone("11991234455") }
+
+      expect(matches).to contain_exactly(own)
+    end
+
+    it "finds no match when only another tenant has this phone" do
+      tenant = create(:tenant)
+      other = create(:tenant, name: "Barbearia do Zé")
+      create(:client, tenant: other, phone: "11991234455")
+
+      matches = ActsAsTenant.with_tenant(tenant) { Client.matching_phone("11991234455") }
+
+      expect(matches).to be_empty
+    end
+  end
+
   describe "tenant isolation" do
     it "a scoped query brings the tenant's own client and not another's" do
       aurora = create(:tenant, name: "Estúdio Aurora")
