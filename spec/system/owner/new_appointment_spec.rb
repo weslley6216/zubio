@@ -63,6 +63,26 @@ RSpec.describe "Owner books a new appointment", type: :system, js: true do
     expect(row.evaluate_script("this.getBoundingClientRect().height")).to be >= 44
   end
 
+  it "keeps the matched client's name readable over its highlighted row in dark mode" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Mary Sombracelhas")
+    owner = create(:user, :with_professional, tenant: tenant, name: "Mary Sombracelhas", email: "mary@example.com", password: "s3cr3t123")
+    create(:branding, tenant: tenant, brand_600: "#8E4B6B")
+    service = create(:service, tenant: tenant, name: "Design com henna", duration_minutes: 60)
+    create(:working_hour, tenant: tenant, professional: owner.professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    create(:client, tenant: tenant, name: "Juliana Prado", phone: "11991234455")
+    emulate_phone
+    emulate_color_scheme("dark")
+    sign_in_owner(owner)
+    visit new_owner_appointment_url(host: "#{tenant.subdomain}.zubio.com.br", service_id: service.id)
+
+    fill_in "phone", with: "11 99123"
+    foreground = Branding::ColorScale.new(computed_hex("[data-client-search-match] div > span:first-child", "color"))
+    background = Branding::ColorScale.new(computed_hex("[data-client-search-match]", "backgroundColor"))
+
+    expect(foreground.contrast_against(background)).to be >= Branding::ColorScale::MIN_CONTRAST
+  end
+
   it "drops the chosen client when the owner types another number" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Mary Sombracelhas")

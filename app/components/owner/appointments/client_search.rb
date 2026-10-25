@@ -9,7 +9,7 @@ class Components::Owner::Appointments::ClientSearch < Components::Base
   MATCH_ROW_CLASS = "flex w-full items-center gap-3 bg-brand-100 px-4 py-3 text-left".freeze
   AVATAR_CLASS = "grid h-9 w-9 flex-none place-items-center rounded-full bg-surface text-[13px] font-extrabold text-brand-800".freeze
   TEXT_CLASS = "flex min-w-0 flex-grow flex-col gap-0.5".freeze
-  NAME_CLASS = "text-[14px] font-bold text-ink".freeze
+  NAME_CLASS = "text-[14px] font-bold text-brand-800".freeze
   SUB_CLASS = "text-[12px] text-brand-800".freeze
   CHECK_ICON_CLASS = "h-5 w-5 flex-none text-brand-600".freeze
   NEW_ROW_CLASS = "flex w-full items-center gap-2 border-t border-line px-4 py-3 text-[14px] font-bold text-brand-600".freeze
