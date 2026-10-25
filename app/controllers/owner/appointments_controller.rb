@@ -17,7 +17,39 @@ class Owner::AppointmentsController < Owner::BaseController
     render_schedule(service: service, selected_day: parsed_day)
   end
 
+  def create
+    service = Service.active.find(params[:service_id])
+    professional = current_owner.professional
+    starts_at = parsed_starts_at
+    client = Client.find(params[:client_id]) if params[:client_id].present?
+    result = Appointment.book(professional: professional, service: service, starts_at: starts_at,
+      client: client, client_name: params[:name].to_s, client_phone: params[:phone].to_s)
+
+    return redirect_to owner_appointment_path(result.value) if result.success?
+    return render_race(service: service, professional: professional, starts_at: starts_at, client: client) if result.reason == :taken
+
+    render_schedule(service: service, selected_day: starts_at&.to_date, status: :unprocessable_entity)
+  end
+
   private
+
+  def render_race(service:, professional:, starts_at:, client:)
+    day = starts_at.to_date
+    availability = Professional::Availability.new(professional: professional, service: service, dates: day..day)
+
+    render Views::Owner::Appointments::Race.new(
+      tenant: ActsAsTenant.current_tenant, branding: current_branding, service: service, professional: professional,
+      selected_day: day, slots: availability.slots_by_date.fetch(day), taken_slots: availability.taken_slots_by_date.fetch(day),
+      nearest: availability.nearest_free(starts_at), client_id: client&.id,
+      client_name: client&.name || params[:name].to_s, client_phone: client&.phone_display || params[:phone].to_s, lost_time: starts_at
+    ), status: :unprocessable_entity
+  end
+
+  def parsed_starts_at
+    Time.zone.iso8601(params[:starts_at].to_s)
+  rescue ArgumentError, TypeError
+    nil
+  end
 
   def render_schedule(service:, selected_day: nil, status: :ok)
     tenant = ActsAsTenant.current_tenant
