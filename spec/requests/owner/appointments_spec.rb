@@ -102,6 +102,16 @@ RSpec.describe "Owner appointments", type: :request do
       expect(response.body).not_to include("Nenhum agendamento neste dia.")
     end
 
+    it "offers a 'Novo agendamento' button linking to the new-appointment screen" do
+      create(:branding, tenant: tenant)
+      sign_in_owner(owner)
+
+      get owner_appointments_path
+
+      expect(response.body).to include("Novo agendamento")
+      expect(response.body).to include(%(href="#{new_owner_appointment_path}"))
+    end
+
     it "sends an anonymous visitor to the login" do
       create(:branding, tenant: tenant)
       service = create(:service, tenant: tenant)
