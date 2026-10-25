@@ -596,6 +596,102 @@ RSpec.describe "Owner appointments", type: :request do
     end
   end
 
+  describe "POST /owner/appointments" do
+    it "creates the confirmed appointment and redirects to the day's agenda" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      service = create(:service, tenant: tenant, duration_minutes: 60)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      sign_in_owner(owner)
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 11)
+
+      post owner_appointments_path, params: { service_id: service.id, name: "Juliana Prado", phone: "(11) 99123-4455", starts_at: starts_at.iso8601 }
+
+      appointment = ActsAsTenant.with_tenant(tenant) { Appointment.includes(:client).last }
+      expect(appointment.client.name).to eq("Juliana Prado")
+      expect(appointment).to be_confirmed
+      expect(response).to redirect_to(owner_appointment_path(appointment))
+    end
+
+    it "removes the booked slot from the public grid" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      service = create(:service, tenant: tenant, duration_minutes: 60)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      sign_in_owner(owner)
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 11)
+      post owner_appointments_path, params: { service_id: service.id, name: "Juliana Prado", phone: "(11) 99123-4455", starts_at: starts_at.iso8601 }
+
+      get new_client_service_booking_path(service, day: starts_at.to_date.iso8601)
+
+      expect(Nokogiri::HTML5(response.body).css("[data-slots] [data-slot]").map { |slot| slot.text.strip }).not_to include("11:00")
+    end
+
+    it "books an existing client by client_id without duplicating her" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      service = create(:service, tenant: tenant, duration_minutes: 60)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      existing = create(:client, tenant: tenant, name: "Juliana Prado", phone: "11991234455")
+      sign_in_owner(owner)
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 11)
+
+      post owner_appointments_path, params: { service_id: service.id, client_id: existing.id, starts_at: starts_at.iso8601 }
+
+      appointment = ActsAsTenant.with_tenant(tenant) { Appointment.includes(:client).last }
+      expect(appointment.client).to eq(existing)
+      expect(ActsAsTenant.with_tenant(tenant) { Client.count }).to eq(1)
+    end
+
+    it "loses the race, creates no second appointment and keeps the client, service, day and time" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      service = create(:service, tenant: tenant, duration_minutes: 60)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 11)
+      ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: starts_at) }
+      sign_in_owner(owner)
+
+      post owner_appointments_path, params: { service_id: service.id, name: "Juliana Prado", phone: "(11) 99123-4455", starts_at: starts_at.iso8601 }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(1)
+      expect(response.body).to include("Alguém marcou")
+      expect(response.body).to include("Juliana Prado")
+      expect(response.body).to include("(11) 99123-4455")
+      expect(response.body).to include(service.name)
+      expect(response.body).to include("setembro")
+    end
+
+    it "redirects an anonymous visitor on POST to the login and creates nothing" do
+      service = create(:service, tenant: tenant)
+      host! "#{tenant.subdomain}.zubio.com.br"
+
+      post owner_appointments_path, params: { service_id: service.id, name: "Juliana Prado", phone: "11991234455", starts_at: Time.current.iso8601 }
+
+      expect(response).to redirect_to(new_owner_session_path)
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
+    it "ignores a client_id from another tenant" do
+      other = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      other_client = create(:client, tenant: other)
+      service = create(:service, tenant: tenant)
+      sign_in_owner(owner)
+
+      post owner_appointments_path, params: { service_id: service.id, client_id: other_client.id, starts_at: Time.current.iso8601 }
+
+      expect(response).to have_http_status(:not_found)
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
+    it "re-renders without creating when the time is missing or malformed" do
+      service = create(:service, tenant: tenant)
+      sign_in_owner(owner)
+
+      post owner_appointments_path, params: { service_id: service.id, name: "Juliana Prado", phone: "11991234455", starts_at: "not-a-time" }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+  end
+
   describe "POST /owner/session" do
     it "leads into the day's agenda after entering the panel" do
       create(:branding, tenant: tenant)
