@@ -30,12 +30,11 @@ export default class extends Controller {
 
   #search() {
     const digits = this.inputTarget.value.replace(/\D/g, "")
+    this.chooseNew()
     if (digits.length >= MIN_DIGITS) {
       this.resultsTarget.src = `/owner/clients?phone=${digits}`
     } else {
       this.resultsTarget.innerHTML = ""
-      this.clientIdTarget.value = ""
-      this.nameFieldTarget.classList.remove("hidden")
     }
   }
 }
