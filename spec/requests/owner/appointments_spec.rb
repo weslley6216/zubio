@@ -596,6 +596,19 @@ RSpec.describe "Owner appointments", type: :request do
       expect(response.body).to include(Views::Client::Bookings::New::UNPUBLISHED_MESSAGE)
     end
 
+    it "answers a day switch with only the booking grid frame" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      service = create(:service, tenant: tenant, duration_minutes: 60)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      sign_in_owner(owner)
+
+      get new_owner_appointment_path(service_id: service.id, day: Date.current.iso8601), headers: { "Turbo-Frame" => "booking-grid" }
+
+      expect(response.body).to include(%(id="booking-grid"))
+      expect(Nokogiri::HTML5(response.body).css("[data-slots] [data-slot]").map { |slot| slot.text.strip }).to eq([ "09:00", "10:00", "11:00" ])
+      expect(response.body).not_to include(Views::Owner::Appointments::New::TITLE)
+    end
+
     it "404s on an inactive or unknown service" do
       inactive = create(:service, tenant: tenant, active: false)
       sign_in_owner(owner)
@@ -667,6 +680,23 @@ RSpec.describe "Owner appointments", type: :request do
       expect(response.body).to include("(11) 99123-4455")
       expect(response.body).to include(service.name)
       expect(response.body).to include("setembro")
+    end
+
+    it "keeps the existing client by id when it loses the race" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      service = create(:service, tenant: tenant, duration_minutes: 60)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      existing = create(:client, tenant: tenant, name: "Juliana Prado", phone: "11991234455")
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 11)
+      ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: starts_at) }
+      sign_in_owner(owner)
+
+      post owner_appointments_path, params: { service_id: service.id, client_id: existing.id, starts_at: starts_at.iso8601 }
+
+      form = Nokogiri::HTML5(response.body).at_css("form[action='#{owner_appointments_path}']")
+      expect(form.at_css("input[name='client_id']")["value"]).to eq(existing.id.to_s)
+      expect(form.at_css("input[name='name']")).to be_nil
+      expect(response.body).to include("(11) 99123-4455")
     end
 
     it "redirects an anonymous visitor on POST to the login and creates nothing" do
