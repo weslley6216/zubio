@@ -37,6 +37,7 @@ Rails.application.routes.draw do
       resource :no_show, only: :create, module: :appointments
     end
     resources :services, only: %i[index new create edit update]
+    resources :clients, only: :index
     resource :brand_colors, only: %i[edit update]
     resource :brand_name, only: %i[edit update]
     resource :brand_logo, only: %i[edit update]

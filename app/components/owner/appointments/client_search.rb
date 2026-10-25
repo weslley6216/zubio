@@ -1,0 +1,71 @@
+class Components::Owner::Appointments::ClientSearch < Components::Base
+  include Phlex::Rails::Helpers::TurboFrameTag
+
+  FRAME_ID = "client-search-results".freeze
+  MATCH_LABEL = "já é sua cliente".freeze
+  NEW_CLIENT_LABEL = "Cliente nova com este telefone".freeze
+
+  CARD_CLASS = "rounded-xl border border-line bg-surface overflow-hidden".freeze
+  MATCH_ROW_CLASS = "flex items-center gap-3 bg-brand-soft px-4 py-3".freeze
+  AVATAR_CLASS = "grid h-9 w-9 flex-none place-items-center rounded-full bg-surface text-[13px] font-extrabold text-brand-ink".freeze
+  TEXT_CLASS = "flex min-w-0 flex-grow flex-col gap-0.5".freeze
+  NAME_CLASS = "text-[14px] font-bold text-ink".freeze
+  SUB_CLASS = "text-[12px] text-brand-ink".freeze
+  CHECK_ICON_CLASS = "h-5 w-5 flex-none text-brand-600".freeze
+  NEW_ROW_CLASS = "flex items-center gap-2 border-t border-line px-4 py-3 text-[14px] font-bold text-brand-700".freeze
+  PLUS_ICON_CLASS = "h-5 w-5 flex-none".freeze
+
+  def initialize(matches:, query:)
+    @matches = matches
+    @query = query
+  end
+
+  def view_template
+    turbo_frame_tag(FRAME_ID, class: "contents") do
+      render_results if @query.present?
+    end
+  end
+
+  private
+
+  def render_results
+    div(class: CARD_CLASS) do
+      @matches.each { |client| render_match(client) }
+      render_new_client_row
+    end
+  end
+
+  def render_match(client)
+    div(class: MATCH_ROW_CLASS, data: { client_search_match: true }) do
+      span(class: AVATAR_CLASS) { client.initials }
+      div(class: TEXT_CLASS) do
+        span(class: NAME_CLASS) { client.name }
+        span(class: SUB_CLASS) { "#{client.phone_display} · #{MATCH_LABEL}" }
+      end
+      button(type: "button", class: "flex-none", aria_pressed: "false", data: {
+        action: "client-search#choose", client_id: client.id, client_name: client.name, client_phone: client.phone_display
+      }) { render_check_icon }
+    end
+  end
+
+  def render_check_icon
+    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.6", stroke_linecap: "round",
+      stroke_linejoin: "round", aria_hidden: "true", class: CHECK_ICON_CLASS) do |icon|
+      icon.path(d: "M20 6 9 17l-5-5")
+    end
+  end
+
+  def render_new_client_row
+    button(type: "button", class: NEW_ROW_CLASS, data: { action: "client-search#chooseNew" }) do
+      render_plus_icon
+      plain NEW_CLIENT_LABEL
+    end
+  end
+
+  def render_plus_icon
+    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
+      stroke_linejoin: "round", aria_hidden: "true", class: PLUS_ICON_CLASS) do |icon|
+      icon.path(d: "M12 5v14M5 12h14")
+    end
+  end
+end
