@@ -29,7 +29,7 @@ class Components::Owner::Clients::Table < Components::Base
       span(class: HEADER_LABEL_CLASS) { "Celular" }
       span(class: HEADER_LABEL_CLASS) { "Visita" }
       span(class: HEADER_LABEL_CLASS) { "Visitas" }
-      span {}
+      span
     end
   end
 
