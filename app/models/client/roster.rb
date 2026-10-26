@@ -58,6 +58,6 @@ class Client::Roster
     return [ "clients.name ILIKE ?", "%#{@query}%" ] if @query.match?(/[[:alpha:]]/)
 
     digits = Client.normalize(@query)
-    digits.present? ? [ "clients.phone LIKE ?", "%#{digits}%" ] : []
+    [ "clients.phone LIKE ?", "%#{digits.presence || @query}%" ]
   end
 end

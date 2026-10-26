@@ -92,6 +92,17 @@ RSpec.describe Client::Roster, type: :model do
       end
     end
 
+    it "finds nobody for a query with no letters and no digits" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0) do
+        tenant = create(:tenant)
+        create(:client, tenant: tenant, name: "Camila Nunes")
+
+        clients = ActsAsTenant.with_tenant(tenant) { Client::Roster.new(query: "---").entries.map(&:client) }
+
+        expect(clients).to be_empty
+      end
+    end
+
     it "keeps another tenant's clients and appointments out of the roster" do
       travel_to Time.zone.local(2026, 9, 8, 7, 0) do
         other_tenant = create(:tenant, name: "Barbearia do Zé")
