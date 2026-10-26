@@ -104,14 +104,14 @@ RSpec.describe "Owner schedule exceptions", type: :request do
       expect(document.at_css(%(input[name="schedule_exception[attends]"]))["checked"]).to be_falsey
     end
 
-    it "marks Configurações as the current section" do
+    it "marks Horários as the current section" do
       create(:professional, tenant: tenant, user: owner)
       sign_in_owner(owner)
 
       get owner_schedule_exceptions_path
 
       document = Nokogiri::HTML5(response.body)
-      expect(document.at_css("nav a[aria-current='page']").text).to eq(Components::Owner::Header::SETTINGS_LABEL)
+      expect(document.at_css("nav a[aria-current='page']").text).to eq(Components::Owner::Header::WORKING_HOURS_LABEL)
     end
 
     it "sends an anonymous visitor to the login with no date in the response" do

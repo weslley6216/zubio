@@ -43,14 +43,14 @@ RSpec.describe "Owner working hours", type: :request do
       expect(document.at_css("[data-invite]")).to be_nil
     end
 
-    it "marks Configurações as the current section on this screen" do
+    it "marks Horários as the current section on this screen" do
       create(:professional, tenant: tenant, user: owner)
       sign_in_owner(owner)
 
       get edit_owner_working_hours_path
 
       document = Nokogiri::HTML5(response.body)
-      expect(document.at_css("nav a[aria-current='page']").text).to eq(Components::Owner::Header::SETTINGS_LABEL)
+      expect(document.at_css("nav a[aria-current='page']").text).to eq(Components::Owner::Header::WORKING_HOURS_LABEL)
     end
 
     it "names the expediente and the break time fields of an open day" do

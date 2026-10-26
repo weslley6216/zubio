@@ -2,7 +2,7 @@ class Owner::WorkingHoursController < Owner::BaseController
   REFUSED = "Não foi possível salvar os horários. Confira os dias destacados.".freeze
   SAVED = "Horários atualizados.".freeze
 
-  self.panel_section = :settings
+  self.panel_section = :working_hours
   self.panel_subtitle = "Horários"
 
   def edit

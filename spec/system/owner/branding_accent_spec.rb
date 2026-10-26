@@ -13,7 +13,7 @@ RSpec.describe "Owner branding accent", type: :system, js: true do
       expect(contrast_ratio("span.bg-brand-accent")).to be >= Branding::ColorScale::MIN_CONTRAST
     end
 
-    it "labels the current section in the brand and underlines it in the secondary on a wide screen, in #{scheme}" do
+    it "labels the current section in the brand accent on the band, in #{scheme}" do
       tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
       branding = create(:branding, tenant: tenant, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C")
       emulate_desktop_screen(width: 1200, height: 800)
@@ -22,8 +22,9 @@ RSpec.describe "Owner branding accent", type: :system, js: true do
 
       visit "http://barbearia-do-ze.zubio.com.br#{owner_services_path}"
 
-      expect(computed_hex("nav a[aria-current='page']", "color")).to eq(branding.css_variables[/--brand-ink-#{scheme}:(#\h{6});/, 1].upcase)
-      expect(computed_hex("nav a[aria-current='page']", "borderBottomColor")).to eq(branding.css_variables[/--secondary-mark-#{scheme}:(#\h{6});/, 1].upcase)
+      accent = scheme == "dark" ? branding.css_variables[/--brand-400:(#\h{6});/, 1] : branding.brand_600
+      expect(computed_hex("nav a[aria-current='page']", "color")).to eq(accent.upcase)
+      expect(computed_hex("nav a[aria-current='page']", "borderBottomColor")).to eq(accent.upcase)
       expect(computed("nav a[aria-current='page']", "backgroundColor")).to eq("rgba(0, 0, 0, 0)")
     end
 
@@ -33,7 +34,7 @@ RSpec.describe "Owner branding accent", type: :system, js: true do
       emulate_phone(width: 375, height: 667)
       emulate_color_scheme(scheme)
       sign_in_owner(create(:user, tenant: tenant))
-      visit "http://barbearia-do-ze.zubio.com.br#{owner_services_path}"
+      visit "http://barbearia-do-ze.zubio.com.br#{edit_owner_brand_colors_path}"
       expect(page).to fit_the_phone_width
 
       find("details summary").click
