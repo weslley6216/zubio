@@ -1,13 +1,21 @@
 class Components::Owner::Header < Components::Base
   include Phlex::Rails::Helpers::ButtonTo
 
+  AGENDA_LABEL = "Agenda".freeze
+  SERVICES_LABEL = "Serviços".freeze
+  WORKING_HOURS_LABEL = "Horários".freeze
   CLIENTS_LABEL = "Clientes".freeze
   SETTINGS_LABEL = "Configurações".freeze
   SIGN_OUT_LABEL = "Sair".freeze
   PANEL_SUBTITLE = "Painel".freeze
-  ITEM_CLASS = "inline-flex min-h-11 items-center border-b-2 px-4 text-sm font-bold".freeze
-  CURRENT_CLASS = "border-secondary-mark text-brand-ink".freeze
-  RESTING_CLASS = "border-transparent text-ink-muted hover:text-ink".freeze
+
+  TAB_CLASS = "inline-flex h-16 items-center px-3.5 text-[14px] leading-[normal]".freeze
+  TAB_CURRENT_CLASS = "-mb-px border-b-[3px] border-brand-accent font-extrabold text-brand-accent".freeze
+  TAB_RESTING_CLASS = "font-bold text-ink-muted hover:text-ink".freeze
+
+  PILL_CLASS = "inline-flex min-h-10 items-center gap-2 rounded-[10px] border px-3.5 text-[14px] leading-[normal] font-bold".freeze
+  PILL_CURRENT_CLASS = "border-brand-accent text-brand-accent".freeze
+  PILL_RESTING_CLASS = "border-line text-ink".freeze
 
   def initialize(tenant:, branding:, current_section:, subtitle: PANEL_SUBTITLE)
     @tenant = tenant
@@ -18,27 +26,63 @@ class Components::Owner::Header < Components::Base
 
   def view_template
     header(class: "sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur", data: { controller: "theme" }) do
-      div(class: "flex items-center gap-3 py-3.5 #{content_width}") do
-        render_identity
-        render_nav
-        render_actions
-        render_menu
-      end
+      render_desktop_band
+      render_mobile_bar
     end
   end
 
   private
 
-  def sections
-    [
-      [ :clients, CLIENTS_LABEL, owner_clients_path ],
-      [ :settings, SETTINGS_LABEL, owner_settings_path ]
-    ]
+  def render_desktop_band
+    div(class: "hidden h-16 items-center gap-6 bg-surface px-10 lg:flex", data: { owner_band: true }) do
+      render_band_identity
+      div(class: "h-7 w-px flex-none bg-line")
+      nav(class: "flex grow") { nav_items.each { |label, href, current| render_tab(label, href, current) } }
+      render Components::ThemeToggle.new(hidden_on_phone: false)
+      render_settings_pill
+    end
   end
 
-  def render_identity
+  def render_band_identity
+    a(href: owner_appointments_path, class: "flex min-w-0 items-center gap-3 font-extrabold text-ink") do
+      render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :header)
+      span(class: "truncate text-[15px] leading-[normal] tracking-[-0.01em]") { @tenant.name }
+    end
+  end
+
+  def render_tab(label, href, current)
+    a(href: href, aria_current: current ? "page" : nil,
+      class: "#{TAB_CLASS} #{current ? TAB_CURRENT_CLASS : TAB_RESTING_CLASS}") { label }
+  end
+
+  def render_settings_pill
+    current = @current_section == :settings
+    a(href: owner_settings_path, aria_current: current ? "page" : nil,
+      class: "#{PILL_CLASS} #{current ? PILL_CURRENT_CLASS : PILL_RESTING_CLASS}") do
+      render_gear(current)
+      plain SETTINGS_LABEL
+    end
+  end
+
+  def render_gear(current)
+    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
+      stroke_linejoin: "round", aria_hidden: "true",
+      class: "h-[17px] w-[17px] flex-none #{current ? "text-brand-accent" : "text-ink-muted"}") do |icon|
+      icon.circle(cx: "12", cy: "12", r: "3")
+      icon.path(d: Components::Owner::Menu::GEAR_PATH)
+    end
+  end
+
+  def render_mobile_bar
+    div(class: "flex items-center gap-3 py-3.5 lg:hidden #{content_width}") do
+      render_mobile_identity
+      render Components::Owner::Menu.new(items: menu_items)
+    end
+  end
+
+  def render_mobile_identity
     a(href: owner_appointments_path, aria_current: @current_section == :agenda ? "page" : nil,
-      class: "flex min-h-11 min-w-0 items-center gap-3 font-extrabold text-ink") do
+      class: "flex min-h-11 min-w-0 grow items-center gap-3 font-extrabold text-ink") do
       render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :header)
       span(class: "grid min-w-0 gap-px leading-[normal]") do
         span(class: "truncate text-[14px] tracking-[-0.01em]") { @tenant.name }
@@ -49,31 +93,19 @@ class Components::Owner::Header < Components::Base
 
   def content_width = @current_section == :agenda ? Components::Owner::Panel::CONTENT_WIDE : Components::Owner::Panel::CONTENT
 
-  def items = sections.map { |key, label, href| [ label, href, key == @current_section ] }
-
-  def render_nav
-    nav(class: "ml-auto hidden items-center gap-1 sm:flex") do
-      items.each { |label, href, current| render_section(label, href, current) }
-    end
+  def nav_items
+    [
+      [ AGENDA_LABEL, owner_appointments_path, @current_section == :agenda ],
+      [ SERVICES_LABEL, owner_services_path, @current_section == :services ],
+      [ WORKING_HOURS_LABEL, edit_owner_working_hours_path, @current_section == :working_hours ],
+      [ CLIENTS_LABEL, owner_clients_path, @current_section == :clients ]
+    ]
   end
 
-  def render_section(label, href, current)
-    a(href: href, aria_current: current ? "page" : nil, class: "#{ITEM_CLASS} #{current ? CURRENT_CLASS : RESTING_CLASS}") { label }
-  end
-
-  def render_actions
-    div(class: "ml-auto flex flex-none items-center gap-3 sm:ml-0") do
-      render Components::ThemeToggle.new(hidden_on_phone: true)
-      div(class: "hidden sm:block") { render_sign_out }
-    end
-  end
-
-  def render_sign_out
-    button_to(SIGN_OUT_LABEL, owner_session_path, method: :delete,
-      class: "inline-flex min-h-11 cursor-pointer items-center rounded-lg border border-line bg-surface px-4 text-sm font-semibold text-ink hover:bg-surface-2")
-  end
-
-  def render_menu
-    render Components::Owner::Menu.new(items: items)
+  def menu_items
+    [
+      [ CLIENTS_LABEL, owner_clients_path, @current_section == :clients ],
+      [ SETTINGS_LABEL, owner_settings_path, @current_section == :settings ]
+    ]
   end
 end
