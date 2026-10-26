@@ -11,7 +11,7 @@ class Views::Layouts::Application < Views::Base
 
   SURFACE_CLASS = "bg-canvas text-ink [color-scheme:light_dark]".freeze
   FLASH_CLASS = "mx-auto grid w-full max-w-6xl gap-2 px-6 pt-4".freeze
-  BODY_CLASS = "min-h-dvh font-sans max-sm:[&:has([data-owner-menu][open])>:not(header)]:pointer-events-none max-sm:[&:has([data-owner-menu][open])>:not(header)]:opacity-45".freeze
+  BODY_CLASS = "min-h-dvh font-sans max-lg:[&:has([data-owner-menu][open])>:not(header)]:pointer-events-none max-lg:[&:has([data-owner-menu][open])>:not(header)]:opacity-45".freeze
 
   def initialize(title:, branding:, page_stylesheet: nil, view_transition: false, social: nil, flash_in_content: false)
     @title = title
