@@ -1,6 +1,7 @@
 class Components::Owner::Header < Components::Base
   include Phlex::Rails::Helpers::ButtonTo
 
+  CLIENTS_LABEL = "Clientes".freeze
   SETTINGS_LABEL = "Configurações".freeze
   SIGN_OUT_LABEL = "Sair".freeze
   PANEL_SUBTITLE = "Painel".freeze
@@ -30,6 +31,7 @@ class Components::Owner::Header < Components::Base
 
   def sections
     [
+      [ :clients, CLIENTS_LABEL, owner_clients_path ],
       [ :settings, SETTINGS_LABEL, owner_settings_path ]
     ]
   end
