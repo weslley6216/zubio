@@ -31,6 +31,9 @@ Rails.application.routes.draw do
     resource :session, only: %i[new create destroy]
     resource :handoff, only: :show
     resource :password_reset, only: %i[new create edit update]
+    namespace :appointments do
+      resource :client_search, only: :show
+    end
     resources :appointments, only: %i[index show new create] do
       resource :cancellation, only: :create, module: :appointments
       resource :completion, only: :create, module: :appointments
