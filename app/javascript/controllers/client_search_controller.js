@@ -32,7 +32,7 @@ export default class extends Controller {
     const digits = this.inputTarget.value.replace(/\D/g, "")
     this.chooseNew()
     if (digits.length >= MIN_DIGITS) {
-      this.resultsTarget.src = `/owner/clients?phone=${digits}`
+      this.resultsTarget.src = `/owner/appointments/client_search?phone=${digits}`
     } else {
       this.resultsTarget.innerHTML = ""
     }

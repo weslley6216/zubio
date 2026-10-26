@@ -1,11 +1,18 @@
 class Owner::ClientsController < Owner::BaseController
-  MIN_SEARCH_DIGITS = 4
+  self.panel_section = :clients
+  self.panel_subtitle = "Clientes"
 
   def index
-    digits = params[:phone].to_s.gsub(/\D/, "")
-    searchable = digits.length >= MIN_SEARCH_DIGITS
-    matches = searchable ? ActsAsTenant.current_tenant.clients.matching_phone(params[:phone]).to_a : []
+    roster = Client::Roster.new(query: params[:q])
 
-    render Components::Owner::Appointments::ClientSearch.new(matches: matches, query: searchable ? params[:phone].to_s : "")
+    render Views::Owner::Clients::Index.new(
+      tenant: ActsAsTenant.current_tenant,
+      branding: current_branding,
+      entries: roster.entries,
+      total: ActsAsTenant.current_tenant.clients.count,
+      query: params[:q].to_s,
+      current_section: panel_section,
+      subtitle: panel_subtitle
+    )
   end
 end
