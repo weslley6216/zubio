@@ -171,6 +171,14 @@ RSpec.describe "Owner clients", type: :request do
       expect(many).to eq(single)
     end
 
+    it "labels the search field for screen readers" do
+      sign_in_owner(owner)
+
+      get owner_clients_path
+
+      expect(Nokogiri::HTML5(response.body).at_css("input[name='q']")["aria-label"]).to eq("Buscar cliente por nome ou telefone")
+    end
+
     it "marks Clientes as the current nav section" do
       sign_in_owner(owner)
 

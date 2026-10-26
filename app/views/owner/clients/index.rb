@@ -1,6 +1,7 @@
 class Views::Owner::Clients::Index < Views::Base
   TITLE = "Suas clientes".freeze
   SEARCH_PLACEHOLDER = "Nome ou telefone".freeze
+  SEARCH_LABEL = "Buscar cliente por nome ou telefone".freeze
   FOOTER_MOBILE = "Quem agenda pelo seu link entra aqui sozinho. A lista é sua e não aparece para nenhum outro estabelecimento.".freeze
   FOOTER_DESKTOP = "A lista é sua e não aparece para nenhum outro estabelecimento.".freeze
 
@@ -63,7 +64,7 @@ class Views::Owner::Clients::Index < Views::Base
     form(method: :get, action: owner_clients_path, class: SEARCH_FORM_CLASS,
       data: { turbo_frame: Components::Owner::Clients::Roster::FRAME_ID, controller: "clients-filter" }) do
       render_search_icon
-      input(type: "text", name: "q", value: @query, placeholder: SEARCH_PLACEHOLDER, autocomplete: "off",
+      input(type: "text", name: "q", value: @query, placeholder: SEARCH_PLACEHOLDER, aria_label: SEARCH_LABEL, autocomplete: "off",
         class: SEARCH_INPUT_CLASS, data: { action: "input->clients-filter#search" })
     end
   end
