@@ -8,9 +8,8 @@ class Components::Owner::Clients::Roster < Components::Base
   SHARE_HELPER = "Mande esse endereço para suas clientes. É por ele que elas escolhem o horário.".freeze
   NO_RESULTS = "Nenhuma cliente com esse nome ou telefone.".freeze
 
-  def initialize(entries:, query:, total:, tenant:)
+  def initialize(entries:, total:, tenant:)
     @entries = entries
-    @query = query
     @total = total
     @tenant = tenant
   end

@@ -32,7 +32,7 @@ class Views::Owner::Clients::Index < Views::Base
       render Components::FlashBanner.new(container_class: "#{Components::Owner::Panel::CONTENT} grid gap-2 pt-4")
       main(class: MAIN_CLASS) do
         render_header_row
-        render Components::Owner::Clients::Roster.new(entries: @entries, query: @query, total: @total, tenant: @tenant)
+        render Components::Owner::Clients::Roster.new(entries: @entries, total: @total, tenant: @tenant)
         render_footer
       end
     end
