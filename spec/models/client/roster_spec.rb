@@ -80,6 +80,18 @@ RSpec.describe Client::Roster, type: :model do
       end
     end
 
+    it "finds a client by a phone pasted with the 55 country code" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0) do
+        tenant = create(:tenant)
+        camila = create(:client, tenant: tenant, name: "Camila Nunes", phone: "11977668899")
+        create(:client, tenant: tenant, name: "Bruna Salles", phone: "11912340000")
+
+        clients = ActsAsTenant.with_tenant(tenant) { Client::Roster.new(query: "+55 11 97766-8899").entries.map(&:client) }
+
+        expect(clients).to contain_exactly(camila)
+      end
+    end
+
     it "keeps another tenant's clients and appointments out of the roster" do
       travel_to Time.zone.local(2026, 9, 8, 7, 0) do
         other_tenant = create(:tenant, name: "Barbearia do Zé")

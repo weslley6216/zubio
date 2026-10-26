@@ -57,7 +57,7 @@ class Client::Roster
     return [] if @query.blank?
     return [ "clients.name ILIKE ?", "%#{@query}%" ] if @query.match?(/[[:alpha:]]/)
 
-    digits = @query.gsub(/\D/, "")
+    digits = Client.normalize(@query)
     digits.present? ? [ "clients.phone LIKE ?", "%#{digits}%" ] : []
   end
 end
