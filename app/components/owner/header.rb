@@ -1,6 +1,4 @@
 class Components::Owner::Header < Components::Base
-  include Phlex::Rails::Helpers::ButtonTo
-
   AGENDA_LABEL = "Agenda".freeze
   SERVICES_LABEL = "Serviços".freeze
   WORKING_HOURS_LABEL = "Horários".freeze
