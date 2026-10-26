@@ -1,5 +1,5 @@
 class Owner::ScheduleExceptionsController < Owner::BaseController
-  self.panel_section = :settings
+  self.panel_section = :working_hours
   self.panel_subtitle = "Horários · Exceções"
 
   SAVED = "Folga registrada.".freeze
