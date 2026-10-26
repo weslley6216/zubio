@@ -8,14 +8,14 @@ class Views::Owner::Clients::Index < Views::Base
   MAIN_CLASS = "#{Components::Owner::Panel::CONTENT} grid gap-3.5 py-5 sm:gap-6 sm:py-8".freeze
   HEADER_ROW_CLASS = "flex flex-col gap-3.5 sm:flex-row sm:items-end sm:justify-between sm:gap-4".freeze
   HEADING_BLOCK_CLASS = "order-2 flex flex-col gap-1 sm:order-1 sm:flex-grow".freeze
-  TITLE_ROW_CLASS = "flex items-baseline gap-2.5 leading-[normal]".freeze
+  TITLE_ROW_CLASS = "flex items-baseline justify-between gap-2.5 leading-[normal]".freeze
   TITLE_CLASS = "text-[20px] font-extrabold tracking-[-0.02em] text-ink sm:text-[28px]".freeze
   COUNT_CLASS = "text-[13px] font-bold tabular-nums text-ink-muted sm:hidden".freeze
   SUBTITLE_CLASS = "hidden text-[14px] text-ink-muted sm:block".freeze
   SEARCH_FORM_CLASS = "order-1 flex min-h-12 items-center gap-2.5 rounded-[10px] border border-line-strong bg-surface px-3.5 sm:order-2 sm:min-h-11 sm:w-[340px] sm:flex-none".freeze
   SEARCH_ICON_CLASS = "h-[18px] w-[18px] flex-none text-ink-subtle".freeze
   SEARCH_INPUT_CLASS = "min-w-0 flex-grow bg-transparent text-[15px] text-ink placeholder:text-ink-subtle focus:outline-none".freeze
-  FOOTER_CLASS = "text-center text-[12px] leading-[normal] text-ink-subtle".freeze
+  FOOTER_CLASS = "text-center text-[12px] leading-[1.5] text-ink-subtle".freeze
 
   def initialize(tenant:, branding:, entries:, total:, query:, current_section:, subtitle:)
     @tenant = tenant
