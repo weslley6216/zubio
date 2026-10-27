@@ -45,6 +45,7 @@ class Views::Owner::Services::Index < Views::Base
   TABLE_PRICE_CLASS = "text-[15px] font-extrabold tabular-nums text-ink".freeze
   TABLE_PRICE_DISABLED_CLASS = "text-[15px] font-extrabold tabular-nums text-ink-subtle".freeze
   TABLE_UNPRICED_CLASS = "text-[13px] font-bold text-ink-muted".freeze
+  TABLE_UNPRICED_DISABLED_CLASS = "text-[13px] font-bold text-ink-subtle".freeze
   TABLE_HIDDEN_HINT_CLASS = "text-[11px] font-semibold text-ink-subtle".freeze
   STATUS_PILL_CLASS = "rounded-full px-2.5 py-1 text-[11px] font-extrabold whitespace-nowrap".freeze
   TABLE_ACTIVE_PILL_CLASS = "#{STATUS_PILL_CLASS} bg-brand-soft text-brand-soft-ink".freeze
@@ -170,7 +171,7 @@ class Views::Owner::Services::Index < Views::Base
       end
     else
       span(class: TABLE_PRICE_CLASS, data: { table_price: true }) do
-        span(class: TABLE_UNPRICED_CLASS) { price(service) }
+        span(class: service.active? ? TABLE_UNPRICED_CLASS : TABLE_UNPRICED_DISABLED_CLASS) { price(service) }
       end
     end
   end

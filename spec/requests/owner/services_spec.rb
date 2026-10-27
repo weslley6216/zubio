@@ -278,6 +278,16 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(price.text).to eq(Service::Price::UNPRICED_LABEL)
     end
 
+    it "dims a priceless service's sob consulta note in the desktop table once it is disabled" do
+      create(:service, tenant: tenant, name: "Retoque de henna", price_cents: nil, active: false)
+      sign_in_owner(owner)
+
+      get owner_services_path
+
+      price = Nokogiri::HTML5(response.body).at_css("[data-service-table] [data-table-price] span")
+      expect(price["class"]).to eq(Views::Owner::Services::Index::TABLE_UNPRICED_DISABLED_CLASS)
+    end
+
     it "marks a disabled service in the desktop table with a faded Desativado pill" do
       create(:service, tenant: tenant, name: "Micropigmentação", active: false)
       sign_in_owner(owner)
