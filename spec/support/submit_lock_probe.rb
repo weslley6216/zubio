@@ -4,7 +4,8 @@ module SubmitLockProbe
       (function() {
         const button = document.querySelector(#{button_selector.to_json})
         #{action_js}
-        return JSON.stringify({ disabled: button.disabled, label: button.textContent })
+        const label = button.tagName === "INPUT" ? button.value : button.textContent
+        return JSON.stringify({ disabled: button.disabled, label: label })
       })()
     JS
   end
