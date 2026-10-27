@@ -14,7 +14,7 @@ class Components::Owner::Emblem < Components::Base
     accent: "bg-brand-accent text-on-brand-accent",
     translucent: "bg-on-brand/20 text-on-brand"
   }.freeze
-  IMAGE_CLASS = "flex-none object-contain".freeze
+  IMAGE_CLASS = "flex-none object-cover".freeze
   INITIAL_CLASS = "grid flex-none place-items-center font-extrabold".freeze
 
   def initialize(tenant:, branding:, size:, tone: :accent)
@@ -29,7 +29,7 @@ class Components::Owner::Emblem < Components::Base
     logo = @branding.header_logo
 
     if logo
-      img(src: rails_storage_proxy_path(logo), alt: "", class: "#{size_class} #{IMAGE_CLASS}")
+      img(src: rails_storage_proxy_path(logo), alt: "", class: "#{size_class} #{IMAGE_CLASS}", data: { brand_logo: true })
     else
       span(class: "#{size_class} #{INITIAL_CLASS} #{TONES.fetch(@tone)}", data: { brand_initial: true }) { @tenant.initial }
     end
