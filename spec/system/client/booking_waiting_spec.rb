@@ -112,6 +112,23 @@ RSpec.describe "Client booking time grid skeleton", type: :system, js: true do
     expect(computed("#booking-grid [data-frame-content]", "transitionDelay")).to eq("0.15s, 0.15s")
   end
 
+  it "drops the loading mark in the same task that inserts the new grid" do
+    create(:working_hour, tenant: tenant, professional: professional, weekday: (day + 1).wday, opens_at: "09:00", closes_at: "12:00")
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: day.iso8601)}"
+    page.execute_script(<<~JS)
+      const frame = document.getElementById("booking-grid")
+      new MutationObserver((records, observer) => {
+        if (!records.some((record) => record.type === "childList")) return
+        frame.dataset.loadingAtInsert = frame.hasAttribute("data-loading")
+        observer.disconnect()
+      }).observe(frame, { childList: true })
+    JS
+
+    find("a[data-day='#{(day + 1).iso8601}']").click
+
+    expect(page).to have_css("turbo-frame#booking-grid[data-loading-at-insert='false']")
+  end
+
   it "keeps the hidden slots out of keyboard reach while busy" do
     visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: day.iso8601)}"
     page.execute_script("document.getElementById('booking-grid').setAttribute('busy', '')")

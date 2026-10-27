@@ -173,22 +173,24 @@
   transition: opacity 0s linear, visibility 0s linear;
 }
 
-turbo-frame:is([busy], [data-loading]) [data-frame-content] {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 0s linear var(--skeleton-delay), visibility 0s linear var(--skeleton-delay);
-}
+turbo-frame:is([busy], [data-loading]) :not(turbo-frame:is([busy], [data-loading]) turbo-frame:not([busy], [data-loading]) *) {
+  &[data-frame-content] {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0s linear var(--skeleton-delay), visibility 0s linear var(--skeleton-delay);
+  }
 
-turbo-frame:is([busy], [data-loading]) [data-skeleton] {
-  opacity: 1;
-  pointer-events: auto;
-  transition: opacity 0s linear var(--skeleton-delay);
-}
+  &[data-skeleton] {
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0s linear var(--skeleton-delay);
+  }
 
-turbo-frame:is([busy], [data-loading]) [data-busy-fade] {
-  opacity: 0.5;
-  pointer-events: none;
+  &[data-busy-fade] {
+    opacity: 0.5;
+    pointer-events: none;
+  }
 }
 
 :root[data-theme="light"] {
