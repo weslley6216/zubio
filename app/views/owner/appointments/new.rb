@@ -87,7 +87,7 @@ class Views::Owner::Appointments::New < Views::Base
       turbo: false, controller: "slot-selector service-selector submit-lock",
       slot_selector_label_value: MARK_LABEL, slot_selector_include_day_value: "true",
       slot_selector_day_value: button_day_label(@selected_day),
-      submit_lock_label_value: "Marcando…", action: "submit->submit-lock#lock pageshow@window->submit-lock#unlock"
+      submit_lock_label_value: "Marcando…", action: SUBMIT_LOCK_ACTIONS
     }) do
       main(class: MAIN_CLASS) do
         render_client_section

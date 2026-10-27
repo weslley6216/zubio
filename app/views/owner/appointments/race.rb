@@ -62,7 +62,7 @@ class Views::Owner::Appointments::Race < Views::Base
         render_header
         form_with(url: owner_appointments_path, method: :post, class: "contents", data: {
           turbo: false, controller: "slot-selector submit-lock", slot_selector_label_value: MARK_LABEL,
-          submit_lock_label_value: "Marcando…", action: "submit->submit-lock#lock pageshow@window->submit-lock#unlock"
+          submit_lock_label_value: "Marcando…", action: SUBMIT_LOCK_ACTIONS
         }) do
           div(class: CONTENT_CLASS) do
             render_alert

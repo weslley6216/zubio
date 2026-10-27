@@ -16,7 +16,7 @@ class Views::Signups::New < Views::Base
           render Components::Panel.new(title: "Criar sua conta") do
             form_with(url: signup_path, method: :post, class: "space-y-4", data: {
               turbo: false, controller: "submit-lock", submit_lock_label_value: "Criando sua página…",
-              action: "submit->submit-lock#lock pageshow@window->submit-lock#unlock"
+              action: SUBMIT_LOCK_ACTIONS
             }) do |form|
               render_owner_name_field(form)
               render_email_field(form)

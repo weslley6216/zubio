@@ -78,8 +78,7 @@ class Views::Owner::Onboarding::Document < Views::Base
         div(class: CONTROLLER_CLASS, data: root_data) do
           form_with(url: owner_onboarding_path, method: :post, class: CONTROLLER_CLASS, data: {
             turbo: false, controller: "submit-lock", submit_lock_label_value: SUBMIT_LOCK_LABEL,
-            action: "input->onboarding#save change->onboarding#save submit->onboarding#submit " \
-                    "submit->submit-lock#lock pageshow@window->submit-lock#unlock"
+            action: "input->onboarding#save change->onboarding#save submit->onboarding#submit #{SUBMIT_LOCK_ACTIONS}"
           }) do
             render_welcome
             render Components::Owner::Onboarding::Screen.new(section: "colors", group: BRAND_GROUP, position: 1, primary: CONTINUE_LABEL, hidden: @open_section != "colors") do

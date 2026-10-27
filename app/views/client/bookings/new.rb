@@ -123,7 +123,7 @@ class Views::Client::Bookings::New < Views::Base
   def render_published
     form_with(url: client_service_booking_path(@service), method: :post, class: "contents", data: {
       turbo: false, controller: "slot-selector submit-lock", submit_lock_label_value: "Confirmando…",
-      action: "submit->submit-lock#lock pageshow@window->submit-lock#unlock"
+      action: SUBMIT_LOCK_ACTIONS
     }) do
       main(class: MAIN_CLASS) do
         render_service_step
