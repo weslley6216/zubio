@@ -61,7 +61,8 @@ class Views::Owner::Appointments::Race < Views::Base
       div(class: PAGE_CLASS) do
         render_header
         form_with(url: owner_appointments_path, method: :post, class: "contents", data: {
-          turbo: false, controller: "slot-selector", slot_selector_label_value: MARK_LABEL
+          turbo: false, controller: "slot-selector submit-lock", slot_selector_label_value: MARK_LABEL,
+          submit_lock_label_value: "Marcando…", action: "submit->submit-lock#lock pageshow@window->submit-lock#unlock"
         }) do
           div(class: CONTENT_CLASS) do
             render_alert
@@ -169,7 +170,8 @@ class Views::Owner::Appointments::Race < Views::Base
 
   def render_bar
     div(class: BAR_CLASS) do
-      button(type: "submit", disabled: @nearest.nil?, class: BUTTON_CLASS, data: { confirm_bar: true, slot_selector_target: "submit" }) do
+      button(type: "submit", disabled: @nearest.nil?, class: BUTTON_CLASS,
+        data: { confirm_bar: true, slot_selector_target: "submit", submit_lock_target: "button" }) do
         @nearest ? "#{MARK_LABEL} #{@nearest.strftime("%H:%M")}" : MARK_LABEL
       end
       a(href: new_owner_appointment_path(service_id: @service.id), class: ANOTHER_DAY_LINK_CLASS, data: { another_day: true }) { ANOTHER_DAY_LABEL } unless @nearest

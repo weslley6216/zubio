@@ -121,7 +121,10 @@ class Views::Client::Bookings::New < Views::Base
   end
 
   def render_published
-    form_with(url: client_service_booking_path(@service), method: :post, class: "contents", data: { turbo: false, controller: "slot-selector" }) do
+    form_with(url: client_service_booking_path(@service), method: :post, class: "contents", data: {
+      turbo: false, controller: "slot-selector submit-lock", submit_lock_label_value: "Confirmando…",
+      action: "submit->submit-lock#lock pageshow@window->submit-lock#unlock"
+    }) do
       main(class: MAIN_CLASS) do
         render_service_step
         render_schedule_steps
@@ -219,7 +222,8 @@ class Views::Client::Bookings::New < Views::Base
         span(class: SERVICE_NAME_CLASS) { @service.name }
         span(class: SERVICE_META_CLASS, data: { summary: true }) { render_summary }
       end
-      button(type: "submit", disabled: @selected_slot.nil?, class: CONFIRM_BUTTON_CLASS, data: { confirm_bar: true, slot_selector_target: "submit" }) { confirm_label }
+      button(type: "submit", disabled: @selected_slot.nil?, class: CONFIRM_BUTTON_CLASS,
+        data: { confirm_bar: true, slot_selector_target: "submit", submit_lock_target: "button" }) { confirm_label }
     end
   end
 
