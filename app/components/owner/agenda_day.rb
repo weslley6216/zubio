@@ -48,7 +48,7 @@ class Components::Owner::AgendaDay < Components::Base
   end
 
   def render_rows_skeleton
-    div(aria_hidden: "true", data: { skeleton: true }, class: "absolute inset-0 grid gap-2.5") do
+    div(aria_hidden: "true", data: { skeleton: true }, class: "absolute inset-0 grid content-start gap-2.5 overflow-hidden") do
       SKELETON_ROWS.times { div(class: SKELETON_ROW_CLASS) }
     end
   end

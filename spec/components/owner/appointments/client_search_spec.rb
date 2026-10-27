@@ -12,4 +12,12 @@ RSpec.describe Components::Owner::Appointments::ClientSearch, type: :component d
     expect(fade).not_to be_nil
     expect(fade.text).to include("Camila Nunes")
   end
+
+  it "renders nothing inside the frame before the owner types" do
+    html = render_phlex(described_class.new(matches: [], query: ""))
+    fragment = Nokogiri::HTML5.fragment(html)
+
+    expect(fragment.at_css("[data-busy-fade]")).to be_nil
+    expect(fragment.at_css("turbo-frame##{described_class::FRAME_ID}").children).to be_empty
+  end
 end

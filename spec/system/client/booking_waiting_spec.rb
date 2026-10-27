@@ -51,6 +51,28 @@ RSpec.describe "Client booking submit lock", type: :system, js: true do
     expect(state["label"]).to eq("Confirmando…")
   end
 
+  it "refuses a second submit after another slot re-enables the locked button" do
+    client = create(:client, tenant: tenant)
+    sign_in_client(client)
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: day.iso8601)}"
+    find("[data-slot]", match: :first).click
+
+    result = page.evaluate_script(<<~JS)
+      (function() {
+        const form = document.querySelector("form")
+        const button = document.querySelector("[data-confirm-bar]")
+        button.click()
+        document.querySelectorAll("[data-slot]")[1].click()
+        let prevented = null
+        form.addEventListener("submit", (event) => { prevented = event.defaultPrevented }, { once: true })
+        form.requestSubmit()
+        return JSON.stringify({ prevented: prevented, disabled: button.disabled, label: button.textContent })
+      })()
+    JS
+
+    expect(JSON.parse(result)).to eq("prevented" => true, "disabled" => true, "label" => "Confirmando…")
+  end
+
   it "does not restore on a normal load" do
     visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: day.iso8601)}"
 
@@ -85,8 +107,114 @@ RSpec.describe "Client booking time grid skeleton", type: :system, js: true do
 
     page.execute_script("document.getElementById('booking-grid').setAttribute('busy', '')")
 
+    expect(computed("#booking-grid [data-frame-content]", "visibility")).to eq("visible")
     expect(computed("#booking-grid [data-skeleton]", "transitionDelay")).to eq("0.15s")
-    expect(computed("#booking-grid [data-frame-content]", "transitionDelay")).to eq("0.15s")
+    expect(computed("#booking-grid [data-frame-content]", "transitionDelay")).to eq("0.15s, 0.15s")
+  end
+
+  it "keeps the hidden slots out of keyboard reach while busy" do
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: day.iso8601)}"
+    page.execute_script("document.getElementById('booking-grid').setAttribute('busy', '')")
+    find("#booking-grid [data-skeleton]", visible: :visible)
+
+    focused = page.evaluate_script(<<~JS)
+      (function() {
+        const slot = document.querySelector("#booking-grid [data-slot]")
+        slot.focus()
+        return document.activeElement === slot
+      })()
+    JS
+
+    expect(focused).to be(false)
+  end
+
+  it "keeps the skeleton until the new grid renders, after busy is already gone" do
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: day.iso8601)}"
+
+    page.execute_script(<<~JS)
+      document.dispatchEvent(new CustomEvent("turbo:before-fetch-request", { detail: { fetchOptions: { headers: { "Turbo-Frame": "booking-grid" } } } }))
+    JS
+
+    expect(page).to have_css("turbo-frame#booking-grid[data-loading]:not([busy])")
+    expect(page).to have_css("#booking-grid [data-skeleton]", visible: :visible)
+    expect(page).to have_no_css("#booking-grid [data-slot]", visible: :visible)
+  end
+
+  it "ignores a link prefetch, which never renders" do
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: day.iso8601)}"
+
+    page.execute_script(<<~JS)
+      document.dispatchEvent(new CustomEvent("turbo:before-fetch-request", { detail: { fetchOptions: { headers: { "X-Sec-Purpose": "prefetch", "Turbo-Frame": "booking-grid" } } } }))
+    JS
+
+    expect(page).to have_no_css("turbo-frame#booking-grid[data-loading]")
+    expect(page).to have_css("#booking-grid [data-slot]", visible: :visible)
+  end
+
+  it "drops the loading mark once the new grid renders" do
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: day.iso8601)}"
+    page.execute_script(<<~JS)
+      document.dispatchEvent(new CustomEvent("turbo:before-fetch-request", { detail: { fetchOptions: { headers: { "Turbo-Frame": "booking-grid" } } } }))
+    JS
+    find("turbo-frame#booking-grid[data-loading]", visible: :all)
+
+    page.execute_script("document.getElementById('booking-grid').dispatchEvent(new CustomEvent('turbo:frame-render', { bubbles: true }))")
+
+    expect(page).to have_no_css("turbo-frame#booking-grid[data-loading]")
+    expect(page).to have_css("#booking-grid [data-slot]", visible: :visible)
+  end
+
+  it "drops the loading mark when the grid request fails" do
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: day.iso8601)}"
+    page.execute_script(<<~JS)
+      document.dispatchEvent(new CustomEvent("turbo:before-fetch-request", { detail: { fetchOptions: { headers: { "Turbo-Frame": "booking-grid" } } } }))
+    JS
+    find("turbo-frame#booking-grid[data-loading]", visible: :all)
+
+    page.execute_script(<<~JS)
+      document.dispatchEvent(new CustomEvent("turbo:fetch-request-error", { detail: { request: { headers: { "Turbo-Frame": "booking-grid" } } } }))
+    JS
+
+    expect(page).to have_no_css("turbo-frame#booking-grid[data-loading]")
+  end
+
+  it "keeps the skeleton pieces at slot height on a full day" do
+    full_day = day + 1
+    create(:working_hour, tenant: tenant, professional: professional, weekday: full_day.wday, opens_at: "09:00", closes_at: "18:00")
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: full_day.iso8601)}"
+
+    page.execute_script("document.getElementById('booking-grid').setAttribute('busy', '')")
+
+    expect(page).to have_css("#booking-grid [data-skeleton]", visible: :visible)
+    expect(computed("#booking-grid [data-skeleton] > *", "height")).to eq("46px")
+  end
+
+  it "keeps the skeleton inside the old content on a day without hours" do
+    closed_day = day + 2
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: closed_day.iso8601)}"
+    page.execute_script("document.getElementById('booking-grid').setAttribute('busy', '')")
+    find("#booking-grid [data-skeleton]", visible: :visible)
+
+    below_hits_skeleton = page.evaluate_script(<<~JS)
+      (function() {
+        const box = document.querySelector("#booking-grid [data-frame-content]").parentElement.getBoundingClientRect()
+        const piece = document.querySelector("#booking-grid [data-skeleton]").lastElementChild.getBoundingClientRect()
+        const hit = document.elementFromPoint(piece.left + piece.width / 2, box.bottom + 12)
+        return !!(hit && hit.closest("[data-skeleton]"))
+      })()
+    JS
+
+    expect(below_hits_skeleton).to be(false)
+  end
+
+  it "keeps the grid hint spaced below the slots" do
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: day.iso8601)}"
+
+    gap = page.evaluate_script(<<~JS)
+      document.querySelector("[data-grid-hint]").getBoundingClientRect().top - document.querySelector("[data-slots]").getBoundingClientRect().bottom
+    JS
+
+    expect(gap).to eq(10)
   end
 
   it "keeps the skeleton still under reduced motion" do

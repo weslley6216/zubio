@@ -25,7 +25,7 @@ RSpec.describe "Owner onboarding submit lock", type: :system, js: true do
     expect(state["label"]).to eq("Criando sua página…")
   end
 
-  it "does not lock when advancing between questions" do
+  it "does not lock when a middle question is submitted" do
     owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
     sign_in_owner(owner)
     click_on "Começar"
@@ -34,6 +34,13 @@ RSpec.describe "Owner onboarding submit lock", type: :system, js: true do
 
     expect(state["disabled"]).to be(false)
     expect(state["label"]).to eq("Ver minha página")
+  end
+
+  it "still advances after a middle question is submitted" do
+    owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
+    sign_in_owner(owner)
+    click_on "Começar"
+    page.execute_script('document.querySelector("form").requestSubmit()')
 
     click_on "Continuar"
 

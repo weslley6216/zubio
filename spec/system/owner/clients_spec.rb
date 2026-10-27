@@ -49,14 +49,24 @@ RSpec.describe "Owner clients screen", type: :system, js: true do
     expect(page).to have_no_text("Bruna Salles")
   end
 
-  it "fades the list while the frame reloads and restores it when idle" do
+  it "shows the list at full strength while the frame is idle" do
+    tenant = create(:tenant, subdomain: "mary-sombracelhas", name: "Mary Sombracelhas")
+    owner = create(:user, :with_professional, tenant: tenant)
+    create(:client, tenant: tenant, name: "Camila Nunes")
+    sign_in_owner(owner)
+
+    visit "http://#{tenant.subdomain}.zubio.com.br#{owner_clients_path}"
+
+    expect(computed("[data-busy-fade]", "opacity")).to eq("1")
+    expect(computed("[data-busy-fade]", "pointerEvents")).to eq("auto")
+  end
+
+  it "fades the list while the frame reloads" do
     tenant = create(:tenant, subdomain: "mary-sombracelhas", name: "Mary Sombracelhas")
     owner = create(:user, :with_professional, tenant: tenant)
     create(:client, tenant: tenant, name: "Camila Nunes")
     sign_in_owner(owner)
     visit "http://#{tenant.subdomain}.zubio.com.br#{owner_clients_path}"
-
-    expect(computed("[data-busy-fade]", "opacity")).to eq("1")
 
     page.execute_script("document.getElementById('clients').setAttribute('busy', '')")
 
