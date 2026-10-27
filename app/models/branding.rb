@@ -17,7 +17,7 @@ class Branding < ApplicationRecord
   ICON_SIZES = [ [ 192, "any" ], [ 512, "any" ], [ 512, "maskable" ] ].freeze
   INVITE_ICON_SIZE = 192
   SOCIAL_IMAGE_SIZE = 512
-  HEADER_LOGO_LIMIT = [ 96, 96 ].freeze
+  EMBLEM_LOGO_SIZE = 128
   LOGO_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
   LOGO_MAX_BYTES = 5.megabytes
   LOGO_MAX_PIXELS = 4096
@@ -94,7 +94,7 @@ class Branding < ApplicationRecord
   def header_logo
     return unless logo.attached? && logo.blob.persisted?
 
-    logo.variant(resize_to_limit: HEADER_LOGO_LIMIT, format: :png)
+    square_logo_variant(EMBLEM_LOGO_SIZE)
   end
 
   def invite_icon

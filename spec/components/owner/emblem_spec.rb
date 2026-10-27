@@ -80,4 +80,14 @@ RSpec.describe Components::Owner::Emblem, type: :component do
 
     expect(html).to include("<img")
   end
+
+  it "fills the emblem box with the logo cover-cropped when there is one" do
+    logo_branding = create(:branding, :with_logo, tenant: tenant)
+
+    html = render_phlex(described_class.new(tenant: tenant, branding: logo_branding, size: :showcase))
+
+    expect(html).to include("object-cover")
+    expect(html).to include("data-brand-logo")
+    expect(html).not_to include("object-contain")
+  end
 end

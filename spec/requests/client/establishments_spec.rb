@@ -445,4 +445,15 @@ RSpec.describe "Public establishment showcase", type: :request do
 
     expect(Nokogiri::HTML5(response.body).at_css("[data-my-appointments-badge]").text).to eq("2")
   end
+
+  it "shows a logo-less host its own initial and serves no other tenant's emblem image" do
+    create(:branding, :with_wide_logo, tenant: create(:tenant, subdomain: "mary-sombracelhas", name: "Mary Sombracelhas"))
+    create(:service, tenant: tenant, name: "Corte feminino")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    expect(response.body).to include("data-brand-initial")
+    expect(response.body).not_to include("<img")
+  end
 end

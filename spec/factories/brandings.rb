@@ -19,5 +19,15 @@ FactoryBot.define do
         )
       end
     end
+
+    trait :with_wide_logo do
+      after(:build) do |branding|
+        branding.logo.attach(
+          io: File.open(Rails.root.join("spec/fixtures/files/logo-wide.png")),
+          filename: "logo-wide.png",
+          content_type: "image/png"
+        )
+      end
+    end
   end
 end
