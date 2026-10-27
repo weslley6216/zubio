@@ -1,20 +1,20 @@
 class Views::Owner::Services::Index < Views::Base
-  TITLE = "Serviços".freeze
-  SUBTITLE = "O que seu estabelecimento oferece.".freeze
+  TITLE = "O que eu faço".freeze
+  SUBTITLE = "Ativos aparecem na sua página. Desativados ficam guardados com o histórico.".freeze
   DISABLED_LABEL = "Desativado".freeze
   HIDDEN_PRICE_LABEL = "Preço oculto".freeze
   EMPTY_TITLE = "Nenhum serviço cadastrado".freeze
   EMPTY_BODY = "Cadastre o primeiro serviço que você oferece para montar seu catálogo.".freeze
   NEW_LABEL = "Novo".freeze
+  NEW_SUFFIX = " serviço".freeze
   NEW_ACCESSIBLE_LABEL = "Novo serviço".freeze
   FIRST_LABEL = "Cadastrar primeiro serviço".freeze
 
   PAGE_CLASS = "#{Components::Owner::Panel::CONTENT} grid gap-6 py-10".freeze
-  HEADING_BLOCK_CLASS = "grid max-w-2xl gap-2".freeze
-  TITLE_ROW_CLASS = "flex items-center gap-3".freeze
-  HEADING_CLASS = "grow text-3xl font-extrabold tracking-tight text-ink".freeze
-  SUBTITLE_CLASS = "text-lg text-ink-muted".freeze
-  ACTION_CLASS = "inline-flex min-h-11 flex-none items-center justify-self-start gap-1.5 rounded-[10px] bg-brand-accent px-3.5 text-sm leading-[normal] font-bold text-on-brand-accent hover:opacity-90".freeze
+  HEADING_BLOCK_CLASS = "grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 lg:items-end lg:gap-x-4".freeze
+  HEADING_CLASS = "text-[22px] font-extrabold tracking-[-0.02em] text-ink lg:text-[28px]".freeze
+  SUBTITLE_CLASS = "hidden text-sm text-ink-muted lg:block".freeze
+  ACTION_CLASS = "inline-flex min-h-11 flex-none items-center justify-self-start gap-1.5 rounded-[10px] bg-brand-accent px-3.5 text-sm leading-[normal] font-bold text-on-brand-accent hover:opacity-90 lg:gap-2 lg:px-[18px] lg:row-span-2 lg:self-end".freeze
   PLUS_ICON_CLASS = "h-[18px] w-[18px] flex-none".freeze
   LIST_CLASS = "grid max-w-2xl gap-2.5".freeze
   PRICE_CLASS = "flex-none rounded-full bg-brand-soft px-3 py-[7px] text-[13px] leading-[normal] font-extrabold tabular-nums text-brand-soft-ink".freeze
@@ -47,10 +47,8 @@ class Views::Owner::Services::Index < Views::Base
 
   def render_heading
     div(class: HEADING_BLOCK_CLASS) do
-      div(class: TITLE_ROW_CLASS) do
-        h1(class: HEADING_CLASS) { TITLE }
-        render_new_action if @services.any?
-      end
+      h1(class: HEADING_CLASS) { TITLE }
+      render_new_action if @services.any?
       p(class: SUBTITLE_CLASS) { SUBTITLE }
     end
   end
@@ -67,6 +65,7 @@ class Views::Owner::Services::Index < Views::Base
     a(href: new_owner_service_path, class: ACTION_CLASS, aria_label: NEW_ACCESSIBLE_LABEL) do
       render_plus_icon
       plain NEW_LABEL
+      span(class: "hidden lg:inline") { NEW_SUFFIX }
     end
   end
 
