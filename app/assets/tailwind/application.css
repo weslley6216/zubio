@@ -185,6 +185,11 @@ turbo-frame[busy] [data-skeleton] {
   transition: opacity 0s linear var(--skeleton-delay);
 }
 
+turbo-frame[busy] [data-busy-fade] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 :root[data-theme="light"] {
   color-scheme: light;
 }

@@ -16,13 +16,15 @@ class Components::Owner::Clients::Roster < Components::Base
 
   def view_template
     turbo_frame_tag(FRAME_ID) do
-      if @total.zero?
-        render_empty_state
-      elsif @entries.empty?
-        render_no_results
-      else
-        render Components::Owner::Clients::List.new(entries: @entries)
-        render Components::Owner::Clients::Table.new(entries: @entries)
+      div(data: { busy_fade: true }) do
+        if @total.zero?
+          render_empty_state
+        elsif @entries.empty?
+          render_no_results
+        else
+          render Components::Owner::Clients::List.new(entries: @entries)
+          render Components::Owner::Clients::Table.new(entries: @entries)
+        end
       end
     end
   end

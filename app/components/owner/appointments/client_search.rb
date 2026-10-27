@@ -22,7 +22,7 @@ class Components::Owner::Appointments::ClientSearch < Components::Base
 
   def view_template
     turbo_frame_tag(FRAME_ID, class: "contents", data: { client_search_target: "results" }) do
-      render_results if @query.present?
+      div(data: { busy_fade: true }) { render_results if @query.present? }
     end
   end
 
