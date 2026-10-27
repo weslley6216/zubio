@@ -29,6 +29,13 @@ RSpec.describe "Client Google OAuth", type: :request do
       expect(response.body).to include(%(action="/auth/google_oauth2"), %(data-turbo="false"), %(name="state"), %(name="authenticity_token"))
     end
 
+    it "signs the browser nonce into the state" do
+      get google_entry_path(tenant: "mary", service: service.id, nonce: "browser-nonce-4k2")
+
+      state = response.body[/name="state" value="([^"]+)"/, 1]
+      expect(Rails.application.message_verifier(:client_oauth_state).verify(CGI.unescapeHTML(state))).to include("nonce" => "browser-nonce-4k2")
+    end
+
     it "redirects to the platform host when reached on a tenant subdomain" do
       host! "mary.zubio.com.br"
 
@@ -46,6 +53,17 @@ RSpec.describe "Client Google OAuth", type: :request do
 
       expect(response.location).to start_with(client_handoff_url(host: tenant.canonical_host, token: linked.handoff_token).split("?").first)
       expect(response.location).to include("service=#{service.id}")
+    end
+
+    it "returns the browser nonce to the handoff of a linked account" do
+      ActsAsTenant.with_tenant(tenant) { Client.link_google!(uid: "g-1", email: "ana@gmail.com", name: "Ana", phone: "11988771234") }
+      state = Rails.application.message_verifier(:client_oauth_state).generate(
+        { "tenant" => tenant.subdomain, "service" => service.id, "nonce" => "browser-nonce-4k2" }, expires_in: 10.minutes
+      )
+
+      get "/auth/google_oauth2/callback", params: { state: state }
+
+      expect(Rack::Utils.parse_query(URI(response.location).query)["nonce"]).to eq("browser-nonce-4k2")
     end
 
     it "sends a brand-new account to the WhatsApp step" do

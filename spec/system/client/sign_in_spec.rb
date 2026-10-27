@@ -60,6 +60,20 @@ RSpec.describe "Client Google sign-in", type: :system, js: true do
     expect(page).to fit_the_phone_width
   end
 
+  it "signs a returning Google account straight back in and reaches day and time" do
+    OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
+      provider: "google_oauth2", uid: "g-1", info: { email: "ana@gmail.com", name: "Ana Paula Ribeiro" }
+    )
+    ActsAsTenant.with_tenant(tenant) { Client.link_google!(uid: "g-1", email: "ana@gmail.com", name: "Ana Paula Ribeiro", phone: "11988771234") }
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_session_path(service_id: service.id)}"
+
+    click_on "Continuar com o Google"
+
+    expect(page).to have_css("[data-day-selector]")
+    expect(page).to have_no_content("Qual é o seu WhatsApp?")
+    expect(page).to fit_the_phone_width
+  end
+
   %w[light dark].each do |scheme|
     it "keeps the sign-in gate readable in #{scheme}" do
       emulate_color_scheme(scheme)

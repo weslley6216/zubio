@@ -47,6 +47,39 @@ RSpec.describe "Client handoff", type: :request do
     expect(response).to redirect_to(establishment_path)
   end
 
+  it "refuses a token whose navigation started on another site" do
+    get client_handoff_path(token: client.handoff_token), headers: { "Sec-Fetch-Site" => "cross-site" }
+
+    expect(response).to redirect_to(establishment_path)
+  end
+
+  it "opens the session for a navigation back from Google carrying the nonce this browser was given" do
+    get client_google_sign_in_path(service: service.id)
+    nonce = Rack::Utils.parse_query(URI(response.location).query)["nonce"]
+
+    get client_handoff_path(token: client.handoff_token, service: service.id, nonce: nonce), headers: { "Sec-Fetch-Site" => "cross-site" }
+
+    expect(response).to redirect_to(new_client_service_booking_path(service.id))
+  end
+
+  it "refuses a navigation from another site carrying a nonce this browser was never given" do
+    get client_google_sign_in_path(service: service.id)
+
+    get client_handoff_path(token: client.handoff_token, nonce: "attacker-nonce"), headers: { "Sec-Fetch-Site" => "cross-site" }
+
+    expect(response).to redirect_to(establishment_path)
+  end
+
+  it "accepts the nonce only once" do
+    get client_google_sign_in_path(service: service.id)
+    nonce = Rack::Utils.parse_query(URI(response.location).query)["nonce"]
+    get client_handoff_path(token: create(:client, tenant: tenant).handoff_token, nonce: nonce), headers: { "Sec-Fetch-Site" => "cross-site" }
+
+    get client_handoff_path(token: client.handoff_token, nonce: nonce), headers: { "Sec-Fetch-Site" => "cross-site" }
+
+    expect(response).to redirect_to(establishment_path)
+  end
+
   it "lands on the appointments list when coming from a receipt" do
     get client_handoff_path(token: client.handoff_token, appointments: "1")
 

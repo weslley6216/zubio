@@ -5,7 +5,7 @@ class Client::Auth::OmniauthController < ApplicationController
   def new
     state = Rails.application.message_verifier(:client_oauth_state).generate(
       { "tenant" => params[:tenant], "service" => params[:service], "appointment_token" => params[:appointment_token],
-        "appointments" => params[:appointments] }, expires_in: 10.minutes
+        "appointments" => params[:appointments], "nonce" => params[:nonce] }, expires_in: 10.minutes
     )
     render Views::Client::Auth::Redirect.new(state: state)
   end
@@ -21,7 +21,7 @@ class Client::Auth::OmniauthController < ApplicationController
 
     if client
       redirect_to client_handoff_url(
-        host: tenant.canonical_host, token: client.handoff_token, service: data["service"],
+        host: tenant.canonical_host, token: client.handoff_token, service: data["service"], nonce: data["nonce"],
         appointments: ("1" if data["appointment_token"].present? || data["appointments"].present?)
       ), allow_other_host: true
     else
