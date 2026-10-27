@@ -63,6 +63,18 @@ RSpec.describe "Content Security Policy", type: :request do
     end
   end
 
+  describe "the form-action directive" do
+    it "lets the google entry form follow its redirect to the google sign-in" do
+      host! Tenant::PLATFORM_HOST
+
+      get google_entry_path(tenant: tenant.subdomain)
+
+      form_action = response.headers["Content-Security-Policy"][/form-action ([^;]*)/, 1].split
+      expect(form_action).to include("https://accounts.google.com")
+      expect(form_action).to include("'self'")
+    end
+  end
+
   describe "the platform root, where no tenant is resolved" do
     before { host! Tenant::PLATFORM_HOST }
 
