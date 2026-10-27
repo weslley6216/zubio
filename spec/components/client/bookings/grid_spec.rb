@@ -23,10 +23,10 @@ RSpec.describe Components::Client::Bookings::Grid, type: :component do
 
     skeleton = fragment.at_css("[data-skeleton][aria-hidden='true']")
     expect(skeleton).not_to be_nil
+    expect(skeleton["class"]).to include("grid-rows-[repeat(auto-fill,46px)]")
     pieces = skeleton.css("> *")
     expect(pieces.size).to eq(8)
     pieces.each do |piece|
-      expect(piece["class"]).to include("min-h-[46px]")
       expect(piece["class"]).to include("rounded-[10px]")
       expect(piece["class"]).to include("bg-surface-3")
       expect(piece["class"]).to include("motion-safe:animate-pulse")

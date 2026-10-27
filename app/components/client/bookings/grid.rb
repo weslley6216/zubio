@@ -15,8 +15,8 @@ class Components::Client::Bookings::Grid < Components::Base
   SLOT_FREE_CLASS = "border border-line bg-surface aria-pressed:border-transparent aria-pressed:bg-brand-600 aria-pressed:text-on-brand aria-pressed:shadow-[0_2px_6px_color-mix(in_srgb,var(--brand-600)_20%,transparent)]".freeze
   SLOT_TAKEN_CLASS = "border border-dashed border-line-strong bg-surface-3 text-ink-subtle line-through".freeze
   REASON_CLASS = "rounded-xl border border-line bg-surface p-6 text-[14px] text-ink-muted".freeze
-  SKELETON_CLASS = "#{GRID_CLASS} absolute inset-0 content-start overflow-hidden".freeze
-  SKELETON_SLOT_CLASS = "min-h-[46px] rounded-[10px] bg-surface-3 motion-safe:animate-pulse".freeze
+  SKELETON_CLASS = "#{GRID_CLASS} absolute inset-0 grid-rows-[repeat(auto-fill,46px)] auto-rows-[0px] overflow-hidden".freeze
+  SKELETON_SLOT_CLASS = "rounded-[10px] bg-surface-3 motion-safe:animate-pulse".freeze
   SKELETON_PIECES = 8
 
   def initialize(service:, slots:, taken_slots:, reason:, selected_slot:)
