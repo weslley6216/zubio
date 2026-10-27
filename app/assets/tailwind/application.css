@@ -157,6 +157,11 @@
   outline-offset: 2px;
 }
 
+.turbo-progress-bar {
+  background-color: var(--brand-600);
+  height: 2px;
+}
+
 :root[data-theme="light"] {
   color-scheme: light;
 }
