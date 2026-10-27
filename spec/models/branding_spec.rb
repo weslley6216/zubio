@@ -490,10 +490,10 @@ RSpec.describe Branding, type: :model do
       expect(branding.header_logo).to be_nil
     end
 
-    it "returns a variant limited to the header size when a logo is attached" do
+    it "fills a 128 square png from the logo for the emblem" do
       branding = create(:branding, :with_logo)
 
-      expect(branding.header_logo.variation.transformations[:resize_to_limit]).to eq(Branding::HEADER_LOGO_LIMIT)
+      expect(branding.header_logo.variation.transformations[:resize_to_fill]).to eq([ Branding::EMBLEM_LOGO_SIZE, Branding::EMBLEM_LOGO_SIZE ])
     end
 
     it "is nil when a rejected upload left an attachment whose blob was never persisted" do
