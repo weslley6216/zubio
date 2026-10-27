@@ -126,7 +126,7 @@ RSpec.describe "Owner services catalog", type: :request do
       document = Nokogiri::HTML5(response.body)
       expect(document.at_css("main h1").text).to eq("O que eu faço")
       expect(response.body).to include("Ativos aparecem na sua página.")
-      expect(document.at_css("main h1 + a span").text).to eq(" serviço")
+      expect(document.at_css("main h1 + a span > span").text).to eq(" serviço")
     end
 
     it "offers the registration beside the title once the catalog has a service" do

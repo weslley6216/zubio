@@ -15,19 +15,20 @@ class Views::Owner::Services::Index < Views::Base
   COLUMN_PRICE = "Preço".freeze
   COLUMN_SITUATION = "Situação".freeze
 
-  PAGE_CLASS = "#{Components::Owner::Panel::CONTENT} grid gap-6 py-10".freeze
-  HEADING_BLOCK_CLASS = "grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 lg:items-end lg:gap-x-4".freeze
+  PAGE_CLASS = "#{Components::Owner::Panel::CONTENT} grid gap-6 py-10 lg:py-8".freeze
+  BACK_LINK_CLASS = "lg:hidden".freeze
+  HEADING_BLOCK_CLASS = "grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 leading-[normal] lg:items-end lg:gap-x-4".freeze
   HEADING_CLASS = "text-[22px] font-extrabold tracking-[-0.02em] text-ink lg:text-[28px]".freeze
-  SUBTITLE_CLASS = "hidden text-sm text-ink-muted lg:block".freeze
+  SUBTITLE_CLASS = "hidden text-[14px] text-ink-muted lg:block".freeze
   ACTION_CLASS = "inline-flex min-h-11 flex-none items-center justify-self-start gap-1.5 rounded-[10px] bg-brand-accent px-3.5 text-sm leading-[normal] font-bold text-on-brand-accent hover:opacity-90 lg:gap-2 lg:px-[18px] lg:row-span-2 lg:self-end".freeze
   PLUS_ICON_CLASS = "h-[18px] w-[18px] flex-none".freeze
-  LIST_CLASS = "grid max-w-2xl gap-2.5".freeze
+  LIST_CLASS = "grid max-w-2xl gap-2.5 lg:hidden".freeze
   PRICE_CLASS = "flex-none rounded-full bg-brand-soft px-3 py-[7px] text-[13px] leading-[normal] font-extrabold tabular-nums text-brand-soft-ink".freeze
   DISABLED_PRICE_CLASS = "flex-none rounded-full bg-surface-3 px-3 py-[7px] text-[13px] leading-[normal] font-extrabold tabular-nums text-ink-subtle".freeze
   EMPTY_CLASS = "grid max-w-2xl gap-2 rounded-xl border border-line bg-surface p-6".freeze
   EMPTY_TITLE_CLASS = "text-lg font-bold text-ink".freeze
   EMPTY_BODY_CLASS = "text-sm text-ink-muted".freeze
-  TABLE_CLASS = "hidden overflow-hidden rounded-2xl border border-line bg-surface lg:block".freeze
+  TABLE_CLASS = "hidden overflow-hidden rounded-2xl border border-line bg-surface leading-[normal] lg:block".freeze
   TABLE_GRID = "grid grid-cols-[minmax(0,1fr)_120px_140px_130px_96px] gap-4 px-5".freeze
   TABLE_HEADER_CLASS = "#{TABLE_GRID} border-b border-line py-3".freeze
   TABLE_ROW_CLASS = "#{TABLE_GRID} items-center border-b border-line py-4".freeze
@@ -37,15 +38,15 @@ class Views::Owner::Services::Index < Views::Base
   TABLE_NAME_CLASS = "text-[15px] font-bold text-ink".freeze
   TABLE_NAME_DISABLED_CLASS = "text-[15px] font-bold text-ink-muted".freeze
   TABLE_DESCRIPTION_CLASS = "text-[13px] text-ink-muted".freeze
-  TABLE_DURATION_CLASS = "flex items-center gap-1.5 text-sm font-semibold tabular-nums text-ink-muted".freeze
-  TABLE_DURATION_DISABLED_CLASS = "flex items-center gap-1.5 text-sm font-semibold tabular-nums text-ink-subtle".freeze
+  TABLE_DURATION_CLASS = "flex items-center gap-1.5 text-[14px] font-semibold tabular-nums text-ink-muted".freeze
+  TABLE_DURATION_DISABLED_CLASS = "flex items-center gap-1.5 text-[14px] font-semibold tabular-nums text-ink-subtle".freeze
   TABLE_CLOCK_CLASS = "h-3.5 w-3.5 flex-none text-ink-subtle".freeze
   TABLE_PRICE_STACK_CLASS = "flex flex-col gap-0.5".freeze
   TABLE_PRICE_CLASS = "text-[15px] font-extrabold tabular-nums text-ink".freeze
   TABLE_PRICE_DISABLED_CLASS = "text-[15px] font-extrabold tabular-nums text-ink-subtle".freeze
   TABLE_UNPRICED_CLASS = "text-[13px] font-bold text-ink-muted".freeze
   TABLE_HIDDEN_HINT_CLASS = "text-[11px] font-semibold text-ink-subtle".freeze
-  STATUS_PILL_CLASS = "inline-flex rounded-full px-2.5 py-1 text-[11px] font-extrabold whitespace-nowrap".freeze
+  STATUS_PILL_CLASS = "rounded-full px-2.5 py-1 text-[11px] font-extrabold whitespace-nowrap".freeze
   TABLE_ACTIVE_PILL_CLASS = "#{STATUS_PILL_CLASS} bg-brand-soft text-brand-soft-ink".freeze
   TABLE_DISABLED_PILL_CLASS = "#{STATUS_PILL_CLASS} bg-surface-3 text-ink-muted".freeze
   TABLE_ACTION_CELL_CLASS = "flex justify-end".freeze
@@ -65,7 +66,7 @@ class Views::Owner::Services::Index < Views::Base
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
       render Components::FlashBanner.new(container_class: "#{Components::Owner::Panel::CONTENT} grid gap-2 pt-4")
       main(class: PAGE_CLASS) do
-        render Components::Owner::SettingsBackLink.new
+        div(class: BACK_LINK_CLASS) { render Components::Owner::SettingsBackLink.new }
         render_heading
         @services.empty? ? render_empty_state : render_catalog
       end
@@ -93,8 +94,10 @@ class Views::Owner::Services::Index < Views::Base
   def render_new_action
     a(href: new_owner_service_path, class: ACTION_CLASS, aria_label: NEW_ACCESSIBLE_LABEL) do
       render_plus_icon
-      plain NEW_LABEL
-      span(class: "hidden lg:inline") { NEW_SUFFIX }
+      span do
+        plain NEW_LABEL
+        span(class: "hidden lg:inline") { NEW_SUFFIX }
+      end
     end
   end
 
@@ -166,7 +169,9 @@ class Views::Owner::Services::Index < Views::Base
         span(class: TABLE_HIDDEN_HINT_CLASS) { HIDDEN_PRICE_LABEL } if service.price_hidden?
       end
     else
-      span(class: TABLE_UNPRICED_CLASS, data: { table_price: true }) { price(service) }
+      span(class: TABLE_PRICE_CLASS, data: { table_price: true }) do
+        span(class: TABLE_UNPRICED_CLASS) { price(service) }
+      end
     end
   end
 
