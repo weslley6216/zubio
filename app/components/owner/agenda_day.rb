@@ -9,6 +9,8 @@ class Components::Owner::AgendaDay < Components::Base
   NEW_APPOINTMENT_LABEL = "Novo agendamento".freeze
   NEW_APPOINTMENT_CLASS = "flex min-h-[40px] flex-none items-center gap-1.5 rounded-[10px] bg-brand-600 px-3.5 text-[13px] font-bold text-on-brand".freeze
   NEW_APPOINTMENT_ICON_CLASS = "h-4 w-4 flex-none".freeze
+  SKELETON_ROW_CLASS = "min-h-[72px] rounded-xl bg-surface-3 motion-safe:animate-pulse".freeze
+  SKELETON_ROWS = 3
 
   def initialize(tenant:, branding:, day:, appointments:, out_of_hours: Set.new, selected: nil, selected_visit_number: nil)
     @tenant = tenant
@@ -37,8 +39,17 @@ class Components::Owner::AgendaDay < Components::Base
   def render_main
     main(class: "#{Components::Owner::Panel::CONTENT_WIDE} grid content-start gap-3.5 py-5") do
       render_title_row
-      @appointments.any? ? render_list : render_empty_state
+      div(class: "relative") do
+        div(data: { frame_content: true }) { @appointments.any? ? render_list : render_empty_state }
+        render_rows_skeleton
+      end
       render_install_invite
+    end
+  end
+
+  def render_rows_skeleton
+    div(aria_hidden: "true", data: { skeleton: true }, class: "absolute inset-0 grid gap-2.5") do
+      SKELETON_ROWS.times { div(class: SKELETON_ROW_CLASS) }
     end
   end
 

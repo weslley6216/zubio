@@ -11,7 +11,12 @@ class Components::Owner::AppointmentDetailFrame < Components::Base
   def view_template
     turbo_frame_tag(Components::Owner::AppointmentDetail::FRAME_ID,
       data: { active_row_target: "detailFrame", action: "turbo:frame-load->active-row#reconcile" }) do
-      @selected ? render(Components::Owner::AppointmentDetail.new(appointment: @selected, visit_number: @selected_visit_number)) : render_placeholder
+      div(class: "relative") do
+        div(data: { frame_content: true }) do
+          @selected ? render(Components::Owner::AppointmentDetail.new(appointment: @selected, visit_number: @selected_visit_number)) : render_placeholder
+        end
+        render_skeleton
+      end
     end
   end
 
@@ -21,6 +26,14 @@ class Components::Owner::AppointmentDetailFrame < Components::Base
     div(class: "hidden lg:grid lg:place-content-center lg:justify-items-center lg:gap-2 lg:p-8 lg:text-center") do
       render_calendar_icon
       span(class: "text-[13px] text-ink-muted") { SELECT_HINT }
+    end
+  end
+
+  def render_skeleton
+    div(aria_hidden: "true", data: { skeleton: true },
+      class: "absolute inset-0 hidden lg:grid lg:place-content-center lg:justify-items-center lg:gap-2 lg:p-8 lg:text-center") do
+      div(class: "h-7 w-7 rounded bg-surface-3 motion-safe:animate-pulse")
+      div(class: "h-[13px] w-32 rounded bg-surface-3 motion-safe:animate-pulse")
     end
   end
 
