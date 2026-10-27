@@ -76,8 +76,8 @@ class Views::Client::Sessions::New < Views::Base
   end
 
   def google_sign_in_href
-    return google_entry_url(host: Tenant::PLATFORM_HOST, tenant: @tenant.subdomain, service: @service.id) if @service
+    return client_google_sign_in_path(service: @service.id) if @service
 
-    google_entry_url(host: Tenant::PLATFORM_HOST, tenant: @tenant.subdomain, appointments: "1")
+    client_google_sign_in_path(appointments: "1")
   end
 end

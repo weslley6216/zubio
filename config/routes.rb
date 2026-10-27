@@ -54,6 +54,7 @@ Rails.application.routes.draw do
     scope module: :client, as: :client do
       resource :session, only: %i[new destroy]
       resource :handoff, only: :show
+      resource :google_sign_in, only: :show, path: "google"
       resource :account_phone, only: %i[new create]
       resources :services, only: [] do
         resource :booking, only: %i[new create]

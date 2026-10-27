@@ -5,8 +5,7 @@ module NavigationRequest
 
   private
 
-  def navigation?
-    request.headers["Sec-Fetch-Dest"].in?([ nil, "document" ]) &&
-      request.headers["Sec-Fetch-Site"].in?(SAFE_SITES)
-  end
+  def navigation? = document_request? && request.headers["Sec-Fetch-Site"].in?(SAFE_SITES)
+
+  def document_request? = request.headers["Sec-Fetch-Dest"].in?([ nil, "document" ])
 end

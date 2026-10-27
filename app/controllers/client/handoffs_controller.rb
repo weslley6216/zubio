@@ -1,8 +1,9 @@
 class Client::HandoffsController < Client::BaseController
   include NavigationRequest
+  include Client::GoogleNonce
 
   def show
-    return redirect_to(establishment_path) unless navigation?
+    return redirect_to(establishment_path) unless trusted_navigation?
 
     client = Client.find_by_handoff_token(params[:token])
 
@@ -15,6 +16,8 @@ class Client::HandoffsController < Client::BaseController
   end
 
   private
+
+  def trusted_navigation? = navigation? || (document_request? && consume_google_nonce(params[:nonce]))
 
   def destination
     return client_my_appointments_path if params[:appointments].present?

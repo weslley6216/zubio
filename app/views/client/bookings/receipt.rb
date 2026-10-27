@@ -168,7 +168,7 @@ class Views::Client::Bookings::Receipt < Views::Base
   end
 
   def render_google_button
-    render Components::Client::GoogleButton.new(href: google_entry_url(host: Tenant::PLATFORM_HOST, tenant: @tenant.subdomain, appointment_token: @appointment.cancel_token))
+    render Components::Client::GoogleButton.new(href: client_google_sign_in_path(appointment_token: @appointment.cancel_token))
   end
 
   def cancel_path = "/a/#{@appointment.cancel_token}"
