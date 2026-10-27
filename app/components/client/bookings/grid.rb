@@ -9,11 +9,15 @@ class Components::Client::Bookings::Grid < Components::Base
   REASON_MESSAGES = { no_working_day: NO_SERVICE_MESSAGE, day_off: NO_SERVICE_MESSAGE, fully_booked: FULLY_BOOKED_MESSAGE }.freeze
 
   HINT_CLASS = "text-[12px] text-ink-subtle".freeze
+  WRAPPER_CLASS = "relative".freeze
   GRID_CLASS = "grid grid-cols-4 gap-2".freeze
   SLOT_BASE_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] text-[13px] font-bold tabular-nums".freeze
   SLOT_FREE_CLASS = "border border-line bg-surface aria-pressed:border-transparent aria-pressed:bg-brand-600 aria-pressed:text-on-brand aria-pressed:shadow-[0_2px_6px_color-mix(in_srgb,var(--brand-600)_20%,transparent)]".freeze
   SLOT_TAKEN_CLASS = "border border-dashed border-line-strong bg-surface-3 text-ink-subtle line-through".freeze
   REASON_CLASS = "rounded-xl border border-line bg-surface p-6 text-[14px] text-ink-muted".freeze
+  SKELETON_CLASS = "#{GRID_CLASS} absolute inset-0".freeze
+  SKELETON_SLOT_CLASS = "min-h-[46px] rounded-[10px] bg-surface-3 motion-safe:animate-pulse".freeze
+  SKELETON_PIECES = 8
 
   def initialize(service:, slots:, taken_slots:, reason:, selected_slot:)
     @service = service
@@ -25,11 +29,20 @@ class Components::Client::Bookings::Grid < Components::Base
 
   def view_template
     turbo_frame_tag(FRAME_ID, class: "contents") do
-      @reason == :bookable ? render_grid : render_reason
+      div(class: WRAPPER_CLASS) do
+        div(data: { frame_content: true }) { @reason == :bookable ? render_grid : render_reason }
+        render_skeleton
+      end
     end
   end
 
   private
+
+  def render_skeleton
+    div(aria_hidden: "true", data: { skeleton: true }, class: SKELETON_CLASS) do
+      SKELETON_PIECES.times { div(class: SKELETON_SLOT_CLASS) }
+    end
+  end
 
   def render_grid
     div(class: GRID_CLASS, data: { slots: true }) do

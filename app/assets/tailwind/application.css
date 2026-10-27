@@ -11,6 +11,7 @@
 :root {
   --radius: 0.5rem;
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --skeleton-delay: 150ms;
 
   --canvas: #f4f6f8;
   --surface: #ffffff;
@@ -160,6 +161,28 @@
 .turbo-progress-bar {
   background-color: var(--brand-600);
   height: 2px;
+}
+
+[data-skeleton] {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0s linear;
+}
+
+[data-frame-content] {
+  transition: opacity 0s linear;
+}
+
+turbo-frame[busy] [data-frame-content] {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0s linear var(--skeleton-delay);
+}
+
+turbo-frame[busy] [data-skeleton] {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0s linear var(--skeleton-delay);
 }
 
 :root[data-theme="light"] {
