@@ -74,7 +74,7 @@ class Components::Owner::Onboarding::Screen < Components::Base
 
   def render_primary
     if @submit
-      button(type: "submit", class: PRIMARY_CLASS) { @primary }
+      button(type: "submit", class: PRIMARY_CLASS, data: { submit_lock_target: "button" }) { @primary }
     else
       button(type: "button", class: PRIMARY_CLASS, data: primary_data) { @primary }
     end

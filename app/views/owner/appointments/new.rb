@@ -84,9 +84,10 @@ class Views::Owner::Appointments::New < Views::Base
 
   def render_published
     form_with(url: owner_appointments_path, method: :post, class: "contents", data: {
-      turbo: false, controller: "slot-selector service-selector",
+      turbo: false, controller: "slot-selector service-selector submit-lock",
       slot_selector_label_value: MARK_LABEL, slot_selector_include_day_value: "true",
-      slot_selector_day_value: button_day_label(@selected_day)
+      slot_selector_day_value: button_day_label(@selected_day),
+      submit_lock_label_value: "Marcando…", action: SUBMIT_LOCK_ACTIONS
     }) do
       main(class: MAIN_CLASS) do
         render_client_section
@@ -209,7 +210,8 @@ class Views::Owner::Appointments::New < Views::Base
 
   def render_submit_bar
     div(class: BUTTON_BAR_CLASS) do
-      button(type: "submit", disabled: true, class: BUTTON_CLASS, data: { slot_selector_target: "submit" }) { button_day_prefix }
+      button(type: "submit", disabled: true, class: BUTTON_CLASS,
+        data: { slot_selector_target: "submit", submit_lock_target: "button" }) { button_day_prefix }
     end
   end
 

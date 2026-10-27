@@ -16,6 +16,7 @@ class Views::Owner::Onboarding::Document < Views::Base
   CONTINUE_LABEL = "Continuar".freeze
   SKIP_LABEL = "Pular por enquanto".freeze
   SUBMIT_LABEL = "Ver minha página".freeze
+  SUBMIT_LOCK_LABEL = "Criando sua página…".freeze
 
   SERVICES_TITLE = "Cadastre o que você faz".freeze
   SERVICES_SUBTITLE = "Adicione aqui os seus serviços".freeze
@@ -75,8 +76,10 @@ class Views::Owner::Onboarding::Document < Views::Base
     render Views::Layouts::Application.new(title: TITLE, branding: @branding, page_stylesheet: @page_stylesheet, view_transition: true) do
       main(class: MAIN_CLASS) do
         div(class: CONTROLLER_CLASS, data: root_data) do
-          form_with(url: owner_onboarding_path, method: :post, class: CONTROLLER_CLASS,
-            data: { turbo: false, action: "input->onboarding#save change->onboarding#save submit->onboarding#submit" }) do
+          form_with(url: owner_onboarding_path, method: :post, class: CONTROLLER_CLASS, data: {
+            turbo: false, controller: "submit-lock", submit_lock_label_value: SUBMIT_LOCK_LABEL,
+            action: "input->onboarding#save change->onboarding#save submit->onboarding#submit #{SUBMIT_LOCK_ACTIONS}"
+          }) do
             render_welcome
             render Components::Owner::Onboarding::Screen.new(section: "colors", group: BRAND_GROUP, position: 1, primary: CONTINUE_LABEL, hidden: @open_section != "colors") do
               render Components::Owner::BrandQuestion::Colors.new(tenant: @tenant, branding: @branding)

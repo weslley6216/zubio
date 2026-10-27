@@ -54,7 +54,10 @@ class Views::Client::Bookings::Race < Views::Base
     render Views::Layouts::Application.new(title: @tenant.name, branding: @branding) do
       div(class: PAGE_CLASS) do
         render_header
-        form_with(url: client_service_booking_path(@service), method: :post, class: "contents", data: { turbo: false, controller: "slot-selector" }) do
+        form_with(url: client_service_booking_path(@service), method: :post, class: "contents", data: {
+          turbo: false, controller: "slot-selector submit-lock", submit_lock_label_value: "Confirmando…",
+          action: SUBMIT_LOCK_ACTIONS
+        }) do
           div(class: CONTENT_CLASS) do
             render_alert
             render_detail_card
@@ -145,7 +148,8 @@ class Views::Client::Bookings::Race < Views::Base
 
   def render_bar
     div(class: BAR_CLASS) do
-      button(type: "submit", disabled: @nearest.nil?, class: BUTTON_CLASS, data: { confirm_bar: true, slot_selector_target: "submit" }) do
+      button(type: "submit", disabled: @nearest.nil?, class: BUTTON_CLASS,
+        data: { confirm_bar: true, slot_selector_target: "submit", submit_lock_target: "button" }) do
         @nearest ? "#{CONFIRM_LABEL} #{@nearest.strftime("%H:%M")}" : CONFIRM_LABEL
       end
       a(href: new_client_service_booking_path(@service), class: ANOTHER_DAY_LINK_CLASS, data: { another_day: true }) { ANOTHER_DAY_LABEL } unless @nearest

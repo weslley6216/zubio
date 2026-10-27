@@ -55,4 +55,13 @@ RSpec.describe "Owner brand logo", type: :system, js: true do
     expect(page).to have_content("não foi aceita")
     expect(page).to have_css("img[data-logo-target='preview'][hidden]", visible: :all)
   end
+
+  it "tells the owner the logo is being sent" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    sign_in_owner(create(:user, tenant: tenant))
+    visit "http://estudio-aurora.zubio.com.br#{edit_owner_brand_logo_path}"
+
+    expect(page).to have_css("input[type=submit][data-turbo-submits-with='Enviando…']", visible: :all)
+  end
 end

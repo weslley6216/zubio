@@ -22,7 +22,7 @@ class Views::Owner::BrandQuestions::Edit < Views::Base
         section(aria_labelledby: @body::HEADING_ID, data: preview_data, class: Components::Owner::FormCard::CARD_CLASS) do
           form_with(url: @url, method: :patch, multipart: true, class: Components::Owner::FormCard::FORM_CLASS) do |form|
             render @body.new(tenant: @tenant, branding: @branding)
-            form.submit(SUBMIT_LABEL, class: PLATFORM_SUBMIT)
+            form.submit(SUBMIT_LABEL, class: PLATFORM_SUBMIT, data: { turbo_submits_with: "Enviando…" })
           end
         end
       end

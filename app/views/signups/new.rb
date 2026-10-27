@@ -14,11 +14,14 @@ class Views::Signups::New < Views::Base
         render Components::Platform::Header.new
         div(class: "flex-grow") do
           render Components::Panel.new(title: "Criar sua conta") do
-            form_with(url: signup_path, method: :post, class: "space-y-4", data: { turbo: false }) do |form|
+            form_with(url: signup_path, method: :post, class: "space-y-4", data: {
+              turbo: false, controller: "submit-lock", submit_lock_label_value: "Criando sua página…",
+              action: SUBMIT_LOCK_ACTIONS
+            }) do |form|
               render_owner_name_field(form)
               render_email_field(form)
               render_password_field(form)
-              form.submit "Criar conta", class: SUBMIT
+              form.submit "Criar conta", class: SUBMIT, data: { submit_lock_target: "button" }
             end
           end
         end
