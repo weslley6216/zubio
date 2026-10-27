@@ -673,7 +673,7 @@ RSpec.describe "Owner appointments", type: :request do
 
       post owner_appointments_path, params: { service_id: service.id, name: "Juliana Prado", phone: "(11) 99123-4455", starts_at: starts_at.iso8601 }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(1)
       expect(response.body).to include("Alguém marcou 11:00 antes de você")
       expect(response.body).to include(service.name)
@@ -730,7 +730,7 @@ RSpec.describe "Owner appointments", type: :request do
 
       post owner_appointments_path, params: { service_id: service.id, name: "Juliana Prado", phone: "11991234455", starts_at: "not-a-time" }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
     end
   end

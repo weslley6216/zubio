@@ -166,7 +166,7 @@ RSpec.describe "Owner onboarding", type: :request do
         services: [ { name: "Corte", duration_minutes: "45", price: "90,00" }, { name: "Corte", duration_minutes: "30", price: "50,00" } ]
       )
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(%(data-onboarding-open-value="services"))
       expect(response.body).to include(Service::NAME_TAKEN_MESSAGE)
       ActsAsTenant.with_tenant(tenant) { expect(Service.count).to eq(0) }
@@ -184,7 +184,7 @@ RSpec.describe "Owner onboarding", type: :request do
       post owner_onboarding_path, params: answers.merge(tenant: { name: "" }, branding: { brand_600: "#2F6FED", logo: blob.signed_id })
 
       document = Nokogiri::HTML5(response.body)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(document.at_css(%(input[name="branding[logo]"]))["value"]).to eq(blob.signed_id)
       expect(document.at_css(%(img[data-logo-target="preview"]))["src"]).to be_present
       expect(response.body).not_to include(Components::Owner::BrandQuestion::Logo::NO_LOGO_TEXT)
@@ -199,7 +199,7 @@ RSpec.describe "Owner onboarding", type: :request do
         services: [ { name: "Corte", duration_minutes: "", price: "90,00" } ]
       )
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(%(data-onboarding-open-value="colors"))
       expect(response.body).to include(Service::DURATION_NOT_WHOLE_MESSAGE)
       ActsAsTenant.with_tenant(tenant) { expect(Service.count).to eq(0) }
@@ -229,7 +229,7 @@ RSpec.describe "Owner onboarding", type: :request do
         working_hours: { weekdays: %w[2], opens_at: "18:00", closes_at: "09:00" }
       )
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(%(data-onboarding-open-value="working_hours"))
       expect(response.body).to include(%(value="Barbearia do Zé"))
     end
@@ -240,7 +240,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
       post owner_onboarding_path, params: answers.merge(working_hours: { weekdays: [], opens_at: "09:00", closes_at: "18:00" })
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(%(data-onboarding-open-value="working_hours"))
       expect(response.body).to include(Onboarding::Schedule::NO_WEEKDAY_MESSAGE)
       expect(tenant.reload.onboarding_completed?).to be(false)
@@ -254,7 +254,7 @@ RSpec.describe "Owner onboarding", type: :request do
         working_hours: { weekdays: %w[2], opens_at: "09:00", closes_at: "18:00", break_starts_at: "14:00", break_ends_at: "12:00" }
       )
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(%(data-onboarding-open-value="working_hours"))
       expect(response.body).to include(Onboarding::Schedule::BREAK_INVERTED_MESSAGE)
       expect(tenant.reload.onboarding_completed?).to be(false)
@@ -266,7 +266,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
       post owner_onboarding_path, params: answers.merge(working_hours: { weekdays: %w[2 3 4 5 6], opens_at: "09:00", closes_at: "" })
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(%(data-onboarding-open-value="working_hours"))
       expect(response.body).to include("não pode ficar em branco")
       expect(tenant.reload.onboarding_completed?).to be(false)
@@ -302,7 +302,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
       post owner_onboarding_path, params: answers.merge(services: [ { name: "Corte", duration_minutes: "45", price: "abc" } ])
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(Service::PRICE_UNREADABLE_MESSAGE)
       expect(response.body).to include(%(data-onboarding-open-value="services"))
       expect(tenant.reload).to have_attributes(name: nil)
@@ -316,7 +316,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
       post owner_onboarding_path, params: answers.merge(services: [ { name: "Corte", duration_minutes: "", price: "90,00" } ])
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(Service::DURATION_NOT_WHOLE_MESSAGE)
       expect(response.body).not_to include("Duration minutes")
     end
@@ -357,7 +357,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
       post owner_onboarding_path, params: answers.merge(tenant: { name: "" })
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(%(data-onboarding-open-value="name"))
       expect(tenant.reload.onboarding_completed?).to be(false)
     end
@@ -368,7 +368,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
       post owner_onboarding_path, params: answers.merge(branding: { brand_600: "not-a-hex" })
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(%(data-onboarding-open-value="colors"))
       expect(tenant.reload.onboarding_completed?).to be(false)
     end
@@ -380,7 +380,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
       post owner_onboarding_path, params: answers.merge(branding: { brand_600: "#2F6FED", logo: pdf })
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(%(data-onboarding-open-value="logo"))
       expect(tenant.reload.onboarding_completed?).to be(false)
     end
@@ -392,7 +392,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
       post owner_onboarding_path, params: answers.merge(branding: { brand_600: "#2F6FED", logo: fake_png })
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(%(data-onboarding-open-value="logo"))
       expect(tenant.reload.onboarding_completed?).to be(false)
     end
@@ -409,7 +409,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
       post owner_onboarding_path, params: answers.merge(branding: { brand_600: "#2F6FED", logo: blob.signed_id })
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(%(data-onboarding-open-value="logo"))
       expect(tenant.reload.onboarding_completed?).to be(false)
     end
@@ -426,7 +426,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
       post owner_onboarding_path, params: answers.merge(branding: { brand_600: "#2F6FED", logo: blob.signed_id })
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(%(data-onboarding-open-value="logo"))
       expect(tenant.reload.onboarding_completed?).to be(false)
       ActsAsTenant.with_tenant(tenant) { expect(Service.count).to eq(0) }
@@ -452,7 +452,7 @@ RSpec.describe "Owner onboarding", type: :request do
 
       post owner_onboarding_path, params: answers.merge(working_hours: { weekdays: %w[2], opens_at: "18:00", closes_at: "09:00" })
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(%(data-onboarding-open-value="working_hours"))
       expect(tenant.reload.onboarding_completed?).to be(false)
     end

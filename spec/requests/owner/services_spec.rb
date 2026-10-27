@@ -516,7 +516,7 @@ RSpec.describe "Owner services catalog", type: :request do
       expect { post owner_services_path, params: { service: service_fields.merge(duration_minutes: "7") } }.not_to change { ActsAsTenant.without_tenant { Service.count } }
 
       document = Nokogiri::HTML5(response.body)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(document.at_css("[data-field='name'] input")["value"]).to eq("Corte feminino")
       expect(document.at_css("[data-field='duration_minutes'] input")["value"]).to eq("7")
       expect(document.at_css("[data-field='price'] input")["value"]).to eq("90,00")
@@ -540,7 +540,7 @@ RSpec.describe "Owner services catalog", type: :request do
       expect { post owner_services_path, params: { service: service_fields.merge(duration_minutes: "45.5") } }.not_to change { ActsAsTenant.without_tenant { Service.count } }
 
       document = Nokogiri::HTML5(response.body)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(document.at_css("[data-field='duration_minutes']").text).to include(Service::DURATION_NOT_WHOLE_MESSAGE)
     end
 
@@ -551,7 +551,7 @@ RSpec.describe "Owner services catalog", type: :request do
       expect { post owner_services_path, params: { service: service_fields } }.not_to change { ActsAsTenant.without_tenant { Service.count } }
 
       document = Nokogiri::HTML5(response.body)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(document.at_css("[data-field='name']").text).to include(Service::NAME_TAKEN_MESSAGE)
       expect(document.at_css("[data-field='duration_minutes']").text).not_to include(Service::NAME_TAKEN_MESSAGE)
     end
@@ -573,7 +573,7 @@ RSpec.describe "Owner services catalog", type: :request do
       expect { post owner_services_path, params: { service: service_fields.merge(price: "noventa") } }.not_to change { ActsAsTenant.without_tenant { Service.count } }
 
       document = Nokogiri::HTML5(response.body)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(document.at_css("[data-field='price'] input")["value"]).to eq("noventa")
       expect(document.at_css("[data-field='price']").text).to include(Service::PRICE_UNREADABLE_MESSAGE)
     end
@@ -584,7 +584,7 @@ RSpec.describe "Owner services catalog", type: :request do
       expect { post owner_services_path, params: { service: service_fields.merge(price: "30.000.000,00") } }.not_to change { ActsAsTenant.without_tenant { Service.count } }
 
       document = Nokogiri::HTML5(response.body)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(document.at_css("[data-field='price']").text).to include(Service::PRICE_OUT_OF_RANGE_MESSAGE)
     end
 
@@ -594,7 +594,7 @@ RSpec.describe "Owner services catalog", type: :request do
       expect { post owner_services_path, params: { service: service_fields.merge(name: "a" * 3_000) } }.not_to change { ActsAsTenant.without_tenant { Service.count } }
 
       document = Nokogiri::HTML5(response.body)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(document.at_css("[data-field='name']").text).to include(Service::NAME_TOO_LONG_MESSAGE)
     end
 
@@ -720,7 +720,7 @@ RSpec.describe "Owner services catalog", type: :request do
       patch owner_service_path(service), params: { service: service_fields.merge(duration_minutes: "600") }
 
       document = Nokogiri::HTML5(response.body)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       ActsAsTenant.with_tenant(tenant) { expect(service.reload.duration_minutes).to eq(45) }
       expect(document.at_css("[data-field='duration_minutes'] input")["value"]).to eq("600")
       expect(document.at_css("[data-field='duration_minutes']").text).to include(Service::DURATION_OUT_OF_STEP_MESSAGE)

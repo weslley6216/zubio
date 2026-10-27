@@ -64,7 +64,7 @@ RSpec.describe "Owner brand logo", type: :request do
 
       patch owner_brand_logo_path, params: { branding: { logo: pdf } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.logo).not_to be_attached }
     end
 
@@ -90,7 +90,7 @@ RSpec.describe "Owner brand logo", type: :request do
 
       patch owner_brand_logo_path, params: { branding: { logo: fake_png } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.logo.blob.id).to eq(original_blob_id) }
     end
 
@@ -104,7 +104,7 @@ RSpec.describe "Owner brand logo", type: :request do
 
       patch owner_brand_logo_path, params: { branding: { logo: fake_png } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       ActsAsTenant.with_tenant(other_tenant) { expect(other_tenant.branding.reload.logo.blob.id).to eq(other_blob_id) }
     end
 
@@ -117,7 +117,7 @@ RSpec.describe "Owner brand logo", type: :request do
 
       patch owner_brand_logo_path, params: { branding: { logo: huge_png } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.logo.blob.id).to eq(original_blob_id) }
     end
 
@@ -132,7 +132,7 @@ RSpec.describe "Owner brand logo", type: :request do
 
       patch owner_brand_logo_path, params: { branding: { logo: huge_png } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       ActsAsTenant.with_tenant(other_tenant) { expect(other_tenant.branding.reload.logo.blob.id).to eq(other_blob_id) }
     end
   end

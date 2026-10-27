@@ -251,7 +251,7 @@ RSpec.describe "Owner working hours", type: :request do
       patch owner_working_hours_path, params: { working_hours: { "2" => { active: "1", opens_at: "09:00", closes_at: "18:00" }, "4" => { active: "1", opens_at: "18:00", closes_at: "09:00" } } }
 
       document = Nokogiri::HTML5(response.body)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(document.at_css("[data-day='4'] p.text-danger").text).to eq(WeeklySchedule::INVERTED_MESSAGE)
       expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.ordered.map(&:weekday) }).to eq([ 2 ])
     end
@@ -275,7 +275,7 @@ RSpec.describe "Owner working hours", type: :request do
       patch owner_working_hours_path, params: { working_hours: { "4" => { active: "1", opens_at: "09:00", closes_at: "18:00", break_starts_at: "17:30", break_ends_at: "18:30" } } }
 
       document = Nokogiri::HTML5(response.body)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(document.at_css("[data-day='4'] p.text-danger").text).to eq("O intervalo precisa caber entre 09:00 e 18:00. Nada foi salvo.")
       expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.to_a }).to be_empty
     end
@@ -287,7 +287,7 @@ RSpec.describe "Owner working hours", type: :request do
       patch owner_working_hours_path, params: { working_hours: { "4" => { active: "1", opens_at: "09:00", closes_at: "18:00", break_starts_at: "12:00", break_ends_at: "" } } }
 
       document = Nokogiri::HTML5(response.body)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(document.at_css("[data-day='4'] p.text-danger").text).to eq(WeeklySchedule::INCOMPLETE_BREAK_MESSAGE)
       expect(ActsAsTenant.with_tenant(tenant) { professional.working_hours.to_a }).to be_empty
     end
@@ -311,7 +311,7 @@ RSpec.describe "Owner working hours", type: :request do
       patch owner_working_hours_path, params: { working_hours: { "2" => { active: "1", opens_at: "09:00", closes_at: "" } } }
 
       field = Nokogiri::HTML5(response.body).at_css(%(input[name="working_hours[2][closes_at]"]))
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(field["value"].to_s).to eq("")
     end
 

@@ -33,7 +33,7 @@ class Owner::PasswordResetsController < ApplicationController
       start_owner_session(owner)
     else
       render Views::Owner::PasswordResets::Edit.new(branding: current_branding, user: owner, token: reset_params[:token]),
-        status: :unprocessable_entity
+        status: :unprocessable_content
     end
   end
 

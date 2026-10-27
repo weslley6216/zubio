@@ -17,7 +17,7 @@ class Owner::ScheduleExceptionsController < Owner::BaseController
       redirect_to owner_schedule_exceptions_path, notice: SAVED
     else
       flash.now[:alert] = REFUSED
-      render screen(exception), status: :unprocessable_entity
+      render screen(exception), status: :unprocessable_content
     end
   end
 

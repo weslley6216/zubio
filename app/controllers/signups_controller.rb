@@ -17,7 +17,7 @@ class SignupsController < ApplicationController
   rescue ActiveRecord::RecordInvalid => invalid
     user = invalid.record.is_a?(User) ? invalid.record : new_user(owner_params)
 
-    render Views::Signups::New.new(user: user, branding: Branding.platform_default), status: :unprocessable_entity
+    render Views::Signups::New.new(user: user, branding: Branding.platform_default), status: :unprocessable_content
   end
 
   private

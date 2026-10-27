@@ -16,7 +16,7 @@ class Client::AccountPhonesController < Client::BaseController
     else
       render Views::Client::AccountPhones::New.new(
         tenant: ActsAsTenant.current_tenant, branding: current_branding, name: @identity["name"], token: params[:token], client: client
-      ), status: :unprocessable_entity
+      ), status: :unprocessable_content
     end
   end
 

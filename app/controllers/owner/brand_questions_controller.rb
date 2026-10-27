@@ -18,7 +18,7 @@ class Owner::BrandQuestionsController < Owner::BaseController
     redirect_to edit_path, notice: NOTICE
   rescue ActiveRecord::RecordInvalid
     flash.now[:alert] = REFUSED
-    render frame(tenant.branding_or_default), status: :unprocessable_entity
+    render frame(tenant.branding_or_default), status: :unprocessable_content
   end
 
   private

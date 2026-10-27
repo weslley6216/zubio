@@ -24,7 +24,7 @@ class Owner::OnboardingController < Owner::BaseController
     redirect_to owner_handoff_url(host: tenant.canonical_host, token: current_owner.handoff_token), allow_other_host: true
   rescue Tenant::OnboardingRejected => rejection
     flash.now[:alert] = REFUSED
-    render document(rejection: rejection), status: :unprocessable_entity
+    render document(rejection: rejection), status: :unprocessable_content
   end
 
   private

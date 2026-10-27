@@ -89,7 +89,7 @@ RSpec.describe "Owner brand colors", type: :request do
 
       patch owner_brand_colors_path, params: { branding: { brand_600: "#7A7A7A" } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(Owner::BrandQuestionsController::REFUSED)
       ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq("#4F46E5") }
     end
@@ -100,7 +100,7 @@ RSpec.describe "Owner brand colors", type: :request do
 
       patch owner_brand_colors_path, params: { branding: { brand_600: "azul" } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("não é válido")
       expect(response.body).not_to include("is invalid")
     end
