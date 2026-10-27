@@ -19,7 +19,7 @@ class Views::Owner::Services::Index < Views::Base
   BACK_LINK_CLASS = "lg:hidden".freeze
   HEADING_BLOCK_CLASS = "grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 leading-[normal] lg:items-end lg:gap-x-4".freeze
   HEADING_CLASS = "text-[22px] font-extrabold tracking-[-0.02em] text-ink lg:text-[28px]".freeze
-  SUBTITLE_CLASS = "hidden text-[14px] text-ink-muted lg:block".freeze
+  SUBTITLE_CLASS = "hidden text-[14px] text-ink-muted lg:col-start-1 lg:block".freeze
   ACTION_CLASS = "inline-flex min-h-11 flex-none items-center justify-self-start gap-1.5 rounded-[10px] bg-brand-accent px-3.5 text-sm leading-[normal] font-bold text-on-brand-accent hover:opacity-90 lg:gap-2 lg:px-[18px] lg:row-span-2 lg:self-end".freeze
   PLUS_ICON_CLASS = "h-[18px] w-[18px] flex-none".freeze
   LIST_CLASS = "grid max-w-2xl gap-2.5 lg:hidden".freeze

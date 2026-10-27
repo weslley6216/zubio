@@ -137,4 +137,17 @@ RSpec.describe "Owner services catalog", type: :system, js: true do
 
     expect(page).to have_css("main a[href='#{owner_settings_path}']", visible: :visible)
   end
+
+  it "sets the subtitle under the title on the desktop while the catalog is empty" do
+    tenant = create(:tenant, subdomain: "mary-sombracelhas", name: "Mary Sombracelhas")
+    emulate_desktop_screen(width: 1280)
+    sign_in_owner(create(:user, tenant: tenant))
+
+    visit "http://mary-sombracelhas.zubio.com.br#{owner_services_path}"
+
+    title = page.evaluate_script("document.querySelector('main h1').getBoundingClientRect().toJSON()")
+    subtitle = page.evaluate_script("document.querySelector('main h1 ~ p').getBoundingClientRect().toJSON()")
+    expect(subtitle["top"]).to be >= title["bottom"]
+    expect(subtitle["left"]).to eq(title["left"])
+  end
 end
