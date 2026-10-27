@@ -98,7 +98,7 @@ RSpec.describe "Signup", type: :request do
     it "rejects an invalid email and re-renders the form with the typed name kept" do
       post signup_path, params: { user: { name: "Ana Lima", email: "not-an-email", password: "s3cr3t123" } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(%(value="Ana Lima"))
       expect(User.unscoped.count).to eq(0)
     end
@@ -106,7 +106,7 @@ RSpec.describe "Signup", type: :request do
     it "rejects a short password, keeps the account uncreated, and states the minimum by the password field" do
       post signup_path, params: { user: { name: "Ana Lima", email: "ana@example.com", password: "123" } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("é muito curto (mínimo: 8 caracteres)")
       expect(User.unscoped.count).to eq(0)
       expect(Tenant.count).to eq(0)
@@ -123,7 +123,7 @@ RSpec.describe "Signup", type: :request do
     it "names blank fields in Portuguese, without the default English" do
       post signup_path, params: { user: { name: "", email: "", password: "" } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("não pode ficar em branco")
       expect(response.body).not_to include("can't be blank")
     end
@@ -131,7 +131,7 @@ RSpec.describe "Signup", type: :request do
     it "states a malformed email in Portuguese, without the default English" do
       post signup_path, params: { user: { name: "Ana Lima", email: "not-an-email", password: "s3cr3t123" } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("não é válido")
       expect(response.body).not_to include("is invalid")
     end

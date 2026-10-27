@@ -231,7 +231,7 @@ RSpec.describe "Owner password reset", type: :request do
 
       post owner_session_path, params: { email: "ze@example.com", password: "s3cr3t123" }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "keeps the owner on the form with the error next to the field when the password is too short" do
@@ -239,7 +239,7 @@ RSpec.describe "Owner password reset", type: :request do
 
       patch owner_password_reset_path, params: { token: token, password: "short" }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("é muito curto (mínimo: 8 caracteres)")
       expect(response.body).to include(%(value="#{token}"))
     end
@@ -267,7 +267,7 @@ RSpec.describe "Owner password reset", type: :request do
 
       patch owner_password_reset_path, params: { token: token, password: "" }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(session[:user_id]).to be_nil
     end
 
@@ -276,7 +276,7 @@ RSpec.describe "Owner password reset", type: :request do
 
       patch owner_password_reset_path, params: { token: token, password: [ "an0th3rpass" ] }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(session[:user_id]).to be_nil
     end
 

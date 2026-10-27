@@ -19,7 +19,7 @@ class Owner::SessionsController < ApplicationController
       flash.now[:alert] = "E-mail ou senha inválidos."
       render Views::Owner::Sessions::New.new(
         tenant: ActsAsTenant.current_tenant, branding: current_branding, email: params[:email]
-      ), status: :unprocessable_entity
+      ), status: :unprocessable_content
     end
   end
 

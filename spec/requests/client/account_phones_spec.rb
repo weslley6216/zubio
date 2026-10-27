@@ -64,7 +64,7 @@ RSpec.describe "Client account phone", type: :request do
 
     post client_account_phone_path, params: { token: other_account_token, phone: "(11) 98877-1234" }
 
-    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response).to have_http_status(:unprocessable_content)
     expect(response.body).to include(Client::PHONE_TAKEN_MESSAGE)
     linked = ActsAsTenant.with_tenant(tenant) { Client.find_by(phone: "11988771234") }
     expect(linked.google_uid).to eq("g-A")
@@ -73,7 +73,7 @@ RSpec.describe "Client account phone", type: :request do
   it "re-renders the step for a phone too short to be a phone" do
     post client_account_phone_path, params: { token: identity_token, phone: "1198877" }
 
-    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response).to have_http_status(:unprocessable_content)
     expect(ActsAsTenant.with_tenant(tenant) { Client.where(google_uid: "g-1") }).to be_empty
   end
 

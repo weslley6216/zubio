@@ -58,6 +58,6 @@ class Owner::ServicesController < Owner::BaseController
 
   def refuse(service)
     flash.now[:alert] = REFUSED
-    render service_form(service), status: :unprocessable_entity
+    render service_form(service), status: :unprocessable_content
   end
 end

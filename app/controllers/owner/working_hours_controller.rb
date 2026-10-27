@@ -16,7 +16,7 @@ class Owner::WorkingHoursController < Owner::BaseController
       redirect_to edit_owner_working_hours_path, notice: SAVED
     else
       flash.now[:alert] = REFUSED
-      render screen(schedule), status: :unprocessable_entity
+      render screen(schedule), status: :unprocessable_content
     end
   end
 

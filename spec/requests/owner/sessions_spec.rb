@@ -31,7 +31,7 @@ RSpec.describe "Owner session", type: :request do
 
       post owner_session_path, params: { email: "owner@example.com", password: "wrong" }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("E-mail ou senha inválidos.")
       expect(response.body).to include(%(class="#{Components::Alert::FRAME_CLASS} border-danger"))
       expect(response.body).to include("text-danger")
@@ -128,7 +128,7 @@ RSpec.describe "Owner session", type: :request do
 
       post owner_session_path, params: { email: "owner@example.com", password: "wrong" }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(session[:user_id]).to be_nil
     end
 
@@ -138,7 +138,7 @@ RSpec.describe "Owner session", type: :request do
 
       post owner_session_path, params: { email: "owner@example.com", password: "s3cr3t123" }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(session[:user_id]).to be_nil
     end
 
@@ -147,7 +147,7 @@ RSpec.describe "Owner session", type: :request do
 
       post owner_session_path, params: { email: "owner@example.com", password: "wrong" }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("E-mail ou senha inválidos.")
       expect(response.body).to include(%(value="owner@example.com"))
       expect(response.body).not_to include(%(value="wrong"))
@@ -162,7 +162,7 @@ RSpec.describe "Owner session", type: :request do
 
       post owner_session_path, params: { email: "owner@example.com", password: "wrong" }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(branding.stylesheet_digest)
       expect(response.body).not_to include(other_branding.stylesheet_digest)
     end

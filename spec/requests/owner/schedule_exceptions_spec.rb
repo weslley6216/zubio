@@ -213,7 +213,7 @@ RSpec.describe "Owner schedule exceptions", type: :request do
 
       post owner_schedule_exceptions_path, params: { schedule_exception: { occurs_on: Date.current.next_week(:monday).iso8601 } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(Nokogiri::HTML5(response.body).at_css("#schedule_exception_occurs_on").parent.at_css(".text-danger")).to be_present
       expect(ActsAsTenant.with_tenant(tenant) { professional.schedule_exceptions.count }).to eq(1)
     end
@@ -224,7 +224,7 @@ RSpec.describe "Owner schedule exceptions", type: :request do
 
       post owner_schedule_exceptions_path, params: { schedule_exception: { occurs_on: Date.current.next_week(:saturday).iso8601, attends: "1" } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("informe o horário de atendimento")
       expect(ActsAsTenant.with_tenant(tenant) { professional.schedule_exceptions.count }).to eq(0)
     end

@@ -590,7 +590,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
       post client_service_booking_path(service), params: { name: "", phone: "11988771234", starts_at: starts_at.iso8601 }
 
       document = Nokogiri::HTML5(response.body)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(document.at_css("[data-field='name'] .text-danger")).to be_present
       expect(document.at_css("input[name='phone']")["value"]).to eq("11988771234")
       expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
@@ -607,7 +607,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
       post client_service_booking_path(service), params: { name: "Ana", phone: "1198877", starts_at: starts_at.iso8601 }
 
       document = Nokogiri::HTML5(response.body)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(document.at_css("[data-field='phone'] .text-danger")).to be_present
       expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
     end
@@ -622,7 +622,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
 
       post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: dawn.iso8601 }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(Nokogiri::HTML5(response.body).css("[data-slots] [data-slot]")).to be_present
       expect(response.body).not_to include("antes de você")
       expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
@@ -638,7 +638,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
 
       post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: nine.iso8601 }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
     end
 

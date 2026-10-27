@@ -40,7 +40,7 @@ RSpec.describe "Owner brand name", type: :request do
 
       patch owner_brand_name_path, params: { tenant: { name: "a" * (Tenant::NAME_MAX_LENGTH + 1) } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("text-danger")
       expect(tenant.reload.name).to eq("Barbearia do Zé")
     end
@@ -50,7 +50,7 @@ RSpec.describe "Owner brand name", type: :request do
 
       patch owner_brand_name_path, params: { tenant: { name: "" } }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("não pode ficar em branco")
       expect(response.body).not_to include("can't be blank")
     end

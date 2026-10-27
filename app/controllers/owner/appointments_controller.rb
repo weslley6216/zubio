@@ -28,7 +28,7 @@ class Owner::AppointmentsController < Owner::BaseController
     return redirect_to owner_appointment_path(result.value) if result.success?
     return render_race(service: service, professional: professional, starts_at: starts_at, client: client) if result.reason == :taken
 
-    render_schedule(service: service, selected_day: starts_at&.to_date, status: :unprocessable_entity)
+    render_schedule(service: service, selected_day: starts_at&.to_date, status: :unprocessable_content)
   end
 
   private
@@ -42,7 +42,7 @@ class Owner::AppointmentsController < Owner::BaseController
       selected_day: day, slots: availability.slots_by_date.fetch(day), taken_slots: availability.taken_slots_by_date.fetch(day),
       nearest: availability.nearest_free(starts_at), client_id: client&.id,
       client_name: client&.name || params[:name].to_s, client_phone: client&.phone_display || params[:phone].to_s, lost_time: starts_at
-    ), status: :unprocessable_entity
+    ), status: :unprocessable_content
   end
 
   def parsed_starts_at

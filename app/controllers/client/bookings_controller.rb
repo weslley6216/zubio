@@ -28,7 +28,7 @@ class Client::BookingsController < Client::BaseController
       selected_day: starts_at&.to_date,
       selected_slot: (starts_at if result.reason == :invalid_client),
       client_name: params[:name], client_phone: params[:phone], client: result.record,
-      status: :unprocessable_entity
+      status: :unprocessable_content
     )
   end
 
@@ -58,7 +58,7 @@ class Client::BookingsController < Client::BaseController
       selected_day: day, slots: availability.slots_by_date.fetch(day), taken_slots: availability.taken_slots_by_date.fetch(day),
       nearest: availability.nearest_free(starts_at), client_name: current_client&.name || params[:name].to_s,
       client_phone: current_client&.phone_display || params[:phone].to_s, lost_time: starts_at
-    ), status: :unprocessable_entity
+    ), status: :unprocessable_content
   end
 
   def render_schedule(service:, selected_day: nil, selected_slot: nil, client_name: nil, client_phone: nil, client: nil, status: :ok)
