@@ -15,7 +15,7 @@ RSpec.describe "Owner panel content width", type: :system, js: true do
     visit "http://estudio-aurora.zubio.com.br#{owner_appointments_path}"
     panel_width = page.evaluate_script("getComputedStyle(document.querySelector('main')).maxWidth")
 
-    expect(widths).to all(eq("1040px"))
+    expect(widths).to all(eq("1120px"))
     expect(panel_width).to eq("1200px")
   end
 end

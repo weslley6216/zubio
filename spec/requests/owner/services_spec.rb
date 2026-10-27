@@ -57,8 +57,8 @@ RSpec.describe "Owner services catalog", type: :request do
 
       get owner_services_path
 
-      expect(response.body).to include("Barba")
-      expect(response.body).to include(Views::Owner::Services::Index::DISABLED_LABEL)
+      catalog = Nokogiri::HTML5(response.body).at_css("[data-catalog]")
+      expect(catalog.text).to include("Barba", Views::Owner::Services::Index::DISABLED_LABEL)
     end
 
     it "leaves an active service unmarked" do
@@ -67,8 +67,9 @@ RSpec.describe "Owner services catalog", type: :request do
 
       get owner_services_path
 
-      expect(response.body).to include("Corte feminino")
-      expect(response.body).not_to include(Views::Owner::Services::Index::DISABLED_LABEL)
+      catalog = Nokogiri::HTML5(response.body).at_css("[data-catalog]")
+      expect(catalog.text).to include("Corte feminino")
+      expect(catalog.text).not_to include(Views::Owner::Services::Index::DISABLED_LABEL)
     end
 
     it "pills the price of an active service in the light pair of the brand" do
@@ -91,7 +92,7 @@ RSpec.describe "Owner services catalog", type: :request do
       price = Nokogiri::HTML5(response.body).at_css("[data-catalog] [data-price]")
       expect(price["class"]).to eq(Views::Owner::Services::Index::DISABLED_PRICE_CLASS)
       expect(price.text).to eq("R$ 450,00")
-      expect(response.body).to include(Views::Owner::Services::Index::DISABLED_LABEL, Views::Owner::Services::Index::HIDDEN_PRICE_LABEL)
+      expect(Nokogiri::HTML5(response.body).at_css("[data-catalog]").text).to include(Views::Owner::Services::Index::DISABLED_LABEL, Views::Owner::Services::Index::HIDDEN_PRICE_LABEL)
     end
 
     it "invites the first registration when there is no service yet" do
@@ -102,6 +103,7 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response.body).to include(Views::Owner::Services::Index::EMPTY_TITLE)
       expect(response.body).to include(Views::Owner::Services::Index::EMPTY_BODY)
       expect(response.body).not_to include("data-catalog")
+      expect(response.body).not_to include("data-service-table")
     end
 
     it "drops the invitation once the catalog has a service" do
@@ -115,6 +117,18 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(response.body).not_to include(Views::Owner::Services::Index::EMPTY_TITLE)
     end
 
+    it "titles the catalog as the brand screens do, with the desktop-only subtitle" do
+      create(:service, tenant: tenant, name: "Corte feminino")
+      sign_in_owner(owner)
+
+      get owner_services_path
+
+      document = Nokogiri::HTML5(response.body)
+      expect(document.at_css("main h1").text).to eq("O que eu faço")
+      expect(response.body).to include("Ativos aparecem na sua página.")
+      expect(document.at_css("main h1 + a span > span").text).to eq(" serviço")
+    end
+
     it "offers the registration beside the title once the catalog has a service" do
       create(:service, tenant: tenant, name: "Corte feminino")
       sign_in_owner(owner)
@@ -124,7 +138,7 @@ RSpec.describe "Owner services catalog", type: :request do
       action = Nokogiri::HTML5(response.body).at_css("h1 + a[href='#{new_owner_service_path}']")
       expect(action["class"]).to eq(Views::Owner::Services::Index::ACTION_CLASS)
       expect(action["aria-label"]).to eq(Views::Owner::Services::Index::NEW_ACCESSIBLE_LABEL)
-      expect(action.text.strip).to eq(Views::Owner::Services::Index::NEW_LABEL)
+      expect(action.text.strip).to eq(Views::Owner::Services::Index::NEW_ACCESSIBLE_LABEL)
       expect(action.at_css(%(svg path[d="M12 5v14M5 12h14"]))).to be_present
       expect(response.body.scan(%(href="#{new_owner_service_path}")).size).to eq(1)
       expect(response.body).not_to include(Views::Owner::Services::Index::FIRST_LABEL)
@@ -226,6 +240,117 @@ RSpec.describe "Owner services catalog", type: :request do
 
       expect(response.body).to include("Avaliação")
       expect(response.body).not_to include(Views::Owner::Services::Index::HIDDEN_PRICE_LABEL)
+    end
+
+    it "heads the desktop table with serviço, duração, preço and situação" do
+      create(:service, tenant: tenant, name: "Design de sobrancelhas")
+      sign_in_owner(owner)
+
+      get owner_services_path
+
+      headers = Nokogiri::HTML5(response.body).css("[data-service-table] > div:first-child span").map(&:text)
+      expect(headers).to include(
+        Views::Owner::Services::Index::COLUMN_SERVICE,
+        Views::Owner::Services::Index::COLUMN_DURATION,
+        Views::Owner::Services::Index::COLUMN_PRICE,
+        Views::Owner::Services::Index::COLUMN_SITUATION
+      )
+    end
+
+    it "shows a service as a desktop row with its duration, price, description and situation" do
+      create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45,
+        price_cents: 6_000, description: "Medição, limpeza e finalização")
+      sign_in_owner(owner)
+
+      get owner_services_path
+
+      row = Nokogiri::HTML5(response.body).at_css("[data-service-table] div:not(:first-child)")
+      expect(row.text).to include("Design de sobrancelhas", "Medição, limpeza e finalização", "45 min", "R$ 60,00", "Ativo")
+    end
+
+    it "shows a priceless service as sob consulta in the desktop table" do
+      create(:service, tenant: tenant, name: "Retoque de henna", price_cents: nil)
+      sign_in_owner(owner)
+
+      get owner_services_path
+
+      price = Nokogiri::HTML5(response.body).at_css("[data-service-table] [data-table-price]")
+      expect(price.text).to eq(Service::Price::UNPRICED_LABEL)
+    end
+
+    it "dims a priceless service's sob consulta note in the desktop table once it is disabled" do
+      create(:service, tenant: tenant, name: "Retoque de henna", price_cents: nil, active: false)
+      sign_in_owner(owner)
+
+      get owner_services_path
+
+      price = Nokogiri::HTML5(response.body).at_css("[data-service-table] [data-table-price] span")
+      expect(price["class"]).to eq(Views::Owner::Services::Index::TABLE_UNPRICED_DISABLED_CLASS)
+    end
+
+    it "marks a disabled service in the desktop table with a faded Desativado pill" do
+      create(:service, tenant: tenant, name: "Micropigmentação", active: false)
+      sign_in_owner(owner)
+
+      get owner_services_path
+
+      pill = Nokogiri::HTML5(response.body).at_css("[data-service-table] [data-status]")
+      expect(pill["class"]).to eq(Views::Owner::Services::Index::TABLE_DISABLED_PILL_CLASS)
+      expect(pill.text).to eq(Views::Owner::Services::Index::DISABLED_LABEL)
+    end
+
+    it "marks an active service in the desktop table with the brand-soft Ativo pill" do
+      create(:service, tenant: tenant, name: "Design de sobrancelhas")
+      sign_in_owner(owner)
+
+      get owner_services_path
+
+      pill = Nokogiri::HTML5(response.body).at_css("[data-service-table] [data-status]")
+      expect(pill["class"]).to eq(Views::Owner::Services::Index::TABLE_ACTIVE_PILL_CLASS)
+      expect(pill.text).to eq(Views::Owner::Services::Index::ACTIVE_LABEL)
+    end
+
+    it "shows the real price and a hidden-price note in the desktop table" do
+      create(:service, :price_hidden, tenant: tenant, name: "Primeira sessão", price_cents: 9_000)
+      sign_in_owner(owner)
+
+      get owner_services_path
+
+      cell = Nokogiri::HTML5(response.body).at_css("[data-service-table] [data-table-price]")
+      expect(cell.text).to include("R$ 90,00", Views::Owner::Services::Index::HIDDEN_PRICE_LABEL)
+    end
+
+    it "keeps the hidden-price note off a priceless hidden service in the desktop table" do
+      create(:service, :price_hidden, tenant: tenant, name: "Avaliação", price_cents: nil)
+      sign_in_owner(owner)
+
+      get owner_services_path
+
+      cell = Nokogiri::HTML5(response.body).at_css("[data-service-table] [data-table-price]")
+      expect(cell.text).to eq(Service::Price::UNPRICED_LABEL)
+    end
+
+    it "links each desktop row to the edit form of its service" do
+      service = create(:service, tenant: tenant, name: "Design de sobrancelhas")
+      sign_in_owner(owner)
+
+      get owner_services_path
+
+      action = Nokogiri::HTML5(response.body).at_css("[data-service-table] a[href='#{edit_owner_service_path(service)}']")
+      expect(action.at_css(%(svg path[d="M12 20h9"]))).to be_present
+    end
+
+    it "keeps another establishment's service out of the desktop table" do
+      other_tenant = create(:tenant, subdomain: "salon-b", name: "Barbearia do Zé")
+      create(:service, tenant: other_tenant, name: "Barba do Zé")
+      create(:service, tenant: tenant, name: "Corte feminino")
+      sign_in_owner(owner)
+
+      get owner_services_path
+
+      table = Nokogiri::HTML5(response.body).at_css("[data-service-table]")
+      expect(table.text).to include("Corte feminino")
+      expect(table.text).not_to include("Barba do Zé")
     end
 
     it "asks the database the same number of times for many services as for one" do

@@ -74,4 +74,80 @@ RSpec.describe "Owner services catalog", type: :system, js: true do
     expect(page).to have_text("R$ 10.000,00")
     expect(page).to fit_the_phone_width
   end
+
+  it "shows the table on the desktop and hides the cards" do
+    tenant = create(:tenant, subdomain: "mary-sombracelhas", name: "Mary Sombracelhas")
+    create(:service, tenant: tenant, name: "Design de sobrancelhas", price_cents: 6_000)
+    emulate_desktop_screen(width: 1280)
+    sign_in_owner(create(:user, tenant: tenant))
+
+    visit "http://mary-sombracelhas.zubio.com.br#{owner_services_path}"
+
+    expect(page).to have_css("[data-service-table]", visible: :visible)
+    expect(page).to have_css("[data-catalog]", visible: :hidden)
+  end
+
+  it "shows the cards on the phone and hides the table, without sideways scroll" do
+    tenant = create(:tenant, subdomain: "mary-sombracelhas", name: "Mary Sombracelhas")
+    create(:service, tenant: tenant, name: "Design de sobrancelhas", price_cents: 6_000)
+    emulate_phone
+    sign_in_owner(create(:user, tenant: tenant))
+
+    visit "http://mary-sombracelhas.zubio.com.br#{owner_services_path}"
+
+    expect(page).to have_css("[data-catalog]", visible: :visible)
+    expect(page).to have_css("[data-service-table]", visible: :hidden)
+    expect(page).to fit_the_phone_width
+  end
+
+  %w[light dark].each do |scheme|
+    it "paints the active situation pill in the brand soft pair on the desktop, in #{scheme}" do
+      tenant = create(:tenant, subdomain: "mary-sombracelhas", name: "Mary Sombracelhas")
+      branding = create(:branding, tenant: tenant, brand_600: "#8E4B6B")
+      create(:service, tenant: tenant, name: "Design de sobrancelhas", price_cents: 6_000)
+      emulate_color_scheme(scheme)
+      emulate_desktop_screen(width: 1280)
+      sign_in_owner(create(:user, tenant: tenant))
+
+      visit "http://mary-sombracelhas.zubio.com.br#{owner_services_path}"
+
+      expect(computed_hex("[data-service-table] [data-status]", "backgroundColor")).to eq(branding.css_variables[/--brand-soft-#{scheme}:(#\h{6});/, 1].upcase)
+      expect(computed_hex("[data-service-table] [data-status]", "color")).to eq(branding.css_variables[/--brand-soft-ink-#{scheme}:(#\h{6});/, 1].upcase)
+    end
+  end
+
+  it "leaves the way back to settings to the band on the desktop" do
+    tenant = create(:tenant, subdomain: "mary-sombracelhas", name: "Mary Sombracelhas")
+    create(:service, tenant: tenant, name: "Design de sobrancelhas")
+    emulate_desktop_screen(width: 1280)
+    sign_in_owner(create(:user, tenant: tenant))
+
+    visit "http://mary-sombracelhas.zubio.com.br#{owner_services_path}"
+
+    expect(page).to have_css("main a[href='#{owner_settings_path}']", visible: :hidden)
+  end
+
+  it "keeps the way back to settings above the title on the phone" do
+    tenant = create(:tenant, subdomain: "mary-sombracelhas", name: "Mary Sombracelhas")
+    create(:service, tenant: tenant, name: "Design de sobrancelhas")
+    emulate_phone
+    sign_in_owner(create(:user, tenant: tenant))
+
+    visit "http://mary-sombracelhas.zubio.com.br#{owner_services_path}"
+
+    expect(page).to have_css("main a[href='#{owner_settings_path}']", visible: :visible)
+  end
+
+  it "sets the subtitle under the title on the desktop while the catalog is empty" do
+    tenant = create(:tenant, subdomain: "mary-sombracelhas", name: "Mary Sombracelhas")
+    emulate_desktop_screen(width: 1280)
+    sign_in_owner(create(:user, tenant: tenant))
+
+    visit "http://mary-sombracelhas.zubio.com.br#{owner_services_path}"
+
+    title = page.evaluate_script("document.querySelector('main h1').getBoundingClientRect().toJSON()")
+    subtitle = page.evaluate_script("document.querySelector('main h1 ~ p').getBoundingClientRect().toJSON()")
+    expect(subtitle["top"]).to be >= title["bottom"]
+    expect(subtitle["left"]).to eq(title["left"])
+  end
 end
