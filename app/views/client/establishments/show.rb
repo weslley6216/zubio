@@ -1,7 +1,6 @@
 class Views::Client::Establishments::Show < Views::Base
   EMPTY_TITLE = "Nenhum serviço publicado ainda".freeze
   EMPTY_BODY = "Este estabelecimento ainda não publicou serviços para agendamento.".freeze
-  OWNER_LINK_LABEL = "É o dono deste estabelecimento? Entrar".freeze
   SHARE_DESCRIPTION = "Agende seu horário online — %s.".freeze
   TITLE = "Escolha o serviço".freeze
   SUBTITLE = "Depois você escolhe o dia e o horário.".freeze
@@ -30,8 +29,6 @@ class Views::Client::Establishments::Show < Views::Base
   EMPTY_CLASS = "grid gap-2 rounded-xl border border-line bg-surface p-6".freeze
   EMPTY_TITLE_CLASS = "text-lg font-bold text-ink".freeze
   EMPTY_BODY_CLASS = "text-sm text-ink-muted".freeze
-  FOOTER_CLASS = "mx-auto w-full max-w-2xl px-6 pb-8".freeze
-  OWNER_LINK_CLASS = "text-xs text-ink-subtle hover:text-ink-muted".freeze
   PRICE_CLASS = "text-[15px] leading-[normal] font-extrabold tabular-nums text-ink".freeze
   UNPRICED_CLASS = "text-xs leading-[normal] font-bold text-ink-muted".freeze
 
@@ -50,7 +47,6 @@ class Views::Client::Establishments::Show < Views::Base
       main(class: SHEET_CLASS) do
         @services.empty? ? render_empty_state : render_catalog
       end
-      render_owner_link
     end
   end
 
@@ -146,12 +142,6 @@ class Views::Client::Establishments::Show < Views::Base
     div(class: EMPTY_CLASS) do
       h2(class: EMPTY_TITLE_CLASS) { EMPTY_TITLE }
       p(class: EMPTY_BODY_CLASS) { EMPTY_BODY }
-    end
-  end
-
-  def render_owner_link
-    footer(class: FOOTER_CLASS) do
-      a(href: new_owner_session_path, class: OWNER_LINK_CLASS) { OWNER_LINK_LABEL }
     end
   end
 end

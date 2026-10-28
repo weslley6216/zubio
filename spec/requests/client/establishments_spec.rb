@@ -18,6 +18,17 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(response.body).not_to include(%(type="password"))
   end
 
+  it "offers the client the booking links and no entry to the owner panel" do
+    service = create(:service, tenant: tenant, name: "Corte feminino")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    links = Nokogiri::HTML5(response.body).css("a").map { |link| link["href"] }
+    expect(links).to include(new_client_session_path(service_id: service.id))
+    expect(links).not_to include(new_owner_session_path)
+  end
+
   it "applies the establishment brand logo and color" do
     branding = create(:branding, :with_logo, tenant: tenant, brand_600: "#1D4ED8")
     create(:service, tenant: tenant, name: "Corte feminino")

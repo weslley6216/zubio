@@ -24,4 +24,34 @@ RSpec.describe "Direct uploads", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.parsed_body).to include("signed_id", "direct_upload")
   end
+
+  it "refuses a session whose user is no longer an owner" do
+    user = create(:user, tenant: tenant)
+    sign_in_owner(user)
+    ActsAsTenant.with_tenant(tenant) { user.update!(role: "professional") }
+
+    post authenticated_direct_uploads_path, params: blob_params, as: :json
+
+    expect(response).to have_http_status(:unauthorized)
+    expect(ActiveStorage::Blob.count).to eq(0)
+  end
+
+  it "refuses an owner of another tenant on this host" do
+    other_tenant = create(:tenant, :onboarding, subdomain: "zzz999yyy888")
+    sign_in_owner(create(:user, tenant: other_tenant))
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    post authenticated_direct_uploads_path, params: blob_params, as: :json
+
+    expect(response).to have_http_status(:unauthorized)
+    expect(ActiveStorage::Blob.count).to eq(0)
+  end
+
+  it "answers not found on a host with no tenant" do
+    host! "nobody-here.zubio.com.br"
+
+    post authenticated_direct_uploads_path, params: blob_params, as: :json
+
+    expect(response).to have_http_status(:not_found)
+  end
 end
