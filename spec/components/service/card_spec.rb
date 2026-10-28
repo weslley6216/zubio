@@ -60,13 +60,13 @@ RSpec.describe Components::Service::Card, type: :component do
     html = described_class.new(service: long_service, href: "/x").call
 
     expect(html).to include(%(<span class="#{described_class::DURATION_CLASS}">120 min</span>))
-    expect(html).to include(%(d="M12 7v5l3 2"))
+    expect(html).to include(%(data-icon="clock"))
   end
 
   it "renders no chevron icon in the panel variant" do
     html = described_class.new(service: service, href: "/x").call
 
-    expect(html).not_to include(%(d="m9 6 6 6-6 6"))
+    expect(html).not_to include(%(data-icon="chevron-right"))
   end
 
   it "renders an active service on a solid card with its name in ink" do
@@ -100,7 +100,7 @@ RSpec.describe Components::Service::Card, type: :component do
 
     expect(html).to include(%(<a href="/x" class="#{described_class::SHOWCASE_NAME_CLASS}">Corte feminino</a>))
     expect(html).to include("45 min")
-    expect(html).to include(%(d="M12 7v5l3 2"))
+    expect(html).to include(%(data-icon="clock"))
   end
 
   it "renders the description in the showcase variant too" do
@@ -114,6 +114,6 @@ RSpec.describe Components::Service::Card, type: :component do
     html = described_class.new(service: service, href: "/x", variant: :showcase).call { "R$ 90" }
 
     expect(html).to include("R$ 90")
-    expect(html).to include(%(d="m9 6 6 6-6 6"))
+    expect(html).to include(%(data-icon="chevron-right"))
   end
 end

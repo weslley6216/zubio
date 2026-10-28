@@ -4,7 +4,7 @@ RSpec.describe Components::Owner::Menu, type: :component do
   it "renders every item with a leading icon and divides them with a hairline" do
     html = render_phlex(described_class.new(items: [ [ "Configurações", "/owner/settings", false, :settings ] ]))
 
-    expect(html).to include(%(circle cx="12" cy="12" r="3"))
+    expect(Nokogiri::HTML5.fragment(html).at_css(%([data-icon="settings"]))).to be_present
     expect(html).to include("divide-y", "divide-line")
   end
 
@@ -12,7 +12,7 @@ RSpec.describe Components::Owner::Menu, type: :component do
     html = render_phlex(described_class.new(items: [ [ "Configurações", "/owner/settings", true, :settings ] ]))
 
     expect(html).to include(%(<a href="/owner/settings" aria-current="page" class="#{described_class::ITEM_CLASS} #{described_class::CURRENT_CLASS}">))
-    expect(html).to include(described_class::CHEVRON_PATH)
+    expect(html).to include(%(data-icon="chevron-right"))
   end
 
   it "leaves a resting item without the current treatment or a chevron" do
@@ -20,7 +20,7 @@ RSpec.describe Components::Owner::Menu, type: :component do
 
     expect(html).to include(described_class::RESTING_CLASS)
     expect(html).not_to include(%(aria-current="page"))
-    expect(html).not_to include(described_class::CHEVRON_PATH)
+    expect(html).not_to include(%(data-icon="chevron-right"))
   end
 
   it "wears the brand outline and the light fill when the menu is open" do
@@ -42,13 +42,12 @@ RSpec.describe Components::Owner::Menu, type: :component do
   end
 
   it "draws the people icon on Clientes and the gear on Configurações" do
-    html = render_phlex(described_class.new(items: [ [ "Clientes", "/owner/clients", false, :clients ], [ "Configurações", "/owner/settings", false, :settings ] ]))
+    html = render_phlex(described_class.new(items: [ [ "Clientes", "/owner/clients", false, :users ], [ "Configurações", "/owner/settings", false, :settings ] ]))
     fragment = Nokogiri::HTML5.fragment(html)
 
-    clients_icon = fragment.at_css(%(a[href="/owner/clients"] svg)).to_html
-    settings_icon = fragment.at_css(%(a[href="/owner/settings"] svg)).to_html
-    expect(clients_icon).to include(%(circle cx="9" cy="7" r="4"))
-    expect(clients_icon).not_to include(described_class::GEAR_PATH)
-    expect(settings_icon).to include(described_class::GEAR_PATH)
+    clients_icon = fragment.at_css(%(a[href="/owner/clients"] svg))
+    settings_icon = fragment.at_css(%(a[href="/owner/settings"] svg))
+    expect(clients_icon["data-icon"]).to eq("users")
+    expect(settings_icon["data-icon"]).to eq("settings")
   end
 end

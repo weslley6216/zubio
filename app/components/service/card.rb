@@ -77,17 +77,10 @@ class Components::Service::Card < Components::Base
   end
 
   def render_clock_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: CLOCK_ICON_CLASS) do |icon|
-      icon.circle(cx: "12", cy: "12", r: "9")
-      icon.path(d: "M12 7v5l3 2")
-    end
+    render Components::Icon.new(:clock, class: CLOCK_ICON_CLASS)
   end
 
   def render_chevron_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.5", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: CHEVRON_ICON_CLASS) do |icon|
-      icon.path(d: "m9 6 6 6-6 6")
-    end
+    render Components::Icon.new(:chevron_right, stroke_width: "2.5", class: CHEVRON_ICON_CLASS)
   end
 end

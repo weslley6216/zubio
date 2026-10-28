@@ -76,10 +76,7 @@ class Views::Owner::Appointments::New < Views::Base
   end
 
   def render_back_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.5", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: BACK_ICON_CLASS) do |icon|
-      icon.path(d: "m15 6-6 6 6 6")
-    end
+    render Components::Icon.new(:chevron_left, stroke_width: "2.5", class: BACK_ICON_CLASS)
   end
 
   def render_published
@@ -123,11 +120,7 @@ class Views::Owner::Appointments::New < Views::Base
   end
 
   def render_search_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: PHONE_ICON_CLASS) do |icon|
-      icon.circle(cx: "11", cy: "11", r: "7")
-      icon.path(d: "m20 20-4-4")
-    end
+    render Components::Icon.new(:search, class: PHONE_ICON_CLASS)
   end
 
   def render_name_field
@@ -153,10 +146,7 @@ class Views::Owner::Appointments::New < Views::Base
   end
 
   def render_chevron_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: SERVICE_CHEVRON_CLASS) do |icon|
-      icon.path(d: "m6 9 6 6 6-6")
-    end
+    render Components::Icon.new(:chevron_down, class: SERVICE_CHEVRON_CLASS)
   end
 
   def render_day_section

@@ -91,10 +91,7 @@ class Views::Client::Appointments::Show < Views::Base
   end
 
   def render_back_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.5", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: BACK_ICON_CLASS) do |icon|
-      icon.path(d: "m15 6-6 6 6 6")
-    end
+    render Components::Icon.new(:chevron_left, stroke_width: "2.5", class: BACK_ICON_CLASS)
   end
 
   def back_href = @back_to_list ? client_my_appointments_path : establishment_path
@@ -165,10 +162,7 @@ class Views::Client::Appointments::Show < Views::Base
   end
 
   def render_cross_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.4", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: CANCELLED_ICON_CLASS) do |icon|
-      icon.path(d: "M6 6l12 12M18 6 6 18")
-    end
+    render Components::Icon.new(:x, stroke_width: "2.4", class: CANCELLED_ICON_CLASS)
   end
 
   def when_label

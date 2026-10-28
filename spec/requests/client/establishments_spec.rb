@@ -369,7 +369,7 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(Nokogiri::HTML5(response.body).css("[data-catalog] [data-description]").map(&:text)).to include("Medição, limpeza e finalização")
     expect(response.body).to include("45 min")
     expect(response.body).to include("R$ 60")
-    expect(response.body).to include(%(d="m9 6 6 6-6 6"))
+    expect(response.body).to include(%(data-icon="chevron-right"))
   end
 
   it "shows Sob consulta for a service with no fixed price, and the price for one that has it" do

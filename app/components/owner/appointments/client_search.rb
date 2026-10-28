@@ -50,10 +50,7 @@ class Components::Owner::Appointments::ClientSearch < Components::Base
   end
 
   def render_check_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.6", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: CHECK_ICON_CLASS) do |icon|
-      icon.path(d: "M20 6 9 17l-5-5")
-    end
+    render Components::Icon.new(:check, stroke_width: "2.6", class: CHECK_ICON_CLASS)
   end
 
   def render_new_client_row
@@ -64,9 +61,6 @@ class Components::Owner::Appointments::ClientSearch < Components::Base
   end
 
   def render_plus_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: PLUS_ICON_CLASS) do |icon|
-      icon.path(d: "M12 5v14M5 12h14")
-    end
+    render Components::Icon.new(:plus, class: PLUS_ICON_CLASS)
   end
 end

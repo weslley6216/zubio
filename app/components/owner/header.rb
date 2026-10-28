@@ -63,12 +63,7 @@ class Components::Owner::Header < Components::Base
   end
 
   def render_gear(current)
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true",
-      class: "h-[17px] w-[17px] flex-none #{current ? "text-brand-accent" : "text-ink-muted"}") do |icon|
-      icon.circle(cx: "12", cy: "12", r: "3")
-      icon.path(d: Components::Owner::Menu::GEAR_PATH)
-    end
+    render Components::Icon.new(:settings, class: "h-[17px] w-[17px] flex-none #{current ? "text-brand-accent" : "text-ink-muted"}")
   end
 
   def render_mobile_bar
@@ -102,7 +97,7 @@ class Components::Owner::Header < Components::Base
 
   def menu_items
     [
-      [ CLIENTS_LABEL, owner_clients_path, @current_section == :clients, :clients ],
+      [ CLIENTS_LABEL, owner_clients_path, @current_section == :clients, :users ],
       [ SETTINGS_LABEL, owner_settings_path, @current_section == :settings, :settings ]
     ]
   end

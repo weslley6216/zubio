@@ -112,12 +112,7 @@ class Components::Owner::BrandQuestion::Logo < Components::Base
   end
 
   def render_upload_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: UPLOAD_ICON_CLASS) do |icon|
-      icon.path(d: "M12 16V4")
-      icon.path(d: "m8 8 4-4 4 4")
-      icon.path(d: "M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7")
-    end
+    render Components::Icon.new(:share, class: UPLOAD_ICON_CLASS)
   end
 
   def render_no_logo_card

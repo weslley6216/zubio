@@ -76,10 +76,7 @@ class Components::Owner::AgendaDay < Components::Base
   end
 
   def render_plus_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.4", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: NEW_APPOINTMENT_ICON_CLASS) do |icon|
-      icon.path(d: "M12 5v14M5 12h14")
-    end
+    render Components::Icon.new(:plus, stroke_width: "2.4", class: NEW_APPOINTMENT_ICON_CLASS)
   end
 
   def count_label
@@ -104,11 +101,7 @@ class Components::Owner::AgendaDay < Components::Base
   end
 
   def render_calendar_icon
-    svg(viewBox: "0 0 28 28", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: "h-7 w-7 text-ink-subtle") do |icon|
-      icon.rect(x: "3", y: "5", width: "18", height: "16", rx: "3")
-      icon.path(d: "M8 3v4M16 3v4M3 11h18")
-    end
+    render Components::Icon.new(:calendar, class: "h-7 w-7 text-ink-subtle")
   end
 
   def render_install_invite

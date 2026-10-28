@@ -20,11 +20,9 @@ class Views::Owner::Settings::Show < Views::Base
   UPCOMING = { one: "próxima", other: "próximas" }.freeze
   REGISTERED = { one: "cadastrado", other: "cadastrados" }.freeze
   DISABLED = { one: "desativado", other: "desativados" }.freeze
-  CHEVRON_PATH = "m9 6 6 6-6 6".freeze
 
   PAGE_CLASS = "#{Components::Owner::Panel::CONTENT} grid gap-[18px] py-5".freeze
   BACK_LABEL = "Voltar".freeze
-  BACK_ICON = "m15 6-6 6 6 6".freeze
   TOP_BAR_CLASS = "flex items-center gap-3.5 border-b border-line bg-surface px-5 py-3.5".freeze
   BACK_CLASS = "grid h-11 w-11 flex-none place-items-center rounded-full border border-line bg-surface".freeze
   TITLE_CLASS = "text-[16px] leading-[normal] font-extrabold tracking-[-0.01em] text-ink".freeze
@@ -64,8 +62,7 @@ class Views::Owner::Settings::Show < Views::Base
   def render_top_bar
     header(class: TOP_BAR_CLASS, data: { top_bar: true }) do
       a(href: owner_appointments_path, class: BACK_CLASS, aria_label: BACK_LABEL) do
-        svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.2", stroke_linecap: "round",
-          stroke_linejoin: "round", aria_hidden: "true", class: "h-5 w-5 text-ink") { |icon| icon.path(d: BACK_ICON) }
+        render Components::Icon.new(:chevron_left, stroke_width: "2.2", class: "h-5 w-5 text-ink")
       end
       span(class: TITLE_CLASS, data: { top_title: true }) { TITLE }
     end
@@ -136,8 +133,7 @@ class Views::Owner::Settings::Show < Views::Base
   end
 
   def render_chevron
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.5", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: CHEVRON_CLASS) { |icon| icon.path(d: CHEVRON_PATH) }
+    render Components::Icon.new(:chevron_right, stroke_width: "2.5", class: CHEVRON_CLASS)
   end
 
   def logo_summary = @tenant.branded? ? LOGO_UPLOADED : LOGO_INITIAL

@@ -26,8 +26,8 @@ RSpec.describe "Owner settings", type: :request do
       get owner_settings_path
 
       document = Nokogiri::HTML5(response.body)
-      expect(document.at_css("[data-setting='name']").to_html).to include(Views::Owner::Settings::Show::CHEVRON_PATH)
-      expect(document.at_css("[data-setting='address']").to_html).not_to include(Views::Owner::Settings::Show::CHEVRON_PATH)
+      expect(document.at_css("[data-setting='name']").to_html).to include(%(data-icon="chevron-right"))
+      expect(document.at_css("[data-setting='address']").to_html).not_to include(%(data-icon="chevron-right"))
     end
 
     it "gathers the brand, the service and the account groups, each row with its current value" do
@@ -192,7 +192,7 @@ RSpec.describe "Owner settings", type: :request do
       document = Nokogiri::HTML5(response.body)
       expect(document.at_css("[data-setting='schedule_exceptions'] a")["href"]).to eq(owner_schedule_exceptions_path)
       expect(document.at_css("[data-setting='schedule_exceptions'] [data-summary]").text).to eq("2 próximas")
-      expect(document.at_css("[data-setting='schedule_exceptions']").to_html).to include(Views::Owner::Settings::Show::CHEVRON_PATH)
+      expect(document.at_css("[data-setting='schedule_exceptions']").to_html).to include(%(data-icon="chevron-right"))
     end
 
     it "summarizes holidays as none when there is nothing upcoming" do

@@ -28,7 +28,7 @@ RSpec.describe "Owner services catalog", type: :request do
       document = Nokogiri::HTML5(response.body)
       expect(document.css("[data-catalog] span").map(&:text)).to include("45 min", "60 min", "120 min")
       expect(document.css("[data-catalog] [data-price]").map(&:text)).to contain_exactly("R$ 60,00", "R$ 85,00", "R$ 450,00")
-      expect(document.css("[data-catalog] li").map { |row| row.css(%(path[d="M12 7v5l3 2"])).size }).to eq([ 1, 1, 1 ])
+      expect(document.css("[data-catalog] li").map { |row| row.css(%([data-icon="clock"])).size }).to eq([ 1, 1, 1 ])
     end
 
     it "shows the description of a service that has one" do
@@ -139,7 +139,7 @@ RSpec.describe "Owner services catalog", type: :request do
       expect(action["class"]).to eq(Views::Owner::Services::Index::ACTION_CLASS)
       expect(action["aria-label"]).to eq(Views::Owner::Services::Index::NEW_ACCESSIBLE_LABEL)
       expect(action.text.strip).to eq(Views::Owner::Services::Index::NEW_ACCESSIBLE_LABEL)
-      expect(action.at_css(%(svg path[d="M12 5v14M5 12h14"]))).to be_present
+      expect(action.at_css(%([data-icon="plus"]))).to be_present
       expect(response.body.scan(%(href="#{new_owner_service_path}")).size).to eq(1)
       expect(response.body).not_to include(Views::Owner::Services::Index::FIRST_LABEL)
     end
@@ -337,7 +337,7 @@ RSpec.describe "Owner services catalog", type: :request do
       get owner_services_path
 
       action = Nokogiri::HTML5(response.body).at_css("[data-service-table] a[href='#{edit_owner_service_path(service)}']")
-      expect(action.at_css(%(svg path[d="M12 20h9"]))).to be_present
+      expect(action.at_css(%([data-icon="pen-line"]))).to be_present
     end
 
     it "keeps another establishment's service out of the desktop table" do

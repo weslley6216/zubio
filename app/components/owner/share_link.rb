@@ -56,25 +56,15 @@ class Components::Owner::ShareLink < Components::Base
   end
 
   def render_link_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: LABEL_ICON_CLASS) do |icon|
-      icon.path(d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71")
-      icon.path(d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71")
-    end
+    render Components::Icon.new(:link, class: LABEL_ICON_CLASS)
   end
 
   def render_whatsapp_icon
-    svg(viewBox: "0 0 24 24", fill: "currentColor", aria_hidden: "true", class: ICON_CLASS) do |icon|
-      icon.path(d: "M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.5 8.5 0 0 1-4-1L4 20l1.1-4.4a8.4 8.4 0 0 1-1.1-4.1A8.4 8.4 0 0 1 12.5 3 8.4 8.4 0 0 1 21 11.5z")
-    end
+    render Components::Icon.new(:message_circle, class: ICON_CLASS)
   end
 
   def render_copy_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: ICON_CLASS) do |icon|
-      icon.rect(x: "9", y: "9", width: "13", height: "13", rx: "2")
-      icon.path(d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1")
-    end
+    render Components::Icon.new(:copy, class: ICON_CLASS)
   end
 
   def address = "https://#{@host}"
