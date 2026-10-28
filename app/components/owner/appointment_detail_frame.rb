@@ -38,10 +38,6 @@ class Components::Owner::AppointmentDetailFrame < Components::Base
   end
 
   def render_calendar_icon
-    svg(viewBox: "0 0 28 28", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: "h-7 w-7 text-ink-subtle") do |icon|
-      icon.rect(x: "3", y: "5", width: "18", height: "16", rx: "3")
-      icon.path(d: "M8 3v4M16 3v4M3 11h18")
-    end
+    render Components::Icon.new(:calendar, class: "h-7 w-7 text-ink-subtle")
   end
 end
