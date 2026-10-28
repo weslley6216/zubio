@@ -7,7 +7,7 @@ RSpec.describe Components::Owner::SettingsBackLink, type: :component do
     link = Nokogiri::HTML5.fragment(html).at_css("a")
     expect(link["href"]).to eq("/owner/settings")
     expect(link.text).to include("Configurações")
-    expect(html).to include(described_class::ICON)
+    expect(html).to include(%(data-icon="chevron-left"))
   end
 
   it "wears the muted back treatment" do
