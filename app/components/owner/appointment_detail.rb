@@ -50,8 +50,7 @@ class Components::Owner::AppointmentDetail < Components::Base
   end
 
   def render_back_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.5", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: "h-5 w-5") { |icon| icon.path(d: "m15 6-6 6 6 6") }
+    render Components::Icon.new(:chevron_left, stroke_width: "2.5", class: "h-5 w-5")
   end
 
   def render_desktop_header
@@ -63,8 +62,7 @@ class Components::Owner::AppointmentDetail < Components::Base
   end
 
   def render_close_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: "h-5 w-5") { |icon| icon.path(d: "M6 6l12 12M18 6L6 18") }
+    render Components::Icon.new(:x, class: "h-5 w-5")
   end
 
   def render_body
@@ -147,13 +145,11 @@ class Components::Owner::AppointmentDetail < Components::Base
   end
 
   def render_whatsapp_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: "h-[18px] w-[18px]") { |icon| icon.path(d: "M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.5 8.5 0 0 1-4-1L4 20l1.1-4.4a8.4 8.4 0 0 1-1.1-4.1A8.4 8.4 0 0 1 12.5 3 8.4 8.4 0 0 1 21 11.5z") }
+    render Components::Icon.new(:message_circle, class: "h-[18px] w-[18px]")
   end
 
   def render_phone_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: "h-[18px] w-[18px] lg:hidden") { |icon| icon.path(d: "M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z") }
+    render Components::Icon.new(:phone, class: "h-[18px] w-[18px] lg:hidden")
   end
 
   def render_cancel_footer
