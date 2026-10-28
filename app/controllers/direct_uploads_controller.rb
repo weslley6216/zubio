@@ -1,9 +1,12 @@
 class DirectUploadsController < ActiveStorage::DirectUploadsController
-  before_action :require_session!
+  include TenantResolution
+  include Owner::CurrentOwner
+
+  before_action :require_owner!
 
   private
 
-  def require_session!
-    head :unauthorized if session[:user_id].blank?
+  def require_owner!
+    head :unauthorized unless current_owner
   end
 end

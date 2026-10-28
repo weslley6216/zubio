@@ -1,4 +1,6 @@
 class Owner::BaseController < ApplicationController
+  include Owner::CurrentOwner
+
   class_attribute :panel_section, instance_writer: false
   class_attribute :panel_subtitle, instance_writer: false
 
@@ -13,9 +15,5 @@ class Owner::BaseController < ApplicationController
 
   def enforce_onboarding_gate
     redirect_to owner_onboarding_path unless ActsAsTenant.current_tenant.onboarding_completed?
-  end
-
-  def current_owner
-    @current_owner ||= session[:user_id] && User.owner.find_by(id: session[:user_id])
   end
 end
