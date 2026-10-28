@@ -48,7 +48,7 @@ RSpec.describe Components::Icon, type: :component do
       svg = Nokogiri::HTML5.fragment(described_class.new(name).call).at_css("svg")
 
       expect(svg["data-icon"]).to eq(name.to_s.tr("_", "-"))
-      expect(svg.children).not_to be_empty
+      expect(svg.element_children.size).to eq(described_class::CATALOG.fetch(name).size)
     end
   end
 
