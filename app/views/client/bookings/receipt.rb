@@ -75,10 +75,7 @@ class Views::Client::Bookings::Receipt < Views::Base
   end
 
   def render_check_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.6", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: BADGE_ICON_CLASS) do |icon|
-      icon.path(d: "M20 6 9 17l-5-5")
-    end
+    render Components::Icon.new(:check, stroke_width: "2.6", class: BADGE_ICON_CLASS)
   end
 
   def subtitle
@@ -129,19 +126,11 @@ class Views::Client::Bookings::Receipt < Views::Base
   end
 
   def render_envelope_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: LINK_ICON_CLASS) do |icon|
-      icon.rect(x: "3", y: "5", width: "18", height: "14", rx: "2")
-      icon.path(d: "m3 7 9 6 9-6")
-    end
+    render Components::Icon.new(:mail, class: LINK_ICON_CLASS)
   end
 
   def render_calendar_icon(klass)
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: klass) do |icon|
-      icon.rect(x: "3", y: "5", width: "18", height: "16", rx: "2")
-      icon.path(d: "M3 10h18M8 3v4M16 3v4")
-    end
+    render Components::Icon.new(:calendar, class: klass)
   end
 
   def render_sent_body
