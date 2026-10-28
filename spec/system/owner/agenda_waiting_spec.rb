@@ -36,13 +36,15 @@ RSpec.describe "Owner agenda skeleton", type: :system, js: true do
 
   %w[phone desktop].each do |screen|
     it "draws only whole skeleton rows as tall as an agenda row on the #{screen}" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
       tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
       professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
       service = create(:service, tenant: tenant, duration_minutes: 45)
       client = create(:client, tenant: tenant)
       ActsAsTenant.with_tenant(tenant) do
-        create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: client, starts_at: Date.current.in_time_zone.change(hour: 9, min: 45))
-        create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: client, starts_at: Date.current.in_time_zone.change(hour: 11, min: 0))
+        create(:working_hour, tenant: tenant, professional: professional_user.professional, weekday: 2, opens_at: "09:00", closes_at: "18:00")
+        create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
+        create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 11, 0))
       end
       emulate_desktop_screen if screen == "desktop"
       sign_in_owner(professional_user)
