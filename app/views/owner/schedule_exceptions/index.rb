@@ -19,7 +19,6 @@ class Views::Owner::ScheduleExceptions::Index < Views::Base
   EMPTY_TITLE = "Nenhuma folga por vir".freeze
   EMPTY_BODY = "Registre acima a primeira data em que você não atende ou atende diferente.".freeze
   MONTHS = %w[jan fev mar abr mai jun jul ago set out nov dez].freeze
-  TRASH_ICON = "M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13".freeze
 
   PAGE_CLASS = "#{Components::Owner::Panel::CONTENT} grid gap-6 py-10".freeze
   HEADING_CLASS = "mt-2 text-xl font-extrabold tracking-tight text-ink".freeze
@@ -167,8 +166,7 @@ class Views::Owner::ScheduleExceptions::Index < Views::Base
 
   def render_remove(exception)
     button_to(owner_schedule_exception_path(exception), method: :delete, class: REMOVE_CLASS, aria_label: REMOVE_LABEL) do
-      svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-        stroke_linejoin: "round", aria_hidden: "true", class: "h-[17px] w-[17px]") { |icon| icon.path(d: TRASH_ICON) }
+      render Components::Icon.new(:trash, class: "h-[17px] w-[17px]")
     end
   end
 
