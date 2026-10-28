@@ -80,11 +80,7 @@ class Views::Client::Establishments::Show < Views::Base
   end
 
   def render_my_appointments_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: MY_APPOINTMENTS_ICON_CLASS) do |icon|
-      icon.rect(x: "3", y: "5", width: "18", height: "16", rx: "2")
-      icon.path(d: "M3 10h18M8 3v4M16 3v4")
-    end
+    render Components::Icon.new(:calendar, class: MY_APPOINTMENTS_ICON_CLASS)
   end
 
   def badge? = @my_appointments_count.to_i.positive?
