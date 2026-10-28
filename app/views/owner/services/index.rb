@@ -103,10 +103,7 @@ class Views::Owner::Services::Index < Views::Base
   end
 
   def render_plus_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.5", stroke_linecap: "round",
-      aria_hidden: "true", class: PLUS_ICON_CLASS) do |icon|
-      icon.path(d: "M12 5v14M5 12h14")
-    end
+    render Components::Icon.new(:plus, stroke_width: "2.5", class: PLUS_ICON_CLASS)
   end
 
   def render_catalog
@@ -156,11 +153,7 @@ class Views::Owner::Services::Index < Views::Base
   end
 
   def render_table_clock
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: TABLE_CLOCK_CLASS) do |icon|
-      icon.circle(cx: "12", cy: "12", r: "9")
-      icon.path(d: "M12 7v5l3 2")
-    end
+    render Components::Icon.new(:clock, class: TABLE_CLOCK_CLASS)
   end
 
   def render_table_price(service)
@@ -193,11 +186,7 @@ class Views::Owner::Services::Index < Views::Base
   end
 
   def render_table_pencil
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: TABLE_PENCIL_CLASS) do |icon|
-      icon.path(d: "M12 20h9")
-      icon.path(d: "M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z")
-    end
+    render Components::Icon.new(:pen_line, class: TABLE_PENCIL_CLASS)
   end
 
   def render_list
