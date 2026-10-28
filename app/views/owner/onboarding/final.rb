@@ -62,10 +62,7 @@ class Views::Owner::Onboarding::Final < Views::Base
   end
 
   def render_check_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.6", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: BADGE_ICON_CLASS) do |icon|
-      icon.path(d: "M20 6 9 17l-5-5")
-    end
+    render Components::Icon.new(:check, stroke_width: "2.6", class: BADGE_ICON_CLASS)
   end
 
   def render_body
@@ -121,12 +118,7 @@ class Views::Owner::Onboarding::Final < Views::Base
   end
 
   def render_logo_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: LOGO_NOTICE_ICON_CLASS) do |icon|
-      icon.path(d: "M12 3v12")
-      icon.path(d: "m7 10 5 5 5-5")
-      icon.path(d: "M5 21h14")
-    end
+    render Components::Icon.new(:arrow_down_to_line, class: LOGO_NOTICE_ICON_CLASS)
   end
 
   def render_footer
