@@ -157,26 +157,20 @@ class Views::Owner::WorkingHours::Edit < Views::Base
 
   def render_remove_break_button
     button(type: "button", aria_label: REMOVE_BREAK_LABEL, class: REMOVE_CLASS, data: { action: "working-week#removeBreak" }) do
-      svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.2", stroke_linecap: "round",
-        stroke_linejoin: "round", aria_hidden: "true", class: "h-[17px] w-[17px] text-danger") { |icon| icon.path(d: "M5 12h14") }
+      render Components::Icon.new(:minus, stroke_width: "2.2", class: "h-[17px] w-[17px] text-danger")
     end
   end
 
   def render_add_break_button
     button(type: "button", class: "flex #{ADD_CLASS}", data: { add_break: true, action: "working-week#addBreak" }) do
-      svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.4", stroke_linecap: "round",
-        aria_hidden: "true", class: "h-[15px] w-[15px]") { |icon| icon.path(d: "M12 5v14M5 12h14") }
+      render Components::Icon.new(:plus, stroke_width: "2.4", class: "h-[15px] w-[15px]")
       plain ADD_BREAK_LABEL
     end
   end
 
   def render_copy_button
     button(type: "button", class: "flex #{COPY_CLASS}", data: { copy: true, action: "working-week#copyToAll" }) do
-      svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.2", stroke_linecap: "round",
-        stroke_linejoin: "round", aria_hidden: "true", class: "h-[15px] w-[15px]") do |icon|
-        icon.rect(x: "9", y: "9", width: "11", height: "11", rx: "2")
-        icon.path(d: "M15 5H6a2 2 0 0 0-2 2v9")
-      end
+      render Components::Icon.new(:copy, stroke_width: "2.2", class: "h-[15px] w-[15px]")
       plain COPY_LABEL
     end
   end
