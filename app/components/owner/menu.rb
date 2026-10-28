@@ -7,6 +7,18 @@ class Components::Owner::Menu < Components::Base
   RESTING_CLASS = "font-bold text-ink hover:bg-surface-2".freeze
   CHEVRON_PATH = "m9 6 6 6-6 6".freeze
   GEAR_PATH = "M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1 2 2 0 1 1-4 0 1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 15a2 2 0 1 1 0-4 1.6 1.6 0 0 0 1.1-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 9 4.6a2 2 0 1 1 4 0 1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.6 1.6 0 0 0 19.4 11a2 2 0 1 1 0 4z".freeze
+  ICONS = {
+    clients: [
+      [ :path, { d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" } ],
+      [ :circle, { cx: "9", cy: "7", r: "4" } ],
+      [ :path, { d: "M22 21v-2a4 4 0 0 0-3-3.87" } ],
+      [ :path, { d: "M16 3.13a4 4 0 0 1 0 7.75" } ]
+    ],
+    settings: [
+      [ :circle, { cx: "12", cy: "12", r: "3" } ],
+      [ :path, { d: GEAR_PATH } ]
+    ]
+  }.freeze
   DOOR_PATH_1 = "M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3".freeze
   DOOR_PATH_2 = "m16 17 5-5-5-5M21 12H9".freeze
   HAMBURGER_PATH = "M4 7h16M4 12h16M4 17h16".freeze
@@ -19,7 +31,7 @@ class Components::Owner::Menu < Components::Base
     details(class: "group relative lg:hidden", data: { owner_menu: true, controller: "owner-menu", action: "click@window->owner-menu#closeOutside" }) do
       render_summary
       div(class: "absolute -right-1.5 top-full z-30 mt-1 w-[262px] divide-y divide-line overflow-hidden rounded-[14px] border border-line bg-surface shadow-[0_16px_40px_rgba(14,26,36,0.18)]") do
-        @items.each { |label, href, current| render_item(label, href, current) }
+        @items.each { |label, href, current, icon| render_item(label, href, current, icon) }
         render_theme_row
         render_sign_out
       end
@@ -38,19 +50,18 @@ class Components::Owner::Menu < Components::Base
     end
   end
 
-  def render_item(label, href, current)
+  def render_item(label, href, current, icon)
     a(href: href, aria_current: current ? "page" : nil, class: "#{ITEM_CLASS} #{current ? CURRENT_CLASS : RESTING_CLASS}") do
-      render_gear(current)
+      render_icon(icon, current)
       span(class: "flex-grow") { label }
       render_chevron if current
     end
   end
 
-  def render_gear(current)
+  def render_icon(icon, current)
     svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: "h-[18px] w-[18px] flex-none #{current ? "text-brand-600" : "text-ink-muted"}") do |icon|
-      icon.circle(cx: "12", cy: "12", r: "3")
-      icon.path(d: GEAR_PATH)
+      stroke_linejoin: "round", aria_hidden: "true", class: "h-[18px] w-[18px] flex-none #{current ? "text-brand-600" : "text-ink-muted"}") do |svg_icon|
+      ICONS.fetch(icon).each { |element, attributes| svg_icon.public_send(element, **attributes) }
     end
   end
 

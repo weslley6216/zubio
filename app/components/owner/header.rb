@@ -102,8 +102,8 @@ class Components::Owner::Header < Components::Base
 
   def menu_items
     [
-      [ CLIENTS_LABEL, owner_clients_path, @current_section == :clients ],
-      [ SETTINGS_LABEL, owner_settings_path, @current_section == :settings ]
+      [ CLIENTS_LABEL, owner_clients_path, @current_section == :clients, :clients ],
+      [ SETTINGS_LABEL, owner_settings_path, @current_section == :settings, :settings ]
     ]
   end
 end
