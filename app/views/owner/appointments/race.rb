@@ -89,10 +89,7 @@ class Views::Owner::Appointments::Race < Views::Base
   end
 
   def render_back_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.5", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: BACK_ICON_CLASS) do |icon|
-      icon.path(d: "m15 6-6 6 6 6")
-    end
+    render Components::Icon.new(:chevron_left, stroke_width: "2.5", class: BACK_ICON_CLASS)
   end
 
   def render_alert
@@ -106,11 +103,7 @@ class Views::Owner::Appointments::Race < Views::Base
   end
 
   def render_alert_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: ALERT_ICON_CLASS) do |icon|
-      icon.circle(cx: "12", cy: "12", r: "9")
-      icon.path(d: "M12 8v4M12 16h.01")
-    end
+    render Components::Icon.new(:circle_alert, class: ALERT_ICON_CLASS)
   end
 
   def render_detail_card
