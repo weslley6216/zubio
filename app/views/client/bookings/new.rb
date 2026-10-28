@@ -92,10 +92,7 @@ class Views::Client::Bookings::New < Views::Base
   end
 
   def render_back_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.5", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: BACK_ICON_CLASS) do |icon|
-      icon.path(d: "m15 6-6 6 6 6")
-    end
+    render Components::Icon.new(:chevron_left, stroke_width: "2.5", class: BACK_ICON_CLASS)
   end
 
   def render_service_step
