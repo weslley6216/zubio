@@ -70,11 +70,7 @@ class Views::Owner::Clients::Index < Views::Base
   end
 
   def render_search_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: SEARCH_ICON_CLASS) do |icon|
-      icon.circle(cx: "11", cy: "11", r: "7")
-      icon.path(d: "m20 20-4-4")
-    end
+    render Components::Icon.new(:search, class: SEARCH_ICON_CLASS)
   end
 
   def render_footer
