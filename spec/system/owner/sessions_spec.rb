@@ -25,4 +25,16 @@ RSpec.describe "Owner login screen", type: :system, js: true do
       expect(page).to fit_the_phone_width
     end
   end
+
+  it "keeps the focus ring on the e-mail field and drops it inside the branded password box" do
+    tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    visit new_owner_session_url(host: "#{tenant.subdomain}.zubio.com.br")
+
+    find_field("E-mail").click
+    email_outline = computed("input[type=email]", "outlineStyle")
+    find_field("Senha").click
+
+    expect(email_outline).to eq("solid")
+    expect(computed("input[type=password]", "outlineStyle")).to eq("none")
+  end
 end

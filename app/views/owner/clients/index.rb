@@ -12,7 +12,7 @@ class Views::Owner::Clients::Index < Views::Base
   TITLE_CLASS = "text-[20px] font-extrabold tracking-[-0.02em] text-ink sm:text-[28px]".freeze
   COUNT_CLASS = "text-[13px] font-bold tabular-nums text-ink-muted sm:hidden".freeze
   SUBTITLE_CLASS = "hidden text-[14px] text-ink-muted sm:block".freeze
-  SEARCH_FORM_CLASS = "order-1 flex min-h-12 items-center gap-2.5 rounded-[10px] border border-line-strong bg-surface px-3.5 sm:order-2 sm:min-h-11 sm:w-[340px] sm:flex-none".freeze
+  SEARCH_FORM_CLASS = "order-1 flex min-h-12 items-center gap-2.5 rounded-[10px] border border-line-strong bg-surface px-3.5 focus-within:border-brand-600 sm:order-2 sm:min-h-11 sm:w-[340px] sm:flex-none".freeze
   SEARCH_ICON_CLASS = "h-[18px] w-[18px] flex-none text-ink-subtle".freeze
   SEARCH_INPUT_CLASS = "min-w-0 flex-grow bg-transparent text-[15px] text-ink placeholder:text-ink-subtle focus:outline-none".freeze
   FOOTER_CLASS = "text-center text-[12px] leading-[1.5] text-ink-subtle".freeze

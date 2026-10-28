@@ -73,4 +73,17 @@ RSpec.describe "Owner clients screen", type: :system, js: true do
     expect(computed("[data-busy-fade]", "opacity")).to eq("0.5")
     expect(computed("[data-busy-fade]", "pointerEvents")).to eq("none")
   end
+
+  it "moves the focus ring from the search input to the search box border" do
+    tenant = create(:tenant, subdomain: "mary-sombracelhas", name: "Mary Sombracelhas")
+    create(:branding, tenant: tenant, brand_600: "#8E4B6B")
+    owner = create(:user, :with_professional, tenant: tenant)
+    sign_in_owner(owner)
+    visit "http://#{tenant.subdomain}.zubio.com.br#{owner_clients_path}"
+
+    find("input[name=q]").click
+
+    expect(computed("input[name=q]", "outlineStyle")).to eq("none")
+    expect(computed_hex("form:has(> input[name=q])", "borderTopColor")).to eq("#8E4B6B")
+  end
 end

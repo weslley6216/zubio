@@ -153,9 +153,11 @@
 
 /* One rule instead of a focus utility on every control: the ring then exists
    on anything focusable, including whatever gets added later. */
-:focus-visible {
-  outline: 2px solid var(--brand-accent);
-  outline-offset: 2px;
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--brand-accent);
+    outline-offset: 2px;
+  }
 }
 
 .turbo-progress-bar {
