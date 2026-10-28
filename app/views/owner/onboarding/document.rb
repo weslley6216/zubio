@@ -180,20 +180,11 @@ class Views::Owner::Onboarding::Document < Views::Base
   end
 
   def render_edit_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: "#{SERVICE_ICON_CLASS} text-ink-muted") do |icon|
-      icon.path(d: "M12 20h9")
-      icon.path(d: "M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z")
-    end
+    render Components::Icon.new(:pen_line, class: "#{SERVICE_ICON_CLASS} text-ink-muted")
   end
 
   def render_remove_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: "#{SERVICE_ICON_CLASS} text-danger") do |icon|
-      icon.path(d: "M4 7h16")
-      icon.path(d: "M9 7V5h6v2")
-      icon.path(d: "M6 7l1 13h10l1-13")
-    end
+    render Components::Icon.new(:trash, class: "#{SERVICE_ICON_CLASS} text-danger")
   end
 
   def render_new_service_card
@@ -209,10 +200,7 @@ class Views::Owner::Onboarding::Document < Views::Base
   end
 
   def render_add_service_icon
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.4", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: "h-4.5 w-4.5") do |icon|
-      icon.path(d: "M12 5v14M5 12h14")
-    end
+    render Components::Icon.new(:plus, stroke_width: "2.4", class: "h-4.5 w-4.5")
   end
 
   def render_working_hours
