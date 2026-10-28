@@ -5,23 +5,6 @@ class Components::Owner::Menu < Components::Base
   ITEM_CLASS = "flex items-center gap-3 px-4 py-3.5 text-[14px] leading-[normal]".freeze
   CURRENT_CLASS = "bg-brand-soft text-brand-soft-ink font-extrabold".freeze
   RESTING_CLASS = "font-bold text-ink hover:bg-surface-2".freeze
-  CHEVRON_PATH = "m9 6 6 6-6 6".freeze
-  GEAR_PATH = "M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1 2 2 0 1 1-4 0 1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 15a2 2 0 1 1 0-4 1.6 1.6 0 0 0 1.1-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 9 4.6a2 2 0 1 1 4 0 1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.6 1.6 0 0 0 19.4 11a2 2 0 1 1 0 4z".freeze
-  ICONS = {
-    clients: [
-      [ :path, { d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" } ],
-      [ :circle, { cx: "9", cy: "7", r: "4" } ],
-      [ :path, { d: "M22 21v-2a4 4 0 0 0-3-3.87" } ],
-      [ :path, { d: "M16 3.13a4 4 0 0 1 0 7.75" } ]
-    ],
-    settings: [
-      [ :circle, { cx: "12", cy: "12", r: "3" } ],
-      [ :path, { d: GEAR_PATH } ]
-    ]
-  }.freeze
-  DOOR_PATH_1 = "M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3".freeze
-  DOOR_PATH_2 = "m16 17 5-5-5-5M21 12H9".freeze
-  HAMBURGER_PATH = "M4 7h16M4 12h16M4 17h16".freeze
 
   def initialize(items:)
     @items = items
@@ -45,8 +28,7 @@ class Components::Owner::Menu < Components::Base
       class: "grid h-11 w-11 cursor-pointer list-none place-items-center rounded-lg border border-line bg-surface text-ink group-open:border-brand-600 group-open:bg-brand-soft group-open:text-brand-600 [&::-webkit-details-marker]:hidden"
     ) do
       span(class: "sr-only") { LABEL }
-      svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-        stroke_linejoin: "round", aria_hidden: "true", class: "h-5 w-5") { |icon| icon.path(d: HAMBURGER_PATH) }
+      render Components::Icon.new(:menu, class: "h-5 w-5")
     end
   end
 
@@ -59,15 +41,11 @@ class Components::Owner::Menu < Components::Base
   end
 
   def render_icon(icon, current)
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: "h-[18px] w-[18px] flex-none #{current ? "text-brand-600" : "text-ink-muted"}") do |svg_icon|
-      ICONS.fetch(icon).each { |element, attributes| svg_icon.public_send(element, **attributes) }
-    end
+    render Components::Icon.new(icon, class: "h-[18px] w-[18px] flex-none #{current ? "text-brand-600" : "text-ink-muted"}")
   end
 
   def render_chevron
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2.5", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: "h-4 w-4 flex-none text-brand-600") { |icon| icon.path(d: CHEVRON_PATH) }
+    render Components::Icon.new(:chevron_right, stroke_width: "2.5", class: "h-4 w-4 flex-none text-brand-600")
   end
 
   def render_theme_row
@@ -85,10 +63,6 @@ class Components::Owner::Menu < Components::Base
   end
 
   def render_door
-    svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: "2", stroke_linecap: "round",
-      stroke_linejoin: "round", aria_hidden: "true", class: "h-[18px] w-[18px] flex-none text-ink-muted") do |icon|
-      icon.path(d: DOOR_PATH_1)
-      icon.path(d: DOOR_PATH_2)
-    end
+    render Components::Icon.new(:log_out, class: "h-[18px] w-[18px] flex-none text-ink-muted")
   end
 end
