@@ -182,10 +182,42 @@ RSpec.describe "Client Google OAuth", type: :request do
   end
 
   describe "failure" do
-    it "returns the visitor to a safe page without a 500 when Google denies consent" do
+    it "returns a visitor who gives up at Google to the establishment they came from" do
+      state = Rails.application.message_verifier(:client_oauth_state).generate(
+        { "tenant" => tenant.subdomain }, expires_in: 10.minutes
+      )
+
+      get "/auth/failure", params: { state: state }
+
+      expect(response).to redirect_to(root_url(host: tenant.canonical_host, signin: "failed"))
+    end
+
+    it "sends a failure with no recognizable establishment to the platform root with the alert" do
       get "/auth/failure", params: { message: "access_denied" }
 
-      expect(response).to have_http_status(:redirect)
+      expect(response).to redirect_to(root_url(host: Tenant::PLATFORM_HOST))
+      expect(flash[:alert]).to eq(Client::Auth::OmniauthController::FAILURE_ALERT)
+    end
+
+    it "ignores a tampered state that points at another establishment and lands on the platform root" do
+      ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      tampered = "#{Rails.application.message_verifier(:client_oauth_state).generate({ "tenant" => ze.subdomain }, expires_in: 10.minutes)}x"
+
+      get "/auth/failure", params: { state: tampered }
+
+      expect(response).to redirect_to(root_url(host: Tenant::PLATFORM_HOST))
+      expect(response.location).not_to include(ze.canonical_host)
+    end
+
+    it "sends a failure whose signed state names an inactive establishment to the platform root" do
+      create(:tenant, subdomain: "suspenso", status: "suspended")
+      state = Rails.application.message_verifier(:client_oauth_state).generate(
+        { "tenant" => "suspenso" }, expires_in: 10.minutes
+      )
+
+      get "/auth/failure", params: { state: state }
+
+      expect(response).to redirect_to(root_url(host: Tenant::PLATFORM_HOST))
     end
   end
 end

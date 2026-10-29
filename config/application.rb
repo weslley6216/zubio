@@ -28,6 +28,14 @@ module Zubio
     origin_from(active_storage.service_configurations&.dig(active_storage.service.to_s, "endpoint"))
   end
 
+  def self.google_oauth_credentials
+    if Rails.env.production? && ENV["SECRET_KEY_BASE_DUMMY"].blank?
+      [ ENV.fetch("GOOGLE_CLIENT_ID"), ENV.fetch("GOOGLE_CLIENT_SECRET") ]
+    else
+      [ ENV["GOOGLE_CLIENT_ID"], ENV["GOOGLE_CLIENT_SECRET"] ]
+    end
+  end
+
   def self.origin_from(endpoint)
     return if endpoint.blank?
 

@@ -457,6 +457,24 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(Nokogiri::HTML5(response.body).at_css("[data-my-appointments-badge]").text).to eq("2")
   end
 
+  it "shows the Google sign-in failure alert when the visitor is bounced back from a failed sign-in" do
+    create(:service, tenant: tenant, name: "Corte feminino")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path(signin: "failed")
+
+    expect(response.body).to include("Não foi possível entrar com o Google. Tente de novo.")
+  end
+
+  it "shows no sign-in failure alert on a plain visit" do
+    create(:service, tenant: tenant, name: "Corte feminino")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    expect(response.body).not_to include("Não foi possível entrar com o Google. Tente de novo.")
+  end
+
   it "shows a logo-less host its own initial and serves no other tenant's emblem image" do
     create(:branding, :with_wide_logo, tenant: create(:tenant, subdomain: "mary-sombracelhas", name: "Mary Sombracelhas"))
     create(:service, tenant: tenant, name: "Corte feminino")
