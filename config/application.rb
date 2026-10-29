@@ -29,7 +29,7 @@ module Zubio
   end
 
   def self.google_oauth_credentials
-    if Rails.env.production?
+    if Rails.env.production? && ENV["SECRET_KEY_BASE_DUMMY"].blank?
       [ ENV.fetch("GOOGLE_CLIENT_ID"), ENV.fetch("GOOGLE_CLIENT_SECRET") ]
     else
       [ ENV["GOOGLE_CLIENT_ID"], ENV["GOOGLE_CLIENT_SECRET"] ]

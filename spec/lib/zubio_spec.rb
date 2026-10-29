@@ -31,6 +31,16 @@ RSpec.describe Zubio do
       expect { described_class.google_oauth_credentials }.to raise_error(KeyError, /GOOGLE_CLIENT_SECRET/)
     end
 
+    it "reads the credentials leniently while the asset build boots production without runtime secrets" do
+      allow(Rails).to receive(:env).and_return(ActiveSupport::StringInquirer.new("production"))
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("SECRET_KEY_BASE_DUMMY").and_return("1")
+      allow(ENV).to receive(:[]).with("GOOGLE_CLIENT_ID").and_return(nil)
+      allow(ENV).to receive(:[]).with("GOOGLE_CLIENT_SECRET").and_return(nil)
+
+      expect(described_class.google_oauth_credentials).to eq([ nil, nil ])
+    end
+
     it "reads the credentials leniently outside production, tolerating their absence" do
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("GOOGLE_CLIENT_ID").and_return(nil)
