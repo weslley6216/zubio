@@ -1,4 +1,6 @@
 class Client::Auth::OmniauthController < ApplicationController
+  FAILURE_ALERT = "Não foi possível entrar com o Google. Tente de novo.".freeze
+
   skip_before_action :resolve_tenant
   before_action :redirect_to_platform_root, unless: :platform_root_host?
 
@@ -12,8 +14,7 @@ class Client::Auth::OmniauthController < ApplicationController
 
   def callback
     auth = request.env["omniauth.auth"]
-    data = Rails.application.message_verifier(:client_oauth_state).verify(signed_state)
-    tenant = Tenant.active.find_by(subdomain: data["tenant"])
+    tenant, data = resolve_signed_state
 
     return redirect_to_platform_root if tenant.nil?
 
@@ -31,18 +32,27 @@ class Client::Auth::OmniauthController < ApplicationController
       )
       redirect_to new_client_account_phone_url(host: tenant.canonical_host, token: identity), allow_other_host: true
     end
-  rescue ActiveSupport::MessageVerifier::InvalidSignature
-    redirect_to_platform_root
   end
 
   def failure
-    redirect_to_platform_root(alert: "Não foi possível entrar com o Google. Tente de novo.")
+    tenant, = resolve_signed_state
+
+    return redirect_to_platform_root(alert: FAILURE_ALERT) if tenant.nil?
+
+    redirect_to root_url(host: tenant.canonical_host, signin: "failed"), allow_other_host: true
   end
 
   private
 
   def signed_state
     request.env["omniauth.origin"].presence || params[:state]
+  end
+
+  def resolve_signed_state
+    data = Rails.application.message_verifier(:client_oauth_state).verify(signed_state)
+    [ Tenant.active.find_by(subdomain: data["tenant"]), data ]
+  rescue ActiveSupport::MessageVerifier::InvalidSignature
+    [ nil, nil ]
   end
 
   def redirect_to_platform_root(alert: nil)
