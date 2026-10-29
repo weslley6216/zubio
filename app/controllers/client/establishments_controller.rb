@@ -1,5 +1,7 @@
 class Client::EstablishmentsController < Client::BaseController
   def show
+    flash.now[:alert] = Client::Auth::OmniauthController::FAILURE_ALERT if params[:signin] == "failed"
+
     tenant = ActsAsTenant.current_tenant
     professional = tenant.professionals.active.first
 
