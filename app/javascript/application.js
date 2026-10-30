@@ -27,3 +27,9 @@ document.addEventListener("turbo:before-frame-render", (event) => {
 for (const name of [ "turbo:frame-render", "turbo:frame-missing" ]) {
   document.addEventListener(name, (event) => event.target.removeAttribute("data-loading"))
 }
+
+document.addEventListener("turbo:before-morph-attribute", (event) => {
+  if (event.detail.attributeName === "open" && event.target.hasAttribute("data-preserve-open")) {
+    event.preventDefault()
+  }
+})

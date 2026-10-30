@@ -35,8 +35,27 @@ RSpec.describe "Owner agenda live updates", type: :system, js: true, cable: true
 
     ActsAsTenant.with_tenant(tenant) { appointment.cancel! }
 
-    expect(page).to have_css(".line-through", text: "Ana Paula Ribeiro")
+    expect(page).to have_text("1 desmarcado")
+    expect(page).to have_no_css(".line-through", text: "Ana Paula Ribeiro")
     expect(page).to fit_the_phone_width
+  end
+
+  it "keeps the open cancellations group open across a live refresh" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    cancelled_client = create(:client, tenant: tenant, name: "Bruna Salles")
+    ActsAsTenant.with_tenant(tenant) { create(:appointment, :cancelled, tenant: tenant, professional: professional_user.professional, service: service, client: cancelled_client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+    sign_in_owner(professional_user)
+    find("summary", text: "desmarcado").click
+    expect(page).to have_css("details[open]")
+
+    ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: create(:client, tenant: tenant, name: "Ana Paula Ribeiro"), starts_at: Time.zone.local(2026, 9, 8, 11, 0)) }
+
+    expect(page).to have_text("Ana Paula Ribeiro")
+    expect(page).to have_css("details[open]")
   end
 
   it "leaves the open day untouched when a booking lands on another day" do
