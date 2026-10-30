@@ -20,5 +20,84 @@ RSpec.describe "Owner agenda live updates", type: :system, js: true, cable: true
     end
 
     expect(page).to have_text("Ana Paula Ribeiro")
+    expect(page).to fit_the_phone_width
+  end
+
+  it "reflects a client cancellation on the open agenda without reloading" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro")
+    appointment = ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+    sign_in_owner(professional_user)
+
+    ActsAsTenant.with_tenant(tenant) { appointment.cancel! }
+
+    expect(page).to have_css(".line-through", text: "Ana Paula Ribeiro")
+    expect(page).to fit_the_phone_width
+  end
+
+  it "leaves the open day untouched when a booking lands on another day" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    wednesday = Date.current + 1
+    sign_in_owner(professional_user)
+
+    ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: create(:client, tenant: tenant, name: "Bruna Salles"), starts_at: wednesday.in_time_zone.change(hour: 9, min: 45)) }
+    sleep 0.3
+
+    expect(page).to have_no_text("Bruna Salles")
+  end
+
+  it "shows an appointment from another day once the owner switches to it" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    wednesday = Date.current + 1
+    sign_in_owner(professional_user)
+    ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: create(:client, tenant: tenant, name: "Bruna Salles"), starts_at: wednesday.in_time_zone.change(hour: 9, min: 45)) }
+
+    find("[data-day='#{wednesday.iso8601}']").click
+
+    expect(page).to have_text("Bruna Salles")
+  end
+
+  it "updates a second open device without reloading" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    sign_in_owner(professional_user)
+    using_session(:second_device) { sign_in_owner(professional_user) }
+
+    ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: create(:client, tenant: tenant, name: "Ana Paula Ribeiro"), starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+
+    expect(page).to have_text("Ana Paula Ribeiro")
+    using_session(:second_device) { expect(page).to have_text("Ana Paula Ribeiro") }
+  end
+
+  it "catches up with what changed while hidden when the page becomes visible again" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro")
+    sign_in_owner(professional_user)
+    Appointment.suppressing_turbo_broadcasts do
+      ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+    end
+
+    page.execute_script('document.dispatchEvent(new Event("visibilitychange"))')
+
+    expect(page).to have_text("Ana Paula Ribeiro")
   end
 end
