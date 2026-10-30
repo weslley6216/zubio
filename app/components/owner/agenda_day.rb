@@ -103,10 +103,10 @@ class Components::Owner::AgendaDay < Components::Base
   end
 
   def render_cancelled_group
-    details(class: "group", data: { preserve_open: true }) do
-      summary(class: "flex min-h-[44px] cursor-pointer list-none items-center gap-2 text-[13px] font-bold text-ink-muted [&::-webkit-details-marker]:hidden") do
-        render Components::Icon.new(:chevron_down, class: "h-4 w-4 flex-none text-ink-subtle transition-transform group-open:rotate-180")
+    details(class: "group mt-1", data: { preserve_open: true }) do
+      summary(class: "flex min-h-[48px] cursor-pointer list-none items-center justify-between rounded-xl border border-dashed border-line-strong px-4 text-[13px] font-bold text-ink-muted [&::-webkit-details-marker]:hidden") do
         span { cancelled_label }
+        render Components::Icon.new(:chevron_down, stroke_width: "2.6", class: "h-4 w-4 flex-none text-ink-muted transition-transform group-open:rotate-180")
       end
       div(class: "mt-2.5 grid gap-2.5") do
         cancelled.each { |appointment| render Components::Owner::AppointmentRow.new(appointment: appointment) }
