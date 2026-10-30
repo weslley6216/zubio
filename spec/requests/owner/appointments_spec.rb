@@ -157,6 +157,42 @@ RSpec.describe "Owner appointments", type: :request do
       expect(response.body).not_to include("Carlos Zé")
     end
 
+    it "counts and shows only its own tenant's cancellation in the group" do
+      ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      ze_professional = create(:professional, tenant: ze)
+      ze_service = create(:service, tenant: ze)
+      ze_client = create(:client, tenant: ze, name: "Carlos Zé")
+      ActsAsTenant.with_tenant(ze) { create(:appointment, :cancelled, tenant: ze, professional: ze_professional, service: ze_service, client: ze_client, starts_at: Date.current.in_time_zone.change(hour: 9)) }
+      create(:branding, tenant: tenant)
+      aurora_service = create(:service, tenant: tenant)
+      aurora_client = create(:client, tenant: tenant, name: "Ana Aurora")
+      ActsAsTenant.with_tenant(tenant) { create(:appointment, :cancelled, tenant: tenant, professional: professional, service: aurora_service, client: aurora_client, starts_at: Date.current.in_time_zone.change(hour: 9)) }
+      sign_in_owner(owner)
+
+      get owner_appointments_path
+
+      expect(response.body).to include("Ana Aurora")
+      expect(response.body).to include("1 desmarcado")
+      expect(response.body).not_to include("Carlos Zé")
+    end
+
+    it "queries the database the same number of times with a cancelled appointment present as without one" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      client = create(:client, tenant: tenant)
+      ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Date.current.in_time_zone.change(hour: 9)) }
+      sign_in_owner(owner)
+
+      without_cancellation = count_queries { get owner_appointments_path }
+
+      ActsAsTenant.with_tenant(tenant) { create(:appointment, :cancelled, tenant: tenant, professional: professional, service: service, client: create(:client, tenant: tenant), starts_at: Date.current.in_time_zone.change(hour: 15)) }
+      with_cancellation = count_queries { get owner_appointments_path }
+
+      expect(without_cancellation).to be_positive
+      expect(with_cancellation).to eq(without_cancellation)
+    end
+
     it "queries the database the same number of times for many appointments as for one" do
       travel_to Time.zone.local(2026, 9, 8, 7, 0)
       create(:branding, tenant: tenant)
