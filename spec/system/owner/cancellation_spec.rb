@@ -38,7 +38,7 @@ RSpec.describe "Owner appointment cancellation", type: :system, js: true do
     expect(ActsAsTenant.with_tenant(tenant) { appointment.reload }).to be_confirmed
   end
 
-  it "strikes the row from the agenda when the owner confirms" do
+  it "moves the row into the collapsed cancellations group when the owner confirms" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
     create(:branding, tenant: tenant, brand_600: "#8E4B6B")
@@ -54,7 +54,8 @@ RSpec.describe "Owner appointment cancellation", type: :system, js: true do
     find("turbo-frame#appointment_detail section", text: "Desmarcado")
     click_on "Voltar para a agenda"
 
-    expect(page).to have_css(".line-through", text: "Ana Paula Ribeiro")
+    expect(page).to have_text("1 desmarcado")
+    expect(page).to have_no_css(".line-through", text: "Ana Paula Ribeiro")
     expect(page).to fit_the_phone_width
     expect(ActsAsTenant.with_tenant(tenant) { appointment.reload }).to be_cancelled
   end

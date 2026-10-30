@@ -41,7 +41,10 @@ class Components::Owner::AgendaDay < Components::Base
     main(class: "#{Components::Owner::Panel::CONTENT_WIDE} grid content-start gap-3.5 py-5") do
       render_title_row
       div(class: "relative") do
-        div(data: { frame_content: true }) { @appointments.any? ? render_list : render_empty_state }
+        div(data: { frame_content: true }) do
+          occupying.any? ? render_list : render_empty_state
+          render_cancelled_group if cancelled.any?
+        end
         render_rows_skeleton
       end
       render_install_invite
@@ -79,14 +82,35 @@ class Components::Owner::AgendaDay < Components::Base
     render Components::Icon.new(:plus, stroke_width: "2.4", class: NEW_APPOINTMENT_ICON_CLASS)
   end
 
+  def partitioned = @partitioned ||= @appointments.partition { |appointment| !appointment.cancelled? }
+  def occupying = partitioned.first
+  def cancelled = partitioned.last
+
   def count_label
-    count = @appointments.count { |appointment| !appointment.cancelled? }
+    count = occupying.count
     "#{count} #{count == 1 ? 'atendimento' : 'atendimentos'}"
+  end
+
+  def cancelled_label
+    count = cancelled.count
+    "#{count} #{count == 1 ? 'desmarcado' : 'desmarcados'}"
   end
 
   def render_list
     div(class: "grid gap-2.5") do
-      @appointments.each { |appointment| render Components::Owner::AppointmentRow.new(appointment: appointment, selected: appointment == @selected, out_of_hours: @out_of_hours.include?(appointment)) }
+      occupying.each { |appointment| render Components::Owner::AppointmentRow.new(appointment: appointment, selected: appointment == @selected, out_of_hours: @out_of_hours.include?(appointment)) }
+    end
+  end
+
+  def render_cancelled_group
+    details(class: "group mt-1", data: { preserve_open: true }) do
+      summary(class: "flex min-h-[48px] cursor-pointer list-none items-center justify-between rounded-xl border border-dashed border-line-strong px-4 text-[13px] font-bold text-ink-muted [&::-webkit-details-marker]:hidden") do
+        span { cancelled_label }
+        render Components::Icon.new(:chevron_down, stroke_width: "2.6", class: "h-4 w-4 flex-none text-ink-muted transition-transform group-open:rotate-180")
+      end
+      div(class: "mt-2.5 grid gap-2.5") do
+        cancelled.each { |appointment| render Components::Owner::AppointmentRow.new(appointment: appointment) }
+      end
     end
   end
 
