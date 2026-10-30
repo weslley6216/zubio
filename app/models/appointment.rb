@@ -7,6 +7,9 @@ class Appointment < ApplicationRecord
 
   acts_as_tenant :tenant
 
+  broadcasts_refreshes_to ->(appointment) { [ appointment.tenant, :agenda ] }
+  broadcasts_refreshes_to ->(appointment) { [ appointment.client, :appointments ] }
+
   has_secure_token :cancel_token
 
   enum :status, { confirmed: "confirmed", cancelled: "cancelled", completed: "completed", no_show: "no_show" }

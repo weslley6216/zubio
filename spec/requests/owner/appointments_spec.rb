@@ -279,6 +279,17 @@ RSpec.describe "Owner appointments", type: :request do
         expect(many).to eq(single)
       end
     end
+
+    it "subscribes to the tenant agenda stream and asks for a morph refresh" do
+      create(:branding, tenant: tenant)
+      sign_in_owner(owner)
+
+      get owner_appointments_path
+
+      expect(response.body).to include("<turbo-cable-stream-source")
+      expect(response.body).to include(%(<meta name="turbo-refresh-method" content="morph">))
+      expect(response.body).to include(%(<meta name="turbo-refresh-scroll" content="preserve">))
+    end
   end
 
   describe "GET /owner/appointments/:id" do

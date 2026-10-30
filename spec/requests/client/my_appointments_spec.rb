@@ -104,6 +104,17 @@ RSpec.describe "My appointments", type: :request do
     expect(tokens).to contain_exactly("/a/#{claimed.cancel_token}?from=list")
   end
 
+  it "subscribes to the client appointments stream and asks for a morph refresh" do
+    client = create(:client, tenant: tenant, account_linked_at: Time.zone.local(2026, 9, 1, 8, 0))
+    sign_in_client(client)
+
+    get client_my_appointments_path
+
+    expect(response.body).to include("<turbo-cable-stream-source")
+    expect(response.body).to include(%(<meta name="turbo-refresh-method" content="morph">))
+    expect(response.body).to include(%(<meta name="turbo-refresh-scroll" content="preserve">))
+  end
+
   it "never lists another tenant's appointment for the same Google account" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")

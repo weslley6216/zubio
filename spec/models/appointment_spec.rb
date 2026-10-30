@@ -882,4 +882,110 @@ RSpec.describe Appointment, type: :model do
       expect(visit_number).to eq(1)
     end
   end
+
+  describe "live refresh broadcasts" do
+    it "broadcasts a refresh to the tenant agenda and the client appointments streams when booking" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      client = create(:client, tenant: tenant)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      appointments = capture_turbo_stream_broadcasts([ client, :appointments ]) do
+        agenda = capture_turbo_stream_broadcasts([ tenant, :agenda ]) do
+          perform_enqueued_jobs { ActsAsTenant.with_tenant(tenant) { described_class.book(professional: professional, service: service, starts_at: nine, client: client) } }
+        end
+        expect(agenda.map { |node| node["action"] }).to eq([ "refresh" ])
+      end
+      expect(appointments.map { |node| node["action"] }).to eq([ "refresh" ])
+    end
+
+    it "broadcasts a refresh to the tenant agenda and the client appointments streams when cancelling" do
+      appointment = create(:appointment)
+
+      appointments = capture_turbo_stream_broadcasts([ appointment.client, :appointments ]) do
+        agenda = capture_turbo_stream_broadcasts([ appointment.tenant, :agenda ]) do
+          perform_enqueued_jobs { ActsAsTenant.with_tenant(appointment.tenant) { appointment.cancel! } }
+        end
+        expect(agenda.map { |node| node["action"] }).to eq([ "refresh" ])
+      end
+      expect(appointments.map { |node| node["action"] }).to eq([ "refresh" ])
+    end
+
+    it "broadcasts a refresh to the tenant agenda and the client appointments streams when settling as completed" do
+      appointment = create(:appointment, :past)
+
+      appointments = capture_turbo_stream_broadcasts([ appointment.client, :appointments ]) do
+        agenda = capture_turbo_stream_broadcasts([ appointment.tenant, :agenda ]) do
+          perform_enqueued_jobs { ActsAsTenant.with_tenant(appointment.tenant) { appointment.settle!(:completed) } }
+        end
+        expect(agenda.map { |node| node["action"] }).to eq([ "refresh" ])
+      end
+      expect(appointments.map { |node| node["action"] }).to eq([ "refresh" ])
+    end
+
+    it "broadcasts a refresh to the tenant agenda and the client appointments streams when settling as no-show" do
+      appointment = create(:appointment, :past)
+
+      appointments = capture_turbo_stream_broadcasts([ appointment.client, :appointments ]) do
+        agenda = capture_turbo_stream_broadcasts([ appointment.tenant, :agenda ]) do
+          perform_enqueued_jobs { ActsAsTenant.with_tenant(appointment.tenant) { appointment.settle!(:no_show) } }
+        end
+        expect(agenda.map { |node| node["action"] }).to eq([ "refresh" ])
+      end
+      expect(appointments.map { |node| node["action"] }).to eq([ "refresh" ])
+    end
+
+    it "broadcasts a refresh to the tenant agenda and the client appointments streams when claiming" do
+      appointment = create(:appointment)
+
+      appointments = capture_turbo_stream_broadcasts([ appointment.client, :appointments ]) do
+        agenda = capture_turbo_stream_broadcasts([ appointment.tenant, :agenda ]) do
+          perform_enqueued_jobs { ActsAsTenant.with_tenant(appointment.tenant) { appointment.claim!(appointment.client) } }
+        end
+        expect(agenda.map { |node| node["action"] }).to eq([ "refresh" ])
+      end
+      expect(appointments.map { |node| node["action"] }).to eq([ "refresh" ])
+    end
+
+    it "broadcasts the booking refresh only to its own tenant agenda stream" do
+      mine = create(:tenant)
+      other = create(:tenant)
+      professional = create(:professional, tenant: mine)
+      service = create(:service, tenant: mine, duration_minutes: 45)
+      client = create(:client, tenant: mine)
+      create(:working_hour, tenant: mine, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      nine = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      leaked = capture_turbo_stream_broadcasts([ other, :agenda ]) do
+        own = capture_turbo_stream_broadcasts([ mine, :agenda ]) do
+          perform_enqueued_jobs { ActsAsTenant.with_tenant(mine) { Appointment.create!(professional: professional, service: service, client: client, starts_at: nine) } }
+        end
+        expect(own.map { |node| node["action"] }).to eq([ "refresh" ])
+      end
+
+      expect(leaked).to be_empty
+    end
+
+    it "broadcasts the appointments refresh only to its own client stream" do
+      tenant = create(:tenant)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      mine = create(:client, tenant: tenant)
+      other = create(:client, tenant: tenant)
+      appointment = create(:appointment, tenant: tenant, professional: professional, service: service, client: mine)
+
+      leaked = capture_turbo_stream_broadcasts([ other, :appointments ]) do
+        own = capture_turbo_stream_broadcasts([ mine, :appointments ]) do
+          perform_enqueued_jobs { ActsAsTenant.with_tenant(tenant) { appointment.cancel! } }
+        end
+        expect(own.map { |node| node["action"] }).to eq([ "refresh" ])
+      end
+
+      expect(leaked).to be_empty
+    end
+  end
 end

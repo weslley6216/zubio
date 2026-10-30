@@ -1,4 +1,6 @@
 class Views::Owner::Appointments::Index < Views::Base
+  include Phlex::Rails::Helpers::TurboStreamFrom
+
   WEEKDAY_ABBR = Views::Client::Bookings::New::WEEKDAY_ABBR
 
   TODAY_LABEL = "HOJE".freeze
@@ -17,7 +19,8 @@ class Views::Owner::Appointments::Index < Views::Base
   end
 
   def view_template
-    render Views::Layouts::Application.new(title: "Agenda · #{@tenant.name}", branding: @branding, flash_in_content: true) do
+    render Views::Layouts::Application.new(title: "Agenda · #{@tenant.name}", branding: @branding, flash_in_content: true, page_refresh: :morph) do
+      div(data: { controller: "refresh-on-visible" }) { turbo_stream_from @tenant, :agenda }
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
       render_day_selector_bar
       render Components::FlashBanner.new(container_class: "#{Components::Owner::Panel::CONTENT_WIDE} grid gap-2 pt-4")

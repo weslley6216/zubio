@@ -8,6 +8,7 @@ require_relative "support/capybara"
 require_relative "support/client_session"
 require_relative "support/computed_style"
 require_relative "support/legible_roles"
+require_relative "support/live_updates"
 require_relative "support/log_capture"
 require_relative "support/neutral_mirror"
 require_relative "support/omniauth"
@@ -44,6 +45,7 @@ RSpec.configure do |config|
   config.include ActiveJob::TestHelper, type: :model
   config.include ActiveJob::TestHelper, type: :mailer
   config.include ActiveSupport::Testing::TimeHelpers
+  config.include Turbo::Broadcastable::TestHelper, type: :model
 end
 
 Shoulda::Matchers.configure do |config|

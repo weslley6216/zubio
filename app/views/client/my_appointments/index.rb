@@ -1,5 +1,6 @@
 class Views::Client::MyAppointments::Index < Views::Base
   include Phlex::Rails::Helpers::ButtonTo
+  include Phlex::Rails::Helpers::TurboStreamFrom
 
   TITLE = "Meus agendamentos".freeze
   BACK_LABEL = "Voltar".freeze
@@ -56,8 +57,9 @@ class Views::Client::MyAppointments::Index < Views::Base
   end
 
   def view_template
-    render Views::Layouts::Application.new(title: "#{TITLE} · #{@tenant.name}", branding: @branding) do
+    render Views::Layouts::Application.new(title: "#{TITLE} · #{@tenant.name}", branding: @branding, page_refresh: :morph) do
       div(class: PAGE_CLASS) do
+        div(data: { controller: "refresh-on-visible" }) { turbo_stream_from @client, :appointments }
         render_header
         @appointments.empty? ? render_empty_state : render_list
         render_footer

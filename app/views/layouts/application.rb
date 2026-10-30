@@ -1,6 +1,8 @@
 class Views::Layouts::Application < Views::Base
   include Phlex::Rails::Layout
   include Phlex::Rails::Helpers::ContentSecurityPolicyNonce
+  include Phlex::Rails::Helpers::TurboRefreshMethodTag
+  include Phlex::Rails::Helpers::TurboRefreshScrollTag
 
   THEME_BOOTSTRAP = <<~JS.freeze
     try {
@@ -13,13 +15,14 @@ class Views::Layouts::Application < Views::Base
   FLASH_CLASS = "mx-auto grid w-full max-w-6xl gap-2 px-6 pt-4".freeze
   BODY_CLASS = "min-h-dvh font-sans max-lg:[&:has([data-owner-menu][open])>:not(header)]:pointer-events-none max-lg:[&:has([data-owner-menu][open])>:not(header)]:opacity-45".freeze
 
-  def initialize(title:, branding:, page_stylesheet: nil, view_transition: false, social: nil, flash_in_content: false)
+  def initialize(title:, branding:, page_stylesheet: nil, view_transition: false, social: nil, flash_in_content: false, page_refresh: nil)
     @title = title
     @branding = branding
     @page_stylesheet = page_stylesheet
     @view_transition = view_transition
     @social = social
     @flash_in_content = flash_in_content
+    @page_refresh = page_refresh
   end
 
   def view_template(&block)
@@ -39,6 +42,7 @@ class Views::Layouts::Application < Views::Base
     meta(charset: "utf-8")
     meta(name: "viewport", content: "width=device-width, initial-scale=1")
     meta(name: "view-transition", content: "same-origin") if @view_transition
+    render_page_refresh if @page_refresh
     render_theme_bootstrap
     title { @title }
     render @social if @social
@@ -59,5 +63,10 @@ class Views::Layouts::Application < Views::Base
 
   def render_theme_bootstrap
     script(nonce: content_security_policy_nonce) { raw safe(THEME_BOOTSTRAP) }
+  end
+
+  def render_page_refresh
+    turbo_refresh_method_tag(@page_refresh)
+    turbo_refresh_scroll_tag(:preserve)
   end
 end
