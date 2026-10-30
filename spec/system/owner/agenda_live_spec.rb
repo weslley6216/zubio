@@ -61,8 +61,8 @@ RSpec.describe "Owner agenda live updates", type: :system, js: true, cable: true
     professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
     service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
     wednesday = Date.current + 1
-    sign_in_owner(professional_user)
     ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: create(:client, tenant: tenant, name: "Bruna Salles"), starts_at: wednesday.in_time_zone.change(hour: 9, min: 45)) }
+    sign_in_owner(professional_user)
 
     find("[data-day='#{wednesday.iso8601}']").click
 
