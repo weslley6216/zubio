@@ -50,7 +50,6 @@ RSpec.describe "Owner agenda live updates", type: :system, js: true, cable: true
     ActsAsTenant.with_tenant(tenant) { create(:appointment, :cancelled, tenant: tenant, professional: professional_user.professional, service: service, client: cancelled_client, starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
     sign_in_owner(professional_user)
     find("summary", text: "desmarcado").click
-    expect(page).to have_css("details[open]")
 
     ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: create(:client, tenant: tenant, name: "Ana Paula Ribeiro"), starts_at: Time.zone.local(2026, 9, 8, 11, 0)) }
 

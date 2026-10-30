@@ -1,6 +1,28 @@
 require "rails_helper"
 
 RSpec.describe "Owner agenda cancellations", type: :system, js: true do
+  it "shows the cancellations collapsed at the end of the day, with no struck card visible" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    first_client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro")
+    second_client = create(:client, tenant: tenant, name: "Bruna Salles")
+    third_client = create(:client, tenant: tenant, name: "Camila Nunes")
+    ActsAsTenant.with_tenant(tenant) do
+      create(:appointment, :cancelled, tenant: tenant, professional: professional_user.professional, service: service, client: first_client, starts_at: Time.zone.local(2026, 9, 8, 9, 0))
+      create(:appointment, :cancelled, tenant: tenant, professional: professional_user.professional, service: service, client: second_client, starts_at: Time.zone.local(2026, 9, 8, 10, 0))
+      create(:appointment, :cancelled, tenant: tenant, professional: professional_user.professional, service: service, client: third_client, starts_at: Time.zone.local(2026, 9, 8, 11, 0))
+    end
+
+    sign_in_owner(professional_user)
+
+    expect(page).to have_text("3 desmarcados")
+    expect(page).to have_no_css(".line-through")
+    expect(page).to fit_the_phone_width
+  end
+
   it "opens the collapsed group on tap, showing the struck cards with the badge" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
@@ -16,8 +38,6 @@ RSpec.describe "Owner agenda cancellations", type: :system, js: true do
       create(:appointment, :cancelled, tenant: tenant, professional: professional_user.professional, service: service, client: third_client, starts_at: Time.zone.local(2026, 9, 8, 11, 0))
     end
     sign_in_owner(professional_user)
-    expect(page).to have_text("3 desmarcados")
-    expect(page).to have_no_css(".line-through")
 
     find("summary", text: "desmarcado").click
 
