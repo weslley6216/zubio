@@ -253,6 +253,24 @@ RSpec.describe "Client booking time grid skeleton", type: :system, js: true do
     create(:branding, tenant: ze, brand_600: "#2C6CB0")
     visit "http://#{ze.subdomain}.zubio.com.br#{new_client_service_booking_path(ze_service, day: day.iso8601)}"
 
-    expect(computed_hex("#booking-grid [data-skeleton] > *", "backgroundColor")).to eq("#EEF2F5")
+    expect(computed_hex("#booking-grid [data-skeleton] > *", "backgroundColor")).to eq("#CFD9E1")
+  end
+
+  it "draws the skeleton slots with a visible contrast over the page" do
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: day.iso8601)}"
+
+    page.execute_script("document.getElementById('booking-grid').setAttribute('busy', '')")
+    find("#booking-grid [data-skeleton]", visible: :visible)
+
+    expect(Branding::ColorScale.new(computed_hex("#booking-grid [data-skeleton] > *", "backgroundColor")).contrast_against(Branding::ColorScale.new("#FFFFFF"))).to be >= 1.2
+  end
+
+  it "hides the grid hint while busy" do
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: day.iso8601)}"
+
+    page.execute_script("document.getElementById('booking-grid').setAttribute('busy', '')")
+    find("#booking-grid [data-skeleton]", visible: :visible)
+
+    expect(computed("#booking-grid [data-grid-hint]", "opacity")).to eq("0")
   end
 end

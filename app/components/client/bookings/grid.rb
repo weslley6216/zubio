@@ -16,7 +16,7 @@ class Components::Client::Bookings::Grid < Components::Base
   SLOT_TAKEN_CLASS = "border border-dashed border-line-strong bg-surface-3 text-ink-subtle line-through".freeze
   REASON_CLASS = "rounded-xl border border-line bg-surface p-6 text-[14px] text-ink-muted".freeze
   SKELETON_CLASS = "#{GRID_CLASS} absolute inset-0 grid-rows-[repeat(auto-fill,46px)] auto-rows-[0px] overflow-hidden".freeze
-  SKELETON_SLOT_CLASS = "rounded-[10px] bg-surface-3 motion-safe:animate-pulse".freeze
+  SKELETON_SLOT_CLASS = "rounded-[10px] bg-line-strong motion-safe:animate-pulse".freeze
   SKELETON_PIECES = 8
 
   def initialize(service:, slots:, taken_slots:, reason:, selected_slot:)
@@ -28,7 +28,7 @@ class Components::Client::Bookings::Grid < Components::Base
   end
 
   def view_template
-    turbo_frame_tag(FRAME_ID, class: "contents") do
+    turbo_frame_tag(FRAME_ID, class: "contents", data: { action: "frame-cache:revalidated->slot-selector#reconcile" }) do
       div(class: WRAPPER_CLASS) do
         div(data: { frame_content: true }) { @reason == :bookable ? render_grid : render_reason }
         render_skeleton
@@ -52,7 +52,7 @@ class Components::Client::Bookings::Grid < Components::Base
   end
 
   def render_hint
-    p(class: HINT_CLASS, data: { grid_hint: true }) { grid_hint }
+    p(class: HINT_CLASS, data: { grid_hint: true, frame_content: true }) { grid_hint }
   end
 
   def render_free_slot(slot)
