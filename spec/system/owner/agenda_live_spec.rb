@@ -57,6 +57,32 @@ RSpec.describe "Owner agenda live updates", type: :system, js: true, cable: true
     expect(page).to have_css("details[open]")
   end
 
+  it "shows on the neighbour what the client booked during the live refresh" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    wednesday = Date.current + 1
+    create(:working_hour, tenant: tenant, professional: professional_user.professional, weekday: wednesday.wday, opens_at: "09:00", closes_at: "12:00")
+    sign_in_owner(professional_user)
+    wait_until { page.driver.network_traffic.any? { |exchange| exchange.url&.include?("day=#{wednesday.iso8601}") && exchange.finished? } }
+
+    using_session(:client) do
+      visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: wednesday.iso8601)}"
+      find("[data-slot][data-time='09:45']").click
+      fill_in "name", with: "Bruna Salles"
+      fill_in "phone", with: "11988771234"
+      click_button "Confirmar 09:45"
+      expect(page).to have_text("Horário confirmado")
+    end
+    sleep 0.3
+
+    find("[data-day='#{wednesday.iso8601}']").click
+
+    expect(page).to have_text("Bruna Salles")
+  end
+
   it "leaves the open day untouched when a booking lands on another day" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")

@@ -12,9 +12,12 @@ export default class extends Controller {
     this.onFetch = this.onFetch.bind(this)
     this.onFrameLoad = this.onFrameLoad.bind(this)
     this.onScroll = this.onScroll.bind(this)
+    this.clear = this.clear.bind(this)
     this.element.addEventListener("turbo:before-fetch-request", this.onFetch)
     this.element.addEventListener("turbo:frame-load", this.onFrameLoad)
     if (this.hasStripTarget) this.stripTarget.addEventListener("scroll", this.onScroll)
+    document.addEventListener("turbo:morph", this.clear)
+    document.addEventListener("turbo:submit-end", this.clear)
     this.preload()
   }
 
@@ -22,7 +25,14 @@ export default class extends Controller {
     this.element.removeEventListener("turbo:before-fetch-request", this.onFetch)
     this.element.removeEventListener("turbo:frame-load", this.onFrameLoad)
     if (this.hasStripTarget) this.stripTarget.removeEventListener("scroll", this.onScroll)
+    document.removeEventListener("turbo:morph", this.clear)
+    document.removeEventListener("turbo:submit-end", this.clear)
     if (this.scrollRAF) cancelAnimationFrame(this.scrollRAF)
+  }
+
+  clear() {
+    this.cache.clear()
+    this.inflight.clear()
   }
 
   get frame() {

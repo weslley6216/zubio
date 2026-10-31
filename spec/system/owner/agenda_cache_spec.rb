@@ -102,4 +102,28 @@ RSpec.describe "Owner agenda day cache", type: :system, js: true do
 
     expect(page).to have_css("#agenda_day [data-appointment-id] a[aria-current='true']")
   end
+
+  it "lists among the cancelled the appointment the owner cancelled" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    client = create(:client, tenant: tenant, name: "Ana Paula Ribeiro")
+    tomorrow = Date.current + 1
+    ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: client, starts_at: tomorrow.in_time_zone.change(hour: 10)) }
+    sign_in_owner(professional_user)
+    find("[data-day='#{tomorrow.iso8601}']").click
+    click_on "Ana Paula Ribeiro"
+    click_button "Desmarcar este horário"
+    click_button "Sim, desmarcar"
+    find("turbo-frame#appointment_detail section", text: "Desmarcado")
+    click_on "Voltar para a agenda"
+    find("[data-day='#{Date.current.iso8601}']").click
+
+    find("[data-day='#{tomorrow.iso8601}']").click
+    find("summary", text: "desmarcado").click
+
+    expect(page).to have_css(".line-through", text: "Ana Paula Ribeiro")
+  end
 end
