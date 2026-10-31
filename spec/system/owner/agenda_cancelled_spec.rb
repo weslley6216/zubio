@@ -68,7 +68,7 @@ RSpec.describe "Owner agenda cancellations", type: :system, js: true do
 
     expect(page.evaluate_script(<<~JS)).to be(true)
       (() => {
-        const frameContent = document.querySelector('[data-frame-content]');
+        const frameContent = document.querySelector('div[data-frame-content]');
         const list = frameContent.querySelector(':scope > div');
         const group = frameContent.querySelector(':scope > details');
         const detail = document.querySelector('turbo-frame#appointment_detail').getBoundingClientRect();
