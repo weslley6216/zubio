@@ -10,4 +10,10 @@ module Components::DayPill
   WEEKDAY = "text-[10px] font-bold tracking-[0.04em]".freeze
   WEEKDAY_RESTING = "text-ink-muted".freeze
   NUMBER = "text-[20px] leading-[1.15] font-extrabold tabular-nums".freeze
+  ARROW = "absolute inset-y-0 grid w-12 cursor-pointer items-center px-1 lg:hidden".freeze
+  ARROW_BACKWARD = "left-0 -ml-4 justify-items-start bg-linear-to-r from-surface from-50% to-transparent".freeze
+  ARROW_FORWARD = "right-0 -mr-4 justify-items-end bg-linear-to-l from-surface from-50% to-transparent".freeze
+  ARROW_ICON = "h-6 w-6 text-ink".freeze
+  ARROW_BACKWARD_LABEL = "Dias anteriores".freeze
+  ARROW_FORWARD_LABEL = "Próximos dias".freeze
 end
