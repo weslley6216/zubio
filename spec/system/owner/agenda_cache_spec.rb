@@ -146,6 +146,32 @@ RSpec.describe "Owner agenda day cache", type: :system, js: true do
     held.each(&:continue)
   end
 
+  it "fetches again a day whose preload failed on the network" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    tomorrow = Date.current + 1
+    ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: create(:client, tenant: tenant, name: "Bruna Salles"), starts_at: tomorrow.in_time_zone.change(hour: 10)) }
+    aborted = []
+    page.driver.browser.on(:request) do |request|
+      if request.url.include?("day=#{tomorrow.iso8601}") && aborted.empty?
+        aborted << request
+        request.abort
+      else
+        request.continue
+      end
+    end
+    page.driver.browser.network.intercept(pattern: "*/owner/appointments*")
+    sign_in_owner(professional_user)
+    wait_until { aborted.any? }
+
+    find("[data-day='#{tomorrow.iso8601}']").click
+
+    expect(page).to have_text("Bruna Salles")
+  end
+
   it "does not reuse an error response" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")

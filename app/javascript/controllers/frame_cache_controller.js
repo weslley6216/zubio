@@ -108,6 +108,9 @@ export default class extends Controller {
     promise.then((response) => {
       this.inflight.delete(day)
       if (!response.ok || response.redirected) this.cache.delete(day)
+    }, () => {
+      this.inflight.delete(day)
+      this.cache.delete(day)
     })
     return promise
   }
