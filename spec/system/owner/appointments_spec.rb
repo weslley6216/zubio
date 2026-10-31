@@ -131,4 +131,52 @@ RSpec.describe "Owner appointments", type: :system, js: true do
 
     expect(page).to have_css("[data-day='#{last_day.iso8601}'][aria-current='date']")
   end
+
+  it "shows only the forward arrow at the start of the phone day strip" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+
+    sign_in_owner(professional_user)
+
+    expect(page).to have_css("[data-day-strip-overflow-target='forward']")
+    expect(page).to have_css("[data-day-strip-overflow-target='backward']", visible: :hidden)
+    expect(page).to fit_the_phone_width
+  end
+
+  it "shows both arrows once the phone day strip is scrolled to the middle" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    sign_in_owner(professional_user)
+
+    page.execute_script("const scroller = document.querySelector('[data-day-selector]'); scroller.scrollLeft = scroller.clientWidth")
+
+    expect(page).to have_css("[data-day-strip-overflow-target='backward']")
+    expect(page).to have_css("[data-day-strip-overflow-target='forward']")
+  end
+
+  it "hides the forward arrow at the end of the phone day strip" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    sign_in_owner(professional_user)
+
+    page.execute_script("document.querySelector('[data-day-selector]').scrollLeft = 10000")
+
+    expect(page).to have_css("[data-day-strip-overflow-target='backward']")
+    expect(page).to have_css("[data-day-strip-overflow-target='forward']", visible: :hidden)
+  end
+
+  it "shows no arrows on the desktop day strip" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    emulate_desktop_screen
+
+    sign_in_owner(professional_user)
+
+    expect(page).to have_css("[data-day-strip-overflow-target='forward']", visible: :hidden)
+    expect(page).to have_css("[data-day-strip-overflow-target='backward']", visible: :hidden)
+  end
 end
