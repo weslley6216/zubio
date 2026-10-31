@@ -443,6 +443,20 @@ RSpec.describe "Public booking day and time selection", type: :request do
     expect(response.body).to include(Views::Client::Bookings::New::DATA_STEP)
   end
 
+  it "renders the taken-time notice hidden below the grid" do
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    tuesday = Date.current.next_week(:tuesday)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service, day: tuesday.iso8601)
+
+    notice = Nokogiri::HTML5(response.body).at_css("[data-slot-taken-notice]")
+    expect(notice).to have_attribute("hidden")
+    expect(notice.text).to eq("Esse horário acabou de ser ocupado. Escolha outro.")
+  end
+
   describe "POST create" do
     it "confirming creates a confirmed appointment and renders the receipt" do
       travel_to Time.zone.local(2026, 9, 8, 7, 0)

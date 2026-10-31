@@ -19,6 +19,8 @@ class Views::Client::Bookings::New < Views::Base
   PHONE_LABEL = "Celular".freeze
   PHONE_PLACEHOLDER = "(11) 90000-0000".freeze
   DATA_HINT = "Sem senha, sem cadastro.".freeze
+  SLOT_TAKEN_NOTICE = "Esse horário acabou de ser ocupado. Escolha outro.".freeze
+  SLOT_TAKEN_NOTICE_CLASS = "text-[12px] font-bold text-danger".freeze
 
   PAGE_CLASS = "mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-surface-2 leading-[normal] text-ink".freeze
   HEADER_CLASS = "flex items-center gap-3 bg-brand-600 px-5 py-3.5 text-on-brand".freeze
@@ -148,6 +150,8 @@ class Views::Client::Bookings::New < Views::Base
         render Components::Client::Bookings::Grid.new(
           service: @service, slots: @slots, taken_slots: @taken_slots, reason: @reason, selected_slot: @selected_slot
         )
+        p(class: SLOT_TAKEN_NOTICE_CLASS, hidden: true, role: "status",
+          data: { slot_taken_notice: true, slot_selector_target: "takenNotice" }) { SLOT_TAKEN_NOTICE }
       end
     end
     render_data_step unless @signed_in
