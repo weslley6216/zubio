@@ -51,7 +51,7 @@ export default class extends Controller {
     if (!hadEntry) this.applyTappedTitle(day)
     const entry = hadEntry ? this.cache.get(day) : this.fetchDay(day)
     event.detail.fetchRequest = { response: entry.then((response) => response.clone()) }
-    if (hadEntry && !wasInflight) this.revalidate(day)
+    if (hadEntry && !wasInflight) this.frame.addEventListener("turbo:frame-load", () => this.revalidate(day), { once: true })
   }
 
   applyTappedTitle(day) {

@@ -15,7 +15,7 @@ RSpec.describe "Public booking day cache", type: :system, js: true do
 
     find("a[data-day='#{wednesday.iso8601}']").click
 
-    expect(page).to have_css("[data-slots] [data-slot]", count: 2)
+    expect(page).to have_css("[data-slots] [data-slot][data-time='14:00']")
     expect(page.all("[data-slots] [data-slot]").map(&:text)).to eq([ "14:00", "15:00" ])
     expect(skeleton_peak).to eq(0)
     expect(page).to fit_the_phone_width
@@ -31,12 +31,13 @@ RSpec.describe "Public booking day cache", type: :system, js: true do
     create(:working_hour, tenant: tenant, professional: professional, weekday: 3, opens_at: "14:00", closes_at: "16:00")
     visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: tuesday.iso8601)}"
     find("a[data-day='#{wednesday.iso8601}']").click
+    expect(page).to have_css("[data-slots] [data-slot][data-time='14:00']")
     expect(page.all("[data-slots] [data-slot]").map(&:text)).to eq([ "14:00", "15:00" ])
     watch_skeleton("booking-grid")
 
     find("a[data-day='#{tuesday.iso8601}']").click
 
-    expect(page).to have_css("[data-slots] [data-slot]", count: 2)
+    expect(page).to have_css("[data-slots] [data-slot][data-time='09:00']")
     expect(page.all("[data-slots] [data-slot]").map(&:text)).to eq([ "09:00", "10:00" ])
     expect(skeleton_peak).to eq(0)
   end
@@ -55,8 +56,35 @@ RSpec.describe "Public booking day cache", type: :system, js: true do
 
     find("a[data-day='#{wednesday.iso8601}']").click
 
-    Capybara.using_wait_time(5) { expect(page).to have_css("[data-slot-taken]", text: "14:00") }
+    expect(page).to have_css("[data-slot-taken]", text: "14:00")
     expect(page.all("[data-slots] [data-slot]").map(&:text)).to eq([ "15:00" ])
+  end
+
+  it "keeps the revalidated grid when the cached grid paints late" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, name: "Corte", duration_minutes: 60)
+    tuesday = Date.current.next_week(:tuesday)
+    wednesday = tuesday + 1
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "11:00")
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 3, opens_at: "14:00", closes_at: "16:00")
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: tuesday.iso8601)}"
+    wait_until { page.driver.network_traffic.any? { |exchange| exchange.url&.include?("day=#{wednesday.iso8601}") && exchange.finished? } }
+    ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: create(:client, tenant: tenant), starts_at: wednesday.in_time_zone.change(hour: 14)) }
+    page.execute_script(<<~JS)
+      const frame = document.getElementById("booking-grid")
+      frame.addEventListener("turbo:before-frame-render", (event) => {
+        event.preventDefault()
+        setTimeout(() => event.detail.resume(), 600)
+      }, { once: true })
+      frame.addEventListener("turbo:frame-load", () => { frame.dataset.painted = "" }, { once: true })
+    JS
+
+    find("a[data-day='#{wednesday.iso8601}']").click
+    find("turbo-frame#booking-grid[data-painted]", visible: :all)
+
+    expect(page).to have_css("[data-slot-taken]", text: "14:00")
+    expect(page).to have_css("[data-slots] [data-slot]", count: 1)
   end
 
   it "reveals a visible slot skeleton when an unloaded day is slow" do
@@ -98,7 +126,7 @@ RSpec.describe "Public booking day cache", type: :system, js: true do
 
     held.each(&:continue)
 
-    Capybara.using_wait_time(5) { expect(page).to have_css("[data-slot-taken]", text: "14:00") }
+    expect(page).to have_css("[data-slot-taken]", text: "14:00")
     expect(page).to have_css("[data-slot-taken-notice]", visible: :visible, text: "Esse horário acabou de ser ocupado. Escolha outro.")
     expect(page).to have_css("[data-confirm-bar][disabled]", exact_text: "Confirmar")
     expect(find("input[name='starts_at']", visible: :hidden).value).to eq("")
@@ -147,7 +175,7 @@ RSpec.describe "Public booking day cache", type: :system, js: true do
     find("[data-slot][data-time='14:00']").click
     wait_until { held.any? }
     held.each(&:continue)
-    Capybara.using_wait_time(5) { expect(page).to have_css("[data-slot-taken-notice]", visible: :visible) }
+    expect(page).to have_css("[data-slot-taken-notice]", visible: :visible)
 
     find("[data-slot][data-time='15:00']").click
 
