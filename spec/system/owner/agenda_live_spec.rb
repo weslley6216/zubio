@@ -138,4 +138,20 @@ RSpec.describe "Owner agenda live updates", type: :system, js: true, cable: true
 
     expect(page).to have_text("Ana Paula Ribeiro")
   end
+
+  it "keeps the arrows coherent with the strip position across a live refresh" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45)
+    sign_in_owner(professional_user)
+    page.execute_script("document.querySelector('[data-day-selector]').scrollLeft = 10000")
+
+    ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: create(:client, tenant: tenant, name: "Ana Paula Ribeiro"), starts_at: Time.zone.local(2026, 9, 8, 9, 45)) }
+
+    expect(page).to have_text("Ana Paula Ribeiro")
+    expect(page).to have_css("[data-day-strip-overflow-target='backward']")
+    expect(page).to have_css("[data-day-strip-overflow-target='forward']", visible: :hidden)
+  end
 end

@@ -6,9 +6,11 @@ export default class extends Controller {
   connect() {
     this.update = this.update.bind(this)
     this.update()
+    document.addEventListener("turbo:render", this.update)
   }
 
   disconnect() {
+    document.removeEventListener("turbo:render", this.update)
     if (this.frame) cancelAnimationFrame(this.frame)
   }
 
