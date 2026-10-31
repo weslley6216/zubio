@@ -179,4 +179,37 @@ RSpec.describe "Owner appointments", type: :system, js: true do
     expect(page).to have_css("[data-day-strip-overflow-target='forward']", visible: :hidden)
     expect(page).to have_css("[data-day-strip-overflow-target='backward']", visible: :hidden)
   end
+
+  it "slides the strip forward on a forward-arrow tap without changing the selected day" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    today = Date.new(2026, 9, 8)
+    sign_in_owner(professional_user)
+
+    find("[data-day-strip-overflow-target='forward']").click
+
+    expect(page).to have_css("[data-day-strip-overflow-target='backward']")
+    expect(page.evaluate_script("document.querySelector('[data-day-selector]').scrollLeft")).to be > 0
+    expect(page).to have_css("[data-day='#{today.iso8601}'][aria-current='date']")
+    expect(page).to have_current_path(owner_appointments_path)
+  end
+
+  it "selects the fourth day when its center is tapped under the forward arrow" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    service = create(:service, tenant: tenant)
+    fourth_day = Date.new(2026, 9, 11)
+    fourth_day_client = create(:client, tenant: tenant, name: "Bia Quarta")
+    ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional_user.professional, service: service, client: fourth_day_client, starts_at: fourth_day.in_time_zone.change(hour: 9)) }
+    sign_in_owner(professional_user)
+
+    find("[data-day='#{fourth_day.iso8601}']").click
+
+    expect(page).to have_css("[data-day='#{fourth_day.iso8601}'][aria-current='date']")
+    expect(page).to have_text("Bia Quarta")
+  end
 end

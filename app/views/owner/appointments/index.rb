@@ -57,7 +57,7 @@ class Views::Owner::Appointments::Index < Views::Base
       class: [ Components::DayPill::ARROW,
                (forward ? Components::DayPill::ARROW_FORWARD : Components::DayPill::ARROW_BACKWARD),
                ("hidden" unless forward) ],
-      data: { day_strip_overflow_target: direction.to_s }) do
+      data: { day_strip_overflow_target: direction.to_s, action: "day-strip-overflow##{direction}" }) do
       render Components::Icon.new(forward ? :chevron_right : :chevron_left,
         stroke_width: "2.2", class: Components::DayPill::ARROW_ICON)
     end

@@ -12,6 +12,14 @@ export default class extends Controller {
     if (this.frame) cancelAnimationFrame(this.frame)
   }
 
+  backward() {
+    this.scrollerTarget.scrollBy({ left: -this.scrollerTarget.clientWidth, behavior: "smooth" })
+  }
+
+  forward() {
+    this.scrollerTarget.scrollBy({ left: this.scrollerTarget.clientWidth, behavior: "smooth" })
+  }
+
   update() {
     if (this.frame) return
     this.frame = requestAnimationFrame(() => {
