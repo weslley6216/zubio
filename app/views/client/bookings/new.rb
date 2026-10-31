@@ -152,12 +152,15 @@ class Views::Client::Bookings::New < Views::Base
   end
 
   def render_day_selector
-    div(class: SELECTOR_CLASS, data: {
-      day_selector: true, controller: "day-selector",
-      day_selector_selected_class: DAY_SELECTED_CLASS,
-      day_selector_resting_class: DAY_FREE_CLASS,
-      day_selector_weekday_resting_class: DAY_WEEKDAY_FREE_CLASS
-    }) { @days.each { |date| render_day(date) } }
+    render Components::DayStripOverflow.new(grid_from: :sm) do |strip|
+      div(class: "#{SELECTOR_CLASS} #{strip.gutter}", data: {
+        day_selector: true, controller: "day-selector",
+        day_selector_selected_class: DAY_SELECTED_CLASS,
+        day_selector_resting_class: DAY_FREE_CLASS,
+        day_selector_weekday_resting_class: DAY_WEEKDAY_FREE_CLASS,
+        **Components::DayStripOverflow::SCROLLER_DATA
+      }) { @days.each { |date| render_day(date) } }
+    end
   end
 
   def render_day(date)
