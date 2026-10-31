@@ -22,10 +22,12 @@ class Views::Owner::Appointments::Index < Views::Base
     render Views::Layouts::Application.new(title: "Agenda · #{@tenant.name}", branding: @branding, flash_in_content: true, page_refresh: :morph) do
       div(data: { controller: "refresh-on-visible" }) { turbo_stream_from @tenant, :agenda }
       render Components::Owner::Header.new(tenant: @tenant, branding: @branding, current_section: @current_section, subtitle: @subtitle)
-      render_day_selector_bar
-      render Components::FlashBanner.new(container_class: "#{Components::Owner::Panel::CONTENT_WIDE} grid gap-2 pt-4")
-      render Components::Owner::AgendaDay.new(tenant: @tenant, branding: @branding, day: @day, appointments: @appointments,
-        out_of_hours: @out_of_hours, selected: @selected, selected_visit_number: @selected_visit_number)
+      div(class: "contents", data: { controller: "frame-cache", frame_cache_frame_value: Components::Owner::AgendaDay::FRAME_ID }) do
+        render_day_selector_bar
+        render Components::FlashBanner.new(container_class: "#{Components::Owner::Panel::CONTENT_WIDE} grid gap-2 pt-4")
+        render Components::Owner::AgendaDay.new(tenant: @tenant, branding: @branding, day: @day, appointments: @appointments,
+          out_of_hours: @out_of_hours, selected: @selected, selected_visit_number: @selected_visit_number)
+      end
     end
   end
 
@@ -40,6 +42,7 @@ class Views::Owner::Appointments::Index < Views::Base
             day_selector_selected_class: Components::DayPill::SELECTED,
             day_selector_resting_class: Components::DayPill::RESTING,
             day_selector_weekday_resting_class: Components::DayPill::WEEKDAY_RESTING,
+            frame_cache_target: "strip",
             **Components::DayStripOverflow::SCROLLER_DATA
           }) { @days.each { |date| render_day_pill(date) } }
         end
