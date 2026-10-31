@@ -180,6 +180,18 @@ RSpec.describe "Owner appointments", type: :system, js: true do
     expect(page).to have_css("[data-day-strip-overflow-target='backward']", visible: :hidden)
   end
 
+  it "still shows the forward arrow on a tablet-width strip that has not reached the week-wide breakpoint yet" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    page.driver.resize(800, 900)
+
+    sign_in_owner(professional_user)
+
+    expect(page).to have_css("[data-day-strip-overflow-target='forward']")
+    expect(page).to have_css("[data-day-strip-overflow-target='backward']", visible: :hidden)
+  end
+
   it "slides the strip forward on a forward-arrow tap without changing the selected day" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")

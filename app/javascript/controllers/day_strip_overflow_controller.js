@@ -12,6 +12,7 @@ export default class extends Controller {
   disconnect() {
     document.removeEventListener("turbo:render", this.update)
     if (this.frame) cancelAnimationFrame(this.frame)
+    this.frame = null
   }
 
   backward() {
