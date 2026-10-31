@@ -1,5 +1,8 @@
 class Client::BookingsController < Client::BaseController
   RATE_LIMIT_ALERT = "Muitas tentativas. Tente novamente em instantes.".freeze
+  STALE_FORM_ALERT = "A página ficou desatualizada. Confira o horário e confirme de novo.".freeze
+
+  rescue_from ActionController::InvalidAuthenticityToken, with: :render_stale_form
 
   rate_limit to: 10, within: 1.minute, only: :create, name: "booking",
     with: -> { redirect_to new_client_service_booking_path(params[:service_id]), alert: RATE_LIMIT_ALERT }
@@ -33,6 +36,18 @@ class Client::BookingsController < Client::BaseController
   end
 
   private
+
+  def render_stale_form
+    resolve_tenant
+    return if performed?
+
+    flash.now[:alert] = STALE_FORM_ALERT
+    starts_at = parsed_starts_at
+    render_schedule(
+      service: Service.active.find(params[:service_id]), selected_day: starts_at&.to_date, selected_slot: starts_at,
+      client_name: params[:name], client_phone: params[:phone], status: :unprocessable_content
+    )
+  end
 
   def current_professional
     @current_professional ||= ActsAsTenant.current_tenant.professionals.active.first

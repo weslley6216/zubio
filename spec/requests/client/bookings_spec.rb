@@ -478,6 +478,48 @@ RSpec.describe "Public booking day and time selection", type: :request do
   end
 
   describe "POST create" do
+    it "returns to the chosen time with a warning when the form token went stale" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+      ActionController::Base.allow_forgery_protection = true
+
+      begin
+        post client_service_booking_path(service), params: { authenticity_token: "stale", name: "Ana Paula Ribeiro", phone: "(11) 98877-1234", starts_at: starts_at.iso8601 }
+      ensure
+        ActionController::Base.allow_forgery_protection = false
+      end
+
+      document = Nokogiri::HTML5(response.body)
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(document.at_css("[role='status']").text).to include("A página ficou desatualizada. Confira o horário e confirme de novo.")
+      expect(document.at_css("[data-slot][aria-pressed='true']").text.strip).to eq("09:00")
+      expect(document.at_css("input[name='starts_at']")["value"]).to eq(starts_at.iso8601)
+      expect(document.at_css("input[name='name']")["value"]).to eq("Ana Paula Ribeiro")
+      expect(document.at_css("input[name='authenticity_token']")["value"]).not_to eq("stale")
+      expect(ActsAsTenant.with_tenant(tenant) { Appointment.count }).to eq(0)
+    end
+
+    it "answers not found for a stale form that names another tenant's service" do
+      ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      ze_service = create(:service, tenant: ze, name: "Barba do Zé")
+      create(:professional, tenant: tenant)
+      host! "#{tenant.subdomain}.zubio.com.br"
+      ActionController::Base.allow_forgery_protection = true
+
+      begin
+        post client_service_booking_path(ze_service), params: { authenticity_token: "stale", starts_at: Time.current.iso8601 }
+      ensure
+        ActionController::Base.allow_forgery_protection = false
+      end
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.body).not_to include("Barba do Zé")
+    end
+
     it "confirming creates a confirmed appointment and renders the receipt" do
       travel_to Time.zone.local(2026, 9, 8, 7, 0)
       professional = create(:professional, tenant: tenant, display_name: "Mary")
