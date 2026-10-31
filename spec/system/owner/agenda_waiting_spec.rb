@@ -66,6 +66,18 @@ RSpec.describe "Owner agenda skeleton", type: :system, js: true do
     end
   end
 
+  it "draws the skeleton pieces with a visible contrast over the surface" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    sign_in_owner(professional_user)
+
+    page.execute_script("document.getElementById('agenda_day').setAttribute('busy', '')")
+    find("#agenda_day main [data-skeleton]", visible: :visible)
+
+    expect(opaque?("#agenda_day main [data-skeleton] .bg-line-strong")).to be(true)
+    expect(border_contrast_ratio("#agenda_day main [data-skeleton] > * > *")).to be >= 1.2
+  end
+
   it "keeps the open appointment sheet on screen while the agenda frame is busy" do
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
     professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")

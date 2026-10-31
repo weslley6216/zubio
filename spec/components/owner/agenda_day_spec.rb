@@ -53,6 +53,22 @@ RSpec.describe Components::Owner::AgendaDay, type: :component do
     expect(fragment.text).to include(Components::Owner::AgendaDay::NEW_APPOINTMENT_LABEL)
   end
 
+  it "draws each skeleton piece in the shape of an appointment row" do
+    tenant = create(:tenant)
+    branding = create(:branding, tenant: tenant)
+    day = Date.current
+
+    html = render_phlex(described_class.new(tenant: tenant, branding: branding, day: day, appointments: []))
+    fragment = Nokogiri::HTML5.fragment(html)
+
+    pieces = fragment.at_css("[data-skeleton]").css("> *")
+    expect(pieces.size).to eq(3)
+    first_piece = pieces.first.at_css("> *")
+    expect(first_piece["class"]).to include("border").and include("bg-surface")
+    expect(first_piece.css(".bg-line-strong").size).to be >= 3
+    expect(first_piece.at_css(".w-12")).not_to be_nil
+  end
+
   it "lists only the occupying appointments in time order and tucks the cancelled one into the group" do
     tenant = create(:tenant)
     branding = create(:branding, tenant: tenant)

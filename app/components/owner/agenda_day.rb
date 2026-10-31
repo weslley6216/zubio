@@ -10,7 +10,12 @@ class Components::Owner::AgendaDay < Components::Base
   NEW_APPOINTMENT_CLASS = "flex min-h-[40px] flex-none items-center gap-1.5 rounded-[10px] bg-brand-600 px-3.5 text-[13px] font-bold text-on-brand".freeze
   NEW_APPOINTMENT_ICON_CLASS = "h-4 w-4 flex-none".freeze
   SKELETON_CLASS = "absolute inset-0 grid grid-rows-[repeat(auto-fill,103px)] auto-rows-[0px] gap-2.5 overflow-hidden".freeze
-  SKELETON_ROW_CLASS = "rounded-xl bg-surface-3 motion-safe:animate-pulse".freeze
+  SKELETON_ROW_CLASS = "flex gap-3 rounded-xl border border-line bg-surface px-4 py-3.5 motion-safe:animate-pulse".freeze
+  SKELETON_ROW_TIME_CLASS = "h-4 w-8 rounded bg-line-strong".freeze
+  SKELETON_ROW_DURATION_CLASS = "h-2.5 w-6 rounded bg-line-strong".freeze
+  SKELETON_ROW_TITLE_CLASS = "h-3.5 w-28 rounded bg-line-strong".freeze
+  SKELETON_ROW_SUBTITLE_CLASS = "h-3 w-16 rounded bg-line-strong".freeze
+  SKELETON_ROW_BADGE_CLASS = "h-5 w-20 rounded-full bg-line-strong".freeze
   SKELETON_ROWS = 3
 
   def initialize(tenant:, branding:, day:, appointments:, out_of_hours: Set.new, selected: nil, selected_visit_number: nil)
@@ -53,7 +58,24 @@ class Components::Owner::AgendaDay < Components::Base
 
   def render_rows_skeleton
     div(aria_hidden: "true", data: { skeleton: true }, class: SKELETON_CLASS) do
-      SKELETON_ROWS.times { div(class: SKELETON_ROW_CLASS) }
+      SKELETON_ROWS.times { render_skeleton_row }
+    end
+  end
+
+  def render_skeleton_row
+    div(class: "min-h-0 overflow-hidden") do
+      div(class: SKELETON_ROW_CLASS) do
+        div(class: "flex w-12 flex-none flex-col items-center gap-1") do
+          div(class: SKELETON_ROW_TIME_CLASS)
+          div(class: SKELETON_ROW_DURATION_CLASS)
+        end
+        div(class: "w-px flex-none bg-line")
+        div(class: "flex min-w-0 flex-grow flex-col gap-1.5") do
+          div(class: SKELETON_ROW_TITLE_CLASS)
+          div(class: SKELETON_ROW_SUBTITLE_CLASS)
+          div(class: SKELETON_ROW_BADGE_CLASS)
+        end
+      end
     end
   end
 
