@@ -34,32 +34,16 @@ class Views::Owner::Appointments::Index < Views::Base
   def render_day_selector_bar
     div(class: "border-b border-line bg-surface") do
       div(class: "#{Components::Owner::Panel::CONTENT_WIDE} py-4") do
-        div(class: "relative", data: { controller: "day-strip-overflow" }) do
-          div(class: Components::DayPill::SCROLLER, data: {
+        render Components::DayStripOverflow.new(grid_from: :lg) do |strip|
+          div(class: "#{Components::DayPill::SCROLLER} #{strip.gutter}", data: {
             day_selector: true, controller: "day-selector",
             day_selector_selected_class: Components::DayPill::SELECTED,
             day_selector_resting_class: Components::DayPill::RESTING,
             day_selector_weekday_resting_class: Components::DayPill::WEEKDAY_RESTING,
-            day_strip_overflow_target: "scroller",
-            action: "scroll->day-strip-overflow#update"
+            **Components::DayStripOverflow::SCROLLER_DATA
           }) { @days.each { |date| render_day_pill(date) } }
-          render_day_strip_arrow(:backward)
-          render_day_strip_arrow(:forward)
         end
       end
-    end
-  end
-
-  def render_day_strip_arrow(direction)
-    forward = direction == :forward
-    button(type: "button",
-      aria_label: forward ? Components::DayPill::ARROW_FORWARD_LABEL : Components::DayPill::ARROW_BACKWARD_LABEL,
-      class: [ Components::DayPill::ARROW,
-               (forward ? Components::DayPill::ARROW_FORWARD : Components::DayPill::ARROW_BACKWARD),
-               ("hidden" unless forward) ],
-      data: { day_strip_overflow_target: direction.to_s, action: "day-strip-overflow##{direction}" }) do
-      render Components::Icon.new(forward ? :chevron_right : :chevron_left,
-        stroke_width: "2.2", class: Components::DayPill::ARROW_ICON)
     end
   end
 

@@ -449,4 +449,80 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
     expect(page).to have_text("Não sobrou nenhum horário livre neste dia.")
     expect(page).to have_link("Escolher outro dia", href: new_client_service_booking_path(service))
   end
+
+  it "shows only the forward arrow at the start of the phone day strip" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 60)
+    (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "18:00") }
+
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service)}"
+
+    expect(page).to have_css("[data-day-strip-overflow-target='forward']")
+    expect(page).to have_css("[data-day-strip-overflow-target='backward']", visible: :hidden)
+    expect(page).to fit_the_phone_width
+  end
+
+  it "hides the forward arrow at the end of the phone day strip" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 60)
+    (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "18:00") }
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service)}"
+
+    page.execute_script("document.querySelector('[data-day-selector]').scrollLeft = 10000")
+
+    expect(page).to have_css("[data-day-strip-overflow-target='backward']")
+    expect(page).to have_css("[data-day-strip-overflow-target='forward']", visible: :hidden)
+  end
+
+  it "slides the strip forward on a forward-arrow tap without changing the selected day" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 60)
+    (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "18:00") }
+    tomorrow = Date.current + 1
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: tomorrow.iso8601)}"
+
+    find("[data-day-strip-overflow-target='forward']").click
+
+    expect(page).to have_css("[data-day-strip-overflow-target='backward']")
+    expect(page.evaluate_script("document.querySelector('[data-day-selector]').scrollLeft")).to be > 0
+    expect(page).to have_css("[data-day='#{tomorrow.iso8601}'][aria-current='date']")
+  end
+
+  it "keeps both chevrons outside the visible window of the day strip" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 60)
+    (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "18:00") }
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service)}"
+    page.execute_script("const scroller = document.querySelector('[data-day-selector]'); scroller.scrollLeft = scroller.clientWidth")
+    expect(page).to have_css("[data-day-strip-overflow-target='backward']")
+
+    edges = page.evaluate_script(<<~JS)
+      (() => {
+        const strip = document.querySelector('[data-day-selector]').getBoundingClientRect();
+        const forward = document.querySelector("[data-day-strip-overflow-target='forward'] svg").getBoundingClientRect();
+        const backward = document.querySelector("[data-day-strip-overflow-target='backward'] svg").getBoundingClientRect();
+        return { stripLeft: strip.left, stripRight: strip.right, forwardLeft: forward.left, backwardRight: backward.right };
+      })()
+    JS
+
+    expect(edges["forwardLeft"]).to be >= edges["stripRight"]
+    expect(edges["backwardRight"]).to be <= edges["stripLeft"]
+  end
+
+  it "shows no arrows once the day strip becomes a week grid" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 60)
+    (0..6).each { |weekday| create(:working_hour, tenant: tenant, professional: professional, weekday: weekday, opens_at: "09:00", closes_at: "18:00") }
+    emulate_desktop_screen
+
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service)}"
+
+    expect(page).to have_css("[data-day-strip-overflow-target='forward']", visible: :hidden)
+    expect(page).to have_css("[data-day-strip-overflow-target='backward']", visible: :hidden)
+  end
 end
