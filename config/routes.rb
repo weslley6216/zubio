@@ -57,12 +57,13 @@ Rails.application.routes.draw do
       resource :google_sign_in, only: :show, path: "google"
       resource :account_phone, only: %i[new create]
       resources :services, only: [] do
-        resource :booking, only: %i[new create]
+        resource :booking, only: %i[show new create]
       end
       get "meus-agendamentos", to: "my_appointments#index", as: :my_appointments
       get "a/:token", to: "appointments#show", as: :appointment
       scope "a/:token", module: :appointments do
         resource :cancellation, only: %i[new create]
+        resource :receipt, only: :show, path: "comprovante"
       end
     end
   end

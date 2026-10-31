@@ -7,6 +7,10 @@ class Client::BookingsController < Client::BaseController
   rate_limit to: 10, within: 1.minute, only: :create, name: "booking",
     with: -> { redirect_to new_client_service_booking_path(params[:service_id]), alert: RATE_LIMIT_ALERT }
 
+  def show
+    redirect_to new_client_service_booking_path(params[:service_id])
+  end
+
   def new
     service = Service.active.find(params[:service_id])
     render_schedule(service: service, selected_day: parsed_day)
@@ -22,7 +26,7 @@ class Client::BookingsController < Client::BaseController
     if result.success?
       notify_owner(result.value)
       notify_client(result.value) if current_client
-      return render_receipt(service, professional, result.value)
+      return redirect_to client_receipt_path(result.value.cancel_token), status: :see_other
     end
     return render_race(service, professional, starts_at) if result.reason == :taken
 
@@ -104,13 +108,6 @@ class Client::BookingsController < Client::BaseController
       name_errors: client ? client.errors[:name] : [], phone_errors: client ? client.errors[:phone] : [],
       signed_in: current_client.present?
     ), status: status
-  end
-
-  def render_receipt(service, professional, appointment)
-    render Views::Client::Bookings::Receipt.new(
-      tenant: ActsAsTenant.current_tenant, branding: current_branding, service: service,
-      professional: professional, appointment: appointment, signed_in: current_client.present?
-    )
   end
 
   def resolve_day(reasons, requested)
