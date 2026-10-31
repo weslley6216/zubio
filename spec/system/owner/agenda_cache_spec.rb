@@ -126,4 +126,41 @@ RSpec.describe "Owner agenda day cache", type: :system, js: true do
 
     expect(page).to have_css(".line-through", text: "Ana Paula Ribeiro")
   end
+
+  it "swaps the title on tap and reveals the row skeleton when the response is slow" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    sign_in_owner(professional_user)
+    target = Date.current + 9
+    held = []
+    page.driver.browser.on(:request) { |request| request.url.include?("day=#{target.iso8601}") ? held << request : request.continue }
+    page.driver.browser.network.intercept(pattern: "*/owner/appointments*")
+
+    find("[data-day='#{target.iso8601}']").click
+
+    expect(page).to have_css("#agenda_day h1", text: Components::LongDate.new(date: target).call)
+    expect(page).to have_css("#agenda_day main [data-skeleton]", visible: :visible)
+    expect(page).to fit_the_phone_width
+    held.each(&:continue)
+  end
+
+  it "does not reuse an error response" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    sign_in_owner(professional_user)
+    target = Date.current + 9
+    page.driver.browser.on(:request) { |request| request.url.include?("day=#{target.iso8601}") ? request.respond(status: 500, body: "") : request.continue }
+    page.driver.browser.network.intercept(pattern: "*/owner/appointments*")
+
+    find("[data-day='#{target.iso8601}']").click
+    sleep 0.2
+    find("[data-day='#{target.iso8601}']").click
+    sleep 0.2
+
+    expect(page.driver.network_traffic.count { |exchange| exchange.url&.include?("day=#{target.iso8601}") }).to be >= 2
+  end
 end

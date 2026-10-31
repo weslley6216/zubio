@@ -48,9 +48,16 @@ export default class extends Controller {
     const day = this.dayOf(event.detail.url)
     const wasInflight = this.inflight.has(day)
     const hadEntry = this.cache.has(day)
+    if (!hadEntry) this.applyTappedTitle(day)
     const entry = hadEntry ? this.cache.get(day) : this.fetchDay(day)
     event.detail.fetchRequest = { response: entry.then((response) => response.clone()) }
     if (hadEntry && !wasInflight) this.revalidate(day)
+  }
+
+  applyTappedTitle(day) {
+    const title = this.pill(day)?.dataset.dayTitle
+    const heading = this.frame.querySelector("[data-frame-title]")
+    if (title && heading) heading.textContent = title
   }
 
   revalidate(day) {
