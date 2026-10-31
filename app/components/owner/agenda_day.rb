@@ -33,7 +33,8 @@ class Components::Owner::AgendaDay < Components::Base
       data: {
         controller: "active-row",
         active_row_active_class: Components::Owner::AppointmentRow::ACTIVE_CLASS,
-        active_row_resting_class: Components::Owner::AppointmentRow::RESTING_CLASS
+        active_row_resting_class: Components::Owner::AppointmentRow::RESTING_CLASS,
+        action: "frame-cache:revalidated->active-row#reconcile"
       }) do
       render_main
       render_aside

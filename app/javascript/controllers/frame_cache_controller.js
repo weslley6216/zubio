@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { Turbo } from "@hotwired/turbo-rails"
 
 export default class extends Controller {
   static values = { frame: String }
@@ -35,8 +36,26 @@ export default class extends Controller {
     if (headers["Turbo-Frame"] !== this.frameValue) return
 
     const day = this.dayOf(event.detail.url)
-    const entry = this.cache.has(day) ? this.cache.get(day) : this.fetchDay(day)
+    const wasInflight = this.inflight.has(day)
+    const hadEntry = this.cache.has(day)
+    const entry = hadEntry ? this.cache.get(day) : this.fetchDay(day)
     event.detail.fetchRequest = { response: entry.then((response) => response.clone()) }
+    if (hadEntry && !wasInflight) this.revalidate(day)
+  }
+
+  revalidate(day) {
+    this.fetchDay(day).then((response) => {
+      if (!response.ok || response.redirected) return
+      if (this.shownDay() !== day) return
+      return response.clone().text().then((text) => {
+        const fresh = new DOMParser().parseFromString(text, "text/html").getElementById(this.frameValue)
+        if (!fresh) return
+        Turbo.morphChildren(this.frame, fresh, {
+          callbacks: { beforeNodeMorphed: (current) => !(current instanceof Element && current.tagName === "TURBO-FRAME") }
+        })
+        this.dispatch("revalidated", { target: this.frame })
+      })
+    })
   }
 
   onFrameLoad(event) {
