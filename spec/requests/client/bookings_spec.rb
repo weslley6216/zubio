@@ -17,6 +17,19 @@ RSpec.describe "Public booking day and time selection", type: :request do
     expect(response.body).to include("Design de sobrancelhas")
   end
 
+  it "disables native prefetch on the bookable day pills" do
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    tuesday = Date.current.next_week(:tuesday)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service, day: tuesday.iso8601)
+
+    pill = Nokogiri::HTML5(response.body).at_css("a[data-day='#{tuesday.iso8601}']")
+    expect(pill["data-turbo-prefetch"]).to eq("false")
+  end
+
   it "strikes a taken slot through and still offers the free ones" do
     professional = create(:professional, tenant: tenant)
     service = create(:service, tenant: tenant, duration_minutes: 45)
@@ -360,6 +373,26 @@ RSpec.describe "Public booking day and time selection", type: :request do
     expect(Nokogiri::HTML5(response.body).css("[data-slots] [data-slot]").map { |slot| slot.text.strip }).to include("09:00")
   end
 
+  it "keeps another tenant's appointment out of the grid frame" do
+    ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    ze_professional = create(:professional, tenant: ze)
+    ze_service = create(:service, tenant: ze, duration_minutes: 45)
+    tuesday = Date.current.next_week(:tuesday)
+    create(:working_hour, tenant: ze, professional: ze_professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    create(:appointment, tenant: ze, professional: ze_professional, service: ze_service, starts_at: tuesday.in_time_zone.change(hour: 9))
+    aurora_professional = create(:professional, tenant: tenant)
+    aurora_service = create(:service, tenant: tenant, duration_minutes: 45)
+    create(:working_hour, tenant: tenant, professional: aurora_professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    create(:appointment, tenant: tenant, professional: aurora_professional, service: aurora_service, starts_at: tuesday.in_time_zone.change(hour: 10, min: 30))
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(aurora_service, day: tuesday.iso8601), headers: { "Turbo-Frame" => Components::Client::Bookings::Grid::FRAME_ID }
+
+    document = Nokogiri::HTML5(response.body)
+    expect(document.css("[data-slots] [data-slot]").map { |slot| slot.text.strip }).to include("09:00")
+    expect(document.css("[data-slot-taken]").map { |slot| slot.text.strip }).to eq([ "10:30" ])
+  end
+
   it "paints the grid with brand tokens and never a demo token" do
     professional = create(:professional, tenant: tenant)
     service = create(:service, tenant: tenant, duration_minutes: 45)
@@ -428,6 +461,20 @@ RSpec.describe "Public booking day and time selection", type: :request do
     get new_client_service_booking_path(ze_service, day: "2026-09-08")
 
     expect(response.body).to include(Views::Client::Bookings::New::DATA_STEP)
+  end
+
+  it "renders the taken-time notice hidden below the grid" do
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    tuesday = Date.current.next_week(:tuesday)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service, day: tuesday.iso8601)
+
+    notice = Nokogiri::HTML5(response.body).at_css("[data-slot-taken-notice]")
+    expect(notice).to have_attribute("hidden")
+    expect(notice.text).to eq("Esse horário acabou de ser ocupado. Escolha outro.")
   end
 
   describe "POST create" do

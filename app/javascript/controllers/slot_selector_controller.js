@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 const SUMMARY_SEPARATOR = " · "
 
 export default class extends Controller {
-  static targets = ["slot", "input", "submit", "time", "day"]
+  static targets = ["slot", "input", "submit", "time", "day", "takenNotice"]
   static values = { label: { type: String, default: "Confirmar" }, includeDay: { type: Boolean, default: false }, day: String }
 
   connect() {
@@ -14,13 +14,28 @@ export default class extends Controller {
   select(event) { this.#choose(event.currentTarget) }
 
   resetDay(event) {
+    this.#clear()
+    if (this.includeDayValue) this.dayValue = event.currentTarget.dataset.dayLabel
+    this.submitTarget.textContent = this.#dayPrefix()
+    if (this.hasDayTarget) this.dayTarget.textContent = `${event.currentTarget.dataset.dayLabel}${SUMMARY_SEPARATOR}`
+  }
+
+  reconcile() {
+    const chosen = this.inputTarget.value
+    if (!chosen) return
+    const slot = this.slotTargets.find((candidate) => candidate.dataset.startsAt === chosen)
+    if (slot) return this.#choose(slot)
+    this.#clear()
+    if (this.hasTakenNoticeTarget) this.takenNoticeTarget.hidden = false
+  }
+
+  #clear() {
     this.slotTargets.forEach((slot) => slot.setAttribute("aria-pressed", "false"))
     this.inputTarget.value = ""
     this.submitTarget.disabled = true
-    if (this.includeDayValue) this.dayValue = event.currentTarget.dataset.dayLabel
     this.submitTarget.textContent = this.#dayPrefix()
     if (this.hasTimeTarget) this.timeTarget.textContent = ""
-    if (this.hasDayTarget) this.dayTarget.textContent = `${event.currentTarget.dataset.dayLabel}${SUMMARY_SEPARATOR}`
+    this.#hideNotice()
   }
 
   #choose(slot) {
@@ -29,6 +44,11 @@ export default class extends Controller {
     this.submitTarget.disabled = false
     this.submitTarget.textContent = `${this.#dayPrefix()} ${this.includeDayValue ? "às " : ""}${slot.dataset.time}`
     if (this.hasTimeTarget) this.timeTarget.textContent = `${slot.dataset.time}${SUMMARY_SEPARATOR}`
+    this.#hideNotice()
+  }
+
+  #hideNotice() {
+    if (this.hasTakenNoticeTarget) this.takenNoticeTarget.hidden = true
   }
 
   #dayPrefix() {

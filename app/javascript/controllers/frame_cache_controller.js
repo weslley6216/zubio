@@ -1,0 +1,157 @@
+import { Controller } from "@hotwired/stimulus"
+import { Turbo } from "@hotwired/turbo-rails"
+
+export default class extends Controller {
+  static values = { frame: String }
+  static targets = ["strip"]
+
+  connect() {
+    this.cache = new Map()
+    this.inflight = new Set()
+    this.pendingRevalidation = new Set()
+    this.queue = []
+    this.onFetch = this.onFetch.bind(this)
+    this.onFrameLoad = this.onFrameLoad.bind(this)
+    this.onScroll = this.onScroll.bind(this)
+    this.clear = this.clear.bind(this)
+    this.element.addEventListener("turbo:before-fetch-request", this.onFetch)
+    this.element.addEventListener("turbo:frame-load", this.onFrameLoad)
+    if (this.hasStripTarget) this.stripTarget.addEventListener("scroll", this.onScroll)
+    document.addEventListener("turbo:morph", this.clear)
+    document.addEventListener("turbo:submit-end", this.clear)
+    this.preload()
+  }
+
+  disconnect() {
+    this.element.removeEventListener("turbo:before-fetch-request", this.onFetch)
+    this.element.removeEventListener("turbo:frame-load", this.onFrameLoad)
+    if (this.hasStripTarget) this.stripTarget.removeEventListener("scroll", this.onScroll)
+    document.removeEventListener("turbo:morph", this.clear)
+    document.removeEventListener("turbo:submit-end", this.clear)
+    if (this.scrollRAF) cancelAnimationFrame(this.scrollRAF)
+  }
+
+  clear() {
+    this.cache.clear()
+    this.inflight.clear()
+    this.pendingRevalidation.clear()
+  }
+
+  get frame() {
+    return document.getElementById(this.frameValue)
+  }
+
+  onFetch(event) {
+    const headers = event.detail.fetchOptions.headers
+    if (headers["X-Sec-Purpose"] === "prefetch") return
+    if (event.detail.fetchOptions.method && event.detail.fetchOptions.method.toUpperCase() !== "GET") return
+    if (headers["Turbo-Frame"] !== this.frameValue) return
+
+    const day = this.dayOf(event.detail.url)
+    const wasInflight = this.inflight.has(day)
+    const hadEntry = this.cache.has(day)
+    if (!hadEntry) this.applyTappedTitle(day)
+    const entry = hadEntry ? this.cache.get(day) : this.fetchDay(day)
+    event.detail.fetchRequest = { response: entry.then((response) => response.clone()) }
+    if (hadEntry && !wasInflight && !this.pendingRevalidation.has(day)) {
+      this.pendingRevalidation.add(day)
+      this.frame.addEventListener("turbo:frame-load", () => {
+        this.pendingRevalidation.delete(day)
+        this.revalidate(day)
+      }, { once: true })
+    }
+  }
+
+  applyTappedTitle(day) {
+    const title = this.pill(day)?.dataset.dayTitle
+    const heading = this.frame.querySelector("[data-frame-title]")
+    if (title && heading) heading.textContent = title
+  }
+
+  revalidate(day) {
+    this.fetchDay(day).then((response) => {
+      if (!response.ok || response.redirected) return
+      if (this.shownDay() !== day) return
+      return response.clone().text().then((text) => {
+        const fresh = new DOMParser().parseFromString(text, "text/html").getElementById(this.frameValue)
+        if (!fresh) return
+        Turbo.morphChildren(this.frame, fresh, {
+          callbacks: { beforeNodeMorphed: (current) => !(current instanceof Element && current.tagName === "TURBO-FRAME") }
+        })
+        this.dispatch("revalidated", { target: this.frame })
+      })
+    })
+  }
+
+  onFrameLoad(event) {
+    if (event.target.id !== this.frameValue) return
+    this.preload()
+  }
+
+  onScroll() {
+    if (this.scrollRAF) return
+    this.scrollRAF = requestAnimationFrame(() => {
+      this.scrollRAF = null
+      this.preload()
+    })
+  }
+
+  dayOf(url) {
+    return new URL(url, window.location.href).searchParams.get("day")
+  }
+
+  pill(day) {
+    return this.element.querySelector(`a[data-day="${day}"]`)
+  }
+
+  shownDay() {
+    return this.element.querySelector("a[data-day][aria-current]")?.dataset.day
+  }
+
+  fetchDay(day) {
+    const pill = this.pill(day)
+    const promise = fetch(pill.href, { headers: { "Turbo-Frame": this.frameValue, "Accept": "text/html, application/xhtml+xml" } })
+    this.cache.set(day, promise)
+    this.inflight.add(day)
+    promise.then((response) => {
+      this.inflight.delete(day)
+      if (!response.ok || response.redirected) this.cache.delete(day)
+    }, () => {
+      this.inflight.delete(day)
+      this.cache.delete(day)
+    })
+    return promise
+  }
+
+  preload() {
+    if (!this.hasStripTarget) return
+    const strip = this.stripTarget.getBoundingClientRect()
+    const pills = Array.from(this.stripTarget.querySelectorAll("a[data-day]"))
+    const visible = pills.filter((pill) => {
+      const box = pill.getBoundingClientRect()
+      return box.right > strip.left && box.left < strip.right
+    })
+    if (visible.length === 0) return
+
+    const days = new Set(visible.map((pill) => pill.dataset.day))
+    const firstIndex = pills.indexOf(visible[0])
+    const lastIndex = pills.indexOf(visible[visible.length - 1])
+    if (firstIndex > 0) days.add(pills[firstIndex - 1].dataset.day)
+    if (lastIndex < pills.length - 1) days.add(pills[lastIndex + 1].dataset.day)
+
+    for (const day of days) {
+      if (!this.cache.has(day) && !this.inflight.has(day) && !this.queue.includes(day)) this.queue.push(day)
+    }
+    this.drainQueue()
+  }
+
+  drainQueue() {
+    if (this.draining || this.queue.length === 0) return
+    this.draining = true
+    const day = this.queue.shift()
+    this.fetchDay(day).finally(() => {
+      this.draining = false
+      this.drainQueue()
+    })
+  }
+}

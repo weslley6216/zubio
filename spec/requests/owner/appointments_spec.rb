@@ -326,6 +326,18 @@ RSpec.describe "Owner appointments", type: :request do
       expect(response.body).to include(%(<meta name="turbo-refresh-method" content="morph">))
       expect(response.body).to include(%(<meta name="turbo-refresh-scroll" content="preserve">))
     end
+
+    it "carries each day's long title and disables native prefetch on the pills" do
+      create(:branding, tenant: tenant)
+      sign_in_owner(owner)
+      other_day = Date.current + 1
+
+      get owner_appointments_path(day: other_day.iso8601)
+
+      pill = Nokogiri::HTML5(response.body).at_css(%(a[href$="day=#{other_day.iso8601}"]))
+      expect(pill["data-day-title"]).to eq(Components::LongDate.new(date: other_day).call)
+      expect(pill["data-turbo-prefetch"]).to eq("false")
+    end
   end
 
   describe "GET /owner/appointments/:id" do
@@ -561,6 +573,25 @@ RSpec.describe "Owner appointments", type: :request do
       document = Nokogiri::HTML5(response.body)
       expect(document.at_css("header")).to be_present
       expect(document.at_css("[data-day-selector]")).to be_present
+    end
+
+    it "answers the day frame with only the request tenant's appointments" do
+      day = Date.current + 1
+      ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+      ze_professional = create(:professional, tenant: ze)
+      ze_service = create(:service, tenant: ze)
+      ze_client = create(:client, tenant: ze, name: "Carlos Zé")
+      ActsAsTenant.with_tenant(ze) { create(:appointment, tenant: ze, professional: ze_professional, service: ze_service, client: ze_client, starts_at: day.in_time_zone.change(hour: 9)) }
+      create(:branding, tenant: tenant)
+      service = create(:service, tenant: tenant)
+      own_client = create(:client, tenant: tenant, name: "Ana Aurora")
+      ActsAsTenant.with_tenant(tenant) { create(:appointment, tenant: tenant, professional: professional, service: service, client: own_client, starts_at: day.in_time_zone.change(hour: 9)) }
+      sign_in_owner(owner)
+
+      get owner_appointments_path(day: day.iso8601), headers: { "Turbo-Frame" => "agenda_day" }
+
+      expect(response.body).to include("Ana Aurora")
+      expect(response.body).not_to include("Carlos Zé")
     end
 
     it "answers not found for another establishment's appointment requested through the detail frame, with none of its data" do
