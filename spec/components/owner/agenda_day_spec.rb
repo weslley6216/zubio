@@ -42,14 +42,16 @@ RSpec.describe Components::Owner::AgendaDay, type: :component do
     html = render_phlex(described_class.new(tenant: tenant, branding: branding, day: day, appointments: [ appointment ]))
     fragment = Nokogiri::HTML5.fragment(html)
 
-    frame_content = fragment.at_css("[data-frame-content]")
-    expect(frame_content.at_css(%(div[data-appointment-id="#{appointment.id}"]))).not_to be_nil
+    list_region = fragment.css("[data-frame-content]").find { |node| node.at_css("[data-appointment-id]") }
+    expect(list_region).not_to be_nil
+    counter = fragment.at_css("span[data-frame-content]")
+    expect(counter.text).to include("atendimento")
+    expect(fragment.at_css("h1[data-frame-title]")).not_to be_nil
+    expect(fragment.at_css("h1[data-frame-content]")).to be_nil
     skeleton = fragment.at_css("[data-skeleton][aria-hidden='true']")
     expect(skeleton).not_to be_nil
     expect(skeleton.css("> *").size).to eq(3)
-    expect(frame_content.at_css("h1")).to be_nil
-    expect(frame_content.text).not_to include(Components::Owner::AgendaDay::NEW_APPOINTMENT_LABEL)
-    expect(fragment.at_css("h1")).not_to be_nil
+    expect(list_region.text).not_to include(Components::Owner::AgendaDay::NEW_APPOINTMENT_LABEL)
     expect(fragment.text).to include(Components::Owner::AgendaDay::NEW_APPOINTMENT_LABEL)
   end
 

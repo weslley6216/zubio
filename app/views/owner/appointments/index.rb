@@ -52,6 +52,7 @@ class Views::Owner::Appointments::Index < Views::Base
     a(href: owner_appointments_path(day: date.iso8601),
       class: [ "#{Components::DayPill::WEEK_ITEM} #{Components::DayPill::FRAME}", (selected ? Components::DayPill::SELECTED : Components::DayPill::RESTING) ],
       data: { day: date.iso8601, day_selector_target: (selected ? "selected" : nil),
+              day_title: Components::LongDate.new(date: date).call, turbo_prefetch: "false",
               turbo_frame: Components::Owner::AgendaDay::FRAME_ID, turbo_action: "advance", action: "day-selector#mark" },
       aria_current: selected ? "date" : nil) do
       span(class: [ Components::DayPill::WEEKDAY, (Components::DayPill::WEEKDAY_RESTING unless selected) ]) { day_label(date) }

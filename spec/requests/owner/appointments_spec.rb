@@ -326,6 +326,18 @@ RSpec.describe "Owner appointments", type: :request do
       expect(response.body).to include(%(<meta name="turbo-refresh-method" content="morph">))
       expect(response.body).to include(%(<meta name="turbo-refresh-scroll" content="preserve">))
     end
+
+    it "carries each day's long title and disables native prefetch on the pills" do
+      create(:branding, tenant: tenant)
+      sign_in_owner(owner)
+      other_day = Date.current + 1
+
+      get owner_appointments_path(day: other_day.iso8601)
+
+      pill = Nokogiri::HTML5(response.body).at_css(%(a[href$="day=#{other_day.iso8601}"]))
+      expect(pill["data-day-title"]).to eq(Components::LongDate.new(date: other_day).call)
+      expect(pill["data-turbo-prefetch"]).to eq("false")
+    end
   end
 
   describe "GET /owner/appointments/:id" do

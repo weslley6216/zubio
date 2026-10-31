@@ -87,8 +87,8 @@ class Components::Owner::AgendaDay < Components::Base
 
   def render_title_row
     div(class: "flex flex-wrap items-center gap-2.5") do
-      h1(class: "min-w-0 flex-grow truncate text-[20px] font-extrabold tracking-[-0.02em] text-ink") { render Components::LongDate.new(date: @day) }
-      span(class: "text-[13px] font-bold tabular-nums text-ink-muted") { count_label }
+      h1(class: "min-w-0 flex-grow truncate text-[20px] font-extrabold tracking-[-0.02em] text-ink", data: { frame_title: true }) { render Components::LongDate.new(date: @day) }
+      span(class: "text-[13px] font-bold tabular-nums text-ink-muted", data: { frame_content: true }) { count_label }
       render_new_appointment_link
     end
   end
