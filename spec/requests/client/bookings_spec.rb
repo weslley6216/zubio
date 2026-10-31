@@ -373,6 +373,26 @@ RSpec.describe "Public booking day and time selection", type: :request do
     expect(Nokogiri::HTML5(response.body).css("[data-slots] [data-slot]").map { |slot| slot.text.strip }).to include("09:00")
   end
 
+  it "keeps another tenant's appointment out of the grid frame" do
+    ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    ze_professional = create(:professional, tenant: ze)
+    ze_service = create(:service, tenant: ze, duration_minutes: 45)
+    tuesday = Date.current.next_week(:tuesday)
+    create(:working_hour, tenant: ze, professional: ze_professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    create(:appointment, tenant: ze, professional: ze_professional, service: ze_service, starts_at: tuesday.in_time_zone.change(hour: 9))
+    aurora_professional = create(:professional, tenant: tenant)
+    aurora_service = create(:service, tenant: tenant, duration_minutes: 45)
+    create(:working_hour, tenant: tenant, professional: aurora_professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    create(:appointment, tenant: tenant, professional: aurora_professional, service: aurora_service, starts_at: tuesday.in_time_zone.change(hour: 10, min: 30))
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(aurora_service, day: tuesday.iso8601), headers: { "Turbo-Frame" => Components::Client::Bookings::Grid::FRAME_ID }
+
+    document = Nokogiri::HTML5(response.body)
+    expect(document.css("[data-slots] [data-slot]").map { |slot| slot.text.strip }).to include("09:00")
+    expect(document.css("[data-slot-taken]").map { |slot| slot.text.strip }).to eq([ "10:30" ])
+  end
+
   it "paints the grid with brand tokens and never a demo token" do
     professional = create(:professional, tenant: tenant)
     service = create(:service, tenant: tenant, duration_minutes: 45)
