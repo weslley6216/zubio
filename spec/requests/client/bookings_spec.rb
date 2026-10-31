@@ -529,6 +529,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
       starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
 
       post client_service_booking_path(service), params: { name: "Ana Paula Ribeiro", phone: "(11) 98877-1234", starts_at: starts_at.iso8601 }
+      follow_redirect!
 
       appointment_attributes = ActsAsTenant.with_tenant(tenant) do
         appointment = Appointment.occupying.sole
@@ -538,6 +539,30 @@ RSpec.describe "Public booking day and time selection", type: :request do
       expect(appointment_attributes).to eq([ service, professional, starts_at, true ])
       expect(response.body).to include("Horário confirmado")
       expect(response.body).to include("Ter, 8 set · 09:00")
+    end
+
+    it "answers the confirm with a see-other redirect to the receipt, so a reload shows it again" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9)
+
+      post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: starts_at.iso8601 }
+
+      token = ActsAsTenant.with_tenant(tenant) { Appointment.occupying.sole.cancel_token }
+      expect(response).to have_http_status(:see_other)
+      expect(response).to redirect_to(client_receipt_path(token))
+    end
+
+    it "sends a reload of the confirm address back to the booking page" do
+      service = create(:service, tenant: tenant)
+      host! "#{tenant.subdomain}.zubio.com.br"
+
+      get client_service_booking_path(service)
+
+      expect(response).to redirect_to(new_client_service_booking_path(service))
     end
 
     it "creates the client and opens no client session" do
@@ -579,6 +604,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
       starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9, min: 45)
 
       post client_service_booking_path(service), params: { starts_at: starts_at.iso8601 }
+      follow_redirect!
 
       expect(response.body).to include("Comprovante enviado")
       expect(response.body).to include("a***@gmail.com")
@@ -596,6 +622,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
       starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9, min: 45)
 
       post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: starts_at.iso8601 }
+      follow_redirect!
 
       token = ActsAsTenant.with_tenant(tenant) { Appointment.occupying.sole.cancel_token }
       expect(response.body).to include("Não perca este horário")
@@ -614,6 +641,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
       starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9, min: 45)
 
       post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: starts_at.iso8601 }
+      follow_redirect!
 
       token = ActsAsTenant.with_tenant(tenant) { Appointment.occupying.sole.cancel_token }
       expect(Nokogiri::HTML5(response.body).at_css("[data-cancel-link]")["href"]).to eq("/a/#{token}")
@@ -632,6 +660,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
       starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9, min: 45)
 
       post client_service_booking_path(service), params: { starts_at: starts_at.iso8601 }
+      follow_redirect!
 
       token = ActsAsTenant.with_tenant(tenant) { Appointment.occupying.sole.cancel_token }
       expect(Nokogiri::HTML5(response.body).at_css("[data-cancel-link]")["href"]).to eq("/a/#{token}")
@@ -769,6 +798,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
       allow(OwnerMailer).to receive(:new_appointment).and_raise(StandardError.new("resend down"))
 
       post client_service_booking_path(service), params: { name: "Ana", phone: "11988771234", starts_at: starts_at.iso8601 }
+      follow_redirect!
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Horário confirmado")
@@ -871,6 +901,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
       allow(ClientMailer).to receive(:booking_receipt).and_raise(StandardError.new("resend down"))
 
       post client_service_booking_path(service), params: { starts_at: starts_at.iso8601 }
+      follow_redirect!
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Horário confirmado")
