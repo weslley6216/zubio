@@ -224,4 +224,25 @@ RSpec.describe "Owner appointments", type: :system, js: true do
     expect(page).to have_css("[data-day='#{fourth_day.iso8601}'][aria-current='date']")
     expect(page).to have_text("Bia Quarta")
   end
+
+  it "keeps both chevrons outside the visible window of the day strip" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, tenant: tenant)
+    professional_user = create(:user, :with_professional, tenant: tenant, name: "Ana Lima")
+    sign_in_owner(professional_user)
+    page.execute_script("const scroller = document.querySelector('[data-day-selector]'); scroller.scrollLeft = scroller.clientWidth")
+    expect(page).to have_css("[data-day-strip-overflow-target='backward']")
+
+    edges = page.evaluate_script(<<~JS)
+      (() => {
+        const strip = document.querySelector('[data-day-selector]').getBoundingClientRect();
+        const forward = document.querySelector("[data-day-strip-overflow-target='forward'] svg").getBoundingClientRect();
+        const backward = document.querySelector("[data-day-strip-overflow-target='backward'] svg").getBoundingClientRect();
+        return { stripLeft: strip.left, stripRight: strip.right, forwardLeft: forward.left, backwardRight: backward.right };
+      })()
+    JS
+
+    expect(edges["forwardLeft"]).to be >= edges["stripRight"]
+    expect(edges["backwardRight"]).to be <= edges["stripLeft"]
+  end
 end

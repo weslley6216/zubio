@@ -35,7 +35,7 @@ class Views::Owner::Appointments::Index < Views::Base
     div(class: "border-b border-line bg-surface") do
       div(class: "#{Components::Owner::Panel::CONTENT_WIDE} py-4") do
         div(class: "relative", data: { controller: "day-strip-overflow" }) do
-          div(class: Components::DayPill::SCROLLER, data: {
+          div(class: "#{Components::DayPill::SCROLLER} #{Components::DayPill::SCROLLER_ARROW_GUTTER}", data: {
             day_selector: true, controller: "day-selector",
             day_selector_selected_class: Components::DayPill::SELECTED,
             day_selector_resting_class: Components::DayPill::RESTING,
