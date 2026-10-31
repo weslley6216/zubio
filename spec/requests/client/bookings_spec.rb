@@ -17,6 +17,19 @@ RSpec.describe "Public booking day and time selection", type: :request do
     expect(response.body).to include("Design de sobrancelhas")
   end
 
+  it "disables native prefetch on the bookable day pills" do
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    tuesday = Date.current.next_week(:tuesday)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service, day: tuesday.iso8601)
+
+    pill = Nokogiri::HTML5(response.body).at_css("a[data-day='#{tuesday.iso8601}']")
+    expect(pill["data-turbo-prefetch"]).to eq("false")
+  end
+
   it "strikes a taken slot through and still offers the free ones" do
     professional = create(:professional, tenant: tenant)
     service = create(:service, tenant: tenant, duration_minutes: 45)

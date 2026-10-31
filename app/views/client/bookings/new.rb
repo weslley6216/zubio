@@ -139,14 +139,16 @@ class Views::Client::Bookings::New < Views::Base
   end
 
   def render_schedule_steps
-    render_step("2", DAY_STEP) do
-      render_day_selector
-      p(class: HINT_CLASS, data: { days_off_hint: true }) { days_off_hint } if disabled_days.any?
-    end
-    render_step("3", TIME_STEP) do
-      render Components::Client::Bookings::Grid.new(
-        service: @service, slots: @slots, taken_slots: @taken_slots, reason: @reason, selected_slot: @selected_slot
-      )
+    div(class: "contents", data: { controller: "frame-cache", frame_cache_frame_value: Components::Client::Bookings::Grid::FRAME_ID }) do
+      render_step("2", DAY_STEP) do
+        render_day_selector
+        p(class: HINT_CLASS, data: { days_off_hint: true }) { days_off_hint } if disabled_days.any?
+      end
+      render_step("3", TIME_STEP) do
+        render Components::Client::Bookings::Grid.new(
+          service: @service, slots: @slots, taken_slots: @taken_slots, reason: @reason, selected_slot: @selected_slot
+        )
+      end
     end
     render_data_step unless @signed_in
   end
@@ -158,6 +160,7 @@ class Views::Client::Bookings::New < Views::Base
         day_selector_selected_class: DAY_SELECTED_CLASS,
         day_selector_resting_class: DAY_FREE_CLASS,
         day_selector_weekday_resting_class: DAY_WEEKDAY_FREE_CLASS,
+        frame_cache_target: "strip",
         **Components::DayStripOverflow::SCROLLER_DATA
       }) { @days.each { |date| render_day(date) } }
     end
@@ -171,7 +174,7 @@ class Views::Client::Bookings::New < Views::Base
     selected = date == @selected_day
     a(href: new_client_service_booking_path(@service, day: date.iso8601),
       class: [ DAY_BASE_CLASS, selected ? DAY_SELECTED_CLASS : DAY_FREE_CLASS ],
-      data: { day: date.iso8601, day_selector_target: selected ? "selected" : nil, turbo: true,
+      data: { day: date.iso8601, day_selector_target: selected ? "selected" : nil, turbo: true, turbo_prefetch: "false",
               turbo_frame: Components::Client::Bookings::Grid::FRAME_ID, turbo_action: "advance",
               day_label: day_label_for(date), action: "day-selector#mark slot-selector#resetDay" },
       aria_current: selected ? "date" : nil) do
