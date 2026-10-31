@@ -8,6 +8,7 @@ export default class extends Controller {
   connect() {
     this.cache = new Map()
     this.inflight = new Set()
+    this.pendingRevalidation = new Set()
     this.queue = []
     this.onFetch = this.onFetch.bind(this)
     this.onFrameLoad = this.onFrameLoad.bind(this)
@@ -33,6 +34,7 @@ export default class extends Controller {
   clear() {
     this.cache.clear()
     this.inflight.clear()
+    this.pendingRevalidation.clear()
   }
 
   get frame() {
@@ -51,7 +53,13 @@ export default class extends Controller {
     if (!hadEntry) this.applyTappedTitle(day)
     const entry = hadEntry ? this.cache.get(day) : this.fetchDay(day)
     event.detail.fetchRequest = { response: entry.then((response) => response.clone()) }
-    if (hadEntry && !wasInflight) this.frame.addEventListener("turbo:frame-load", () => this.revalidate(day), { once: true })
+    if (hadEntry && !wasInflight && !this.pendingRevalidation.has(day)) {
+      this.pendingRevalidation.add(day)
+      this.frame.addEventListener("turbo:frame-load", () => {
+        this.pendingRevalidation.delete(day)
+        this.revalidate(day)
+      }, { once: true })
+    }
   }
 
   applyTappedTitle(day) {
