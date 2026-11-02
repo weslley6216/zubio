@@ -88,6 +88,7 @@ RSpec.describe "Public booking day cache", type: :system, js: true do
   end
 
   it "reveals a visible slot skeleton when an unloaded day is slow" do
+    travel_to Time.zone.local(2026, 10, 31, 8, 0)
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
     professional = create(:professional, tenant: tenant)
     service = create(:service, tenant: tenant, name: "Corte", duration_minutes: 60)
