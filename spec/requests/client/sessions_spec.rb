@@ -41,6 +41,25 @@ RSpec.describe "Client session", type: :request do
     end
   end
 
+  describe "cross-tenant isolation" do
+    it "does not authenticate a client cookie from another establishment" do
+      other_tenant = create(:tenant, subdomain: "other-salon")
+      sign_in_client(client)
+      stale_cookie = cookies[:client_id]
+
+      host! "#{other_tenant.subdomain}.zubio.com.br"
+      cookies[:client_id] = stale_cookie
+      get client_my_appointments_path
+
+      expect(response).to redirect_to(establishment_path)
+
+      host! "#{tenant.subdomain}.zubio.com.br"
+      get client_my_appointments_path
+
+      expect(response).not_to redirect_to(establishment_path)
+    end
+  end
+
   describe "a client session is not an owner session" do
     it "lets an owner session reach the owner dashboard" do
       owner = create(:user, tenant: tenant)

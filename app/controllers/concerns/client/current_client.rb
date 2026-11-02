@@ -8,7 +8,7 @@ module Client::CurrentClient
   end
 
   def start_client_session(client, destination:)
-    cookies.encrypted[:client_id] = { value: client.id, httponly: true }
+    cookies.encrypted.permanent[:client_id] = { value: client.id, httponly: true, secure: Rails.env.production? }
     redirect_to destination
   end
 
