@@ -105,9 +105,15 @@ RSpec.describe "Client booking time grid skeleton", type: :system, js: true do
   it "reveals the skeleton only after the delay" do
     visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: day.iso8601)}"
 
-    page.execute_script("document.getElementById('booking-grid').setAttribute('busy', '')")
+    visibility_when_busy = page.evaluate_script(<<~JS)
+      (() => {
+        const frame = document.getElementById("booking-grid")
+        frame.setAttribute("busy", "")
+        return getComputedStyle(frame.querySelector("[data-frame-content]")).visibility
+      })()
+    JS
 
-    expect(computed("#booking-grid [data-frame-content]", "visibility")).to eq("visible")
+    expect(visibility_when_busy).to eq("visible")
     expect(computed("#booking-grid [data-skeleton]", "transitionDelay")).to eq("0.15s")
     expect(computed("#booking-grid [data-frame-content]", "transitionDelay")).to eq("0.15s, 0.15s")
   end
