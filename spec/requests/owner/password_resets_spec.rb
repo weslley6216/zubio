@@ -234,6 +234,28 @@ RSpec.describe "Owner password reset", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
     end
 
+    it "logs out the other devices of the owner once the password changes" do
+      post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
+      other_device_cookie = cookies[:session_id]
+      token = ActsAsTenant.with_tenant(tenant) { owner.issue_password_reset_token! }
+      patch owner_password_reset_path, params: { token: token, password: "an0th3rpass" }
+      cookies[:session_id] = other_device_cookie
+
+      get owner_appointments_path
+
+      expect(response).to redirect_to(new_owner_session_path)
+    end
+
+    it "keeps the other devices of the owner logged in when the new password is refused" do
+      post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
+      token = ActsAsTenant.with_tenant(tenant) { owner.issue_password_reset_token! }
+      patch owner_password_reset_path, params: { token: token, password: "short" }
+
+      get owner_appointments_path
+
+      expect(response).not_to redirect_to(new_owner_session_path)
+    end
+
     it "keeps the owner on the form with the error next to the field when the password is too short" do
       token = ActsAsTenant.with_tenant(tenant) { owner.issue_password_reset_token! }
 
