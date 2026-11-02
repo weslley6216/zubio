@@ -31,6 +31,22 @@ RSpec.describe "Client install invite", type: :system, js: true do
     expect(page).to have_no_button(Components::InstallInvite::INSTALL_LABEL)
   end
 
+  it "offers the install action below the list in Meus horários" do
+    client = create(:client, tenant: tenant, account_linked_at: 1.day.ago)
+    create(:appointment, tenant: tenant, client: client, starts_at: 1.week.from_now)
+    emulate_android
+    sign_in_client(client)
+
+    visit "http://#{tenant.subdomain}.zubio.com.br#{client_my_appointments_path}"
+    wait_until { fire_before_install_prompt; page.has_css?("[data-pwa-install-target='action']:not([hidden])", wait: 0) }
+
+    rebook_bottom = find("[data-rebook-link]").evaluate_script("this.getBoundingClientRect().bottom")
+    invite_top = find("[data-pwa-install-target='action']").evaluate_script("this.getBoundingClientRect().top")
+    expect(invite_top).to be > rebook_bottom
+    expect(page).to have_text("Tenha a Titiko Crochê na tela inicial")
+    expect(page).to fit_the_phone_width
+  end
+
   it "hides the invite on a first visit to the showcase, then shows it after a receipt visit" do
     create(:service, tenant: tenant, name: "Corte")
     emulate_android
