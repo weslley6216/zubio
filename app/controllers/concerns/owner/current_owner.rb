@@ -4,6 +4,9 @@ module Owner::CurrentOwner
   private
 
   def current_owner
-    @current_owner ||= session[:user_id] && User.owner.find_by(id: session[:user_id])
+    @current_owner ||= begin
+      session_record = cookies.signed[:session_id] && Session.find_by(id: cookies.signed[:session_id])
+      session_record&.user if session_record&.user&.owner?
+    end
   end
 end

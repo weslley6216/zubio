@@ -24,7 +24,7 @@ class Owner::SessionsController < ApplicationController
   end
 
   def destroy
-    session.delete(:user_id)
+    terminate_owner_session
     redirect_to new_owner_session_path
   end
 end
