@@ -2,6 +2,7 @@ class User < ApplicationRecord
   acts_as_tenant(:tenant)
   has_secure_password reset_token: false
   has_one :professional, dependent: nil
+  has_many :sessions, dependent: :destroy
 
   MINIMUM_PASSWORD_LENGTH = 8
 
