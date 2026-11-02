@@ -103,6 +103,23 @@ RSpec.describe "Client install invite", type: :system, js: true do
     expect(page).to have_css("[data-controller='pwa-install'][hidden]", visible: :all)
   end
 
+  it "sets the card type with the prancheta's metrics instead of inheriting the showcase line height" do
+    create(:service, tenant: tenant, name: "Corte")
+    client = create(:client, tenant: tenant)
+    emulate_iphone
+    sign_in_client(client)
+
+    visit "http://#{tenant.subdomain}.zubio.com.br#{establishment_path}"
+
+    instructions = "[data-pwa-install-target='instructions']"
+    expect(page).to have_css("#{instructions}:not([hidden])")
+    expect(computed("#{instructions} p", "lineHeight")).to eq("normal")
+    expect(computed("#{instructions} p", "letterSpacing")).to eq("-0.16px")
+    expect(computed("#{instructions} p + p", "lineHeight")).to eq("normal")
+    expect(computed("#{instructions} strong", "lineHeight")).to eq("normal")
+    expect(computed("#{instructions} button", "lineHeight")).to eq("normal")
+  end
+
   it "offers nothing and reserves no space on a desktop receipt" do
     appointment = create(:appointment, tenant: tenant)
     emulate_desktop

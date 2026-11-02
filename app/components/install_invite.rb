@@ -16,20 +16,20 @@ class Components::InstallInvite < Components::Base
   CARD_CLASS = "grid gap-4 rounded-[18px] border border-line bg-surface p-5 shadow-[0_8px_24px_rgba(14,26,36,0.10)]".freeze
   IDENTITY_CLASS = "flex items-center gap-3.5".freeze
   ICON_CLASS = "h-13 w-13 flex-none rounded-[14px]".freeze
-  INITIAL_CLASS = "grid place-items-center bg-brand-600 text-[22px] font-extrabold text-on-brand".freeze
+  INITIAL_CLASS = "grid place-items-center bg-brand-600 text-[22px] leading-[normal] font-extrabold text-on-brand".freeze
   TEXT_COLUMN_CLASS = "grid flex-grow gap-[3px]".freeze
-  TITLE_CLASS = "text-base font-extrabold tracking-tight text-ink".freeze
-  HELPER_CLASS = "text-[13px] text-ink-muted".freeze
+  TITLE_CLASS = "text-base leading-[normal] font-extrabold tracking-[-0.01em] text-ink".freeze
+  HELPER_CLASS = "text-[13px] leading-[normal] text-ink-muted".freeze
   ACTIONS_CLASS = "flex gap-2".freeze
-  INSTALL_CLASS = "flex min-h-11 flex-grow items-center justify-center gap-2 rounded-[10px] bg-brand-600 text-sm font-bold text-on-brand".freeze
-  DISMISS_CLASS = "inline-flex min-h-11 flex-none items-center rounded-[10px] border border-line bg-surface px-4 text-sm font-bold text-ink-muted".freeze
+  INSTALL_CLASS = "flex min-h-11 flex-grow items-center justify-center gap-2 rounded-[10px] bg-brand-600 text-sm leading-[normal] font-bold text-on-brand".freeze
+  DISMISS_CLASS = "inline-flex min-h-11 flex-none items-center rounded-[10px] border border-line bg-surface px-4 text-sm leading-[normal] font-bold text-ink-muted".freeze
   STEPS_CLASS = "grid gap-2.5".freeze
   STEP_ROW_CLASS = "flex items-center gap-3 rounded-[10px] border border-line bg-surface-2 px-3.5 py-3".freeze
-  STEP_NUMBER_CLASS = "grid h-6 w-6 flex-none place-items-center rounded-full bg-brand-600 text-xs font-extrabold text-on-brand".freeze
-  STEP_TEXT_CLASS = "flex-grow text-[13px] text-ink".freeze
+  STEP_NUMBER_CLASS = "grid h-6 w-6 flex-none place-items-center rounded-full bg-brand-600 text-xs leading-[normal] font-extrabold text-on-brand".freeze
+  STEP_TEXT_CLASS = "flex-grow text-[13px] leading-[normal] text-ink".freeze
   STEP_ICON_CLASS = "h-5 w-5 flex-none text-ink".freeze
   INSTALL_ICON_CLASS = "h-4.5 w-4.5".freeze
-  INSTALLED_CLASS = "inline-flex min-h-11 items-center justify-self-start rounded-[10px] border border-line bg-surface px-4 text-sm font-bold text-ink-muted".freeze
+  INSTALLED_CLASS = "inline-flex min-h-11 items-center justify-self-start rounded-[10px] border border-line bg-surface px-4 text-sm leading-[normal] font-bold text-ink-muted".freeze
 
   def self.for_owner(name:, icon:, initial:)
     new(name: name, icon: icon, initial: initial,
