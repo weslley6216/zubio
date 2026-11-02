@@ -328,4 +328,35 @@ RSpec.describe Client, type: :model do
       expect(names).not_to include("Bia Zé")
     end
   end
+
+  describe "#record_app_installation!" do
+    it "stamps app_installed_at the first time" do
+      client = create(:client)
+
+      client.record_app_installation!
+
+      expect(client.reload.app_installed_at).to be_present
+    end
+
+    it "does not move the timestamp on a second call" do
+      client = create(:client)
+      client.record_app_installation!
+      first_timestamp = client.reload.app_installed_at
+
+      client.record_app_installation!
+
+      expect(client.reload.app_installed_at).to eq(first_timestamp)
+    end
+
+    it "recording an installation for the tenant B client does not stamp the tenant A client" do
+      ze = create(:tenant, name: "Barbearia do Zé")
+      aurora = create(:tenant, name: "Estúdio Aurora")
+      client_ze = create(:client, tenant: ze)
+      client_aurora = create(:client, tenant: aurora)
+
+      client_ze.record_app_installation!
+
+      expect(client_aurora.reload.app_installed_at).to be_nil
+    end
+  end
 end
