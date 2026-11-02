@@ -49,11 +49,15 @@ RSpec.describe "Client session", type: :request do
 
       host! "#{other_tenant.subdomain}.zubio.com.br"
       cookies[:client_id] = stale_cookie
+
       get client_my_appointments_path
 
       expect(response).to redirect_to(establishment_path)
+    end
 
-      host! "#{tenant.subdomain}.zubio.com.br"
+    it "authenticates the client cookie on its own establishment" do
+      sign_in_client(client)
+
       get client_my_appointments_path
 
       expect(response).not_to redirect_to(establishment_path)

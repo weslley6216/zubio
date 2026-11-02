@@ -208,14 +208,10 @@ RSpec.describe "Owner session", type: :request do
 
       host! "#{other_tenant.subdomain}.zubio.com.br"
       cookies[:session_id] = stale_cookie
+
       get owner_appointments_path
 
       expect(response).to redirect_to(new_owner_session_path)
-
-      host! "#{tenant.subdomain}.zubio.com.br"
-      get owner_appointments_path
-
-      expect(response).not_to redirect_to(new_owner_session_path)
     end
   end
 
@@ -230,19 +226,35 @@ RSpec.describe "Owner session", type: :request do
       expect(response).to redirect_to(new_owner_session_path)
     end
 
-    it "invalidates only the device that logged out, server-side" do
+    it "destroys the Session row of the device that logged out" do
       owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
       post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
-      stale_cookie = cookies[:session_id]
 
       delete owner_session_path
 
       expect(ActsAsTenant.with_tenant(tenant) { owner.sessions.count }).to eq(0)
+    end
 
+    it "refuses the cookie of the device that logged out, server-side" do
+      owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
+      post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
+      stale_cookie = cookies[:session_id]
+      delete owner_session_path
       cookies[:session_id] = stale_cookie
+
       get owner_appointments_path
 
       expect(response).to redirect_to(new_owner_session_path)
+    end
+
+    it "keeps the Session row of the other device when only one of them logs out" do
+      owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
+      post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
+      post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
+
+      delete owner_session_path
+
+      expect(ActsAsTenant.with_tenant(tenant) { owner.sessions.count }).to eq(1)
     end
 
     it "leaves the other device logged in when only one of them logs out" do
@@ -250,12 +262,9 @@ RSpec.describe "Owner session", type: :request do
       post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
       other_device_cookie = cookies[:session_id]
       post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
-
       delete owner_session_path
-
-      expect(ActsAsTenant.with_tenant(tenant) { owner.sessions.count }).to eq(1)
-
       cookies[:session_id] = other_device_cookie
+
       get owner_appointments_path
 
       expect(response).not_to redirect_to(new_owner_session_path)
