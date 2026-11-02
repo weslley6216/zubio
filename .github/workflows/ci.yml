@@ -3,7 +3,10 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [ main ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   scan_ruby:
@@ -72,6 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RAILS_ENV: test
+      COVERAGE_GATE: "1"
       POSTGRES_HOST: localhost
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

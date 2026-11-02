@@ -23,10 +23,13 @@ Ambiente via Docker Compose (`docker-compose.yml` + `Dockerfile.dev`), serviços
 docker compose up                                    # sobe app (bin/dev: Puma + Tailwind watch) + db
 docker compose run --rm app bin/rails console
 docker compose run --rm app bin/rails db:create db:migrate
-docker compose run --rm app bundle exec rspec        # suíte completa
+docker compose run --rm app bundle exec rspec spec/models/user_spec.rb   # specs de um arquivo; sai 0 se passar
+docker compose run --rm -e RAILS_ENV=test -e COVERAGE_GATE=1 app bin/rails parallel:spec   # suíte completa em paralelo, exige 100%
 docker compose run --rm app bundle exec rubocop
 docker compose run --rm app bundle install            # após alterar o Gemfile
 ```
+
+O mínimo de 100% de cobertura só é exigido com `COVERAGE_GATE=1` (ligado no CI), para que rodar um arquivo isolado não falhe por cobertura. A suíte completa é provada pelo CI da branch: todo push dispara o CI, e o `/ship` só faz merge com o run do SHA atual verde. Bancos paralelos (`zubio_test2..N`): `RAILS_ENV=test bin/rails parallel:create parallel:load_schema`, uma vez e depois de cada migration.
 
 `config/database.yml` lê `POSTGRES_HOST`/`POSTGRES_USER`/`POSTGRES_PASSWORD` do `.env` (default local: `localhost`/`postgres`/`postgres`, coerente com o app rodando fora do compose se preciso). CI usa o mesmo `database.yml` com um serviço `postgres:16-alpine` e essas variáveis.
 
