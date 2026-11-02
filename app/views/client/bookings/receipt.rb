@@ -39,13 +39,14 @@ class Views::Client::Bookings::Receipt < Views::Base
   CANCEL_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-danger-line bg-surface text-[14px] font-bold text-danger".freeze
   FOOTER_CLASS = "text-center text-[12px] leading-[1.6] text-ink-subtle".freeze
 
-  def initialize(tenant:, branding:, service:, professional:, appointment:, signed_in:)
+  def initialize(tenant:, branding:, service:, professional:, appointment:, signed_in:, app_installed: false)
     @tenant = tenant
     @branding = branding
     @service = service
     @professional = professional
     @appointment = appointment
     @signed_in = signed_in
+    @app_installed = app_installed
   end
 
   def view_template
@@ -55,6 +56,7 @@ class Views::Client::Bookings::Receipt < Views::Base
         div(class: CONTENT_CLASS) do
           render_detail_card
           render_link_card
+          render_install_invite unless @app_installed
           render_actions
           p(class: FOOTER_CLASS) { FOOTER_NOTE }
         end
@@ -161,6 +163,13 @@ class Views::Client::Bookings::Receipt < Views::Base
   end
 
   def cancel_path = "/a/#{@appointment.cancel_token}"
+
+  def render_install_invite
+    render Components::InstallInvite.for_client(
+      name: @tenant.name, icon: @branding.invite_icon, initial: @tenant.initial,
+      mark_visit: true, standalone_path: (client_app_installation_path if @signed_in)
+    )
+  end
 
   def render_actions
     div(class: ACTIONS_CLASS) do

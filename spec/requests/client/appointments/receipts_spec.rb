@@ -46,4 +46,23 @@ RSpec.describe "Public booking receipt", type: :request do
     expect(response).to have_http_status(:not_found)
     expect(response.body).not_to include("Barba do Zé")
   end
+
+  it "offers the install invite to a client who has not installed the app yet" do
+    appointment = create(:appointment, tenant: tenant)
+    sign_in_client(appointment.client)
+
+    get client_receipt_path(appointment.cancel_token)
+
+    expect(response.body).to include("data-controller=\"pwa-install\"")
+  end
+
+  it "does not offer the install invite to a client who already installed the app" do
+    appointment = create(:appointment, tenant: tenant)
+    appointment.client.record_app_installation!
+    sign_in_client(appointment.client)
+
+    get client_receipt_path(appointment.cancel_token)
+
+    expect(response.body).not_to include("data-controller=\"pwa-install\"")
+  end
 end
