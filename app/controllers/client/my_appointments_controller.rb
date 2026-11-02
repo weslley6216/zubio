@@ -4,7 +4,8 @@ class Client::MyAppointmentsController < Client::BaseController
 
     render Views::Client::MyAppointments::Index.new(
       tenant: ActsAsTenant.current_tenant, branding: current_branding, client: current_client,
-      appointments: Appointment.visible_to_account(current_client).includes(:service)
+      appointments: Appointment.visible_to_account(current_client).includes(:service),
+      app_installed: current_client.app_installed_at.present?
     )
   end
 end

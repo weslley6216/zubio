@@ -115,6 +115,31 @@ RSpec.describe "My appointments", type: :request do
     expect(response.body).to include(%(<meta name="turbo-refresh-scroll" content="preserve">))
   end
 
+  it "offers the install invite below the list when the client has not installed the app" do
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant)
+    client = create(:client, tenant: tenant, account_linked_at: Time.zone.local(2026, 9, 1, 8, 0))
+    create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: 1.week.from_now)
+    sign_in_client(client)
+
+    get client_my_appointments_path
+
+    expect(response.body).to include("data-controller=\"pwa-install\"")
+  end
+
+  it "does not offer the install invite once the client has installed the app" do
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant)
+    client = create(:client, tenant: tenant, account_linked_at: Time.zone.local(2026, 9, 1, 8, 0))
+    client.record_app_installation!
+    create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: 1.week.from_now)
+    sign_in_client(client)
+
+    get client_my_appointments_path
+
+    expect(response.body).not_to include("data-controller=\"pwa-install\"")
+  end
+
   it "never lists another tenant's appointment for the same Google account" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")

@@ -49,11 +49,12 @@ class Views::Client::MyAppointments::Index < Views::Base
   FOOTER_EMAIL_CLASS = "text-[14px] font-bold".freeze
   SIGN_OUT_CLASS = "min-h-[44px] flex-none rounded-[10px] border border-line-strong bg-surface px-3.5 text-[13px] font-bold text-ink".freeze
 
-  def initialize(tenant:, branding:, appointments:, client:)
+  def initialize(tenant:, branding:, appointments:, client:, app_installed: false)
     @tenant = tenant
     @branding = branding
     @appointments = appointments
     @client = client
+    @app_installed = app_installed
   end
 
   def view_template
@@ -89,6 +90,7 @@ class Views::Client::MyAppointments::Index < Views::Base
       div(class: LIST_CLASS) { @appointments.each { |appointment| render_item(appointment) } }
       span(class: HINT_CLASS) { HINT }
       a(href: establishment_path, class: REBOOK_CLASS, data: { rebook_link: true }) { REBOOK_LABEL }
+      render_install_invite unless @app_installed
     end
   end
 
@@ -134,6 +136,13 @@ class Views::Client::MyAppointments::Index < Views::Base
 
   def render_calendar_icon
     render Components::Icon.new(:calendar, stroke_width: "2.2", class: EMPTY_ICON_CLASS)
+  end
+
+  def render_install_invite
+    render Components::InstallInvite.for_client(
+      name: @tenant.name, icon: @branding.invite_icon, initial: @tenant.initial,
+      standalone_path: client_app_installation_path
+    )
   end
 
   def render_footer
