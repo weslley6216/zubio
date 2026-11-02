@@ -114,32 +114,44 @@ RSpec.describe "Owner session", type: :request do
   end
 
   describe "POST /owner/session" do
-    it "creates a session and redirects to the dashboard with correct credentials" do
+    it "creates a Session row for the owner on a correct login" do
       owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
 
-      post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
+      expect { post owner_session_path, params: { email: owner.email, password: "s3cr3t123" } }
+        .to change { ActsAsTenant.with_tenant(tenant) { owner.sessions.count } }.by(1)
 
       expect(response).to redirect_to(owner_appointments_path)
-      expect(session[:user_id]).to eq(owner.id)
+    end
+
+    it "sets a permanent, httponly, lax session cookie" do
+      create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
+
+      post owner_session_path, params: { email: "owner@example.com", password: "s3cr3t123" }
+
+      set_cookie = response.headers["Set-Cookie"].to_s
+      expect(set_cookie).to match(/session_id=/)
+      expect(set_cookie.downcase).to include("httponly")
+      expect(set_cookie.downcase).to include("samesite=lax")
+      expect(set_cookie).to match(/expires=/i)
     end
 
     it "does not create a session with an incorrect password" do
       create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
 
-      post owner_session_path, params: { email: "owner@example.com", password: "wrong" }
+      expect { post owner_session_path, params: { email: "owner@example.com", password: "wrong" } }
+        .not_to change { ActsAsTenant.without_tenant { Session.count } }
 
       expect(response).to have_http_status(:unprocessable_content)
-      expect(session[:user_id]).to be_nil
     end
 
     it "does not authenticate credentials belonging to another tenant" do
       other_tenant = create(:tenant, subdomain: "other-salon")
       create(:user, tenant: other_tenant, email: "owner@example.com", password: "s3cr3t123")
 
-      post owner_session_path, params: { email: "owner@example.com", password: "s3cr3t123" }
+      expect { post owner_session_path, params: { email: "owner@example.com", password: "s3cr3t123" } }
+        .not_to change { ActsAsTenant.without_tenant { Session.count } }
 
       expect(response).to have_http_status(:unprocessable_content)
-      expect(session[:user_id]).to be_nil
     end
 
     it "re-renders the login form with the typed email kept and the password cleared after a wrong password" do
@@ -178,6 +190,31 @@ RSpec.describe "Owner session", type: :request do
     end
   end
 
+  describe "resuming a session" do
+    it "stays logged in on a later request with the same cookie" do
+      owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
+      post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
+
+      get owner_appointments_path
+
+      expect(response).not_to redirect_to(new_owner_session_path)
+    end
+
+    it "does not authenticate a session cookie from another establishment" do
+      other_tenant = create(:tenant, subdomain: "other-salon")
+      owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
+      post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
+      stale_cookie = cookies[:session_id]
+
+      host! "#{other_tenant.subdomain}.zubio.com.br"
+      cookies[:session_id] = stale_cookie
+
+      get owner_appointments_path
+
+      expect(response).to redirect_to(new_owner_session_path)
+    end
+  end
+
   describe "DELETE /owner/session" do
     it "ends the session and requires login again for a protected route" do
       owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
@@ -187,6 +224,50 @@ RSpec.describe "Owner session", type: :request do
       get owner_appointments_path
 
       expect(response).to redirect_to(new_owner_session_path)
+    end
+
+    it "destroys the Session row of the device that logged out" do
+      owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
+      post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
+
+      delete owner_session_path
+
+      expect(ActsAsTenant.with_tenant(tenant) { owner.sessions.count }).to eq(0)
+    end
+
+    it "refuses the cookie of the device that logged out, server-side" do
+      owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
+      post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
+      stale_cookie = cookies[:session_id]
+      delete owner_session_path
+      cookies[:session_id] = stale_cookie
+
+      get owner_appointments_path
+
+      expect(response).to redirect_to(new_owner_session_path)
+    end
+
+    it "keeps the Session row of the other device when only one of them logs out" do
+      owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
+      post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
+      post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
+
+      delete owner_session_path
+
+      expect(ActsAsTenant.with_tenant(tenant) { owner.sessions.count }).to eq(1)
+    end
+
+    it "leaves the other device logged in when only one of them logs out" do
+      owner = create(:user, tenant: tenant, email: "owner@example.com", password: "s3cr3t123")
+      post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
+      other_device_cookie = cookies[:session_id]
+      post owner_session_path, params: { email: owner.email, password: "s3cr3t123" }
+      delete owner_session_path
+      cookies[:session_id] = other_device_cookie
+
+      get owner_appointments_path
+
+      expect(response).not_to redirect_to(new_owner_session_path)
     end
   end
 end

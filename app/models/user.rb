@@ -2,6 +2,7 @@ class User < ApplicationRecord
   acts_as_tenant(:tenant)
   has_secure_password reset_token: false
   has_one :professional, dependent: nil
+  has_many :sessions, dependent: :destroy
 
   MINIMUM_PASSWORD_LENGTH = 8
 
@@ -32,7 +33,13 @@ class User < ApplicationRecord
     generate_token_for(PASSWORD_RESET_PURPOSE)
   end
 
-  def reset_password(new_password) = update(password: new_password.presence)
+  def reset_password(new_password)
+    transaction do
+      updated = update(password: new_password.presence)
+      sessions.destroy_all if updated
+      updated
+    end
+  end
 
   def self.login_targets_for(email)
     ActsAsTenant.without_tenant do

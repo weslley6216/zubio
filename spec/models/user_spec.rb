@@ -256,6 +256,25 @@ RSpec.describe User, type: :model do
 
       expect(user.errors[:password]).not_to be_empty
     end
+
+    it "revokes every session of the user once the password changes" do
+      user = create(:user, password: "s3cr3t123")
+      create(:session, tenant: user.tenant, user: user)
+      create(:session, tenant: user.tenant, user: user)
+
+      ActsAsTenant.with_tenant(user.tenant) { user.reset_password("an0th3rpass") }
+
+      expect(ActsAsTenant.with_tenant(user.tenant) { user.sessions.count }).to eq(0)
+    end
+
+    it "keeps the sessions of the user when the new password is refused" do
+      user = create(:user, password: "s3cr3t123")
+      create(:session, tenant: user.tenant, user: user)
+
+      ActsAsTenant.with_tenant(user.tenant) { user.reset_password("short") }
+
+      expect(ActsAsTenant.with_tenant(user.tenant) { user.sessions.count }).to eq(1)
+    end
   end
 
   describe "professional association" do

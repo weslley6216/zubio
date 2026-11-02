@@ -13,6 +13,15 @@ RSpec.describe "Client handoff", type: :request do
     expect(response).to redirect_to(new_client_service_booking_path(service.id))
   end
 
+  it "sets a permanent, httponly client cookie on sign-in" do
+    get client_handoff_path(token: client.handoff_token, service: service.id)
+
+    set_cookie = response.headers["Set-Cookie"].to_s
+    expect(set_cookie).to match(/client_id=/)
+    expect(set_cookie.downcase).to include("httponly")
+    expect(set_cookie).to match(/expires=/i)
+  end
+
   it "refuses the same handoff token a second time" do
     token = client.handoff_token
     get client_handoff_path(token: token)
