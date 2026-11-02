@@ -11,7 +11,8 @@ class Client::EstablishmentsController < Client::BaseController
       services: Service.active.ordered.to_a,
       open_until: professional && Professional::Availability.new(professional: professional).open_until(Time.current),
       authenticated: current_client.present?,
-      my_appointments_count: current_client && Appointment.visible_to_account(current_client).count
+      my_appointments_count: current_client && Appointment.visible_to_account(current_client).count,
+      app_installed: current_client&.app_installed_at.present?
     )
   end
 end

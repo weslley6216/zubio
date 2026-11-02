@@ -67,6 +67,10 @@ class Client < ApplicationRecord
 
   def initials = name.split.first(2).map { |word| word[0] }.join.upcase
 
+  def record_app_installation!
+    update!(app_installed_at: Time.current) unless app_installed_at?
+  end
+
   def masked_email
     user, domain = email.split("@")
     "#{user[0]}***@#{domain}"

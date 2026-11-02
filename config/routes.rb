@@ -56,6 +56,7 @@ Rails.application.routes.draw do
       resource :handoff, only: :show
       resource :google_sign_in, only: :show, path: "google"
       resource :account_phone, only: %i[new create]
+      resource :app_installation, only: :create
       resources :services, only: [] do
         resource :booking, only: %i[show new create]
       end

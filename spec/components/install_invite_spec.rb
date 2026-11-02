@@ -1,8 +1,8 @@
 require "rails_helper"
 
-RSpec.describe Components::Owner::InstallInvite, type: :component do
+RSpec.describe Components::InstallInvite, type: :component do
   it "is born hidden at the root and in both variants" do
-    html = render_phlex(described_class.new(name: "Barbearia do Zé", icon: nil, initial: "B"))
+    html = render_phlex(described_class.for_owner(name: "Barbearia do Zé", icon: nil, initial: "B"))
 
     fragment = Nokogiri::HTML5.fragment(html)
     expect(fragment.at_css("[data-controller='pwa-install']")["hidden"]).not_to be_nil
@@ -11,7 +11,7 @@ RSpec.describe Components::Owner::InstallInvite, type: :component do
   end
 
   it "falls back to the establishment initial on the brand color when there is no icon" do
-    html = render_phlex(described_class.new(name: "Barbearia do Zé", icon: nil, initial: "B"))
+    html = render_phlex(described_class.for_owner(name: "Barbearia do Zé", icon: nil, initial: "B"))
 
     initial = Nokogiri::HTML5.fragment(html).at_css("[data-brand-initial]")
     expect(initial.text).to eq("B")
@@ -22,7 +22,7 @@ RSpec.describe Components::Owner::InstallInvite, type: :component do
   it "shows the establishment icon with the name as its alt when an icon is given" do
     branding = create(:branding, :with_logo)
 
-    html = render_phlex(described_class.new(name: "Estúdio Aurora", icon: branding.invite_icon, initial: "E"))
+    html = render_phlex(described_class.for_owner(name: "Estúdio Aurora", icon: branding.invite_icon, initial: "E"))
 
     image = Nokogiri::HTML5.fragment(html).at_css("img")
     expect(image["src"]).to include("/rails/active_storage/representations/proxy/")
@@ -30,15 +30,15 @@ RSpec.describe Components::Owner::InstallInvite, type: :component do
   end
 
   it "offers the install action and a defer in the action card" do
-    html = render_phlex(described_class.new(name: "Barbearia do Zé", icon: nil, initial: "B"))
+    html = render_phlex(described_class.for_owner(name: "Barbearia do Zé", icon: nil, initial: "B"))
 
     action = Nokogiri::HTML5.fragment(html).at_css("[data-pwa-install-target='action']")
-    expect(action.text).to include(described_class::INSTALL_LABEL, described_class::DISMISS_LABEL)
+    expect(action.text).to include(described_class::INSTALL_LABEL, described_class::OWNER_DISMISS)
     expect(action.at_css("[data-action='pwa-install#install']")).not_to be_nil
   end
 
   it "spells the two Safari steps in the instructions card and never offers to install there" do
-    html = render_phlex(described_class.new(name: "Barbearia do Zé", icon: nil, initial: "B"))
+    html = render_phlex(described_class.for_owner(name: "Barbearia do Zé", icon: nil, initial: "B"))
 
     instructions = Nokogiri::HTML5.fragment(html).at_css("[data-pwa-install-target='instructions']")
     expect(instructions.text).to include("Compartilhar", "Adicionar à Tela de Início", described_class::INSTALLED_LABEL)
@@ -46,14 +46,14 @@ RSpec.describe Components::Owner::InstallInvite, type: :component do
   end
 
   it "wires both the defer and the already-installed buttons to dismiss" do
-    html = render_phlex(described_class.new(name: "Barbearia do Zé", icon: nil, initial: "B"))
+    html = render_phlex(described_class.for_owner(name: "Barbearia do Zé", icon: nil, initial: "B"))
 
-    dismissers = Nokogiri::HTML5.fragment(html).css("[data-action='pwa-install#dismiss']")
-    expect(dismissers.map(&:text)).to contain_exactly(described_class::DISMISS_LABEL, described_class::INSTALLED_LABEL)
+    dismissers = Nokogiri::HTML5.fragment(html).css("[data-action*='pwa-install#dismiss']")
+    expect(dismissers.map(&:text)).to contain_exactly(described_class::OWNER_DISMISS, described_class::INSTALLED_LABEL)
   end
 
   it "dresses the card in theme tokens so it reads in light and dark" do
-    html = render_phlex(described_class.new(name: "Barbearia do Zé", icon: nil, initial: "B"))
+    html = render_phlex(described_class.for_owner(name: "Barbearia do Zé", icon: nil, initial: "B"))
 
     fragment = Nokogiri::HTML5.fragment(html)
     expect(fragment.at_css("[data-pwa-install-target='action']")["class"]).to include("bg-surface", "border-line")
@@ -61,11 +61,31 @@ RSpec.describe Components::Owner::InstallInvite, type: :component do
   end
 
   it "does not render the reference-board eyebrows or the dashed cross-persona note" do
-    html = render_phlex(described_class.new(name: "Barbearia do Zé", icon: nil, initial: "B"))
+    html = render_phlex(described_class.for_owner(name: "Barbearia do Zé", icon: nil, initial: "B"))
 
-    expect(html).to include(described_class::TITLE)
+    expect(html).to include(described_class::OWNER_TITLE)
     expect(html).not_to include("prompt nativo")
     expect(html).not_to include("instrução manual")
     expect(html).not_to include("O mesmo convite aparece")
+  end
+
+  it "carries a zero snooze value for the owner, so dismissing is permanent" do
+    html = render_phlex(described_class.for_owner(name: "Barbearia do Zé", icon: nil, initial: "B"))
+
+    fragment = Nokogiri::HTML5.fragment(html)
+    expect(fragment.at_css("[data-controller='pwa-install']")["data-pwa-install-snooze-days-value"]).to eq("0")
+  end
+
+  describe ".for_client" do
+    it "shows the client copy, the seven-day snooze value and the client dismiss label" do
+      html = render_phlex(described_class.for_client(name: "Titiko Crochê", icon: nil, initial: "T"))
+
+      fragment = Nokogiri::HTML5.fragment(html)
+      expect(html).to include("Tenha a Titiko Crochê na tela inicial")
+      expect(html).to include("Marque o próximo horário em um toque e veja seus agendamentos.")
+      action = fragment.at_css("[data-pwa-install-target='action']")
+      expect(action.text).to include("Agora não")
+      expect(fragment.at_css("[data-controller='pwa-install']")["data-pwa-install-snooze-days-value"]).to eq("7")
+    end
   end
 end

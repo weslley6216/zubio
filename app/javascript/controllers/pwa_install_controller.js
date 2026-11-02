@@ -1,17 +1,25 @@
 import { Controller } from "@hotwired/stimulus"
 import { chooseInstallInvite } from "pwa_install"
 
-const DISMISSED_KEY = "pwa-install-dismissed"
-
 export default class extends Controller {
   static targets = ["action", "instructions"]
+  static values = {
+    audience: String,
+    snoozeDays: { type: Number, default: 0 },
+    requireVisit: Boolean,
+    markVisit: Boolean,
+    standalonePath: String
+  }
 
   connect() {
+    if (this.standalonePathValue && this.#isStandalone()) this.#recordInstallation()
+    if (this.markVisitValue) this.#markVisit()
     if (this.#dismissed()) return
+    if (this.requireVisitValue && !this.#visited()) return
 
     this.installEvent = null
     this.onBeforeInstallPrompt = (event) => this.#capture(event)
-    this.onAppInstalled = () => this.dismiss()
+    this.onAppInstalled = () => this.#onAppInstalled()
     window.addEventListener("beforeinstallprompt", this.onBeforeInstallPrompt)
     window.addEventListener("appinstalled", this.onAppInstalled)
     this.#reveal(chooseInstallInvite(false, this.#isIOS(), this.#isStandalone(), this.#isMobile()))
@@ -26,15 +34,24 @@ export default class extends Controller {
     this.installEvent?.prompt()
   }
 
-  dismiss() {
+  dismiss(event) {
     this.#reveal("hidden")
-    this.#remember()
+    if (event.params.forever || this.snoozeDaysValue === 0) {
+      this.#rememberForever()
+    } else {
+      this.#snooze()
+    }
   }
 
   #capture(event) {
     event.preventDefault()
     this.installEvent = event
     this.#reveal(chooseInstallInvite(true, this.#isIOS(), this.#isStandalone(), this.#isMobile()))
+  }
+
+  #onAppInstalled() {
+    this.#reveal("hidden")
+    this.#rememberForever()
   }
 
   #reveal(variant) {
@@ -45,16 +62,60 @@ export default class extends Controller {
 
   #dismissed() {
     try {
-      return localStorage.getItem(DISMISSED_KEY) === "true"
+      if (localStorage.getItem(this.#dismissedKey) === "true") return true
+      const snoozeUntil = Number(localStorage.getItem(this.#snoozeKey))
+      return Boolean(snoozeUntil) && Date.now() < snoozeUntil
     } catch {
       return false
     }
   }
 
-  #remember() {
+  #visited() {
     try {
-      localStorage.setItem(DISMISSED_KEY, "true")
+      return localStorage.getItem(this.#visitedKey) === "true"
+    } catch {
+      return false
+    }
+  }
+
+  #markVisit() {
+    try {
+      localStorage.setItem(this.#visitedKey, "true")
     } catch {}
+  }
+
+  #rememberForever() {
+    try {
+      localStorage.setItem(this.#dismissedKey, "true")
+    } catch {}
+  }
+
+  #snooze() {
+    try {
+      localStorage.setItem(this.#snoozeKey, String(Date.now() + this.snoozeDaysValue * 86400000))
+    } catch {}
+  }
+
+  async #recordInstallation() {
+    try {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+      await fetch(this.standalonePathValue, {
+        method: "POST",
+        headers: { "X-CSRF-Token": csrfToken, "Accept": "application/json" }
+      })
+    } catch {}
+  }
+
+  get #dismissedKey() {
+    return `pwa-install-dismissed:${this.audienceValue}`
+  }
+
+  get #snoozeKey() {
+    return `pwa-install-snooze:${this.audienceValue}`
+  }
+
+  get #visitedKey() {
+    return `pwa-install-visited:${this.audienceValue}`
   }
 
   #isIOS() {

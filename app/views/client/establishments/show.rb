@@ -32,13 +32,14 @@ class Views::Client::Establishments::Show < Views::Base
   PRICE_CLASS = "text-[15px] leading-[normal] font-extrabold tabular-nums text-ink".freeze
   UNPRICED_CLASS = "text-xs leading-[normal] font-bold text-ink-muted".freeze
 
-  def initialize(tenant:, branding:, services:, open_until: nil, authenticated: false, my_appointments_count: nil)
+  def initialize(tenant:, branding:, services:, open_until: nil, authenticated: false, my_appointments_count: nil, app_installed: false)
     @tenant = tenant
     @branding = branding
     @services = services
     @open_until = open_until
     @authenticated = authenticated
     @my_appointments_count = my_appointments_count
+    @app_installed = app_installed
   end
 
   def view_template
@@ -46,6 +47,7 @@ class Views::Client::Establishments::Show < Views::Base
       render_brand_bar
       main(class: SHEET_CLASS) do
         @services.empty? ? render_empty_state : render_catalog
+        render_install_invite unless @authenticated && @app_installed
       end
     end
   end
@@ -139,5 +141,13 @@ class Views::Client::Establishments::Show < Views::Base
       h2(class: EMPTY_TITLE_CLASS) { EMPTY_TITLE }
       p(class: EMPTY_BODY_CLASS) { EMPTY_BODY }
     end
+  end
+
+  def render_install_invite
+    render Components::InstallInvite.for_client(
+      name: @tenant.name, icon: @branding.invite_icon, initial: @tenant.initial,
+      require_visit: !@authenticated,
+      standalone_path: (client_app_installation_path if @authenticated)
+    )
   end
 end

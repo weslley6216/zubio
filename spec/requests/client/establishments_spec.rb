@@ -475,6 +475,43 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(response.body).not_to include("Não foi possível entrar com o Google. Tente de novo.")
   end
 
+  it "offers the install invite to an anonymous visitor, gated by a prior visit mark" do
+    create(:service, tenant: tenant, name: "Corte feminino")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get root_path
+
+    fragment = Nokogiri::HTML5.fragment(response.body)
+    invite = fragment.at_css("[data-controller='pwa-install']")
+    expect(invite["data-pwa-install-require-visit-value"]).not_to be_nil
+  end
+
+  it "offers the install invite to a signed-in client without the visit gate and with a standalone path" do
+    create(:service, tenant: tenant, name: "Corte feminino")
+    client = create(:client, tenant: tenant)
+    host! "#{tenant.subdomain}.zubio.com.br"
+    sign_in_client(client)
+
+    get root_path
+
+    fragment = Nokogiri::HTML5.fragment(response.body)
+    invite = fragment.at_css("[data-controller='pwa-install']")
+    expect(invite["data-pwa-install-require-visit-value"]).to be_nil
+    expect(invite["data-pwa-install-standalone-path-value"]).to eq(client_app_installation_path)
+  end
+
+  it "does not offer the install invite to a signed-in client who already installed the app" do
+    create(:service, tenant: tenant, name: "Corte feminino")
+    client = create(:client, tenant: tenant)
+    client.record_app_installation!
+    host! "#{tenant.subdomain}.zubio.com.br"
+    sign_in_client(client)
+
+    get root_path
+
+    expect(response.body).not_to include("data-controller=\"pwa-install\"")
+  end
+
   it "shows a logo-less host its own initial and serves no other tenant's emblem image" do
     create(:branding, :with_wide_logo, tenant: create(:tenant, subdomain: "mary-sombracelhas", name: "Mary Sombracelhas"))
     create(:service, tenant: tenant, name: "Corte feminino")

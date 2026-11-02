@@ -152,6 +152,6 @@ class Components::Owner::AgendaDay < Components::Base
   end
 
   def render_install_invite
-    render Components::Owner::InstallInvite.new(name: @tenant.name, icon: @branding.invite_icon, initial: @tenant.initial)
+    render Components::InstallInvite.for_owner(name: @tenant.name, icon: @branding.invite_icon, initial: @tenant.initial)
   end
 end
