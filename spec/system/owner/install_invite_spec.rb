@@ -13,7 +13,7 @@ RSpec.describe "Owner install invite", type: :system, js: true do
 
     wait_until { fire_before_install_prompt; page.has_css?("[data-pwa-install-target='action']:not([hidden])", wait: 0) }
 
-    expect(page).to have_button(Components::Owner::InstallInvite::INSTALL_LABEL)
+    expect(page).to have_button(Components::InstallInvite::INSTALL_LABEL)
     expect(page).to have_css("[data-controller='pwa-install']:not([hidden])")
     expect(page).to fit_the_phone_width
   end
@@ -25,7 +25,7 @@ RSpec.describe "Owner install invite", type: :system, js: true do
     visit dashboard_url
     wait_until { fire_before_install_prompt; page.has_css?("[data-pwa-install-target='action']:not([hidden])", wait: 0) }
 
-    click_on Components::Owner::InstallInvite::INSTALL_LABEL
+    click_on Components::InstallInvite::INSTALL_LABEL
 
     expect(install_prompt_called?).to be(true)
   end
@@ -39,7 +39,7 @@ RSpec.describe "Owner install invite", type: :system, js: true do
     expect(page).to have_css("[data-pwa-install-target='instructions']:not([hidden])")
     expect(page).to have_text("Compartilhar")
     expect(page).to have_text("Adicionar à Tela de Início")
-    expect(page).to have_no_button(Components::Owner::InstallInvite::INSTALL_LABEL)
+    expect(page).to have_no_button(Components::InstallInvite::INSTALL_LABEL)
   end
 
   it "gives an iPad that presents itself as a Mac the two manual steps" do
@@ -49,7 +49,7 @@ RSpec.describe "Owner install invite", type: :system, js: true do
     visit dashboard_url
 
     expect(page).to have_css("[data-pwa-install-target='instructions']:not([hidden])")
-    expect(page).to have_no_button(Components::Owner::InstallInvite::INSTALL_LABEL)
+    expect(page).to have_no_button(Components::InstallInvite::INSTALL_LABEL)
   end
 
   it "stays away when the app is already installed, even with an install prompt waiting" do
@@ -73,7 +73,7 @@ RSpec.describe "Owner install invite", type: :system, js: true do
     visit dashboard_url
     wait_until { fire_before_install_prompt; page.has_css?("[data-pwa-install-target='action']:not([hidden])", wait: 0) }
 
-    click_on Components::Owner::InstallInvite::DISMISS_LABEL
+    click_on Components::InstallInvite::OWNER_DISMISS
     visit "http://#{tenant.subdomain}.zubio.com.br#{owner_settings_path}"
     expect(page).to fit_the_phone_width
     visit dashboard_url
