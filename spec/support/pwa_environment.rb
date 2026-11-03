@@ -26,10 +26,15 @@ module PwaEnvironment
 
   def fire_before_install_prompt
     page.execute_script(<<~JS)
-      const event = new Event("beforeinstallprompt")
+      const event = new Event("beforeinstallprompt", { cancelable: true })
       event.prompt = () => { window.__pwaPromptCalled = true }
       window.dispatchEvent(event)
+      window.__pwaNativeBannerSuppressed = event.defaultPrevented
     JS
+  end
+
+  def native_install_banner_suppressed?
+    page.evaluate_script("window.__pwaNativeBannerSuppressed === true")
   end
 
   def fire_app_installed

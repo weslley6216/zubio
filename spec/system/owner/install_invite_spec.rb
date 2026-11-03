@@ -81,6 +81,7 @@ RSpec.describe "Owner install invite", type: :system, js: true do
     page.evaluate_async_script("setTimeout(arguments[0], 0)")
 
     expect(page).to have_css("[data-controller='pwa-install'][hidden]", visible: :all)
+    expect(native_install_banner_suppressed?).to be(true)
   end
 
   it "closes the invite when installation completes" do
