@@ -1,6 +1,6 @@
 module Components::Owner::Clients::Shared
-  WEEKDAY_ABBR = Views::Client::Bookings::New::WEEKDAY_ABBR
-  MONTH_ABBR = Views::Client::Bookings::New::MONTH_ABBR
+  WEEKDAY_ABBR = Appointment::Labels::WEEKDAY_ABBR
+  MONTH_ABBR = Appointment::Labels::MONTH_ABBR
 
   MOBILE_WHATSAPP_BUTTON_CLASS = "grid h-11 w-11 flex-none place-items-center rounded-[10px] border border-line bg-surface".freeze
   DESKTOP_WHATSAPP_BUTTON_CLASS = "grid h-10 w-10 flex-none place-items-center rounded-[9px] border border-line bg-surface".freeze

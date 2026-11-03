@@ -1,9 +1,4 @@
 class Views::Client::Bookings::New < Views::Base
-  WEEKDAY_ABBR = %w[DOM SEG TER QUA QUI SEX SÁB].freeze
-  WEEKDAY_NAMES = %w[Domingo Segunda Terça Quarta Quinta Sexta Sábado].freeze
-  MONTH_ABBR = %w[jan fev mar abr mai jun jul ago set out nov dez].freeze
-  MONTH_NAMES = %w[janeiro fevereiro março abril maio junho julho agosto setembro outubro novembro dezembro].freeze
-
   BACK_LABEL = "Voltar".freeze
   SERVICE_STEP = "Serviço".freeze
   DAY_STEP = "Dia".freeze
@@ -182,14 +177,14 @@ class Views::Client::Bookings::New < Views::Base
               turbo_frame: Components::Client::Bookings::Grid::FRAME_ID, turbo_action: "advance",
               day_label: day_label_for(date), action: "day-selector#mark slot-selector#resetDay" },
       aria_current: selected ? "date" : nil) do
-      span(class: [ DAY_WEEKDAY_CLASS, (DAY_WEEKDAY_FREE_CLASS unless selected) ]) { WEEKDAY_ABBR[date.wday] }
+      span(class: [ DAY_WEEKDAY_CLASS, (DAY_WEEKDAY_FREE_CLASS unless selected) ]) { Appointment::Labels::WEEKDAY_ABBR[date.wday] }
       span(class: DAY_NUMBER_CLASS) { date.strftime("%d") }
     end
   end
 
   def render_disabled_day(date)
     div(class: [ DAY_BASE_CLASS, DAY_DISABLED_CLASS ], data: { day: date.iso8601 }, aria_disabled: "true") do
-      span(class: DAY_WEEKDAY_CLASS) { WEEKDAY_ABBR[date.wday] }
+      span(class: DAY_WEEKDAY_CLASS) { Appointment::Labels::WEEKDAY_ABBR[date.wday] }
       span(class: DAY_NUMBER_CLASS) { date.strftime("%d") }
     end
   end
@@ -200,7 +195,7 @@ class Views::Client::Bookings::New < Views::Base
 
   def days_off_hint
     days = disabled_days
-    days.one? ? Kernel.format(DAY_OFF_HINT, weekday: WEEKDAY_NAMES[days.first.wday]) : DAYS_OFF_HINT
+    days.one? ? Kernel.format(DAY_OFF_HINT, weekday: Appointment::Labels::WEEKDAY_NAMES[days.first.wday]) : DAYS_OFF_HINT
   end
 
   def render_unpublished
@@ -245,7 +240,7 @@ class Views::Client::Bookings::New < Views::Base
   end
 
   def day_label_for(date)
-    "#{WEEKDAY_ABBR[date.wday].capitalize}, #{date.day} #{MONTH_ABBR[date.month - 1]}"
+    Appointment::Labels.day_label(date)
   end
 
   def confirm_label

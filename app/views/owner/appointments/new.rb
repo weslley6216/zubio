@@ -1,8 +1,8 @@
 class Views::Owner::Appointments::New < Views::Base
   UNPUBLISHED_MESSAGE = Views::Client::Bookings::New::UNPUBLISHED_MESSAGE
   UNPUBLISHED_CLASS = Views::Client::Bookings::New::UNPUBLISHED_CLASS
-  WEEKDAY_NAMES = Views::Client::Bookings::New::WEEKDAY_NAMES
-  WEEKDAY_ABBR = Views::Client::Bookings::New::WEEKDAY_ABBR
+  WEEKDAY_NAMES = Appointment::Labels::WEEKDAY_NAMES
+  WEEKDAY_ABBR = Appointment::Labels::WEEKDAY_ABBR
   DAY_PILL_TODAY_LABEL = Views::Owner::Appointments::Index::TODAY_LABEL
 
   TITLE = "Novo agendamento".freeze
