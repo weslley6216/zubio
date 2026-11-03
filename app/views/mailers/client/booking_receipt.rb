@@ -157,7 +157,7 @@ class Views::Mailers::Client::BookingReceipt < Views::Base
 
   def render_signature_chip
     logo = @branding.invite_icon
-    style = "display:inline-block;width:40px;height:40px;border-radius:10px;margin-bottom:8px;text-align:center;"
+    style = "width:40px;height:40px;border-radius:10px;margin:0 auto 8px;text-align:center;"
     style += logo ? "background:#ffffff;border:1px solid #e4eaef;padding:4px;box-sizing:border-box;" : "background:#{hex};"
 
     div(style: style) do
