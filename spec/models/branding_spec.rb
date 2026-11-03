@@ -394,6 +394,23 @@ RSpec.describe Branding, type: :model do
     end
   end
 
+  describe "#light_ink" do
+    it "keeps a brand dark enough to read on the light surfaces" do
+      branding = build(:branding, brand_600: "#B5123E")
+
+      expect(branding.light_ink).to eq("#B5123E")
+    end
+
+    it "darkens a light brand until it reads on the light surfaces" do
+      branding = build(:branding, brand_600: "#F2C94C")
+
+      ink = branding.light_ink
+
+      expect(ink).not_to eq("#F2C94C")
+      expect(Branding::ColorScale.new(ink).contrast_against(Branding::ColorScale.new("#ffffff"))).to be >= Branding::ColorScale::MIN_CONTRAST
+    end
+  end
+
   describe "#stylesheet" do
     it "wraps the brand scale in a root rule a browser can apply on its own" do
       branding = build(:branding, brand_600: "#4F46E5")

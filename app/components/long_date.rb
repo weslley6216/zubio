@@ -1,6 +1,6 @@
 class Components::LongDate < Components::Base
-  WEEKDAY_NAMES = Views::Client::Bookings::New::WEEKDAY_NAMES
-  MONTH_NAMES = Views::Client::Bookings::New::MONTH_NAMES
+  WEEKDAY_NAMES = Appointment::Labels::WEEKDAY_NAMES
+  MONTH_NAMES = Appointment::Labels::MONTH_NAMES
 
   def initialize(date:)
     @date = date

@@ -1,7 +1,7 @@
 class Views::Owner::Appointments::Index < Views::Base
   include Phlex::Rails::Helpers::TurboStreamFrom
 
-  WEEKDAY_ABBR = Views::Client::Bookings::New::WEEKDAY_ABBR
+  WEEKDAY_ABBR = Appointment::Labels::WEEKDAY_ABBR
 
   TODAY_LABEL = "HOJE".freeze
 

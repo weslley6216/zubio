@@ -86,13 +86,13 @@ class Views::Client::Bookings::Receipt < Views::Base
 
   def render_detail_card
     div(class: DETAIL_CARD_CLASS, data: { when: true }) do
-      render_detail_row(WHEN_LABEL, when_label)
+      render_detail_row(WHEN_LABEL, labels.when_label)
       render_divider
       render_detail_row(SERVICE_LABEL, @service.name)
       render_divider
-      render_detail_row(DURATION_LABEL, duration_label)
+      render_detail_row(DURATION_LABEL, labels.duration_label)
       render_divider
-      render_detail_row(PRICE_LABEL, price_label)
+      render_detail_row(PRICE_LABEL, labels.price_label)
     end
   end
 
@@ -105,16 +105,7 @@ class Views::Client::Bookings::Receipt < Views::Base
 
   def render_divider = div(class: DETAIL_DIVIDER_CLASS)
 
-  def when_label
-    date = @appointment.starts_at.to_date
-    "#{Views::Client::Bookings::New::WEEKDAY_ABBR[date.wday].capitalize}, #{date.day} #{Views::Client::Bookings::New::MONTH_ABBR[date.month - 1]} · #{@appointment.starts_at.strftime("%H:%M")}"
-  end
-
-  def duration_label
-    "#{::Service::Duration.minutes_label(@service.duration_minutes)} · termina #{@appointment.ends_at.strftime("%H:%M")}"
-  end
-
-  def price_label = ::Service::Price.label(@service.public_price_cents)
+  def labels = @labels ||= Appointment::Labels.new(@appointment)
 
   def render_link_card
     div(class: LINK_CARD_CLASS, data: (@signed_in ? { receipt_sent: true } : { receipt_invite: true })) do

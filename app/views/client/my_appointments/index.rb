@@ -115,8 +115,7 @@ class Views::Client::MyAppointments::Index < Views::Base
   end
 
   def day_label(appointment)
-    date = appointment.starts_at.to_date
-    "#{Views::Client::Bookings::New::WEEKDAY_ABBR[date.wday].capitalize}, #{date.day} #{Views::Client::Bookings::New::MONTH_ABBR[date.month - 1]}"
+    Appointment::Labels.day_label(appointment.starts_at.to_date)
   end
 
   def render_chevron_icon

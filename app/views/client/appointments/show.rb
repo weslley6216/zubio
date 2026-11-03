@@ -49,8 +49,8 @@ class Views::Client::Appointments::Show < Views::Base
 
   def self.confirm_prompt(appointment)
     date = appointment.starts_at.to_date
-    Kernel.format(CONFIRM_PROMPT, weekday: Views::Client::Bookings::New::WEEKDAY_NAMES[date.wday].downcase, day: date.day,
-      month: Views::Client::Bookings::New::MONTH_ABBR[date.month - 1], time: appointment.starts_at.strftime("%H:%M"))
+    Kernel.format(CONFIRM_PROMPT, weekday: Appointment::Labels::WEEKDAY_NAMES[date.wday].downcase, day: date.day,
+      month: Appointment::Labels::MONTH_ABBR[date.month - 1], time: appointment.starts_at.strftime("%H:%M"))
   end
 
   def initialize(tenant:, branding:, appointment:, service:, professional:, back_to_list: false)
@@ -165,14 +165,13 @@ class Views::Client::Appointments::Show < Views::Base
     render Components::Icon.new(:x, stroke_width: "2.4", class: CANCELLED_ICON_CLASS)
   end
 
-  def when_label
-    date = @appointment.starts_at.to_date
-    "#{Views::Client::Bookings::New::WEEKDAY_ABBR[date.wday].capitalize}, #{date.day} #{Views::Client::Bookings::New::MONTH_ABBR[date.month - 1]} · #{@appointment.starts_at.strftime("%H:%M")}"
-  end
+  def when_label = labels.when_label
 
   def confirm_prompt = self.class.confirm_prompt(@appointment)
 
   def cancelled_subtitle = Kernel.format(CANCELLED_SUBTITLE, professional: @professional.display_name.split.first)
 
-  def price_label = ::Service::Price.label(@service.public_price_cents)
+  def price_label = labels.price_label
+
+  def labels = @labels ||= Appointment::Labels.new(@appointment)
 end
