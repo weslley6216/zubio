@@ -116,7 +116,7 @@ RSpec.describe "Public appointment screen", type: :request do
     client = create(:client, tenant: tenant, email: "ana@gmail.com")
     appointment = create(:appointment, tenant: tenant, professional: professional, service: service, client: client, starts_at: Time.zone.local(2026, 9, 8, 9, 45))
     mail = ClientMailer.booking_receipt(tenant.id, appointment.id)
-    url = mail.body.to_s[%r{http[s]?://\S+}]
+    url = mail.text_part.decoded[%r{http[s]?://\S+}]
     host! "mary.zubio.com.br"
 
     get URI(url).path
