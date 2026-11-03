@@ -14,15 +14,14 @@ export default class extends Controller {
   connect() {
     if (this.standalonePathValue && this.#isStandalone()) this.#recordInstallation()
     if (this.markVisitValue) this.#markVisit()
-    if (this.#dismissed()) return
-    if (this.requireVisitValue && !this.#visited()) return
+    this.invited = !this.#dismissed() && (!this.requireVisitValue || this.#visited())
 
     this.installEvent = null
     this.onBeforeInstallPrompt = (event) => this.#capture(event)
     this.onAppInstalled = () => this.#onAppInstalled()
     window.addEventListener("beforeinstallprompt", this.onBeforeInstallPrompt)
     window.addEventListener("appinstalled", this.onAppInstalled)
-    this.#reveal(chooseInstallInvite(false, this.#isIOS(), this.#isStandalone(), this.#isMobile()))
+    if (this.invited) this.#reveal(chooseInstallInvite(false, this.#isIOS(), this.#isStandalone(), this.#isMobile()))
   }
 
   disconnect() {
@@ -35,6 +34,7 @@ export default class extends Controller {
   }
 
   dismiss(event) {
+    this.invited = false
     this.#reveal("hidden")
     if (event.params.forever || this.snoozeDaysValue === 0) {
       this.#rememberForever()
@@ -46,7 +46,7 @@ export default class extends Controller {
   #capture(event) {
     event.preventDefault()
     this.installEvent = event
-    this.#reveal(chooseInstallInvite(true, this.#isIOS(), this.#isStandalone(), this.#isMobile()))
+    if (this.invited) this.#reveal(chooseInstallInvite(true, this.#isIOS(), this.#isStandalone(), this.#isMobile()))
   }
 
   #onAppInstalled() {

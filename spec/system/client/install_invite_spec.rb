@@ -62,6 +62,34 @@ RSpec.describe "Client install invite", type: :system, js: true do
     expect(page).to have_button(Components::InstallInvite::INSTALL_LABEL)
   end
 
+  it "keeps the browser's own install banner away on a first visit to the showcase" do
+    create(:service, tenant: tenant, name: "Corte")
+    emulate_android
+    visit "http://#{tenant.subdomain}.zubio.com.br#{establishment_path}"
+    expect(page).to have_css("[data-controller='pwa-install'][hidden]", visible: :all)
+
+    fire_before_install_prompt
+
+    expect(native_install_banner_suppressed?).to be(true)
+    expect(page).to have_css("[data-controller='pwa-install'][hidden]", visible: :all)
+  end
+
+  it "keeps the browser's own install banner away while the invite is snoozed" do
+    create(:service, tenant: tenant, name: "Corte")
+    client = create(:client, tenant: tenant)
+    emulate_android
+    sign_in_client(client)
+    visit "http://#{tenant.subdomain}.zubio.com.br#{establishment_path}"
+    wait_until { fire_before_install_prompt; page.has_css?("[data-pwa-install-target='action']:not([hidden])", wait: 0) }
+    click_on "Agora não"
+    visit "http://#{tenant.subdomain}.zubio.com.br#{establishment_path}"
+
+    fire_before_install_prompt
+
+    expect(native_install_banner_suppressed?).to be(true)
+    expect(page).to have_css("[data-controller='pwa-install'][hidden]", visible: :all)
+  end
+
   it "snoozes the invite for seven days after Agora não, then brings it back" do
     create(:service, tenant: tenant, name: "Corte")
     client = create(:client, tenant: tenant)
