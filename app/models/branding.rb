@@ -48,11 +48,15 @@ class Branding < ApplicationRecord
     "#{ramp}--on-#{prefix}:#{scale.foreground};--on-#{prefix}-#{DARK_ACCENT_STEP}:#{dark_accent.foreground};#{roles}"
   end
 
+  def self.ink_step(scale, theme)
+    scale.first_step_reaching(ColorScale::MIN_CONTRAST, steps: ON_NEUTRAL_STEPS.fetch(theme), against: NEUTRALS.fetch(theme).values)
+  end
+
   def self.role_variables(prefix, scale, theme)
     neutrals = NEUTRALS.fetch(theme).values
     soft_step = SOFT_STEP.fetch(theme)
     steps = {
-      "ink" => scale.first_step_reaching(ColorScale::MIN_CONTRAST, steps: ON_NEUTRAL_STEPS.fetch(theme), against: neutrals),
+      "ink" => ink_step(scale, theme),
       "mark" => scale.first_step_reaching(ColorScale::MIN_NON_TEXT_CONTRAST, steps: ON_NEUTRAL_STEPS.fetch(theme), against: neutrals),
       "soft" => soft_step,
       "soft-ink" => scale.first_step_reaching(ColorScale::MIN_CONTRAST, steps: ON_SOFT_STEPS.fetch(theme), against: [ scale.tokens.fetch(soft_step) ])
@@ -63,6 +67,10 @@ class Branding < ApplicationRecord
 
   def color_scale
     @color_scale ||= ColorScale.new(hex?(brand_600) ? brand_600 : DEFAULT_BRAND_600)
+  end
+
+  def light_ink
+    color_scale.tokens.fetch(self.class.ink_step(color_scale, :light))
   end
 
   def css_variables
