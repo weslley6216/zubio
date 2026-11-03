@@ -52,6 +52,7 @@ RSpec.describe Views::Mailers::Client::BookingReceipt, type: :component do
     expect(html).to include("R$ 60,00")
     expect(html).to include("Horário confirmado")
     expect(html).to include("A Mary já está sabendo, Ana.")
+    expect(Nokogiri::HTML5(html).at_css("html")["lang"]).to eq("pt-BR")
   end
 
   it "links the button to the appointment on the establishment's host" do
