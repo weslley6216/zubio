@@ -58,6 +58,28 @@ RSpec.describe Branding::ColorScale do
     it "is the dark neutral on a white background" do
       expect(described_class.new("#ffffff").foreground).to eq(described_class::DARK_NEUTRAL)
     end
+
+    it "picks the app ink for a light color" do
+      color_scale = described_class.new("#F0617A")
+
+      expect(color_scale.foreground).to eq("#0e1a24")
+      expect(described_class::DARK_NEUTRAL).not_to eq("#111827")
+    end
+  end
+
+  describe "#mix" do
+    it "blends the color over a base at the given share, channel by channel" do
+      color_scale = described_class.new("#ffffff")
+
+      expect(color_scale.mix("#16324A", 40)).to eq("#738492")
+    end
+
+    it "returns the base at zero share and the color itself at full share" do
+      color_scale = described_class.new("#ffffff")
+
+      expect(color_scale.mix("#16324A", 0)).to eq("#16324a")
+      expect(color_scale.mix("#16324A", 100)).to eq("#ffffff")
+    end
   end
 
   describe "#deepened_hex" do

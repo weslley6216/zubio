@@ -3,7 +3,7 @@ class Branding::ColorScale
   MIN_CONTRAST = 4.5
   MIN_NON_TEXT_CONTRAST = 3.0
   WHITE = "#ffffff".freeze
-  DARK_NEUTRAL = "#111827".freeze
+  DARK_NEUTRAL = "#0e1a24".freeze
   DEEP_LIGHTNESS_FACTOR = 0.6
 
   attr_reader :hex
@@ -60,6 +60,19 @@ class Branding::ColorScale
     from_hsl(hue, saturation, lightness * DEEP_LIGHTNESS_FACTOR)
   end
 
+  def mix(base, share)
+    [ rgb, self.class.new(base).rgb ].transpose
+      .map { |own, other| ((own * share + other * (100 - share)) / 100.0 * 255).round.clamp(0, 255) }
+      .map { |value| value.to_s(16).rjust(2, "0") }
+      .then { |parts| "##{parts.join}" }
+  end
+
+  protected
+
+  def rgb
+    hex.delete("#").scan(/../).map { |channel| channel.to_i(16) / 255.0 }
+  end
+
   private
 
   def reaches?(step_hex, minimum, backgrounds)
@@ -114,10 +127,6 @@ class Branding::ColorScale
       .map { |channel| ((channel + m) * 255).round.clamp(0, 255) }
       .map { |value| value.to_s(16).rjust(2, "0") }
       .then { |parts| "##{parts.join}" }
-  end
-
-  def rgb
-    hex.delete("#").scan(/../).map { |channel| channel.to_i(16) / 255.0 }
   end
 
   def linearize(channel)
