@@ -6,20 +6,70 @@ RSpec.describe "Generated stylesheets", type: :request do
   end
 
   describe "GET /branding.css" do
-    it "serves both ramps of the establishment in the host and never another one's" do
-      aurora = create(:tenant, subdomain: "estudio-aurora")
+    it "serves the brand ramp and the theme of the establishment in the host and never another one's" do
+      ze = create(:tenant, subdomain: "barbearia-do-ze")
       other = create(:tenant, subdomain: "salon-b")
-      branding = create(:branding, tenant: aurora, brand_600: "#1D4ED8", brand_secondary_600: "#0B7658")
-      create(:branding, tenant: other, brand_600: "#DC2626", brand_secondary_600: "#96590B")
-      host! "estudio-aurora.zubio.com.br"
+      branding = create(:branding, :with_background, tenant: ze)
+      create(:branding, tenant: other, brand_600: "#DC2626")
+      host! "barbearia-do-ze.zubio.com.br"
 
       get branding_stylesheet_path(v: branding.stylesheet_digest)
 
       expect(response.media_type).to eq("text/css")
-      expect(response.body).to include("--brand-600:#1D4ED8;")
-      expect(response.body).to include("--secondary-600:#0B7658;")
+      expect(response.body).to include("--brand-600:#F0617A;")
+      expect(response.body).to include("--theme-bg:#16324A;")
+      expect(response.body).to include("--theme-card:#e7f0f8;")
       expect(response.body).not_to include("#DC2626")
-      expect(response.body).not_to include("#96590B")
+    end
+
+    it "carries the eighteen theme tokens, every one a six-digit hex" do
+      ze = create(:tenant, subdomain: "barbearia-do-ze")
+      branding = create(:branding, :with_background, tenant: ze)
+      host! "barbearia-do-ze.zubio.com.br"
+
+      get branding_stylesheet_path(v: branding.stylesheet_digest)
+
+      tokens = response.body.scan(/--theme-([\w-]+):([^;]+);/)
+
+      expect(tokens.map(&:first)).to eq(%w[
+        bg on-bg on-bg-muted bg-tint ghost danger-on-bg danger-line-on-bg
+        card on-card on-card-muted card-line card-chip field-line focus
+        danger-on-card accent on-accent selected-ring
+      ])
+      expect(tokens.map(&:last)).to all(match(/\A#\h{6}\z/))
+      expect(response.body).not_to include("--secondary-")
+    end
+
+    it "derives no rule from a stored support color" do
+      tenant = create(:tenant, subdomain: "estudio-aurora")
+      branding = create(:branding, tenant: tenant, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C")
+      host! "estudio-aurora.zubio.com.br"
+
+      get branding_stylesheet_path(v: branding.stylesheet_digest)
+
+      body = response.body.downcase
+      leaked = Branding::ColorScale.new("#E8493C").tokens.values.map(&:downcase).select { |hex| body.include?(hex) }
+
+      expect(leaked).to be_empty
+      expect(body).to include("--theme-accent:#2c6cb0;")
+    end
+
+    it "keeps another establishment's background out of the sheet" do
+      ze = create(:tenant, subdomain: "barbearia-do-ze")
+      create(:branding, :with_background, tenant: ze)
+      mary = create(:tenant, subdomain: "mary-sombracelhas")
+      mary_branding = create(:branding, tenant: mary, brand_600: "#8E4B6B")
+      host! "mary-sombracelhas.zubio.com.br"
+
+      get branding_stylesheet_path(v: mary_branding.stylesheet_digest)
+
+      body = response.body.downcase
+      leaked_background = Branding::ColorScale.new("#16324A").tokens.values.map(&:downcase)
+
+      expect(body).not_to include("#16324a")
+      expect(leaked_background.select { |hex| body.include?(hex) }).to be_empty
+      expect(body).to include("--theme-bg:#f8fafb;")
+      expect(body).to include("--theme-accent:#8e4b6b;")
     end
 
     it "serves the platform default at the platform root, where no establishment is resolved" do
@@ -31,6 +81,7 @@ RSpec.describe "Generated stylesheets", type: :request do
 
       expect(response.body).to include("--brand-600:#{Branding::DEFAULT_BRAND_600};")
       expect(response.body).not_to include("--brand-600:#1D4ED8;")
+      expect(response.body).to include("--theme-bg:#f8fafb;")
     end
 
     it "falls back to the platform default when the establishment has no branding yet" do
