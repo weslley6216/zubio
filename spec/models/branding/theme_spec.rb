@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe Branding::Theme do
   describe "#tokens" do
-    it "resolves the ADR table for Barbearia do Zé" do
+    it "resolves the ADR table for a dark blue background with a light pink accent" do
       theme = described_class.new(background: "#16324A", accent: "#F0617A")
 
       expect(theme.tokens).to eq(
@@ -27,7 +27,7 @@ RSpec.describe Branding::Theme do
       )
     end
 
-    it "resolves the ADR table for Bicho Feliz Pet" do
+    it "resolves the ADR table for a dark green background with a light yellow accent" do
       theme = described_class.new(background: "#1F4D3A", accent: "#F2B33D")
 
       expect(theme.tokens).to eq(
@@ -52,7 +52,7 @@ RSpec.describe Branding::Theme do
       )
     end
 
-    it "resolves the ADR table for Mary Sombracelhas" do
+    it "resolves the ADR table for a light pink background with a dark purple accent" do
       theme = described_class.new(background: "#F6EEF2", accent: "#8E4B6B")
 
       expect(theme.tokens).to eq(
@@ -101,11 +101,11 @@ RSpec.describe Branding::Theme do
     end
 
     it "cuts the card of a dark background from step 100 of its own ramp" do
-      ze = described_class.new(background: "#16324A", accent: "#F0617A")
-      pet = described_class.new(background: "#1F4D3A", accent: "#F2B33D")
+      dark_blue = described_class.new(background: "#16324A", accent: "#F0617A")
+      dark_green = described_class.new(background: "#1F4D3A", accent: "#F2B33D")
 
-      expect(ze.tokens["card"]).to eq(Branding::ColorScale.new("#16324A").tokens[100])
-      expect(pet.tokens["card"]).to eq(Branding::ColorScale.new("#1F4D3A").tokens[100])
+      expect(dark_blue.tokens["card"]).to eq(Branding::ColorScale.new("#16324A").tokens[100])
+      expect(dark_green.tokens["card"]).to eq(Branding::ColorScale.new("#1F4D3A").tokens[100])
     end
 
     it "falls back to the neutral surface-2 when no background is chosen" do
