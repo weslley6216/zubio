@@ -61,8 +61,11 @@ class Branding::ColorScale
   end
 
   def mix(base, share)
-    [ rgb, self.class.new(base).rgb ].transpose
-      .map { |own, other| ((own * share + other * (100 - share)) / 100.0 * 255).round.clamp(0, 255) }
+    own = rgb.map { |channel| (channel * 255).round }
+    other = self.class.new(base).rgb.map { |channel| (channel * 255).round }
+
+    [ own, other ].transpose
+      .map { |value, counterpart| ((value * share + counterpart * (100 - share)) / 100.0).round.clamp(0, 255) }
       .map { |value| value.to_s(16).rjust(2, "0") }
       .then { |parts| "##{parts.join}" }
   end
