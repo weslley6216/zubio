@@ -34,6 +34,7 @@
   --brand-accent: var(--brand-600);
   --on-brand-accent: var(--on-brand, #ffffff);
   --brand-ink: var(--brand-ink-light);
+  --brand-mark: var(--brand-mark-light);
   --brand-soft: var(--brand-soft-light);
   --brand-soft-ink: var(--brand-soft-ink-light);
   --secondary-mark: var(--secondary-mark-light);
@@ -53,6 +54,7 @@
   --brand-accent: var(--brand-600);
   --on-brand-accent: var(--on-brand, #ffffff);
   --brand-ink: var(--brand-ink-light);
+  --brand-mark: var(--brand-mark-light);
   --brand-soft: var(--brand-soft-light);
   --brand-soft-ink: var(--brand-soft-ink-light);
   --secondary-mark: var(--secondary-mark-light);
@@ -84,6 +86,7 @@
     --brand-accent: var(--brand-400);
     --on-brand-accent: var(--on-brand-400, #08121a);
     --brand-ink: var(--brand-ink-dark);
+    --brand-mark: var(--brand-mark-dark);
     --brand-soft: var(--brand-soft-dark);
     --brand-soft-ink: var(--brand-soft-ink-dark);
     --secondary-mark: var(--secondary-mark-dark);
@@ -100,6 +103,7 @@
     --brand-accent: var(--brand-400);
     --on-brand-accent: var(--on-brand-400, #08121a);
     --brand-ink: var(--brand-ink-dark);
+    --brand-mark: var(--brand-mark-dark);
     --brand-soft: var(--brand-soft-dark);
     --brand-soft-ink: var(--brand-soft-ink-dark);
     --secondary-mark: var(--secondary-mark-dark);
@@ -128,6 +132,7 @@
   --brand-accent: var(--brand-400);
   --on-brand-accent: var(--on-brand-400, #08121a);
   --brand-ink: var(--brand-ink-dark);
+  --brand-mark: var(--brand-mark-dark);
   --brand-soft: var(--brand-soft-dark);
   --brand-soft-ink: var(--brand-soft-ink-dark);
   --secondary-mark: var(--secondary-mark-dark);
@@ -144,6 +149,7 @@
   --brand-accent: var(--brand-400);
   --on-brand-accent: var(--on-brand-400, #08121a);
   --brand-ink: var(--brand-ink-dark);
+  --brand-mark: var(--brand-mark-dark);
   --brand-soft: var(--brand-soft-dark);
   --brand-soft-ink: var(--brand-soft-ink-dark);
   --secondary-mark: var(--secondary-mark-dark);
@@ -225,6 +231,7 @@ turbo-frame:is([busy], [data-loading]) :not(turbo-frame:is([busy], [data-loading
   --color-brand-accent: var(--brand-accent);
   --color-on-brand-accent: var(--on-brand-accent);
   --color-brand-ink: var(--brand-ink);
+  --color-brand-mark: var(--brand-mark);
   --color-brand-soft: var(--brand-soft);
   --color-brand-soft-ink: var(--brand-soft-ink);
 

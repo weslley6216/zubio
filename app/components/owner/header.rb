@@ -8,11 +8,11 @@ class Components::Owner::Header < Components::Base
   PANEL_SUBTITLE = "Painel".freeze
 
   TAB_CLASS = "inline-flex h-16 items-center px-3.5 text-[14px] leading-[normal]".freeze
-  TAB_CURRENT_CLASS = "-mb-px border-b-[3px] border-brand-accent font-extrabold text-brand-accent".freeze
+  TAB_CURRENT_CLASS = "-mb-px border-b-[3px] border-brand-mark font-extrabold text-brand-ink".freeze
   TAB_RESTING_CLASS = "font-bold text-ink-muted hover:text-ink".freeze
 
   PILL_CLASS = "inline-flex min-h-10 items-center gap-2 rounded-[10px] border px-3.5 text-[14px] leading-[normal] font-bold".freeze
-  PILL_CURRENT_CLASS = "border-brand-accent text-brand-accent".freeze
+  PILL_CURRENT_CLASS = "border-brand-mark text-brand-ink".freeze
   PILL_RESTING_CLASS = "border-line text-ink".freeze
 
   def initialize(tenant:, branding:, current_section:, subtitle: PANEL_SUBTITLE)
@@ -63,7 +63,7 @@ class Components::Owner::Header < Components::Base
   end
 
   def render_gear(current)
-    render Components::Icon.new(:settings, class: "h-[17px] w-[17px] flex-none #{current ? "text-brand-accent" : "text-ink-muted"}")
+    render Components::Icon.new(:settings, class: "h-[17px] w-[17px] flex-none #{current ? "text-brand-mark" : "text-ink-muted"}")
   end
 
   def render_mobile_bar
