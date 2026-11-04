@@ -10,7 +10,9 @@ class Views::Owner::Settings::Show < Views::Base
   LOGO_INITIAL = "Usando a inicial".freeze
   LOGO_UPLOADED = "Logo enviada".freeze
   COLORS_LABEL = "Cores".freeze
-  SECONDARY_PREFIX = "apoio".freeze
+  BACKGROUND_PREFIX = "Fundo".freeze
+  ACCENT_PREFIX = "Destaque".freeze
+  NEUTRAL_BACKGROUND = "Fundo neutro".freeze
   ADDRESS_LABEL = "Endereço do link".freeze
   SERVICES_LABEL = "Serviços".freeze
   NO_SERVICES = "Nenhum cadastrado".freeze
@@ -127,8 +129,8 @@ class Views::Owner::Settings::Show < Views::Base
 
   def render_chips
     span(class: CHIPS_CLASS) do
-      render Components::ColorChip.new(attribute: :brand_600, size: :large)
-      render Components::ColorChip.new(attribute: :brand_secondary_600, size: :large) if secondary?
+      render Components::ColorChip.new(attribute: :brand_background, size: :large, data: { chip: "background" }) if @branding.brand_background.present?
+      render Components::ColorChip.new(attribute: :brand_600, size: :large, data: { chip: "accent" })
     end
   end
 
@@ -138,12 +140,14 @@ class Views::Owner::Settings::Show < Views::Base
 
   def logo_summary = @tenant.branded? ? LOGO_UPLOADED : LOGO_INITIAL
 
-  def secondary? = @branding.brand_secondary_600.present?
-
   def colors_summary
-    secondary = "#{SECONDARY_PREFIX} #{@branding.brand_secondary_600.upcase}" if secondary?
+    [ background_summary, "#{ACCENT_PREFIX} #{@branding.brand_600.upcase}" ].join(" · ")
+  end
 
-    [ @branding.brand_600.upcase, secondary ].compact.join(" · ")
+  def background_summary
+    return NEUTRAL_BACKGROUND if @branding.brand_background.blank?
+
+    "#{BACKGROUND_PREFIX} #{@branding.brand_background.upcase}"
   end
 
   def services_summary
