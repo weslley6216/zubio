@@ -23,7 +23,7 @@ class Views::Client::AccountPhones::New < Views::Base
   DIVIDER_CLASS = "h-px bg-(--theme-card-line)".freeze
   FIELD_WRAPPER_CLASS = "flex flex-col gap-1.5".freeze
   FIELD_LABEL_CLASS = "text-[11px] font-bold uppercase tracking-[0.06em] text-(--theme-on-card-muted)".freeze
-  FIELD_CLASS = "flex min-h-[48px] items-center rounded-lg border-2 border-(--theme-field-line) px-3 text-[15px] font-bold tabular-nums".freeze
+  FIELD_CLASS = "flex min-h-[48px] items-center rounded-lg border-2 border-(--theme-field-line) bg-(--theme-card) px-3 text-[15px] font-bold tabular-nums".freeze
   SUBMIT_CLASS = "flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-(--theme-accent) text-[15px] font-extrabold text-(--theme-on-accent)".freeze
 
   def initialize(tenant:, branding:, name:, token:, client: nil)
@@ -36,7 +36,7 @@ class Views::Client::AccountPhones::New < Views::Base
 
   def view_template
     render Views::Layouts::Application.new(title: @tenant.name, branding: @branding) do
-      div(class: PAGE_CLASS) do
+      div(class: PAGE_CLASS, data: { page: true }) do
         render_header
         render_main
       end

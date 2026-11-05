@@ -183,8 +183,8 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
 
       visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: tuesday.iso8601)}"
 
-      expect(opaque?("header")).to be(true)
-      expect(contrast_ratio("header")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(opaque?("[data-page]")).to be(true)
+      expect(contrast_against("header", "[data-page]")).to be >= Branding::ColorScale::MIN_CONTRAST
       expect(opaque?("[data-slot]")).to be(true)
       expect(contrast_ratio("[data-slot]")).to be >= Branding::ColorScale::MIN_CONTRAST
       expect(opaque?("[data-day][aria-disabled='true']")).to be(true)
@@ -385,8 +385,8 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
       expect(contrast_ratio("[data-when]")).to be >= Branding::ColorScale::MIN_CONTRAST
       expect(opaque?("[data-receipt-invite] [data-google-button]")).to be(true)
       expect(contrast_ratio("[data-receipt-invite] [data-google-button]")).to be >= Branding::ColorScale::MIN_CONTRAST
-      expect(opaque?("[data-cancel-link]")).to be(true)
-      expect(contrast_ratio("[data-cancel-link]")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(opaque?("[data-receipt]")).to be(true)
+      expect(contrast_against("[data-cancel-link]", "[data-receipt]")).to be >= Branding::ColorScale::MIN_CONTRAST
       expect(page).to fit_the_phone_width
     end
 

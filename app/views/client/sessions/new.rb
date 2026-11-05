@@ -16,7 +16,7 @@ class Views::Client::Sessions::New < Views::Base
   HEADING_CLASS = "text-[24px] leading-[normal] font-extrabold tracking-[-0.02em]".freeze
   SUBTITLE_CLASS = "text-[14px] leading-[1.5] text-pretty text-(--theme-on-bg-muted)".freeze
   CARD_CLASS = "flex flex-col gap-3 rounded-2xl bg-(--theme-card) p-5 text-(--theme-on-card)".freeze
-  GUEST_CLASS = "flex min-h-[44px] w-full items-center justify-center rounded-[10px] text-[14px] font-bold text-(--theme-on-card-muted)".freeze
+  GUEST_CLASS = "flex min-h-[44px] w-full items-center justify-center rounded-[10px] bg-(--theme-card) text-[14px] font-bold text-(--theme-on-card-muted)".freeze
   NOTE_CLASS = "text-center text-[12px] leading-[1.5] text-(--theme-on-card-muted)".freeze
 
   def initialize(tenant:, branding:, service: nil)
@@ -27,7 +27,7 @@ class Views::Client::Sessions::New < Views::Base
 
   def view_template
     render Views::Layouts::Application.new(title: @tenant.name, branding: @branding) do
-      div(class: PAGE_CLASS) do
+      div(class: PAGE_CLASS, data: { page: true }) do
         render_header
         render_main
       end
