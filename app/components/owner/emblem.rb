@@ -12,7 +12,8 @@ class Components::Owner::Emblem < Components::Base
   }.freeze
   TONES = {
     accent: "bg-brand-accent text-on-brand-accent",
-    translucent: "bg-(--theme-bg-tint) text-(--theme-on-bg)"
+    translucent: "bg-(--theme-bg-tint) text-(--theme-on-bg)",
+    card: "bg-(--theme-card) text-(--theme-on-card)"
   }.freeze
   IMAGE_CLASS = "flex-none object-cover".freeze
   INITIAL_CLASS = "grid flex-none place-items-center font-extrabold".freeze

@@ -56,7 +56,7 @@ class Views::Client::Sessions::New < Views::Base
 
   def render_identity
     div(class: IDENTITY_CLASS) do
-      render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :login)
+      render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :login, tone: :card)
       div(class: HEADING_BLOCK_CLASS) do
         h1(class: HEADING_CLASS) { TITLE }
         span(class: SUBTITLE_CLASS) { SUBTITLE % @tenant.name }

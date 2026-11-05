@@ -73,6 +73,14 @@ RSpec.describe Components::Owner::Emblem, type: :component do
     expect(html).not_to include("bg-brand-accent")
   end
 
+  it "paints the initial on the theme card when asked for the card tone" do
+    html = described_class.new(tenant: tenant, branding: branding, size: :login, tone: :card).call
+
+    expect(html).to include("bg-(--theme-card)")
+    expect(html).to include("text-(--theme-on-card)")
+    expect(html).not_to include("bg-brand-accent")
+  end
+
   it "still shows the logo image in the translucent tone when there is one" do
     logo_branding = create(:branding, :with_logo, tenant: tenant)
 
