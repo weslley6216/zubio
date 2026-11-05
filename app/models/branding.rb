@@ -31,7 +31,7 @@ class Branding < ApplicationRecord
   validates :brand_background, format: { with: ColorScale::HEX }, allow_blank: true
   validate :brand_600_meets_contrast_minimum
   validate :brand_background_meets_contrast_minimum
-  validate :brand_600_stands_out_on_background
+  validate :brand_600_stands_out_on_background, if: -> { will_save_change_to_brand_600? || will_save_change_to_brand_background? }
   validate :logo_meets_upload_constraints
 
   def self.platform_default

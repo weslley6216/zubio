@@ -114,6 +114,25 @@ RSpec.describe Branding, type: :model do
       expect(branding).to be_valid
     end
 
+    it "keeps a stored light accent valid when only another field changes" do
+      branding = create(:branding)
+      ActsAsTenant.with_tenant(branding.tenant) { branding.update_column(:brand_600, "#EAB308") }
+      branding.reload
+
+      branding.brand_secondary_600 = "#1E60C4"
+
+      expect(branding).to be_valid
+    end
+
+    it "still refuses the stored light accent when the owner chooses it again" do
+      branding = create(:branding)
+
+      branding.brand_600 = "#EAB308"
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:brand_600]).to eq([ Branding::CONTRAST_MESSAGE ])
+    end
+
     it "is invalid when logo content type is not png, jpeg or webp" do
       branding = build(:branding)
       branding.logo.attach(
