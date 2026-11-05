@@ -7,7 +7,7 @@ RSpec.describe "Owner brand colors without JavaScript", type: :system do
     sign_in_owner(create(:user, tenant: tenant))
     visit "http://#{tenant.subdomain}.zubio.com.br#{edit_owner_brand_colors_path}"
 
-    within(%(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::BRAND_LABEL}"])) do
+    within(%(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::ACCENT_LABEL}"])) do
       choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
       fill_in "branding[brand_600_custom]", with: "#7E22CE"
     end

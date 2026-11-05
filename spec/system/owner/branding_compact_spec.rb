@@ -38,18 +38,17 @@ RSpec.describe "Owner branding on one screen", type: :system, js: true do
     )
   end
 
-  { "light" => 600, "dark" => 400 }.each do |scheme, step|
-    it "repaints the two-color preview live as a swatch is chosen, in #{scheme}" do
+  %w[light dark].each do |scheme|
+    it "repaints the preview book action live as a swatch is chosen, in #{scheme}" do
       tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
-      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+      create(:branding, :with_background, tenant: tenant)
       emulate_color_scheme(scheme)
       sign_in_owner(create(:user, tenant: tenant))
       visit "http://estudio-aurora.zubio.com.br#{edit_owner_brand_colors_path}"
 
-      within(%(fieldset[aria-label="Cor principal"])) { find(%([data-row-option] [data-swatch="#BE123C"])).click }
+      within(%(fieldset[aria-label="Destaque"])) { find(%([data-row-option] [data-swatch="#F2B33D"])).click }
 
-      expect(computed_hex("[data-color-swatch-target='preview'] .bg-brand-accent", "backgroundColor"))
-        .to eq(Branding::ColorScale.new("#BE123C").tokens.fetch(step).upcase)
+      expect(computed_hex("[data-preview-role='book']", "backgroundColor")).to eq("#F2B33D")
     end
   end
 end

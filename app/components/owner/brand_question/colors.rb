@@ -57,7 +57,7 @@ class Components::Owner::BrandQuestion::Colors < Components::Base
           span(class: PREVIEW_NAME_CLASS) { PREVIEW_SERVICE_NAME }
           span(class: PREVIEW_META_CLASS) { PREVIEW_SERVICE_META }
         end
-        span(class: PREVIEW_BOOK_CLASS) { PREVIEW_BOOK }
+        span(class: PREVIEW_BOOK_CLASS, data: { preview_role: "book" }) { PREVIEW_BOOK }
       end
       p(class: PREVIEW_CAPTION_CLASS) { PREVIEW_CAPTION }
     end

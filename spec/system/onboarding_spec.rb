@@ -433,7 +433,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     expect(page.driver.network_traffic.count { |exchange| exchange.url&.include?("/rails/active_storage/direct_uploads") }).to eq(0)
   end
 
-  it "paints the current screen the moment a swatch is chosen, but not its continue button" do
+  it "paints the current screen and its continue button the moment a swatch is chosen" do
     owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
     sign_in_owner(owner)
     click_on "Começar"
@@ -441,9 +441,9 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
 
     find("[data-swatch-row] [data-swatch='#{chosen}']").click
 
-    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#{chosen}']", visible: :all)
-    expect(computed_hex("[data-onboarding-section='colors'] [data-progress-bar] .bg-brand-600", "backgroundColor")).to eq(chosen)
-    expect(computed_hex("[data-onboarding-section='colors'] button[data-action='onboarding#next']", "backgroundColor")).to eq("#4F46E5")
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#{chosen}']", visible: :all)
+    expect(computed_hex("[data-onboarding-section='colors'] [data-progress-bar] > div:first-child", "backgroundColor")).to eq(chosen)
+    expect(computed_hex("[data-onboarding-section='colors'] button[data-action='onboarding#next']", "backgroundColor")).to eq(chosen)
   end
 
   it "carries the chosen color into the next questions while their continue button stays in the Zubio color" do
@@ -455,8 +455,8 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
 
     click_on "Continuar"
 
-    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#{chosen}']", visible: :all)
-    expect(computed_hex("[data-onboarding-section='name'] [data-progress-bar] .bg-brand-600", "backgroundColor")).to eq(chosen)
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#{chosen}']", visible: :all)
+    expect(computed_hex("[data-onboarding-section='name'] [data-progress-bar] > div:first-child", "backgroundColor")).to eq(chosen)
     expect(computed_hex("[data-onboarding-section='name'] button[data-action='onboarding#next']", "backgroundColor")).to eq("#4F46E5")
   end
 
@@ -465,7 +465,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     sign_in_owner(owner)
     welcome_color = computed_hex("button[data-action='onboarding#next']", "backgroundColor")
     click_on "Começar"
-    find("[data-swatch-row] [data-swatch='#BE123C']").click
+    find("[data-swatch-row] [data-swatch='#F2B33D']").click
     click_on "Continuar"
     fill_in "Nome da marca", with: "Barbearia do Zé"
     click_on "Continuar"
@@ -491,81 +491,81 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
     sign_in_owner(owner)
     click_on "Começar"
-    within(%(fieldset[aria-label="Cor principal"])) do
+    within(%(fieldset[aria-label="Destaque"])) do
       find("label:has([data-more-toggle])").click
       choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
     end
 
     fill_in "branding[brand_600_custom]", with: "#2C6CB0"
 
-    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
-    expect(find("[data-onboarding-section='colors'] [data-progress-bar] .bg-brand-600").evaluate_script("getComputedStyle(this).backgroundColor"))
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#2C6CB0']", visible: :all)
+    expect(find("[data-onboarding-section='colors'] [data-progress-bar] > div:first-child").evaluate_script("getComputedStyle(this).backgroundColor"))
       .to eq("rgb(44, 108, 176)")
   end
 
-  it "uses the typed support color for the preview today badge" do
+  it "uses the typed background color for the preview panel" do
     owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
     sign_in_owner(owner)
     click_on "Começar"
-    within(%(fieldset[aria-label="Cor de apoio"])) do
+    within(%(fieldset[aria-label="Fundo"])) do
       find("label:has([data-more-toggle])").click
       choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
     end
 
-    fill_in "branding[brand_secondary_600_custom]", with: "#E8493C"
+    fill_in "branding[brand_background_custom]", with: "#123456"
 
-    expect(page).to have_css("[data-color-swatch-target='preview'][data-preview-secondary='#E8493C']", visible: :all)
+    expect(page).to have_css("[data-color-swatch-target='preview'][data-preview-bg='#123456']", visible: :all)
   end
 
   it "flags an invalid code and keeps the last valid color" do
     owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
     sign_in_owner(owner)
     click_on "Começar"
-    within(%(fieldset[aria-label="Cor principal"])) do
+    within(%(fieldset[aria-label="Destaque"])) do
       find("label:has([data-more-toggle])").click
       choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
     end
     fill_in "branding[brand_600_custom]", with: "#2C6CB0"
-    find("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
+    find("[data-controller='onboarding'][data-preview-accent='#2C6CB0']", visible: :all)
 
     fill_in "branding[brand_600_custom]", with: "#ZZZ123"
 
     expect(find(%(input[name="branding[brand_600_custom]"]))["aria-invalid"]).to eq("true")
     expect(find(%(input[name="branding[brand_600_custom]"]))["aria-describedby"]).to eq("brand_600-color-error")
     expect(find("#brand_600-color-error")).to be_visible
-    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#2C6CB0']", visible: :all)
   end
 
   it "repaints the screen from a restored swatch after a reload" do
     owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
     sign_in_owner(owner)
     click_on "Começar"
-    find("[data-swatch-row] [data-swatch='#1E60C4']").click
+    find("[data-swatch-row] [data-swatch='#4FB3A9']").click
     click_on "Continuar"
 
     page.refresh
 
-    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#1E60C4']", visible: :all)
-    expect(find("[data-onboarding-section='colors'] [data-progress-bar] .bg-brand-600", visible: :all).evaluate_script("getComputedStyle(this).backgroundColor"))
-      .to eq("rgb(30, 96, 196)")
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#4FB3A9']", visible: :all)
+    expect(find("[data-onboarding-section='colors'] [data-progress-bar] > div:first-child", visible: :all).evaluate_script("getComputedStyle(this).backgroundColor"))
+      .to eq("rgb(79, 179, 169)")
   end
 
   it "repaints the screen from a restored typed color after a reload" do
     owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
     sign_in_owner(owner)
     click_on "Começar"
-    within(%(fieldset[aria-label="Cor principal"])) do
+    within(%(fieldset[aria-label="Destaque"])) do
       find("label:has([data-more-toggle])").click
       choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
     end
     fill_in "branding[brand_600_custom]", with: "#2C6CB0"
-    find("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
+    find("[data-controller='onboarding'][data-preview-accent='#2C6CB0']", visible: :all)
     click_on "Continuar"
 
     page.refresh
 
-    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
-    expect(find("[data-onboarding-section='colors'] [data-progress-bar] .bg-brand-600", visible: :all).evaluate_script("getComputedStyle(this).backgroundColor"))
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#2C6CB0']", visible: :all)
+    expect(find("[data-onboarding-section='colors'] [data-progress-bar] > div:first-child", visible: :all).evaluate_script("getComputedStyle(this).backgroundColor"))
       .to eq("rgb(44, 108, 176)")
   end
 
@@ -574,29 +574,17 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     sign_in_owner(owner)
     click_on "Começar"
 
-    within(%(fieldset[aria-label="Cor principal"])) { find("label:has([data-more-toggle])").click }
+    within(%(fieldset[aria-label="Destaque"])) { find("label:has([data-more-toggle])").click }
 
-    expect(page).to have_css(%(fieldset[aria-label="Cor principal"] [data-swatch='#{Branding::Palette.extras(:brand_600).first}']))
-    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#{Branding::DEFAULT_BRAND_600}']", visible: :all)
-  end
-
-  it "repaints the screen from a swatch revealed behind the plus" do
-    owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
-    sign_in_owner(owner)
-    click_on "Começar"
-    extra = Branding::Palette.extras(:brand_600).first
-    within(%(fieldset[aria-label="Cor principal"])) { find("label:has([data-more-toggle])").click }
-
-    find(%(fieldset[aria-label="Cor principal"] [data-swatch='#{extra}'])).click
-
-    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#{extra}']", visible: :all)
+    expect(page).to have_css(%(fieldset[aria-label="Destaque"] input[value="custom"]))
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#{Branding::Palette::STARTING.fetch(:brand_600)}']", visible: :all)
   end
 
   it "keeps a swatch chosen while a typed color's sheet was still loading" do
     owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
     sign_in_owner(owner)
     click_on "Começar"
-    within(%(fieldset[aria-label="Cor principal"])) do
+    within(%(fieldset[aria-label="Destaque"])) do
       find("label:has([data-more-toggle])").click
       choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
     end
@@ -613,21 +601,21 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     JS
     fill_in "branding[brand_600_custom]", with: "#2C6CB0"
     wait_until { held.any? { |request| request.url.include?("2C6CB0") } }
-    find("[data-swatch-row] [data-swatch='#1E60C4']").click
-    find("[data-controller='onboarding'][data-preview-brand='#1E60C4']", visible: :all)
+    find("[data-swatch-row] [data-swatch='#4FB3A9']").click
+    find("[data-controller='onboarding'][data-preview-accent='#4FB3A9']", visible: :all)
 
     held.each(&:continue)
     wait_until { page.evaluate_script("window.previewSheets").any? { |entry| entry.start_with?("loaded") && entry.include?("%232C6CB0") } }
     page.evaluate_async_script("setTimeout(arguments[0], 0)")
 
-    expect(find("[data-controller='onboarding']", visible: :all)["data-preview-brand"]).to eq("#1E60C4")
+    expect(find("[data-controller='onboarding']", visible: :all)["data-preview-accent"]).to eq("#4FB3A9")
   end
 
   it "keeps the last painted color when a typed color's sheet fails to load" do
     owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
     sign_in_owner(owner)
     click_on "Começar"
-    within(%(fieldset[aria-label="Cor principal"])) do
+    within(%(fieldset[aria-label="Destaque"])) do
       find("label:has([data-more-toggle])").click
       choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
     end
@@ -646,14 +634,14 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     wait_until { page.evaluate_script("window.previewSheets").any? { |entry| entry.start_with?("failed") && entry.include?("%232C6CB0") } }
     page.evaluate_async_script("setTimeout(arguments[0], 0)")
 
-    expect(find("[data-controller='onboarding']", visible: :all)["data-preview-brand"]).to eq(Branding::DEFAULT_BRAND_600)
+    expect(find("[data-controller='onboarding']", visible: :all)["data-preview-accent"]).to eq(Branding::Palette::STARTING.fetch(:brand_600))
   end
 
   it "fetches a typed color's sheet again after a failed load and repaints" do
     owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
     sign_in_owner(owner)
     click_on "Começar"
-    within(%(fieldset[aria-label="Cor principal"])) do
+    within(%(fieldset[aria-label="Destaque"])) do
       find("label:has([data-more-toggle])").click
       choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
     end
@@ -674,8 +662,8 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
 
     fill_in "branding[brand_600_custom]", with: "#2C6CB0"
 
-    expect(page).to have_css("[data-controller='onboarding'][data-preview-brand='#2C6CB0']", visible: :all)
-    expect(find("[data-onboarding-section='colors'] [data-progress-bar] .bg-brand-600").evaluate_script("getComputedStyle(this).backgroundColor"))
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#2C6CB0']", visible: :all)
+    expect(find("[data-onboarding-section='colors'] [data-progress-bar] > div:first-child").evaluate_script("getComputedStyle(this).backgroundColor"))
       .to eq("rgb(44, 108, 176)")
   end
 
@@ -688,7 +676,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
       HTMLInputElement.prototype.showPicker = function () { window.pickerOpenings += 1 }
     JS
 
-    within(%(fieldset[aria-label="Cor principal"])) do
+    within(%(fieldset[aria-label="Destaque"])) do
       find("label:has([data-more-toggle])").click
       choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
     end
