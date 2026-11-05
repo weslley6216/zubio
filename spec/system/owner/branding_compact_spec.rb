@@ -38,6 +38,21 @@ RSpec.describe "Owner branding on one screen", type: :system, js: true do
     )
   end
 
+  it "keeps each settings swatch row on a single line on a 390px phone" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, :with_background, tenant: tenant)
+    sign_in_owner(create(:user, tenant: tenant))
+
+    visit "http://estudio-aurora.zubio.com.br#{edit_owner_brand_colors_path}"
+
+    rows = page.evaluate_script(<<~JS)
+      Array.from(document.querySelectorAll("[data-swatch-row]"))
+        .map((row) => new Set(Array.from(row.querySelectorAll("[data-row-option]")).map((option) => Math.round(option.getBoundingClientRect().top))).size)
+    JS
+    expect(rows).to eq([ 1, 1 ])
+    expect(page).to fit_the_phone_width
+  end
+
   %w[light dark].each do |scheme|
     it "repaints the preview book action live as a swatch is chosen, in #{scheme}" do
       tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")

@@ -17,7 +17,7 @@ class Components::Owner::BrandQuestion::Colors < Components::Base
   HEADING_BLOCK_CLASS = "flex flex-col gap-1.5".freeze
   TITLE_CLASS = "text-[24px] font-extrabold tracking-[-0.02em] text-ink".freeze
   SUBTITLE_CLASS = "text-[14px] leading-[1.5] text-ink-muted".freeze
-  GROUP_CARD_CLASS = "rounded-2xl border border-line bg-surface p-4".freeze
+  GROUP_CARD_CLASS = "rounded-2xl border border-line bg-surface p-4 in-data-panel:rounded-none in-data-panel:border-0 in-data-panel:p-0".freeze
   PREVIEW_CLASS = "flex flex-col gap-3.5".freeze
   PREVIEW_PANEL_CLASS = "flex items-center gap-3 rounded-2xl bg-(--theme-bg) p-3".freeze
   PREVIEW_CARD_CLASS = "flex-grow flex flex-col gap-2 rounded-xl bg-(--theme-card) p-3".freeze
