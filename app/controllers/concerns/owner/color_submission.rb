@@ -4,11 +4,11 @@ module Owner::ColorSubmission
   private
 
   def submitted_colors
-    @submitted_colors ||= params.require(:branding).permit(:brand_600, :brand_600_custom, :brand_secondary_600, :brand_secondary_600_custom)
+    @submitted_colors ||= params.require(:branding).permit(:brand_600, :brand_600_custom, :brand_background, :brand_background_custom)
   end
 
   def color_attrs
-    resolved_color(:brand_600).merge(resolved_color(:brand_secondary_600))
+    resolved_color(:brand_600).merge(resolved_color(:brand_background))
   end
 
   def resolved_color(attribute)

@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "Owner branding on one screen", type: :system, js: true do
   it "fits each brand question on a phone screen without scrolling" do
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
-    create(:branding, tenant: tenant, brand_600: "#4F46E5")
+    create(:branding, :with_background, tenant: tenant)
     emulate_phone(width: 430, height: 800)
     sign_in_owner(create(:user, tenant: tenant))
 
@@ -38,18 +38,32 @@ RSpec.describe "Owner branding on one screen", type: :system, js: true do
     )
   end
 
-  { "light" => 600, "dark" => 400 }.each do |scheme, step|
-    it "repaints the two-color preview live as a swatch is chosen, in #{scheme}" do
+  it "keeps each settings swatch row on a single line on a 390px phone" do
+    tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    create(:branding, :with_background, tenant: tenant)
+    sign_in_owner(create(:user, tenant: tenant))
+
+    visit "http://estudio-aurora.zubio.com.br#{edit_owner_brand_colors_path}"
+
+    rows = page.evaluate_script(<<~JS)
+      Array.from(document.querySelectorAll("[data-swatch-row]"))
+        .map((row) => new Set(Array.from(row.querySelectorAll("[data-row-option]")).map((option) => Math.round(option.getBoundingClientRect().top))).size)
+    JS
+    expect(rows).to eq([ 1, 1 ])
+    expect(page).to fit_the_phone_width
+  end
+
+  %w[light dark].each do |scheme|
+    it "repaints the preview book action live as a swatch is chosen, in #{scheme}" do
       tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
-      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+      create(:branding, :with_background, tenant: tenant)
       emulate_color_scheme(scheme)
       sign_in_owner(create(:user, tenant: tenant))
       visit "http://estudio-aurora.zubio.com.br#{edit_owner_brand_colors_path}"
 
-      within(%(fieldset[aria-label="Cor principal"])) { find(%([data-row-option] [data-swatch="#BE123C"])).click }
+      within(%(fieldset[aria-label="Destaque"])) { find(%([data-row-option] [data-swatch="#F2B33D"])).click }
 
-      expect(computed_hex("[data-color-swatch-target='preview'] .bg-brand-accent", "backgroundColor"))
-        .to eq(Branding::ColorScale.new("#BE123C").tokens.fetch(step).upcase)
+      expect(computed_hex("[data-preview-role='book']", "backgroundColor")).to eq("#F2B33D")
     end
   end
 end

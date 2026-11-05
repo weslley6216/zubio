@@ -4,7 +4,6 @@ class Branding::ColorScale
   MIN_NON_TEXT_CONTRAST = 3.0
   WHITE = "#ffffff".freeze
   DARK_NEUTRAL = "#0e1a24".freeze
-  DEEP_LIGHTNESS_FACTOR = 0.6
 
   attr_reader :hex
 
@@ -52,12 +51,6 @@ class Branding::ColorScale
 
   def first_step_reaching(minimum, steps:, against:)
     steps.find { |step| reaches?(tokens.fetch(step), minimum, against) } || steps.last
-  end
-
-  def deepened_hex
-    hue, saturation, lightness = to_hsl
-
-    from_hsl(hue, saturation, lightness * DEEP_LIGHTNESS_FACTOR)
   end
 
   def mix(base, share)

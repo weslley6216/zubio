@@ -6,7 +6,7 @@ RSpec.describe "Owner brand colors", type: :request do
 
   describe "GET /owner/brand_colors/edit" do
     it "renders the colors question with the palette sheet, marking settings as the current section" do
-      create(:branding, tenant: tenant, brand_600: "#2C6CB0")
+      create(:branding, :with_background, tenant: tenant)
       sign_in_owner(owner)
 
       get edit_owner_brand_colors_path
@@ -17,14 +17,16 @@ RSpec.describe "Owner brand colors", type: :request do
       expect(response.body).to include(%(<a href="#{owner_settings_path}" aria-current="page"))
     end
 
-    it "reaches the suggestions and the custom code field through the plus, without JavaScript" do
-      create(:branding, tenant: tenant, brand_600: "#2C6CB0")
+    it "reaches the custom code field through the plus, without JavaScript" do
+      create(:branding, :with_background, tenant: tenant)
       sign_in_owner(owner)
 
       get edit_owner_brand_colors_path
 
       Branding::Palette::SUGGESTIONS.fetch(:brand_600).each { |hex| expect(response.body).to include(%(data-swatch="#{hex}")) }
+      Branding::Palette::SUGGESTIONS.fetch(:brand_background).each { |hex| expect(response.body).to include(%(data-swatch="#{hex}")) }
       expect(response.body).to include(%(name="branding[brand_600_custom]"))
+      expect(response.body).to include(%(name="branding[brand_background_custom]"))
     end
 
     it "sends an anonymous visitor to the login" do
@@ -35,8 +37,8 @@ RSpec.describe "Owner brand colors", type: :request do
       expect(response).to redirect_to(new_owner_session_path)
     end
 
-    it "paints an off-palette stored color, keeping the five suggestions, the plus and the current color selected" do
-      create(:branding, tenant: tenant, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C")
+    it "paints an off-palette stored accent, keeping the suggestions, the plus and the current color selected" do
+      create(:branding, tenant: tenant, brand_600: "#2C6CB0")
       sign_in_owner(owner)
 
       get edit_owner_brand_colors_path
@@ -47,66 +49,88 @@ RSpec.describe "Owner brand colors", type: :request do
       expect(response.body).not_to include(%(data-swatch="#2C6CB0"))
       expect(response.body).to include(%(value="custom" checked))
     end
+
+    it "marks no background radio when the stored branding has no background" do
+      create(:branding, tenant: tenant, brand_600: "#4F46E5", brand_background: nil)
+      sign_in_owner(owner)
+
+      get edit_owner_brand_colors_path
+
+      document = Nokogiri::HTML5(response.body)
+      background_fieldset = document.css("fieldset").find { |node| node["aria-label"] == Components::Owner::BrandQuestion::Colors::BACKGROUND_LABEL }
+      expect(background_fieldset.css("input[type=radio][checked]")).to be_empty
+    end
   end
 
   describe "PATCH /owner/brand_colors" do
-    it "changes only the brand color, leaving the name and the logo untouched" do
-      create(:branding, :with_logo, tenant: tenant, brand_600: "#4F46E5")
+    it "changes only the accent, leaving the name and the logo untouched" do
+      create(:branding, :with_logo, :with_background, tenant: tenant)
       sign_in_owner(owner)
 
-      patch owner_brand_colors_path, params: { branding: { brand_600: "#2F6FED" } }
+      patch owner_brand_colors_path, params: { branding: { brand_600: "#F2B33D" } }
 
       expect(response).to redirect_to(edit_owner_brand_colors_path)
       ActsAsTenant.with_tenant(tenant) do
         expect(tenant.reload.name).to eq("Barbearia do Zé")
-        expect(tenant.branding.brand_600).to eq("#2F6FED")
+        expect(tenant.branding.brand_600).to eq("#F2B33D")
         expect(tenant.branding.logo).to be_attached
       end
     end
 
     it "stores a swatch chosen from the grid without any typed code" do
-      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+      create(:branding, :with_background, tenant: tenant)
       sign_in_owner(owner)
 
-      patch owner_brand_colors_path, params: { branding: { brand_600: Branding::Palette.swatches.last, brand_600_custom: "" } }
+      patch owner_brand_colors_path, params: { branding: { brand_600: Branding::Palette::ACCENTS.last, brand_600_custom: "" } }
 
-      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq(Branding::Palette.swatches.last) }
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq(Branding::Palette::ACCENTS.last) }
     end
 
-    it "clears the support color and keeps the establishment valid when the owner chooses none" do
-      create(:branding, :with_secondary, tenant: tenant, brand_600: "#4F46E5")
+    it "leaves the background untouched when only the accent is submitted" do
+      create(:branding, tenant: tenant, brand_600: "#4F46E5", brand_background: nil)
       sign_in_owner(owner)
 
-      patch owner_brand_colors_path, params: { branding: { brand_600: "#4F46E5", brand_secondary_600: "" } }
+      patch owner_brand_colors_path, params: { branding: { brand_600: "#2F6FED" } }
 
       expect(response).to redirect_to(edit_owner_brand_colors_path)
-      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_secondary_600).to be_nil }
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_background).to be_nil }
     end
 
-    it "refuses a color without contrast on the same screen and keeps the stored one" do
-      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+    it "changes the background when it is submitted alongside an accent that stands out on it" do
+      create(:branding, tenant: tenant, brand_600: "#4F46E5", brand_background: nil)
+      sign_in_owner(owner)
+
+      patch owner_brand_colors_path, params: { branding: { brand_600: "#F2B33D", brand_background: "#1F4D3A" } }
+
+      expect(response).to redirect_to(edit_owner_brand_colors_path)
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_background).to eq("#1F4D3A") }
+    end
+
+    it "refuses an accent without contrast on the same screen and keeps the stored one" do
+      create(:branding, :with_background, tenant: tenant)
       sign_in_owner(owner)
 
       patch owner_brand_colors_path, params: { branding: { brand_600: "#7A7A7A" } }
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(Owner::BrandQuestionsController::REFUSED)
-      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq("#4F46E5") }
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq("#F0617A") }
     end
 
-    it "refuses a light accent the neutral background would swallow, on the same screen" do
-      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+    it "refuses an accent that does not stand out against the background, on the same screen" do
+      create(:branding, :with_background, tenant: tenant)
       sign_in_owner(owner)
 
-      patch owner_brand_colors_path, params: { branding: { brand_600: "#EAB308" } }
+      patch owner_brand_colors_path, params: { branding: { brand_600: "custom", brand_600_custom: "#1E3A55" } }
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(Owner::BrandQuestionsController::REFUSED)
-      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq("#4F46E5") }
+      expect(response.body).to include(Branding::STANDS_OUT_MESSAGE)
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq("#F0617A") }
     end
 
     it "states an unrecognised color in Portuguese, not the default English" do
-      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+      create(:branding, :with_background, tenant: tenant)
       sign_in_owner(owner)
 
       patch owner_brand_colors_path, params: { branding: { brand_600: "azul" } }
@@ -119,12 +143,12 @@ RSpec.describe "Owner brand colors", type: :request do
     it "does not touch another establishment's brand" do
       other_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
       create(:branding, tenant: other_tenant, brand_600: "#000000")
-      create(:branding, tenant: tenant, brand_600: "#4F46E5")
+      create(:branding, :with_background, tenant: tenant)
       sign_in_owner(owner)
 
-      patch owner_brand_colors_path, params: { branding: { brand_600: "#2F6FED" } }
+      patch owner_brand_colors_path, params: { branding: { brand_600: "#F2B33D" } }
 
-      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq("#2F6FED") }
+      ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq("#F2B33D") }
       expect(other_tenant.reload.name).to eq("Estúdio Aurora")
       ActsAsTenant.with_tenant(other_tenant) { expect(other_tenant.branding.reload.brand_600).to eq("#000000") }
     end
@@ -134,13 +158,13 @@ RSpec.describe "Owner brand colors", type: :request do
     it "shows its own brand and nothing of another establishment" do
       other_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
       create(:branding, tenant: other_tenant, brand_600: "#000000")
-      create(:branding, tenant: tenant, brand_600: "#2C6CB0")
+      create(:branding, :with_background, tenant: tenant)
       sign_in_owner(owner)
 
       get edit_owner_brand_colors_path
 
       expect(response.body).to include("Barbearia do Zé")
-      expect(response.body).to include("#2C6CB0")
+      expect(response.body).to include("#F0617A")
       expect(response.body).not_to include("Estúdio Aurora")
       expect(response.body).not_to include("#000000")
     end

@@ -32,6 +32,6 @@ class Views::Owner::BrandQuestions::Edit < Views::Base
   private
 
   def preview_data
-    { panel: true, preview_brand: @branding.brand_600, preview_secondary: @branding.brand_secondary_600.presence || "none" }
+    { panel: true, preview_bg: @branding.brand_background.presence || "none", preview_accent: @branding.brand_600 }
   end
 end

@@ -17,7 +17,7 @@ class StylesheetsController < ApplicationController
   end
 
   def preview
-    sheet = Branding::PreviewSheet.new(brand: valid_hex(:brand), secondary: valid_hex(:secondary))
+    sheet = Branding::PreviewSheet.new(bg: valid_hex(:bg), accent: valid_hex(:accent))
     return head :not_found if sheet.stylesheet.empty?
 
     expires_in(CACHE_WINDOW, public: true)

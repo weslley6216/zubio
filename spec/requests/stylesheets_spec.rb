@@ -33,8 +33,8 @@ RSpec.describe "Generated stylesheets", type: :request do
 
       expect(tokens.map(&:first)).to eq(%w[
         bg on-bg on-bg-muted bg-tint ghost danger-on-bg danger-line-on-bg
-        card on-card on-card-muted card-line card-chip field-line focus
-        danger-on-card accent on-accent selected-ring
+        card on-card on-card-muted card-line card-chip field-line
+        danger-on-card accent on-accent focus selected-ring
       ])
       expect(tokens.map(&:last)).to all(match(/\A#\h{6}\z/))
       expect(response.body).not_to include("--secondary-")
@@ -155,14 +155,15 @@ RSpec.describe "Generated stylesheets", type: :request do
   end
 
   describe "GET /palette.css" do
-    it "serves one background rule per swatch of the brand palette and the preview ramps" do
+    it "serves one background rule per swatch of the palette and the preview rules" do
       host! "zubio.com.br"
 
       get palette_stylesheet_path(v: Branding::Palette.stylesheet_digest)
 
       expect(response.media_type).to eq("text/css")
-      expect(response.body).to include(%([data-swatch="#{Branding::Palette::FAMILIES.first}"]))
-      expect(response.body).to include(%([data-preview-brand="#{Branding::Palette::FAMILIES.first}"]{))
+      expect(response.body).to include(%([data-swatch="#{Branding::Palette::BACKGROUNDS.first}"]))
+      expect(response.body).to include(%([data-preview-bg="#{Branding::Palette::BACKGROUNDS.first}"]{))
+      expect(response.body).to include(%([data-preview-accent="#{Branding::Palette::ACCENTS.first}"]{))
     end
 
     it "is built from the families alone and never carries a stored brand color" do
@@ -186,29 +187,29 @@ RSpec.describe "Generated stylesheets", type: :request do
   end
 
   describe "GET /preview.css" do
-    it "serves the brand ramp for a valid hex, public and cacheable" do
+    it "serves the background tokens for a valid hex, public and cacheable" do
       host! "zubio.com.br"
 
-      get "/preview.css", params: { brand: "#2C6CB0" }
+      get "/preview.css", params: { bg: "#2C6CB0" }
 
       expect(response.media_type).to eq("text/css")
-      expect(response.body).to include(%([data-preview-brand="#2C6CB0"]{))
+      expect(response.body).to include(%([data-preview-bg="#2C6CB0"]{))
       expect(response.headers["Cache-Control"]).to include("public")
       expect(response.headers["Cache-Control"]).to include("max-age=31536000")
     end
 
-    it "serves the support ramp for a valid hex" do
+    it "serves the accent tokens for a valid hex" do
       host! "zubio.com.br"
 
-      get "/preview.css", params: { secondary: "#E8493C" }
+      get "/preview.css", params: { accent: "#E8493C" }
 
-      expect(response.body).to include(%([data-preview-secondary="#E8493C"]{))
+      expect(response.body).to include(%([data-preview-accent="#E8493C"]{))
     end
 
     it "answers not found when the code is not a color" do
       host! "zubio.com.br"
 
-      get "/preview.css", params: { brand: "#ZZZ123" }
+      get "/preview.css", params: { bg: "#ZZZ123" }
 
       expect(response).to have_http_status(:not_found)
     end
@@ -216,7 +217,7 @@ RSpec.describe "Generated stylesheets", type: :request do
     it "answers not found and never echoes an injection payload" do
       host! "zubio.com.br"
 
-      get "/preview.css", params: { brand: "#fff;}body{background:red" }
+      get "/preview.css", params: { bg: "#fff;}body{background:red" }
 
       expect(response).to have_http_status(:not_found)
       expect(response.body).not_to include("body{")
@@ -234,14 +235,14 @@ RSpec.describe "Generated stylesheets", type: :request do
       tenant = create(:tenant, subdomain: "estudio-aurora")
       create(:branding, tenant: tenant, brand_600: "#123456")
       host! "zubio.com.br"
-      get "/preview.css", params: { brand: "#2C6CB0" }
+      get "/preview.css", params: { bg: "#2C6CB0" }
       on_platform = response.body
       host! "estudio-aurora.zubio.com.br"
 
-      get "/preview.css", params: { brand: "#2C6CB0" }
+      get "/preview.css", params: { bg: "#2C6CB0" }
 
       expect(response.body).to eq(on_platform)
-      expect(response.body).to include(%([data-preview-brand="#2C6CB0"]{))
+      expect(response.body).to include(%([data-preview-bg="#2C6CB0"]{))
       expect(response.body).not_to include("#123456")
     end
   end

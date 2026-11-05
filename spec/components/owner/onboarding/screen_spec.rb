@@ -13,7 +13,7 @@ RSpec.describe Components::Owner::Onboarding::Screen, type: :component do
 
     segments = Nokogiri::HTML5.fragment(html).css("[data-progress-bar] > div")
     expect(segments.length).to eq(5)
-    expect(segments.take(4).map { |segment| segment["class"] }).to all(include("bg-brand-600"))
+    expect(segments.take(4).map { |segment| segment["class"] }).to all(include("bg-(--theme-accent)"))
     expect(segments.last["class"]).to include("bg-line")
   end
 
@@ -23,6 +23,31 @@ RSpec.describe Components::Owner::Onboarding::Screen, type: :component do
     primary = Nokogiri::HTML5.fragment(html).at_css("button[data-action='onboarding#next']")
     expect(primary["class"].split).to include("bg-zubio", "text-on-zubio")
     expect(primary["class"].split).not_to include("bg-brand-600")
+  end
+
+  it "paints the primary button in the accent color when asked, instead of the Zubio color" do
+    html = described_class.new(section: "colors", group: "Sua marca", position: 1, total: 5, primary: "Continuar", accent_primary: true).call { "corpo" }
+
+    primary = Nokogiri::HTML5.fragment(html).at_css("button[data-action='onboarding#next']")
+    expect(primary["class"].split).to include("bg-(--theme-accent)", "text-(--theme-on-accent)", "text-[16px]", "leading-[normal]")
+    expect(primary["class"].split).not_to include("bg-zubio")
+  end
+
+  it "narrows the body and footer gutter to the T1 20px when asked" do
+    html = described_class.new(section: "colors", group: "Sua marca", position: 1, total: 5, primary: "Continuar", gutter: :t1).call { "corpo" }
+
+    document = Nokogiri::HTML5.fragment(html)
+    expect(document.at_css("section > div:nth-child(3)")["class"].split).to include("px-5")
+    expect(document.at_css("button[data-action='onboarding#next']").parent["class"].split).to include("px-5", "pb-6")
+    expect(document.at_css("button[data-action='onboarding#next']").parent["class"].split).not_to include("pt-3")
+  end
+
+  it "keeps the regular 24px gutter by default" do
+    html = described_class.new(section: "name", group: "Sua marca", position: 2, total: 5, primary: "Continuar").call { "corpo" }
+
+    document = Nokogiri::HTML5.fragment(html)
+    expect(document.at_css("section > div:nth-child(3)")["class"].split).to include("px-6")
+    expect(document.at_css("button[data-action='onboarding#next']").parent["class"].split).to include("px-6", "pt-3", "pb-5")
   end
 
   it "anchors a next button by default" do

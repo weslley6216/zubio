@@ -11,6 +11,10 @@ class Branding::Theme
   DANGER = "#b42318".freeze
   DANGER_ON_DARK = "#ffb4be".freeze
 
+  def self.background_variables(hex) = new(background: hex, accent: nil).background_css
+
+  def self.accent_variables(hex) = new(background: nil, accent: hex).accent_css
+
   def initialize(background:, accent:)
     @background = background
     @accent = accent
@@ -24,8 +28,16 @@ class Branding::Theme
     @tokens ||= build_tokens.freeze
   end
 
+  def background_css
+    theme_variables(background_tokens)
+  end
+
+  def accent_css
+    theme_variables(accent_tokens)
+  end
+
   def css_variables
-    tokens.map { |name, value| "--theme-#{name}:#{value};" }.join
+    theme_variables(tokens)
   end
 
   def accent_stands_out?
@@ -35,6 +47,10 @@ class Branding::Theme
   private
 
   attr_reader :accent
+
+  def theme_variables(hash)
+    hash.map { |name, value| "--theme-#{name}:#{value};" }.join
+  end
 
   def background_scale
     @background_scale ||= Branding::ColorScale.new(background)
@@ -49,47 +65,58 @@ class Branding::Theme
   end
 
   def build_tokens
-    bg = background
-    on_bg = background_scale.foreground
-    card = dark_background? ? background_scale.tokens[CARD_STEP] : Branding::ColorScale::WHITE
-    on_card = Branding::ColorScale.new(card).foreground
-    on_accent = accent_scale.foreground
+    background_tokens.merge(accent_tokens).merge(cross_tokens)
+  end
 
-    on_bg_muted = climb(on_bg, over: bg, from: MUTED_FROM, minimum: Branding::ColorScale::MIN_CONTRAST)
-    ghost = climb(on_bg, over: bg, from: GHOST_FROM, minimum: Branding::ColorScale::MIN_NON_TEXT_CONTRAST)
-    danger_on_bg =
-      if dark_background?
-        climb(Branding::ColorScale::WHITE, over: DANGER_ON_DARK, from: 0, minimum: Branding::ColorScale::MIN_CONTRAST, against: bg)
-      else
-        climb(Branding::ColorScale::DARK_NEUTRAL, over: DANGER, from: 0, minimum: Branding::ColorScale::MIN_CONTRAST, against: bg)
-      end
-    on_card_muted = climb(on_card, over: card, from: MUTED_FROM, minimum: Branding::ColorScale::MIN_CONTRAST)
-    field_line = climb(on_card, over: card, from: FIELD_LINE_FROM, minimum: Branding::ColorScale::MIN_NON_TEXT_CONTRAST)
-    danger_on_card = climb(Branding::ColorScale::DARK_NEUTRAL, over: DANGER, from: 0, minimum: Branding::ColorScale::MIN_CONTRAST, against: card)
+  def background_tokens
+    @background_tokens ||= begin
+      bg = background
+      on_bg = background_scale.foreground
+      card = dark_background? ? background_scale.tokens[CARD_STEP] : Branding::ColorScale::WHITE
+      on_card = Branding::ColorScale.new(card).foreground
 
-    tokens = {
-      "bg" => bg,
-      "on-bg" => on_bg,
-      "on-bg-muted" => on_bg_muted,
-      "bg-tint" => mix(on_bg, over: bg, share: TINT_SHARE),
-      "ghost" => ghost,
-      "danger-on-bg" => danger_on_bg,
-      "danger-line-on-bg" => mix(danger_on_bg, over: bg, share: DANGER_LINE_SHARE),
-      "card" => card,
-      "on-card" => on_card,
-      "on-card-muted" => on_card_muted,
-      "card-line" => mix(on_card, over: card, share: CARD_LINE_SHARE),
-      "card-chip" => mix(Branding::ColorScale::WHITE, over: card, share: CARD_CHIP_SHARE),
-      "field-line" => field_line,
-      "focus" => focus(bg: bg, card: card, on_card: on_card),
-      "danger-on-card" => danger_on_card,
-      "accent" => accent,
-      "on-accent" => on_accent
-    }
+      on_bg_muted = climb(on_bg, over: bg, from: MUTED_FROM, minimum: Branding::ColorScale::MIN_CONTRAST)
+      ghost = climb(on_bg, over: bg, from: GHOST_FROM, minimum: Branding::ColorScale::MIN_NON_TEXT_CONTRAST)
+      danger_on_bg =
+        if dark_background?
+          climb(Branding::ColorScale::WHITE, over: DANGER_ON_DARK, from: 0, minimum: Branding::ColorScale::MIN_CONTRAST, against: bg)
+        else
+          climb(Branding::ColorScale::DARK_NEUTRAL, over: DANGER, from: 0, minimum: Branding::ColorScale::MIN_CONTRAST, against: bg)
+        end
+      on_card_muted = climb(on_card, over: card, from: MUTED_FROM, minimum: Branding::ColorScale::MIN_CONTRAST)
+      field_line = climb(on_card, over: card, from: FIELD_LINE_FROM, minimum: Branding::ColorScale::MIN_NON_TEXT_CONTRAST)
+      danger_on_card = climb(Branding::ColorScale::DARK_NEUTRAL, over: DANGER, from: 0, minimum: Branding::ColorScale::MIN_CONTRAST, against: card)
 
-    if accent_scale.contrast_against(Branding::ColorScale.new(card)) < Branding::ColorScale::MIN_NON_TEXT_CONTRAST
-      tokens["selected-ring"] = on_card
+      {
+        "bg" => bg,
+        "on-bg" => on_bg,
+        "on-bg-muted" => on_bg_muted,
+        "bg-tint" => mix(on_bg, over: bg, share: TINT_SHARE),
+        "ghost" => ghost,
+        "danger-on-bg" => danger_on_bg,
+        "danger-line-on-bg" => mix(danger_on_bg, over: bg, share: DANGER_LINE_SHARE),
+        "card" => card,
+        "on-card" => on_card,
+        "on-card-muted" => on_card_muted,
+        "card-line" => mix(on_card, over: card, share: CARD_LINE_SHARE),
+        "card-chip" => mix(Branding::ColorScale::WHITE, over: card, share: CARD_CHIP_SHARE),
+        "field-line" => field_line,
+        "danger-on-card" => danger_on_card
+      }
     end
+  end
+
+  def accent_tokens
+    @accent_tokens ||= { "accent" => accent, "on-accent" => accent_scale.foreground }
+  end
+
+  def cross_tokens
+    return {} unless accent
+
+    card = background_tokens.fetch("card")
+    on_card = background_tokens.fetch("on-card")
+    tokens = { "focus" => focus(bg: background_tokens.fetch("bg"), card: card, on_card: on_card) }
+    tokens["selected-ring"] = on_card if accent_scale.contrast_against(Branding::ColorScale.new(card)) < Branding::ColorScale::MIN_NON_TEXT_CONTRAST
 
     tokens
   end

@@ -382,7 +382,7 @@ RSpec.describe Branding, type: :model do
     it "gives every swatch, as brand, a label and an underline that read on every neutral and a light pair that reads, in both themes" do
       stylesheets = Branding::Palette.swatches.map { |hex| build(:branding, brand_600: hex).css_variables }
 
-      expect(Branding::Palette.swatches.size).to eq(24)
+      expect(Branding::Palette.swatches.size).to eq(9)
       expect(stylesheets).to all(have_legible_roles("brand"))
     end
 

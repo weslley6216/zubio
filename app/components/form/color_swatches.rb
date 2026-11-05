@@ -3,52 +3,42 @@ class Components::Form::ColorSwatches < Components::Base
 
   PICKER_LABEL = "Escolher a cor em um seletor".freeze
   CODE_LABEL = "Código hexadecimal da cor".freeze
-  NONE_LABEL = "Sem".freeze
   CUSTOM_SUMMARY = "+".freeze
   MORE_LABEL = "Mais cores".freeze
   CUSTOMIZE_LABEL = "Personalizar".freeze
   INVALID_HEX_MESSAGE = "não é uma cor válida".freeze
 
-  FIELDSET_CLASS = "min-w-0".freeze
-  LEGEND_CLASS = "flex w-full flex-nowrap items-baseline gap-1.5 #{SECTION_LABEL} text-ink-subtle".freeze
-  TEXT_GROUP_CLASS = "flex min-w-0 items-baseline gap-1.5".freeze
-  HINT_CLASS = "min-w-0 truncate".freeze
-  TAG_CLASS = "ml-auto flex-none rounded-full bg-surface-3 px-2 py-[3px] text-[10px] font-extrabold uppercase tracking-[0.08em] text-ink-muted".freeze
-  GRID_CLASS = "mt-1.5 grid w-full grid-cols-6 gap-2".freeze
+  FIELDSET_CLASS = "flex min-w-0 flex-col gap-2.5".freeze
+  LEGEND_CLASS = "mb-2.5 flex w-full flex-col gap-0.5".freeze
+  LABEL_CLASS = "text-[14px] font-extrabold text-ink".freeze
+  HINT_CLASS = "text-[12px] text-ink-muted".freeze
+  ROW_CLASS = "flex flex-wrap gap-2.5".freeze
   ROW_OPTION_CLASS = "block".freeze
-  SWATCH_CLASS = "block aspect-square rounded-xl ring-1 ring-line peer-checked:shadow-[0_0_0_3px_var(--color-canvas),0_0_0_5px_currentColor]".freeze
-  NONE_CLASS = "flex aspect-square w-full items-center justify-center rounded-xl border border-line-strong bg-surface text-[10px] font-extrabold text-ink-muted peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-offset-canvas peer-checked:ring-ink".freeze
-  CUSTOM_CLASS = "grid aspect-square w-full place-items-center rounded-xl border border-dashed border-line-strong bg-surface".freeze
-  CUSTOM_ICON_CLASS = "h-4.5 w-4.5 text-ink-muted".freeze
-  CUSTOMIZE_OPTION_CLASS = "col-span-2 block".freeze
-  CUSTOMIZE_CLASS = "flex h-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-line-strong bg-surface px-2 text-xs font-bold text-ink-muted peer-checked:border-solid peer-checked:text-ink peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-offset-canvas peer-checked:ring-ink".freeze
+  SWATCH_CLASS = "block h-11 w-11 rounded-xl shadow-[inset_0_0_0_1px_rgba(14,26,36,0.12)] peer-checked:shadow-[0_0_0_2px_#ffffff,0_0_0_4px_#0e1a24]".freeze
+  CUSTOM_CLASS = "grid h-11 w-11 place-items-center rounded-xl border-[1.5px] border-dashed border-ink-subtle text-[20px] font-bold text-ink-muted".freeze
+  CUSTOMIZE_OPTION_CLASS = "block".freeze
+  CUSTOMIZE_CLASS = "flex h-11 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line-strong bg-surface px-2 text-xs font-bold text-ink-muted peer-checked:border-solid peer-checked:text-ink peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-offset-canvas peer-checked:ring-ink".freeze
   PICKER_CLASS = "h-11 w-11 flex-none cursor-pointer rounded-lg border border-line".freeze
   DISCLOSURE_CLASS = "hidden group-has-[[data-more-toggle]:checked]:block group-has-[input[value='custom']:checked]:block".freeze
-  DISCLOSURE_GRID_CLASS = "mt-2 grid w-full grid-cols-6 gap-2".freeze
   PANEL_CLASS = "mt-2 hidden w-full items-end gap-2 group-has-[input[value='custom']:checked]:flex".freeze
   ERROR_CLASS = "mt-1 text-sm text-danger".freeze
 
-  def initialize(label:, hint:, attribute:, selected:, fallback: Branding::DEFAULT_BRAND_600, tag: nil)
+  def initialize(label:, hint:, attribute:, selected:, fallback: Branding::DEFAULT_BRAND_600)
     @label = label
     @hint = hint
     @attribute = attribute
     @selected = selected
     @fallback = fallback
-    @tag = tag
   end
 
   def view_template
     fieldset(aria_label: @label, class: FIELDSET_CLASS) do
       legend(class: LEGEND_CLASS) do
-        div(class: TEXT_GROUP_CLASS) do
-          span { @label }
-          span(aria_hidden: "true") { "·" }
-          span(class: HINT_CLASS) { @hint }
-        end
-        span(class: TAG_CLASS) { @tag } if @tag
+        span(class: LABEL_CLASS) { @label }
+        span(class: HINT_CLASS) { @hint }
       end
       div(class: "group contents") do
-        div(class: GRID_CLASS, data: { swatch_row: true }) do
+        div(class: ROW_CLASS, data: { swatch_row: true }) do
           suggestions.each { |hex| render_row_option(hex) }
           render_more_toggle
         end
@@ -61,29 +51,22 @@ class Components::Form::ColorSwatches < Components::Base
 
   def render_row_option(hex)
     label(class: ROW_OPTION_CLASS, data: { row_option: true }) do
-      input(type: "radio", name: field_name, value: hex, checked: !custom? && hex == selected, class: "peer sr-only", aria_label: option_label(hex))
-      if hex.empty?
-        span(class: NONE_CLASS) { NONE_LABEL }
-      else
-        span(class: SWATCH_CLASS, data: { swatch: hex })
-      end
+      input(type: "radio", name: field_name, value: hex, checked: !custom? && hex == selected, class: "peer sr-only", aria_label: hex)
+      span(class: SWATCH_CLASS, data: { swatch: hex })
     end
   end
 
   def render_more_toggle
     label(class: ROW_OPTION_CLASS, data: { row_option: true }) do
-      input(type: "checkbox", checked: !suggestion?, class: "peer sr-only", aria_label: "#{MORE_LABEL} (#{CUSTOM_SUMMARY})",
+      input(type: "checkbox", checked: custom?, class: "peer sr-only", aria_label: "#{MORE_LABEL} (#{CUSTOM_SUMMARY})",
         data: { more_toggle: true })
-      span(class: CUSTOM_CLASS) { render_custom_icon }
+      span(class: CUSTOM_CLASS) { CUSTOM_SUMMARY }
     end
   end
 
   def render_disclosure
     div(class: DISCLOSURE_CLASS) do
-      div(class: DISCLOSURE_GRID_CLASS) do
-        extras.each { |hex| render_row_option(hex) }
-        render_customize_option
-      end
+      render_customize_option
       render_custom_panel
     end
   end
@@ -97,10 +80,6 @@ class Components::Form::ColorSwatches < Components::Base
         span { CUSTOMIZE_LABEL }
       end
     end
-  end
-
-  def render_custom_icon
-    render Components::Icon.new(:plus, class: CUSTOM_ICON_CLASS)
   end
 
   def render_custom_panel
@@ -118,12 +97,6 @@ class Components::Form::ColorSwatches < Components::Base
   def error_id = "#{@attribute}-color-error"
 
   def suggestions = Branding::Palette::SUGGESTIONS.fetch(@attribute)
-
-  def extras = Branding::Palette.extras(@attribute)
-
-  def suggestion? = suggestions.include?(selected)
-
-  def option_label(hex) = hex.empty? ? NONE_LABEL : hex
 
   def field_name = "branding[#{@attribute}]"
 
