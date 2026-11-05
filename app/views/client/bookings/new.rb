@@ -48,7 +48,7 @@ class Views::Client::Bookings::New < Views::Base
   CONFIRM_BUTTON_CLASS = "min-h-[46px] flex-none rounded-[10px] bg-(--theme-accent) px-5 text-[15px] font-extrabold text-(--theme-on-accent) disabled:bg-(--theme-card-chip) disabled:text-(--theme-on-card-muted)".freeze
   FIELD_WRAPPER_CLASS = "flex flex-col gap-1.5".freeze
   FIELD_LABEL_CLASS = "text-[11px] font-bold uppercase tracking-[0.06em] text-(--theme-on-bg-muted)".freeze
-  FIELD_CLASS = "min-h-[46px] w-full rounded-lg border border-(--theme-field-line) bg-(--theme-card-chip) px-3 text-[15px] text-(--theme-on-bg) placeholder:text-(--theme-on-bg-muted)".freeze
+  FIELD_CLASS = "min-h-[46px] w-full rounded-lg border border-(--theme-field-line) bg-(--theme-card-chip) px-3 text-[15px] text-(--theme-on-bg) placeholder:text-(--theme-on-bg-muted) focus:outline-none focus:ring-2 focus:ring-(--theme-focus)".freeze
 
   def initialize(service:, tenant:, branding:, published:, days: [], reasons: {}, selected_day: nil, slots: [], taken_slots: [], reason: nil,
     selected_slot: nil, client_name: nil, client_phone: nil, name_errors: [], phone_errors: [], signed_in: false)

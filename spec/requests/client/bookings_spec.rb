@@ -17,6 +17,18 @@ RSpec.describe "Public booking day and time selection", type: :request do
     expect(response.body).to include("Design de sobrancelhas")
   end
 
+  it "themes the guest data fields with a visible focus ring" do
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas")
+    create(:working_hour, tenant: tenant, professional: professional, weekday: Date.current.wday, opens_at: "09:00", closes_at: "18:00")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service)
+
+    expect(response.body).to include("(--theme-focus)")
+    expect(response.body).to include("(--theme-field-line)")
+  end
+
   it "disables native prefetch on the bookable day pills" do
     professional = create(:professional, tenant: tenant)
     service = create(:service, tenant: tenant, duration_minutes: 45)

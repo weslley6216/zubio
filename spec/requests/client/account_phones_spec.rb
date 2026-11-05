@@ -18,6 +18,13 @@ RSpec.describe "Client account phone", type: :request do
     expect(response.body).to include("Qual é o seu WhatsApp?", "Ana Paula Ribeiro")
   end
 
+  it "themes the phone field with a visible focus ring" do
+    get new_client_account_phone_path(token: identity_token)
+
+    expect(response.body).to include("(--theme-focus)")
+    expect(response.body).to include("(--theme-field-line)")
+  end
+
   it "links the account, starts the session and lands on the service booking" do
     post client_account_phone_path, params: { token: identity_token, phone: "(11) 98877-1234" }
 
