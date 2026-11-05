@@ -87,12 +87,18 @@ RSpec.describe Components::Service::Card, type: :component do
     expect(html).to include(%(<span class="#{described_class::DISABLED_DURATION_CLASS}">120 min</span>))
   end
 
-  it "renders the description with the same class in both variants" do
-    tile = described_class.new(service: service, href: "/x", variant: :tile, description: "Inclui lavagem.").call
-    panel = described_class.new(service: service, href: "/x", description: "Inclui lavagem.").call
+  it "renders the panel description in the neutral muted ink" do
+    html = described_class.new(service: service, href: "/x", description: "Inclui lavagem.").call
 
-    expect(tile).to include(%(<span class="#{described_class::DESCRIPTION_CLASS}" data-description>))
-    expect(panel).to include(%(<span class="#{described_class::DESCRIPTION_CLASS}" data-description>))
+    expect(html).to include(%(<span class="#{described_class::DESCRIPTION_CLASS}" data-description>))
+  end
+
+  it "renders the tile description in the card muted theme token" do
+    html = described_class.new(service: service, href: "/x", variant: :tile, description: "Inclui lavagem.").call
+
+    expect(html).to include(%(<span class="#{described_class::TILE_DESCRIPTION_CLASS}" data-description>))
+    expect(html).to include("text-(--theme-on-card-muted)")
+    expect(html).not_to include("text-ink-muted")
   end
 
   it "renders the tile variant's name and duration in minutes without a clock icon" do

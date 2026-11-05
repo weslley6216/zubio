@@ -14,6 +14,7 @@ class Components::Service::Card < Components::Base
   TILE_NAME_CLASS = "text-[15px] leading-[1.3] font-extrabold text-pretty after:absolute after:inset-0 after:rounded-2xl".freeze
   TILE_ROW_CLASS = "flex items-baseline justify-between gap-1.5".freeze
   TILE_DURATION_CLASS = "text-[12px] text-(--theme-on-card-muted)".freeze
+  TILE_DESCRIPTION_CLASS = "text-xs leading-[normal] text-(--theme-on-card-muted)".freeze
   CLOCK_ICON_CLASS = "h-[13px] w-[13px] flex-none text-ink-subtle".freeze
 
   def initialize(service:, href:, variant: :panel, badges: [], description: nil)
@@ -28,7 +29,7 @@ class Components::Service::Card < Components::Base
     if @variant == :tile
       li(class: TILE_CARD_CLASS) do
         a(href: @href, class: TILE_NAME_CLASS) { @service.name }
-        render_description
+        render_description(TILE_DESCRIPTION_CLASS)
         div(class: TILE_ROW_CLASS) do
           span(class: TILE_DURATION_CLASS) { ::Service::Duration.minutes_label(@service.duration_minutes) }
           yield if block_given?
@@ -61,8 +62,8 @@ class Components::Service::Card < Components::Base
     a(href: @href, class: active? ? NAME_CLASS : DISABLED_NAME_CLASS) { @service.name }
   end
 
-  def render_description
-    span(class: DESCRIPTION_CLASS, data: { description: true }) { @description } if @description.present?
+  def render_description(description_class = DESCRIPTION_CLASS)
+    span(class: description_class, data: { description: true }) { @description } if @description.present?
   end
 
   def render_duration(duration_class)
