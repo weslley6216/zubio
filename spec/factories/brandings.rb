@@ -10,6 +10,11 @@ FactoryBot.define do
       brand_secondary_600 { "#1E60C4" }
     end
 
+    trait :with_background do
+      brand_background { "#16324A" }
+      brand_600 { "#F0617A" }
+    end
+
     trait :with_logo do
       after(:build) do |branding|
         branding.logo.attach(

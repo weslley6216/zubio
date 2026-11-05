@@ -31,7 +31,7 @@ RSpec.describe "Owner settings", type: :request do
     end
 
     it "gathers the brand, the service and the account groups, each row with its current value" do
-      create(:branding, tenant: tenant, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C")
+      create(:branding, :with_background, tenant: tenant, brand_secondary_600: "#E8493C")
       create(:service, tenant: tenant)
       create(:service, tenant: tenant)
       create(:service, tenant: tenant, active: false)
@@ -50,8 +50,10 @@ RSpec.describe "Owner settings", type: :request do
       expect(document.at_css("[data-setting='logo'] [data-summary]").text).to eq(Views::Owner::Settings::Show::LOGO_INITIAL)
       expect(document.at_css("[data-setting='logo']").at_css("img")).to be_nil
       expect(document.at_css("[data-setting='logo']").css("span").map(&:text)).to include("B")
-      expect(document.at_css("[data-setting='colors'] [data-summary]").text).to eq("#2C6CB0 · apoio #E8493C")
-      expect(document.at_css("[data-setting='colors']").to_html).to include("bg-brand-600", "bg-secondary-600")
+      expect(document.at_css("[data-setting='colors'] [data-summary]").text).to eq("Fundo #16324A · Destaque #F0617A")
+      expect(document.at_css("[data-setting='colors']").to_html).to include("bg-(--theme-bg)", "bg-brand-600")
+      expect(document.at_css("[data-setting='colors']").to_html).not_to include("bg-secondary-600", "apoio")
+      expect(document.at_css("[data-setting='colors']").css("[data-chip]").map { |chip| chip["data-chip"] }).to eq(%w[background accent])
       expect(document.at_css("[data-setting='address'] [data-summary]").text).to eq("barbearia-do-ze.zubio.com.br")
       expect(document.at_css("[data-setting='services'] [data-summary]").text).to eq("3 cadastrados, 1 desativado")
       expect(document.at_css("[data-setting='sign-out']").at_css(%(form[action="#{owner_session_path}"]) + " button").text).to eq(Components::Owner::Header::SIGN_OUT_LABEL)
@@ -68,16 +70,15 @@ RSpec.describe "Owner settings", type: :request do
       expect(document.at_css("[data-setting='logo']").at_css("img")["src"]).to include("/rails/active_storage/representations/proxy/")
     end
 
-    it "reads a lone brand color in capitals with a single chip when there is no secondary color" do
+    it "reads the neutral background and the accent in capitals, with a single chip, when there is no background" do
       create(:branding, tenant: tenant, brand_600: "#7e22ce")
       sign_in_owner(owner)
 
       get owner_settings_path
 
       document = Nokogiri::HTML5(response.body)
-      expect(document.at_css("[data-setting='colors'] [data-summary]").text).to eq("#7E22CE")
-      expect(document.at_css("[data-setting='colors']").to_html).to include("bg-brand-600")
-      expect(document.at_css("[data-setting='colors']").to_html).not_to include("bg-secondary-600")
+      expect(document.at_css("[data-setting='colors'] [data-summary]").text).to eq("Fundo neutro · Destaque #7E22CE")
+      expect(document.at_css("[data-setting='colors']").css("[data-chip]").map { |chip| chip["data-chip"] }).to eq(%w[accent])
     end
 
     it "reads the platform color for an establishment that never saved a brand" do
@@ -86,7 +87,7 @@ RSpec.describe "Owner settings", type: :request do
       get owner_settings_path
 
       document = Nokogiri::HTML5(response.body)
-      expect(document.at_css("[data-setting='colors'] [data-summary]").text).to eq(Branding::DEFAULT_BRAND_600)
+      expect(document.at_css("[data-setting='colors'] [data-summary]").text).to eq("Fundo neutro · Destaque #{Branding::DEFAULT_BRAND_600}")
     end
 
     it "counts a single registered service in the singular, with no disabled part" do
@@ -226,7 +227,7 @@ RSpec.describe "Owner settings", type: :request do
     end
 
     it "summarizes the name, the colors and the service count of the establishment in the host and nothing of another one" do
-      create(:branding, tenant: tenant, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C")
+      create(:branding, :with_background, tenant: tenant)
       create_list(:service, 3, tenant: tenant)
       host_professional = create(:professional, tenant: tenant, user: owner)
       ActsAsTenant.with_tenant(tenant) { host_professional.replace_working_hours!(2 => [ [ "07:00", "13:00" ] ]) }
@@ -241,12 +242,11 @@ RSpec.describe "Owner settings", type: :request do
 
       document = Nokogiri::HTML5(response.body)
       expect(document.at_css("[data-setting='name'] [data-summary]").text).to eq("Estúdio Aurora")
-      expect(document.at_css("[data-setting='colors'] [data-summary]").text).to eq("#7E22CE")
+      expect(document.at_css("[data-setting='colors'] [data-summary]").text).to eq("Fundo neutro · Destaque #7E22CE")
       expect(document.at_css("[data-setting='services'] [data-summary]").text).to eq("1 cadastrado")
       expect(document.at_css("[data-setting='working_hours'] [data-summary]").text).to eq(WorkingHour::Summary::NO_HOURS)
       expect(response.body).not_to include("Barbearia do Zé")
-      expect(response.body).not_to include("#2C6CB0")
-      expect(response.body).not_to include("#E8493C")
+      expect(response.body).not_to include("#16324A")
       expect(response.body).not_to include("3 cadastrados")
     end
   end

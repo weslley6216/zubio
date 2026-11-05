@@ -2,13 +2,13 @@ class Branding::Palette
   extend StylesheetProducer
 
   FAMILIES = %w[
-    #4F46E5 #7E22CE #1E60C4 #0E7490 #14B8A6 #0B7658
-    #EAB308 #B45309 #FF5A5F #BE123C #FF00BB #334155
+    #4F46E5 #7E22CE #1E60C4 #0E7490 #0C6E64 #0B7658
+    #8C6B05 #B45309 #CF0006 #BE123C #FF00BB #334155
   ].freeze
 
   SUGGESTIONS = {
     brand_600: %w[#4F46E5 #1E60C4 #0B7658 #BE123C #334155].freeze,
-    brand_secondary_600: ([ "" ] + %w[#FF5A5F #B45309 #334155 #FF00BB]).freeze
+    brand_secondary_600: ([ "" ] + %w[#CF0006 #B45309 #334155 #FF00BB]).freeze
   }.freeze
 
   def self.swatches

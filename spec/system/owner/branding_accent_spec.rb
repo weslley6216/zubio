@@ -13,7 +13,7 @@ RSpec.describe "Owner branding accent", type: :system, js: true do
       expect(contrast_ratio("span.bg-brand-accent")).to be >= Branding::ColorScale::MIN_CONTRAST
     end
 
-    it "labels the current section in the brand accent on the band, in #{scheme}" do
+    it "underlines the current section with the accent mark and never the support color, in #{scheme}" do
       tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
       branding = create(:branding, tenant: tenant, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C")
       emulate_desktop_screen(width: 1200, height: 800)
@@ -22,10 +22,26 @@ RSpec.describe "Owner branding accent", type: :system, js: true do
 
       visit "http://barbearia-do-ze.zubio.com.br#{owner_services_path}"
 
-      accent = scheme == "dark" ? branding.css_variables[/--brand-400:(#\h{6});/, 1] : branding.brand_600
-      expect(computed_hex("nav a[aria-current='page']", "color")).to eq(accent.upcase)
-      expect(computed_hex("nav a[aria-current='page']", "borderBottomColor")).to eq(accent.upcase)
+      expect(computed_hex("nav a[aria-current='page']", "borderBottomColor")).to eq(branding.css_variables[/--brand-mark-#{scheme}:(#\h{6});/, 1].upcase)
+      expect(computed_hex("nav a[aria-current='page']", "color")).to eq(branding.css_variables[/--brand-ink-#{scheme}:(#\h{6});/, 1].upcase)
+      expect(computed_hex("nav a[aria-current='page']", "borderBottomColor")).not_to eq("#E8493C")
       expect(computed("nav a[aria-current='page']", "backgroundColor")).to eq("rgba(0, 0, 0, 0)")
+    end
+
+    it "keeps a light accent's underline visible on the band, in #{scheme}" do
+      tenant = create(:tenant, subdomain: "bicho-feliz-pet", name: "Bicho Feliz Pet")
+      create(:branding, tenant: tenant, brand_600: "#F2B33D", brand_background: "#1F4D3A")
+      emulate_desktop_screen(width: 1200, height: 800)
+      emulate_color_scheme(scheme)
+      sign_in_owner(create(:user, tenant: tenant))
+
+      visit "http://bicho-feliz-pet.zubio.com.br#{owner_services_path}"
+
+      underline = computed_hex("nav a[aria-current='page']", "borderBottomColor")
+      band = computed_hex("[data-owner-band]", "backgroundColor")
+
+      expect(underline).not_to eq("#F2B33D")
+      expect(Branding::ColorScale.new(underline).contrast_against(Branding::ColorScale.new(band))).to be >= Branding::ColorScale::MIN_NON_TEXT_CONTRAST
     end
 
     it "lights the current section in the brand inside the phone menu, in #{scheme}" do

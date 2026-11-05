@@ -24,12 +24,15 @@ class Branding < ApplicationRecord
   INVALID_IMAGE_MESSAGE = "não é uma imagem válida".freeze
   OVERSIZED_IMAGE_MESSAGE = "excede as dimensões máximas de #{LOGO_MAX_PIXELS}×#{LOGO_MAX_PIXELS} pixels".freeze
   CONTRAST_MESSAGE = "não tem contraste suficiente com o texto que vai sobre ela (mínimo 4.5:1)".freeze
+  STANDS_OUT_MESSAGE = "não se destaca do fundo (mínimo 3:1)".freeze
   CUSTOM_COLOR_CHOICE = "custom".freeze
 
   validates :brand_600, presence: true, format: { with: ColorScale::HEX }
   validates :brand_secondary_600, format: { with: ColorScale::HEX }, allow_blank: true
+  validates :brand_background, format: { with: ColorScale::HEX }, allow_blank: true
   validate :brand_600_meets_contrast_minimum
-  validate :brand_secondary_600_meets_contrast_minimum
+  validate :brand_background_meets_contrast_minimum
+  validate :brand_600_stands_out_on_background, if: -> { will_save_change_to_brand_600? || will_save_change_to_brand_background? }
   validate :logo_meets_upload_constraints
 
   def self.platform_default
@@ -73,8 +76,12 @@ class Branding < ApplicationRecord
     color_scale.tokens.fetch(self.class.ink_step(color_scale, :light))
   end
 
+  def theme
+    Theme.new(background: (brand_background if hex?(brand_background)), accent: color_scale.hex)
+  end
+
   def css_variables
-    self.class.ramp_variables("brand", color_scale) + self.class.ramp_variables("secondary", secondary_color_scale)
+    self.class.ramp_variables("brand", color_scale) + theme.css_variables
   end
 
   def stylesheet
@@ -119,13 +126,17 @@ class Branding < ApplicationRecord
     logo.variant(resize_to_fill: [ size, size ], format: :png)
   end
 
-  def secondary_color_scale
-    @secondary_color_scale ||= hex?(brand_secondary_600) ? ColorScale.new(brand_secondary_600) : color_scale
-  end
-
   def brand_600_meets_contrast_minimum = validate_contrast(:brand_600)
 
-  def brand_secondary_600_meets_contrast_minimum = validate_contrast(:brand_secondary_600)
+  def brand_background_meets_contrast_minimum = validate_contrast(:brand_background)
+
+  def brand_600_stands_out_on_background
+    return unless hex?(brand_600)
+    return if brand_background.present? && !hex?(brand_background)
+    return if Theme.new(background: brand_background.presence, accent: brand_600).accent_stands_out?
+
+    errors.add(:brand_600, STANDS_OUT_MESSAGE)
+  end
 
   def validate_contrast(attribute)
     value = public_send(attribute)

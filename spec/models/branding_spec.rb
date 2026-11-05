@@ -58,11 +58,79 @@ RSpec.describe Branding, type: :model do
       expect(branding).not_to be_valid
     end
 
-    it "refuses a brand_secondary_600 without contrast with the same message as the brand color" do
+    it "no longer weighs the contrast of a support color that paints nothing" do
       branding = build(:branding, brand_secondary_600: "#7A7A7A")
 
+      expect(branding).to be_valid
+    end
+
+    it "is valid without a background" do
+      branding = build(:branding, brand_background: nil)
+
+      expect(branding).to be_valid
+    end
+
+    it "is valid with a background its accent stands out on" do
+      branding = build(:branding, :with_background)
+
+      expect(branding).to be_valid
+    end
+
+    it "is invalid when the background is not a 6-digit hex color" do
+      branding = build(:branding, brand_background: "#fff")
+
       expect(branding).not_to be_valid
-      expect(branding.errors[:brand_secondary_600]).to eq([ Branding::CONTRAST_MESSAGE ])
+    end
+
+    it "is invalid when the background carries a CSS injection payload" do
+      branding = build(:branding, brand_background: "#16324A;}body{")
+
+      expect(branding).not_to be_valid
+    end
+
+    it "refuses a background no text reads on" do
+      branding = build(:branding, brand_background: "#7A7A7A", brand_600: "#000000")
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:brand_background]).to eq([ Branding::CONTRAST_MESSAGE ])
+    end
+
+    it "refuses an accent lost on the background with the stands-out message" do
+      branding = build(:branding, brand_background: "#16324A", brand_600: "#1E3A55")
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:brand_600]).to eq([ Branding::STANDS_OUT_MESSAGE ])
+    end
+
+    it "refuses a light accent with no background, since it would sit on the neutral" do
+      branding = build(:branding, brand_600: "#F2B33D")
+
+      expect(branding).not_to be_valid
+    end
+
+    it "accepts the same light accent over a dark background" do
+      branding = build(:branding, brand_600: "#F2B33D", brand_background: "#1F4D3A")
+
+      expect(branding).to be_valid
+    end
+
+    it "keeps a stored light accent valid when only another field changes" do
+      branding = create(:branding)
+      ActsAsTenant.with_tenant(branding.tenant) { branding.update_column(:brand_600, "#EAB308") }
+      branding.reload
+
+      branding.brand_secondary_600 = "#1E60C4"
+
+      expect(branding).to be_valid
+    end
+
+    it "still refuses the stored light accent when the owner chooses it again" do
+      branding = create(:branding)
+
+      branding.brand_600 = "#EAB308"
+
+      expect(branding).not_to be_valid
+      expect(branding.errors[:brand_600]).to eq([ Branding::STANDS_OUT_MESSAGE ])
     end
 
     it "is invalid when logo content type is not png, jpeg or webp" do
@@ -267,6 +335,21 @@ RSpec.describe Branding, type: :model do
     end
   end
 
+  describe "#theme" do
+    it "builds the theme from the stored background and accent" do
+      branding = build(:branding, :with_background)
+
+      expect(branding.theme.tokens["card"]).to eq("#e7f0f8")
+    end
+
+    it "falls back to the neutral background when the stored one is not a well-formed hex" do
+      branding = build(:branding, brand_background: "not-a-hex")
+
+      expect(branding.theme.background).to eq("#f8fafb")
+      expect { branding.css_variables }.not_to raise_error
+    end
+  end
+
   describe "#css_variables" do
     it "includes the brand scale and the on-brand token" do
       branding = build(:branding, brand_600: "#4F46E5")
@@ -296,48 +379,11 @@ RSpec.describe Branding, type: :model do
       expect(branding.css_variables).to include("--brand-600:#{Branding::DEFAULT_BRAND_600};")
     end
 
-    it "falls back to the brand ramp for the secondary tokens when no secondary color is set" do
-      branding = build(:branding, brand_600: "#4F46E5", brand_secondary_600: nil)
-
-      expect(branding.css_variables).to include("--secondary-600:#4F46E5;")
-      expect(branding.css_variables).to include("--on-secondary:#{branding.color_scale.foreground};")
-    end
-
-    it "gives every secondary token the value of its brand counterpart when no secondary color is set, so nothing already painted changes" do
-      branding = build(:branding, brand_600: "#BE123C", brand_secondary_600: nil)
-
-      renamed = branding.css_variables.scan(/--(?:on-)?secondary[\w-]*:[^;]+;/).map { |token| token.sub("secondary", "brand") }
-
-      expect(renamed).not_to be_empty
-      expect(renamed).to eq(branding.css_variables.scan(/--(?:on-)?brand[\w-]*:[^;]+;/))
-    end
-
-    it "keeps the two ramps apart when a secondary color is set" do
-      branding = build(:branding, brand_600: "#BE123C", brand_secondary_600: "#1E60C4")
-
-      expect(branding.css_variables).to include("--brand-600:#BE123C;")
-      expect(branding.css_variables).to include("--secondary-600:#1E60C4;")
-    end
-
-    it "carries a foreground for the secondary dark accent step, as it already does for the brand" do
-      branding = build(:branding, brand_600: "#4F46E5", brand_secondary_600: "#0B7658")
-      dark_accent = Branding::ColorScale.new(Branding::ColorScale.new("#0B7658").tokens[Branding::DARK_ACCENT_STEP])
-
-      expect(branding.css_variables).to include("--on-secondary-400:#{dark_accent.foreground};")
-    end
-
-    it "falls back to the brand ramp when brand_secondary_600 is not a well-formed hex" do
-      branding = build(:branding, brand_600: "#4F46E5", brand_secondary_600: "not-a-hex")
-
-      expect { branding.css_variables }.not_to raise_error
-      expect(branding.css_variables).to include("--secondary-600:#4F46E5;")
-    end
-
-    it "gives every swatch, as brand and as secondary, a label and an underline that read on every neutral and a light pair that reads, in both themes" do
-      stylesheets = Branding::Palette.swatches.map { |hex| build(:branding, brand_600: hex, brand_secondary_600: hex).css_variables }
+    it "gives every swatch, as brand, a label and an underline that read on every neutral and a light pair that reads, in both themes" do
+      stylesheets = Branding::Palette.swatches.map { |hex| build(:branding, brand_600: hex).css_variables }
 
       expect(Branding::Palette.swatches.size).to eq(24)
-      expect(stylesheets).to all(have_legible_roles("brand").and(have_legible_roles("secondary")))
+      expect(stylesheets).to all(have_legible_roles("brand"))
     end
 
     it "catches a label that does not read on the neutrals" do
@@ -361,13 +407,6 @@ RSpec.describe Branding, type: :model do
       expect(css[/--brand-ink-light:(#\h{6});/, 1]).to eq("#2C6CB0")
     end
 
-    it "underlines with the chosen secondary color itself when it reaches the non-text minimum on every neutral" do
-      css = build(:branding, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C").css_variables
-
-      expect(css[/--secondary-mark-light:(#\h{6});/, 1]).to eq("#E8493C")
-      expect(css[/--secondary-ink-light:(#\h{6});/, 1]).not_to eq("#E8493C")
-    end
-
     it "takes the light pair from the end of the ramp that belongs to each theme" do
       branding = build(:branding, brand_600: "#2C6CB0")
 
@@ -377,20 +416,26 @@ RSpec.describe Branding, type: :model do
       expect(css[/--brand-soft-dark:(#\h{6});/, 1]).to eq(branding.color_scale.tokens.fetch(900))
     end
 
-    it "draws the secondary underline and light pair from the brand ramp when no secondary color is set" do
-      lone = build(:branding, brand_600: "#2C6CB0", brand_secondary_600: nil).css_variables
-      paired = build(:branding, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C").css_variables
-      roles = %w[mark-light mark-dark soft-light soft-dark soft-ink-light soft-ink-dark]
-
-      expect(roles.map { |name| lone[/--secondary-#{name}:(#\h{6});/, 1] }).to eq(roles.map { |name| lone[/--brand-#{name}:(#\h{6});/, 1] })
-      expect(paired[/--secondary-mark-light:(#\h{6});/, 1]).not_to eq(paired[/--brand-mark-light:(#\h{6});/, 1])
-    end
-
     it "derives the same ramp through the class method that the instance uses" do
       scale = Branding::ColorScale.new("#4F46E5")
 
       expect(Branding.ramp_variables("brand", scale)).to include("--brand-600:#4F46E5;")
       expect(Branding.ramp_variables("brand", scale)).to include("--brand-ink-light:")
+    end
+
+    it "carries every theme token of the establishment" do
+      branding = build(:branding, :with_background)
+
+      expect(branding.css_variables).to include(branding.theme.css_variables)
+      expect(branding.css_variables).to include("--brand-600:#F0617A;")
+    end
+
+    it "derives nothing from a stored support color" do
+      branding = build(:branding, brand_600: "#2C6CB0", brand_secondary_600: "#E8493C")
+
+      expect(branding.css_variables).not_to include("--secondary-")
+      expect(branding.css_variables.downcase).not_to include("e8493c")
+      expect(branding.css_variables).to include("--brand-mark-light:")
     end
   end
 
@@ -433,6 +478,13 @@ RSpec.describe Branding, type: :model do
 
     it "is short enough to travel in a URL" do
       expect(build(:branding).stylesheet_digest.length).to eq(StylesheetProducer::DIGEST_LENGTH)
+    end
+
+    it "changes when only the background changes" do
+      navy = build(:branding, brand_600: "#F0617A", brand_background: "#16324A")
+      green = build(:branding, brand_600: "#F0617A", brand_background: "#1F4D3A")
+
+      expect(navy.stylesheet_digest).not_to eq(green.stylesheet_digest)
     end
   end
 

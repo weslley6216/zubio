@@ -18,6 +18,18 @@ RSpec.describe Components::Owner::Header, type: :component do
     expect(pill.text).to include(Components::Owner::Header::SETTINGS_LABEL)
   end
 
+  it "marks the settings pill with the accent mark and never the support color" do
+    html = render_phlex(described_class.new(tenant: tenant, branding: branding, current_section: :settings))
+
+    document = Nokogiri::HTML5.fragment(html)
+    pill = document.at_css("[data-owner-band] a[href='/owner/settings']")
+    gear = pill.at_css("svg")
+
+    expect(pill["aria-current"]).to eq("page")
+    expect(pill["class"]).to eq("#{Components::Owner::Header::PILL_CLASS} #{Components::Owner::Header::PILL_CURRENT_CLASS}")
+    expect(gear["class"]).to include("text-brand-mark")
+  end
+
   it "marks nothing when the section is not in the band" do
     html = render_phlex(described_class.new(tenant: tenant, branding: branding, current_section: :none))
 

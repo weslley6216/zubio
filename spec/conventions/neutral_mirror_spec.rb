@@ -15,4 +15,10 @@ RSpec.describe "Neutral surfaces mirrored for color derivation" do
     expect(drifted).not_to eq(stylesheet)
     expect(drifted).not_to mirror_branding_neutrals
   end
+
+  it "mirrors the app ink as the dark text of the color derivation" do
+    stylesheet = Rails.root.join("app/assets/tailwind/application.css").read
+
+    expect(stylesheet).to include("--ink: #{Branding::ColorScale::DARK_NEUTRAL};")
+  end
 end

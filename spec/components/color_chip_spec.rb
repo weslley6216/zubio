@@ -8,6 +8,13 @@ RSpec.describe Components::ColorChip, type: :component do
     expect(html).not_to include("bg-secondary-600")
   end
 
+  it "paints the background chip with the theme background token" do
+    html = described_class.new(attribute: :brand_background, size: :small).call
+
+    expect(html).to include("bg-(--theme-bg)")
+    expect(html).not_to include("bg-brand-600")
+  end
+
   it "paints the secondary chip with the secondary token" do
     html = described_class.new(attribute: :brand_secondary_600, size: :small).call
 

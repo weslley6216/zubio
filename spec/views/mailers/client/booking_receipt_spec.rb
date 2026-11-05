@@ -27,7 +27,7 @@ RSpec.describe Views::Mailers::Client::BookingReceipt, type: :component do
 
     band = Nokogiri::HTML5(render_phlex(described_class.new(tenant: tenant, branding: branding, appointment: appointment))).at_css("[data-band]").to_html
 
-    expect(band).to include("color:#111827")
+    expect(band).to include("color:#0e1a24")
     expect(band).not_to include("color:#ffffff")
   end
 
