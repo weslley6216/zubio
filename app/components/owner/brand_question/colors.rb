@@ -37,8 +37,8 @@ class Components::Owner::BrandQuestion::Colors < Components::Base
         h1(id: HEADING_ID, class: TITLE_CLASS) { TITLE }
         p(class: SUBTITLE_CLASS) { SUBTITLE }
       end
-      render_group(:brand_background, BACKGROUND_LABEL, BACKGROUND_HINT, @branding.brand_background, fallback: "#16324A")
-      render_group(:brand_600, ACCENT_LABEL, ACCENT_HINT, @branding.brand_600, fallback: "#F0617A")
+      render_group(:brand_background, BACKGROUND_LABEL, BACKGROUND_HINT, @branding.brand_background, fallback: Branding::Palette::STARTING.fetch(:brand_background))
+      render_group(:brand_600, ACCENT_LABEL, ACCENT_HINT, @branding.brand_600, fallback: Branding::Palette::STARTING.fetch(:brand_600))
       render_preview
     end
   end
