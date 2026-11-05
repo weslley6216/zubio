@@ -22,30 +22,33 @@ class Views::Client::Bookings::New < Views::Base
   BACK_CLASS = Views::Client::Frame::BACK
   BACK_ICON_CLASS = Views::Client::Frame::BACK_ICON
   NAME_CLASS = Views::Client::Frame::NAME
-  MAIN_CLASS = "flex min-w-0 flex-grow flex-col gap-[22px] px-5 pt-[22px] pb-[120px]".freeze
-  STEP_CLASS = "flex min-w-0 flex-col gap-2.5".freeze
+  MAIN_CLASS = "flex min-w-0 flex-grow flex-col gap-3 px-5 pt-2 pb-[120px]".freeze
+  STEP_CLASS = "flex min-w-0 flex-col gap-3".freeze
   STEP_LABEL_ROW_CLASS = "flex items-center gap-2.5".freeze
   STEP_NUMBER_CLASS = "grid h-6 w-6 place-items-center rounded-full bg-(--theme-bg-tint) text-[12px] font-extrabold".freeze
-  STEP_TITLE_CLASS = "text-[15px] font-extrabold tracking-[-0.01em]".freeze
-  SERVICE_ROW_CLASS = "flex items-center gap-3 rounded-xl bg-(--theme-card) px-4 py-3.5 text-(--theme-on-card)".freeze
+  STEP_TITLE_CLASS = "text-[15px] font-extrabold".freeze
+  SERVICE_ROW_CLASS = "flex items-center gap-3 rounded-2xl bg-(--theme-card) p-4 text-(--theme-on-card)".freeze
   SERVICE_TEXT_CLASS = "flex min-w-0 flex-grow flex-col gap-0.5".freeze
-  SERVICE_NAME_CLASS = "text-[14px] font-bold".freeze
-  SERVICE_META_CLASS = "text-[12px] tabular-nums text-(--theme-on-card-muted)".freeze
-  SERVICE_PRICE_CLASS = "flex-none rounded-full bg-(--theme-accent) px-3 py-[7px] text-[13px] font-extrabold tabular-nums text-(--theme-on-accent)".freeze
-  SELECTOR_CLASS = Components::DayPill::STRIP
-  DAY_BASE_CLASS = "#{Components::DayPill::ITEM} #{Components::DayPill::FRAME}".freeze
-  DAY_SELECTED_CLASS = "bg-(--theme-accent) text-(--theme-on-accent) ring-2 ring-[color:var(--theme-selected-ring,transparent)]".freeze
-  DAY_FREE_CLASS = "border border-(--theme-card-line) bg-(--theme-card-chip) text-(--theme-on-card)".freeze
-  DAY_DISABLED_CLASS = "border border-dashed border-(--theme-ghost) bg-(--theme-card-chip) text-(--theme-on-bg-muted)".freeze
-  DAY_WEEKDAY_CLASS = Components::DayPill::WEEKDAY
-  DAY_WEEKDAY_FREE_CLASS = "text-(--theme-on-card-muted)".freeze
-  DAY_NUMBER_CLASS = Components::DayPill::NUMBER
+  SERVICE_NAME_CLASS = "text-[15px] font-extrabold".freeze
+  SERVICE_META_CLASS = "text-[12px] whitespace-nowrap tabular-nums text-(--theme-on-card-muted)".freeze
+  SERVICE_PRICE_CLASS = "flex-none rounded-full bg-(--theme-bg) px-3 py-[7px] text-[13px] font-extrabold whitespace-nowrap text-(--theme-on-bg)".freeze
+  DAY_PANEL_CLASS = "rounded-2xl bg-(--theme-card) py-3 text-(--theme-on-card)".freeze
+  SELECTOR_CLASS = "flex snap-x snap-mandatory gap-1.5 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-7 sm:overflow-visible".freeze
+  DAY_BASE_CLASS = "flex min-h-[58px] shrink-0 basis-[calc((100%-1.5rem)/5)] snap-start flex-col items-center justify-center gap-0.5 rounded-xl leading-[normal]".freeze
+  DAY_SELECTED_CLASS = "bg-(--theme-accent) text-(--theme-on-accent) ring-2 ring-inset ring-[color:var(--theme-selected-ring,transparent)]".freeze
+  DAY_FREE_CLASS = "bg-(--theme-card-chip) text-(--theme-on-card)".freeze
+  DAY_DISABLED_CLASS = "border-[1.5px] border-dashed border-(--theme-on-card-muted) bg-(--theme-card) text-(--theme-on-card-muted)".freeze
+  DAY_WEEKDAY_CLASS = "text-[12px] font-bold".freeze
+  DAY_WEEKDAY_FREE_CLASS = "text-(--theme-on-card)".freeze
+  DAY_NUMBER_CLASS = "text-[17px] font-extrabold".freeze
   HINT_CLASS = "text-[12px] text-(--theme-on-bg-muted)".freeze
   DATA_HINT_CLASS = "text-[12px] text-(--theme-on-bg-muted)".freeze
   UNPUBLISHED_CLASS = "rounded-xl bg-(--theme-card) p-6 text-[14px] text-(--theme-on-card-muted)".freeze
-  CONFIRM_BAR_CLASS = "sticky bottom-0 -mt-[100px] flex items-center gap-3 border-t border-(--theme-card-line) bg-(--theme-card) px-5 pt-3.5 pb-[calc(18px+env(safe-area-inset-bottom,0px))] text-(--theme-on-card)".freeze
+  CONFIRM_BAR_CLASS = "sticky bottom-0 -mt-[100px] flex items-center gap-3 border-t border-(--theme-ghost) bg-(--theme-bg) px-5 pt-3.5 pb-[calc(22px+env(safe-area-inset-bottom,0px))] text-(--theme-on-bg)".freeze
+  CONFIRM_NAME_CLASS = "text-[14px] font-extrabold".freeze
+  CONFIRM_META_CLASS = "text-[12px] tabular-nums text-(--theme-on-bg-muted)".freeze
   CONFIRM_SUMMARY_CLASS = "flex min-w-0 flex-grow flex-col gap-0.5".freeze
-  CONFIRM_BUTTON_CLASS = "min-h-[46px] flex-none rounded-[10px] bg-(--theme-accent) px-5 text-[15px] font-extrabold text-(--theme-on-accent) disabled:bg-(--theme-card-chip) disabled:text-(--theme-on-card-muted)".freeze
+  CONFIRM_BUTTON_CLASS = "min-h-12 flex-none rounded-xl bg-(--theme-accent) px-5 text-[15px] font-extrabold text-(--theme-on-accent) disabled:bg-(--theme-card-chip) disabled:text-(--theme-on-card-muted)".freeze
   FIELD_WRAPPER_CLASS = "flex flex-col gap-1.5".freeze
   FIELD_LABEL_CLASS = "text-[11px] font-bold uppercase tracking-[0.06em] text-(--theme-on-bg-muted)".freeze
   FIELD_CLASS = "min-h-[46px] w-full rounded-lg border border-(--theme-field-line) bg-(--theme-card-chip) px-3 text-[15px] text-(--theme-on-bg) placeholder:text-(--theme-on-bg-muted) focus:outline-none focus:ring-2 focus:ring-(--theme-focus)".freeze
@@ -97,7 +100,7 @@ class Views::Client::Bookings::New < Views::Base
       div(class: SERVICE_ROW_CLASS) do
         div(class: SERVICE_TEXT_CLASS) do
           span(class: SERVICE_NAME_CLASS) { @service.name }
-          span(class: SERVICE_META_CLASS) { ::Service::Duration.minutes_label(@service.duration_minutes) }
+          span(class: SERVICE_META_CLASS) { ::Service::Duration.compact_label(@service.duration_minutes) }
         end
         span(class: SERVICE_PRICE_CLASS, data: { price: true }) { price_label }
       end
@@ -153,16 +156,20 @@ class Views::Client::Bookings::New < Views::Base
   end
 
   def render_day_selector
-    render Components::DayStripOverflow.new(grid_from: :sm) do |strip|
-      div(class: "#{SELECTOR_CLASS} #{strip.gutter}", data: {
-        day_selector: true, controller: "day-selector",
-        day_selector_selected_class: DAY_SELECTED_CLASS,
-        day_selector_resting_class: DAY_FREE_CLASS,
-        day_selector_weekday_resting_class: DAY_WEEKDAY_FREE_CLASS,
-        frame_cache_target: "strip",
-        **Components::DayStripOverflow::SCROLLER_DATA
-      }) { @days.each { |date| render_day(date) } }
+    div(class: DAY_PANEL_CLASS) do
+      render Components::DayStripOverflow.new(grid_from: :sm) { |strip| render_day_strip(strip) }
     end
+  end
+
+  def render_day_strip(strip)
+    div(class: "#{SELECTOR_CLASS} #{strip.gutter}", data: {
+      day_selector: true, controller: "day-selector",
+      day_selector_selected_class: DAY_SELECTED_CLASS,
+      day_selector_resting_class: DAY_FREE_CLASS,
+      day_selector_weekday_resting_class: DAY_WEEKDAY_FREE_CLASS,
+      frame_cache_target: "strip",
+      **Components::DayStripOverflow::SCROLLER_DATA
+    }) { @days.each { |date| render_day(date) } }
   end
 
   def render_day(date)
@@ -177,14 +184,14 @@ class Views::Client::Bookings::New < Views::Base
               turbo_frame: Components::Client::Bookings::Grid::FRAME_ID, turbo_action: "advance",
               day_label: day_label_for(date), action: "day-selector#mark slot-selector#resetDay" },
       aria_current: selected ? "date" : nil) do
-      span(class: [ DAY_WEEKDAY_CLASS, (DAY_WEEKDAY_FREE_CLASS unless selected) ]) { Appointment::Labels::WEEKDAY_ABBR[date.wday] }
+      span(class: [ DAY_WEEKDAY_CLASS, (DAY_WEEKDAY_FREE_CLASS unless selected) ]) { Appointment::Labels::WEEKDAY_ABBR[date.wday].capitalize }
       span(class: DAY_NUMBER_CLASS) { date.strftime("%d") }
     end
   end
 
   def render_disabled_day(date)
     div(class: [ DAY_BASE_CLASS, DAY_DISABLED_CLASS ], data: { day: date.iso8601 }, aria_disabled: "true") do
-      span(class: DAY_WEEKDAY_CLASS) { Appointment::Labels::WEEKDAY_ABBR[date.wday] }
+      span(class: DAY_WEEKDAY_CLASS) { Appointment::Labels::WEEKDAY_ABBR[date.wday].capitalize }
       span(class: DAY_NUMBER_CLASS) { date.strftime("%d") }
     end
   end
@@ -221,8 +228,8 @@ class Views::Client::Bookings::New < Views::Base
   def render_confirmation_bar
     div(class: CONFIRM_BAR_CLASS) do
       div(class: CONFIRM_SUMMARY_CLASS) do
-        span(class: SERVICE_NAME_CLASS) { @service.name }
-        span(class: SERVICE_META_CLASS, data: { summary: true }) { render_summary }
+        span(class: CONFIRM_NAME_CLASS) { @service.name }
+        span(class: CONFIRM_META_CLASS, data: { summary: true }) { render_summary }
       end
       button(type: "submit", disabled: @selected_slot.nil?, class: CONFIRM_BUTTON_CLASS,
         data: { confirm_bar: true, slot_selector_target: "submit", submit_lock_target: "button" }) { confirm_label }

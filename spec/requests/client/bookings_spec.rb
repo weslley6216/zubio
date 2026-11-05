@@ -935,5 +935,19 @@ RSpec.describe "Public booking day and time selection", type: :request do
       expect(response.body).to include(client.name)
       expect(response.body).to include(client.phone_display)
     end
+
+    it "shows the guest's typed phone formatted on the race screen" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9, min: 45)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: starts_at)
+
+      post client_service_booking_path(service), params: { name: "Rafael Lima", phone: "11987654321", starts_at: starts_at.iso8601 }
+
+      expect(response.body).to include("(11) 98765-4321")
+    end
   end
 end

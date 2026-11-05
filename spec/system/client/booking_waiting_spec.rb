@@ -237,7 +237,7 @@ RSpec.describe "Client booking time grid skeleton", type: :system, js: true do
       document.querySelector("[data-grid-hint]").getBoundingClientRect().top - document.querySelector("[data-slots]").getBoundingClientRect().bottom
     JS
 
-    expect(gap).to eq(10)
+    expect(gap).to eq(24)
   end
 
   it "keeps the skeleton still under reduced motion" do
