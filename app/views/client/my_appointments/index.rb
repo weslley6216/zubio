@@ -18,22 +18,22 @@ class Views::Client::MyAppointments::Index < Views::Base
   BACK_ICON_CLASS = Views::Client::Frame::BACK_ICON
   NAME_CLASS = Views::Client::Frame::NAME
 
-  MAIN_CLASS = "flex min-w-0 flex-grow flex-col gap-3.5 px-5 py-5".freeze
+  MAIN_CLASS = "flex min-w-0 flex-grow flex-col gap-3 px-5 pt-2 pb-5".freeze
   HEADING_ROW_CLASS = "flex items-baseline gap-2.5".freeze
   HEADING_CLASS = "flex-grow text-[22px] font-extrabold tracking-[-0.02em]".freeze
   COUNT_CLASS = "text-[13px] font-bold text-(--theme-on-bg-muted) tabular-nums".freeze
-  LIST_CLASS = "flex flex-col gap-2.5".freeze
-  ITEM_CLASS = "relative flex min-h-[44px] items-center gap-3 rounded-xl border border-(--theme-card-line) bg-(--theme-card) px-4 py-3.5 shadow-[0_1px_2px_rgba(14,26,36,0.04)] text-(--theme-on-card)".freeze
+  LIST_CLASS = "flex flex-col gap-3".freeze
+  ITEM_CLASS = "relative flex min-h-[44px] items-center gap-3 rounded-2xl bg-(--theme-card) p-3.5 text-(--theme-on-card)".freeze
   ITEM_WHEN_CLASS = "flex w-12 flex-none flex-col items-center".freeze
-  ITEM_TIME_CLASS = "text-[16px] font-extrabold leading-[1.2] tabular-nums".freeze
-  ITEM_DURATION_CLASS = "text-[11px] text-(--theme-on-card-muted) tabular-nums".freeze
+  ITEM_TIME_CLASS = "text-[16px] leading-[normal] font-extrabold whitespace-nowrap tabular-nums".freeze
+  ITEM_DURATION_CLASS = "text-[11px] whitespace-nowrap text-(--theme-on-card-muted)".freeze
   ITEM_DIVIDER_CLASS = "w-px flex-none self-stretch bg-(--theme-card-line)".freeze
-  ITEM_DETAIL_CLASS = "flex min-w-0 flex-grow flex-col gap-1".freeze
-  ITEM_DAY_CLASS = "text-[14px] font-bold tabular-nums".freeze
+  ITEM_DETAIL_CLASS = "flex min-w-0 flex-grow flex-col gap-[3px]".freeze
+  ITEM_DAY_CLASS = "text-[14px] font-extrabold tabular-nums".freeze
   ITEM_SERVICE_CLASS = "text-[12px] text-(--theme-on-card-muted)".freeze
   ITEM_CHEVRON_CLASS = "h-[18px] w-[18px] flex-none text-(--theme-on-card-muted)".freeze
   HINT_CLASS = "text-[12px] text-(--theme-on-bg-muted)".freeze
-  REBOOK_CLASS = "flex min-h-[46px] w-full items-center justify-center gap-2 rounded-[10px] border border-(--theme-ghost) text-[14px] font-bold text-(--theme-on-bg)".freeze
+  REBOOK_CLASS = "flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-(--theme-ghost) text-[14px] font-bold text-(--theme-on-bg)".freeze
 
   EMPTY_CLASS = "flex flex-grow flex-col items-center gap-3.5 px-6 pt-14 pb-7 text-center".freeze
   EMPTY_ICON_WRAP_CLASS = "grid h-16 w-16 place-items-center rounded-full bg-(--theme-bg-tint)".freeze
@@ -43,11 +43,11 @@ class Views::Client::MyAppointments::Index < Views::Base
   EMPTY_SUBTITLE_CLASS = "text-[14px] text-(--theme-on-bg-muted)".freeze
   EMPTY_CTA_CLASS = "mt-2 flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-(--theme-accent) text-[15px] font-extrabold text-(--theme-on-accent)".freeze
 
-  FOOTER_CLASS = "mx-5 mb-6 flex items-center gap-3 rounded-xl bg-(--theme-card) py-3 pr-3 pl-4 text-(--theme-on-card)".freeze
+  FOOTER_CLASS = "mx-5 mb-6 flex items-center gap-3 rounded-2xl bg-(--theme-card) py-3 pr-3 pl-4 text-(--theme-on-card)".freeze
   FOOTER_TEXT_CLASS = "flex min-w-0 flex-grow flex-col gap-0.5".freeze
   FOOTER_LEAD_CLASS = "text-[12px] text-(--theme-on-card-muted)".freeze
-  FOOTER_EMAIL_CLASS = "text-[14px] font-bold".freeze
-  SIGN_OUT_CLASS = "min-h-[44px] flex-none rounded-[10px] border border-(--theme-card-line) px-3.5 text-[13px] font-bold text-(--theme-on-card)".freeze
+  FOOTER_EMAIL_CLASS = "text-[14px] font-extrabold".freeze
+  SIGN_OUT_CLASS = "min-h-[46px] flex-none rounded-[10px] border border-(--theme-card-line) px-3.5 text-[13px] font-bold text-(--theme-on-card)".freeze
 
   def initialize(tenant:, branding:, appointments:, client:, app_installed: false)
     @tenant = tenant
@@ -103,7 +103,7 @@ class Views::Client::MyAppointments::Index < Views::Base
     a(href: client_appointment_path(appointment.cancel_token, from: "list"), class: ITEM_CLASS, data: { my_appointment: true }) do
       div(class: ITEM_WHEN_CLASS) do
         span(class: ITEM_TIME_CLASS) { appointment.starts_at.strftime("%H:%M") }
-        span(class: ITEM_DURATION_CLASS) { ::Service::Duration.minutes_label(appointment.service.duration_minutes) }
+        span(class: ITEM_DURATION_CLASS) { ::Service::Duration.compact_label(appointment.service.duration_minutes) }
       end
       div(class: ITEM_DIVIDER_CLASS)
       div(class: ITEM_DETAIL_CLASS) do

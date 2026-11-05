@@ -10,7 +10,7 @@ class Components::Owner::AppointmentDetail < Components::Base
   SHEET_TITLE_CLASS = "#{SHEET_FRAME::TITLE_CLASS} text-ink".freeze
   SHEET_NOTE_CLASS = "#{SHEET_FRAME::NOTE_CLASS} text-ink-muted".freeze
   SHEET_CONFIRM_CLASS = "#{SHEET_FRAME::CONFIRM_CLASS} bg-danger text-on-danger".freeze
-  SHEET_KEEP_CLASS = "#{SHEET_FRAME::KEEP_CLASS} border-line-strong text-ink".freeze
+  SHEET_KEEP_CLASS = "#{SHEET_FRAME::KEEP_CLASS} min-h-[46px] border-line-strong text-ink".freeze
 
   TITLE = "Agendamento".freeze
   BACK_LABEL = "Voltar para a agenda".freeze

@@ -14,20 +14,20 @@ class Views::Client::Appointments::Show < Views::Base
   KEEP_LABEL = "Manter meu horário".freeze
 
   PAGE_CLASS = Views::Client::Frame::PAGE
-  BAND_CLASS = "flex items-center gap-3 px-5 py-3.5".freeze
-  BACK_CLASS = "grid h-10 w-10 flex-none place-items-center rounded-[10px] bg-(--theme-bg-tint)".freeze
-  BACK_ICON_CLASS = "h-5 w-5".freeze
-  BAND_NAME_CLASS = "min-w-0 flex-grow truncate text-[15px] font-extrabold tracking-[-0.01em]".freeze
-  CONTENT_CLASS = "flex flex-grow flex-col gap-4 px-5 py-5".freeze
+  BAND_CLASS = Views::Client::Frame::HEADER
+  BACK_CLASS = Views::Client::Frame::BACK
+  BACK_ICON_CLASS = Views::Client::Frame::BACK_ICON
+  BAND_NAME_CLASS = Views::Client::Frame::NAME
+  CONTENT_CLASS = "flex flex-grow flex-col gap-3.5 px-5 pt-2 pb-5".freeze
   HEADING_CLASS = "text-[22px] font-extrabold tracking-[-0.02em]".freeze
-  CARD_CLASS = "flex flex-col gap-3.5 rounded-2xl border border-(--theme-card-line) bg-(--theme-card) p-5 text-(--theme-on-card)".freeze
+  CARD_CLASS = "flex flex-col gap-3.5 rounded-2xl bg-(--theme-card) p-5 text-(--theme-on-card)".freeze
   ROW_CLASS = "flex items-baseline justify-between gap-4".freeze
   ROW_LABEL_CLASS = "flex-none text-[13px] text-(--theme-on-card-muted)".freeze
-  ROW_VALUE_CLASS = "text-right text-[14px] font-bold tabular-nums".freeze
+  ROW_VALUE_CLASS = "text-right text-[14px] font-extrabold tabular-nums".freeze
   DIVIDER_CLASS = "h-px bg-(--theme-card-line)".freeze
-  ACTIONS_CLASS = "flex flex-col gap-2.5".freeze
-  REBOOK_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-(--theme-ghost) text-[14px] font-bold text-(--theme-on-bg)".freeze
-  CANCEL_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-(--theme-danger-line-on-bg) text-[14px] font-bold text-(--theme-danger-on-bg)".freeze
+  ACTIONS_CLASS = "flex flex-col gap-3.5".freeze
+  REBOOK_CLASS = "grid min-h-12 place-items-center rounded-xl border border-(--theme-ghost) text-[14px] font-bold text-(--theme-on-bg)".freeze
+  CANCEL_CLASS = "grid min-h-12 place-items-center rounded-xl border border-(--theme-danger-line-on-bg) text-[14px] font-bold text-(--theme-danger-on-bg)".freeze
 
   SHEET_CLASS = "#{Views::Client::Appointments::SheetFrame::SHEET_CLASS} bg-(--theme-card)".freeze
   GRABBER_CLASS = Views::Client::Appointments::SheetFrame::GRABBER_CLASS
@@ -35,7 +35,7 @@ class Views::Client::Appointments::Show < Views::Base
   SHEET_TITLE_CLASS = "#{Views::Client::Appointments::SheetFrame::TITLE_CLASS} text-(--theme-on-card)".freeze
   SHEET_NOTE_CLASS = "#{Views::Client::Appointments::SheetFrame::NOTE_CLASS} text-(--theme-on-card-muted)".freeze
   CONFIRM_CLASS = "#{Views::Client::Appointments::SheetFrame::CONFIRM_CLASS} bg-(--theme-danger-on-card) text-(--theme-card)".freeze
-  KEEP_CLASS = "#{Views::Client::Appointments::SheetFrame::KEEP_CLASS} border-(--theme-card-line) text-(--theme-on-card)".freeze
+  KEEP_CLASS = "#{Views::Client::Appointments::SheetFrame::KEEP_CLASS} min-h-12 border-(--theme-card-line) text-(--theme-on-card)".freeze
 
   CANCELLED_ICON_WRAP_CLASS = "flex flex-col items-center gap-3.5 px-6 pt-11 pb-7 text-center".freeze
   CANCELLED_CIRCLE_CLASS = "grid h-16 w-16 place-items-center rounded-full bg-(--theme-bg-tint) text-(--theme-on-bg-muted)".freeze
@@ -83,7 +83,7 @@ class Views::Client::Appointments::Show < Views::Base
   end
 
   def render_emblem
-    render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :client, tone: :translucent)
+    render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :client, tone: :card)
   end
 
   def render_back_link

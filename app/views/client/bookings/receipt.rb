@@ -15,29 +15,28 @@ class Views::Client::Bookings::Receipt < Views::Base
   FOOTER_NOTE = "Esta tela também é o comprovante.".freeze
 
   PAGE_CLASS = Views::Client::Frame::PAGE
-  BAND_CLASS = "flex flex-col items-center gap-3.5 px-5 pt-[34px] pb-[44px] text-center".freeze
+  BAND_CLASS = "flex flex-col items-center gap-3.5 px-5 pt-[30px] pb-[26px] text-center".freeze
   BADGE_CLASS = "grid h-16 w-16 place-items-center rounded-full bg-(--theme-bg-tint)".freeze
   BADGE_ICON_CLASS = "h-[34px] w-[34px]".freeze
   BAND_TEXT_CLASS = "flex flex-col gap-[5px]".freeze
   TITLE_CLASS = "text-[22px] font-extrabold tracking-[-0.02em]".freeze
   SUBTITLE_CLASS = "text-[14px] text-(--theme-on-bg-muted)".freeze
-  CONTENT_CLASS = "flex flex-col gap-4 px-5 pb-6".freeze
+  CONTENT_CLASS = "flex flex-col gap-3 px-5 pb-5".freeze
   DETAIL_CARD_CLASS = "flex flex-col gap-3.5 rounded-2xl bg-(--theme-card) p-5 text-(--theme-on-card)".freeze
   DETAIL_DIVIDER_CLASS = "h-px bg-(--theme-card-line)".freeze
-  DETAIL_ROW_CLASS = "flex items-baseline gap-3".freeze
-  DETAIL_LABEL_CLASS = "w-[78px] flex-none text-[12px] font-bold uppercase tracking-[0.04em] text-(--theme-on-card-muted)".freeze
-  DETAIL_VALUE_CLASS = "text-[15px] font-bold".freeze
-  LINK_CARD_CLASS = "flex flex-col gap-3 rounded-[14px] bg-(--theme-card) p-4 text-(--theme-on-card)".freeze
+  DETAIL_ROW_CLASS = "flex items-baseline justify-between gap-4".freeze
+  DETAIL_LABEL_CLASS = "flex-none text-[13px] text-(--theme-on-card-muted)".freeze
+  DETAIL_VALUE_CLASS = "text-right text-[14px] font-extrabold".freeze
+  LINK_CARD_CLASS = "flex flex-col gap-3 rounded-2xl bg-(--theme-card) p-4 text-(--theme-on-card)".freeze
   LINK_HEADER_CLASS = "flex items-center gap-2".freeze
   LINK_ICON_CLASS = "h-[17px] w-[17px]".freeze
   LINK_TITLE_CLASS = "text-[14px] font-extrabold".freeze
   LINK_BODY_CLASS = "text-[13px] leading-[1.55] text-(--theme-on-card-muted)".freeze
-  MY_APPOINTMENTS_LINK_CLASS = "flex min-h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-(--theme-accent) text-[14px] font-bold text-(--theme-on-accent)".freeze
-  BUTTON_ICON_CLASS = "h-[17px] w-[17px]".freeze
-  ACTIONS_CLASS = "flex flex-col gap-2.5".freeze
-  REBOOK_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-(--theme-ghost) text-[14px] font-bold text-(--theme-on-bg)".freeze
-  CANCEL_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-(--theme-danger-line-on-bg) text-[14px] font-bold text-(--theme-danger-on-bg)".freeze
-  FOOTER_CLASS = "text-center text-[12px] leading-[1.6] text-(--theme-on-bg-muted)".freeze
+  MY_APPOINTMENTS_LINK_CLASS = "grid min-h-[46px] w-full place-items-center rounded-[14px] bg-(--theme-accent) text-[16px] font-extrabold text-(--theme-on-accent)".freeze
+  ACTIONS_CLASS = "flex flex-col gap-3".freeze
+  REBOOK_LINK_CLASS = "grid min-h-12 place-items-center rounded-xl border border-(--theme-ghost) text-[14px] font-bold text-(--theme-on-bg)".freeze
+  CANCEL_LINK_CLASS = "grid min-h-12 place-items-center rounded-xl border border-(--theme-danger-line-on-bg) text-[14px] font-bold text-(--theme-danger-on-bg)".freeze
+  FOOTER_CLASS = "text-center text-[12px] leading-[normal] text-(--theme-on-bg-muted)".freeze
 
   def initialize(tenant:, branding:, service:, professional:, appointment:, signed_in:, app_installed: false)
     @tenant = tenant
@@ -90,7 +89,7 @@ class Views::Client::Bookings::Receipt < Views::Base
       render_divider
       render_detail_row(SERVICE_LABEL, @service.name)
       render_divider
-      render_detail_row(DURATION_LABEL, labels.duration_label)
+      render_detail_row(DURATION_LABEL, labels.compact_duration_label)
       render_divider
       render_detail_row(PRICE_LABEL, labels.price_label)
     end
@@ -110,7 +109,7 @@ class Views::Client::Bookings::Receipt < Views::Base
   def render_link_card
     div(class: LINK_CARD_CLASS, data: (@signed_in ? { receipt_sent: true } : { receipt_invite: true })) do
       div(class: LINK_HEADER_CLASS) do
-        @signed_in ? render_envelope_icon : render_calendar_icon(LINK_ICON_CLASS)
+        @signed_in ? render_envelope_icon : render_calendar_icon
         span(class: LINK_TITLE_CLASS) { @signed_in ? SENT_TITLE : INVITE_TITLE }
       end
       @signed_in ? render_sent_body : render_invite_body
@@ -122,8 +121,8 @@ class Views::Client::Bookings::Receipt < Views::Base
     render Components::Icon.new(:mail, class: LINK_ICON_CLASS)
   end
 
-  def render_calendar_icon(klass)
-    render Components::Icon.new(:calendar, class: klass)
+  def render_calendar_icon
+    render Components::Icon.new(:calendar, class: LINK_ICON_CLASS)
   end
 
   def render_sent_body
@@ -143,10 +142,7 @@ class Views::Client::Bookings::Receipt < Views::Base
   end
 
   def render_my_appointments_link
-    a(href: client_my_appointments_path, class: MY_APPOINTMENTS_LINK_CLASS) do
-      render_calendar_icon(BUTTON_ICON_CLASS)
-      plain MY_APPOINTMENTS_LABEL
-    end
+    a(href: client_my_appointments_path, class: MY_APPOINTMENTS_LINK_CLASS) { MY_APPOINTMENTS_LABEL }
   end
 
   def render_google_button

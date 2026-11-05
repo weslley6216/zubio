@@ -10,8 +10,8 @@ class Views::Client::Sessions::New < Views::Base
   BACK_CLASS = Views::Client::Frame::BACK
   BACK_ICON_CLASS = Views::Client::Frame::BACK_ICON
   NAME_CLASS = Views::Client::Frame::NAME
-  MAIN_CLASS = "flex grow flex-col gap-[22px] px-6 pt-12 pb-6".freeze
-  IDENTITY_CLASS = "flex flex-col items-center gap-3.5 text-center".freeze
+  MAIN_CLASS = "flex grow flex-col gap-[22px] px-5 pt-2 pb-5".freeze
+  IDENTITY_CLASS = "flex flex-col items-center gap-3.5 pt-7 text-center".freeze
   HEADING_BLOCK_CLASS = "flex flex-col gap-1.5".freeze
   HEADING_CLASS = "text-[24px] leading-[normal] font-extrabold tracking-[-0.02em]".freeze
   SUBTITLE_CLASS = "text-[14px] leading-[1.5] text-pretty text-(--theme-on-bg-muted)".freeze
