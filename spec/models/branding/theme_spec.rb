@@ -160,6 +160,13 @@ RSpec.describe Branding::Theme do
       expect(field_line.contrast_against(card)).to be >= 3.0
     end
 
+    it "falls back to the role's own text when no step of the climb reaches the minimum" do
+      theme = described_class.new(background: "#767676", accent: "#4F46E5")
+
+      expect(theme.tokens["on-bg"]).to eq("#ffffff")
+      expect(theme.tokens["on-bg-muted"]).to eq("#ffffff")
+    end
+
     it "solves every token to a solid six-digit hex" do
       examples = [
         described_class.new(background: "#16324A", accent: "#F0617A"),
