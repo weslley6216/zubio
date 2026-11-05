@@ -14,7 +14,7 @@ class Views::Client::Bookings::Receipt < Views::Base
   CANCEL_LABEL = "Desmarcar este horário".freeze
   FOOTER_NOTE = "Esta tela também é o comprovante.".freeze
 
-  PAGE_CLASS = "mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-(--theme-bg) leading-[normal] text-(--theme-on-bg)".freeze
+  PAGE_CLASS = Views::Client::Frame::PAGE
   BAND_CLASS = "flex flex-col items-center gap-3.5 px-5 pt-[34px] pb-[44px] text-center".freeze
   BADGE_CLASS = "grid h-16 w-16 place-items-center rounded-full bg-(--theme-bg-tint)".freeze
   BADGE_ICON_CLASS = "h-[34px] w-[34px]".freeze
