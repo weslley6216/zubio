@@ -15,9 +15,10 @@ class Components::Owner::Onboarding::Screen < Components::Base
 
   FOOTER_CLASS = "px-6 pb-5 pt-3".freeze
   PRIMARY_CLASS = "min-h-13 w-full rounded-xl bg-zubio text-base font-extrabold text-on-zubio".freeze
+  ACCENT_PRIMARY_CLASS = "min-h-13 w-full rounded-[14px] bg-(--theme-accent) text-base font-extrabold text-(--theme-on-accent)".freeze
   SECONDARY_CLASS = "mt-2 min-h-10 w-full bg-none text-sm font-bold text-ink-muted".freeze
 
-  def initialize(section:, group:, position:, primary:, total: 5, submit: false, secondary: nil, count: false, hidden: false)
+  def initialize(section:, group:, position:, primary:, total: 5, submit: false, secondary: nil, count: false, hidden: false, accent_primary: false)
     @section = section
     @group = group
     @position = position
@@ -27,6 +28,7 @@ class Components::Owner::Onboarding::Screen < Components::Base
     @secondary = secondary
     @count = count
     @hidden = hidden
+    @accent_primary = accent_primary
   end
 
   def view_template
@@ -71,11 +73,13 @@ class Components::Owner::Onboarding::Screen < Components::Base
 
   def render_primary
     if @submit
-      button(type: "submit", class: PRIMARY_CLASS, data: { submit_lock_target: "button" }) { @primary }
+      button(type: "submit", class: primary_class, data: { submit_lock_target: "button" }) { @primary }
     else
-      button(type: "button", class: PRIMARY_CLASS, data: primary_data) { @primary }
+      button(type: "button", class: primary_class, data: primary_data) { @primary }
     end
   end
+
+  def primary_class = @accent_primary ? ACCENT_PRIMARY_CLASS : PRIMARY_CLASS
 
   def primary_data
     data = { action: "onboarding#next" }

@@ -25,6 +25,14 @@ RSpec.describe Components::Owner::Onboarding::Screen, type: :component do
     expect(primary["class"].split).not_to include("bg-brand-600")
   end
 
+  it "paints the primary button in the accent color when asked, instead of the Zubio color" do
+    html = described_class.new(section: "colors", group: "Sua marca", position: 1, total: 5, primary: "Continuar", accent_primary: true).call { "corpo" }
+
+    primary = Nokogiri::HTML5.fragment(html).at_css("button[data-action='onboarding#next']")
+    expect(primary["class"].split).to include("bg-(--theme-accent)", "text-(--theme-on-accent)")
+    expect(primary["class"].split).not_to include("bg-zubio")
+  end
+
   it "anchors a next button by default" do
     html = described_class.new(section: "logo", group: "Sua marca", position: 3, total: 5, primary: "Continuar").call { "corpo" }
 
