@@ -27,7 +27,7 @@ class Views::Client::Bookings::New < Views::Base
   STEP_LABEL_ROW_CLASS = "flex items-center gap-2.5".freeze
   STEP_NUMBER_CLASS = "grid h-6 w-6 place-items-center rounded-full bg-(--theme-bg-tint) text-[12px] font-extrabold".freeze
   STEP_TITLE_CLASS = "text-[15px] font-extrabold tracking-[-0.01em]".freeze
-  SERVICE_ROW_CLASS = "flex items-center gap-3 rounded-xl border-2 border-(--theme-accent) bg-(--theme-card) px-4 py-3.5 text-(--theme-on-card)".freeze
+  SERVICE_ROW_CLASS = "flex items-center gap-3 rounded-xl bg-(--theme-card) px-4 py-3.5 text-(--theme-on-card)".freeze
   SERVICE_TEXT_CLASS = "flex min-w-0 flex-grow flex-col gap-0.5".freeze
   SERVICE_NAME_CLASS = "text-[14px] font-bold".freeze
   SERVICE_META_CLASS = "text-[12px] tabular-nums text-(--theme-on-card-muted)".freeze

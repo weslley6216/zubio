@@ -521,4 +521,25 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(response.body).to include("data-brand-initial")
     expect(response.body).not_to include("<img")
   end
+
+  it "does not wire the showcase to another tenant's theme stylesheet" do
+    ze = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    ze_branding = create(:branding, :with_background, tenant: ze)
+    create(:service, tenant: ze, name: "Corte")
+    mary = create(:tenant, subdomain: "mary-sombracelhas", name: "Mary Sombracelhas")
+    mary_branding = create(:branding, tenant: mary)
+    create(:service, tenant: mary, name: "Design de sobrancelhas")
+
+    host! "mary-sombracelhas.zubio.com.br"
+    get root_path
+    mary_href = Nokogiri::HTML5(response.body).at_css("link[href*='branding.css']")["href"]
+
+    host! "barbearia-do-ze.zubio.com.br"
+    get root_path
+    ze_href = Nokogiri::HTML5(response.body).at_css("link[href*='branding.css']")["href"]
+
+    expect(mary_href).to include(mary_branding.stylesheet_digest)
+    expect(ze_href).to include(ze_branding.stylesheet_digest)
+    expect(mary_href).not_to eq(ze_href)
+  end
 end

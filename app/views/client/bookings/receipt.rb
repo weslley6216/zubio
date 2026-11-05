@@ -27,9 +27,9 @@ class Views::Client::Bookings::Receipt < Views::Base
   DETAIL_ROW_CLASS = "flex items-baseline gap-3".freeze
   DETAIL_LABEL_CLASS = "w-[78px] flex-none text-[12px] font-bold uppercase tracking-[0.04em] text-(--theme-on-card-muted)".freeze
   DETAIL_VALUE_CLASS = "text-[15px] font-bold".freeze
-  LINK_CARD_CLASS = "flex flex-col gap-3 rounded-[14px] border-2 border-(--theme-accent) bg-(--theme-card) p-4 text-(--theme-on-card)".freeze
+  LINK_CARD_CLASS = "flex flex-col gap-3 rounded-[14px] bg-(--theme-card) p-4 text-(--theme-on-card)".freeze
   LINK_HEADER_CLASS = "flex items-center gap-2".freeze
-  LINK_ICON_CLASS = "h-[17px] w-[17px] text-(--theme-accent)".freeze
+  LINK_ICON_CLASS = "h-[17px] w-[17px]".freeze
   LINK_TITLE_CLASS = "text-[14px] font-extrabold".freeze
   LINK_BODY_CLASS = "text-[13px] leading-[1.55] text-(--theme-on-card-muted)".freeze
   MY_APPOINTMENTS_LINK_CLASS = "flex min-h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-(--theme-accent) text-[14px] font-bold text-(--theme-on-accent)".freeze
