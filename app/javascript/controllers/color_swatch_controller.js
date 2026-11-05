@@ -2,10 +2,10 @@ import { Controller } from "@hotwired/stimulus"
 
 const HEX = /^#[0-9a-fA-F]{6}$/
 const ROLE = {
-  "branding[brand_600]": "previewBrand",
-  "branding[brand_secondary_600]": "previewSecondary"
+  "branding[brand_background]": "previewBg",
+  "branding[brand_600]": "previewAccent"
 }
-const PARAM = { previewBrand: "brand", previewSecondary: "secondary" }
+const PARAM = { previewBg: "bg", previewAccent: "accent" }
 
 export default class extends Controller {
   static targets = ["preview"]
@@ -44,7 +44,6 @@ export default class extends Controller {
     if (!role || !radio.checked) return
 
     if (radio.value === "custom") this.#applyCustom(radio.closest("fieldset"))
-    else if (radio.value === "") this.#paint("previewSecondary", "none")
     else if (HEX.test(radio.value)) this.#paint(role, radio.value.toUpperCase())
   }
 
@@ -89,7 +88,7 @@ export default class extends Controller {
 
   #paint(role, value) {
     if (this.hasPreviewTarget) this.previewTarget.dataset[role] = value
-    const scope = this.element.closest("[data-preview-brand]")
+    const scope = this.element.closest("[data-preview-bg]")
     if (scope) scope.dataset[role] = value
   }
 

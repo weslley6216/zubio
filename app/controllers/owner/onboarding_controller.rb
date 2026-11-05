@@ -32,7 +32,7 @@ class Owner::OnboardingController < Owner::BaseController
   def document(rejection: nil)
     Views::Owner::Onboarding::Document.new(
       tenant: rejection&.tenant || ActsAsTenant.current_tenant,
-      branding: rejection&.branding || current_branding,
+      branding: rejection&.branding || ActsAsTenant.current_tenant.branding || Branding.new(Branding::Palette::STARTING),
       services: rejection&.services || [],
       schedule: rejection&.schedule || Onboarding::Schedule.starting_point,
       open_section: open_section(rejection),
@@ -45,7 +45,7 @@ class Owner::OnboardingController < Owner::BaseController
     return "welcome" if rejection.nil?
 
     branding_errors = rejection.branding.errors
-    return "colors" if branding_errors[:brand_600].present? || branding_errors[:brand_secondary_600].present?
+    return "colors" if branding_errors[:brand_600].present? || branding_errors[:brand_background].present?
     return "name" if rejection.tenant.errors[:name].present?
     return "logo" if branding_errors[:logo].present?
     return "services" if rejection.services.any? { |service| service.errors.present? }

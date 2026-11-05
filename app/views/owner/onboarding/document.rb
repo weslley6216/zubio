@@ -81,7 +81,7 @@ class Views::Owner::Onboarding::Document < Views::Base
             action: "input->onboarding#save change->onboarding#save submit->onboarding#submit #{SUBMIT_LOCK_ACTIONS}"
           }) do
             render_welcome
-            render Components::Owner::Onboarding::Screen.new(section: "colors", group: BRAND_GROUP, position: 1, primary: CONTINUE_LABEL, hidden: @open_section != "colors") do
+            render Components::Owner::Onboarding::Screen.new(section: "colors", group: BRAND_GROUP, position: 1, primary: CONTINUE_LABEL, accent_primary: true, hidden: @open_section != "colors") do
               render Components::Owner::BrandQuestion::Colors.new(tenant: @tenant, branding: @branding)
             end
             render Components::Owner::Onboarding::Screen.new(section: "name", group: BRAND_GROUP, position: 2, primary: CONTINUE_LABEL, hidden: @open_section != "name") do
@@ -113,8 +113,8 @@ class Views::Owner::Onboarding::Document < Views::Base
       onboarding_editing_label_value: EDITING_LABEL,
       onboarding_add_service_label_value: ADD_SERVICE_LABEL,
       onboarding_save_service_label_value: SAVE_SERVICE_LABEL,
-      preview_brand: @branding.brand_600,
-      preview_secondary: @branding.brand_secondary_600.presence || "none"
+      preview_bg: @branding.brand_background.presence || "none",
+      preview_accent: @branding.brand_600
     }
   end
 

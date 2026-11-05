@@ -8,7 +8,7 @@ class Components::Owner::Onboarding::Screen < Components::Base
 
   BAR_CLASS = "flex gap-1.5 px-6 pb-6".freeze
   SEGMENT_CLASS = "h-[5px] flex-grow rounded-full".freeze
-  SEGMENT_FILLED_CLASS = "bg-brand-600".freeze
+  SEGMENT_FILLED_CLASS = "bg-(--theme-accent)".freeze
   SEGMENT_EMPTY_CLASS = "bg-line".freeze
 
   BODY_CLASS = "flex flex-grow flex-col gap-3.5 overflow-y-auto px-6".freeze

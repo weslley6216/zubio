@@ -108,15 +108,25 @@ RSpec.describe "Owner onboarding", type: :request do
       expect(response.body).to include("sob consulta")
     end
 
-    it "renders the onboarding root as the repaint scope in the default brand color" do
+    it "renders the onboarding root as the repaint scope in the T1 starting colors" do
       tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
       sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
 
       get owner_onboarding_path
 
       root = Nokogiri::HTML5(response.body).at_css(%([data-controller="onboarding"]))
-      expect(root["data-preview-brand"]).to eq(Branding::DEFAULT_BRAND_600)
-      expect(root["data-preview-secondary"]).to eq("none")
+      expect(root["data-preview-bg"]).to eq(Branding::Palette::STARTING.fetch(:brand_background))
+      expect(root["data-preview-accent"]).to eq(Branding::Palette::STARTING.fetch(:brand_600))
+    end
+
+    it "opens the colors question with the T1 starting pair already selected" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
+
+      get owner_onboarding_path
+
+      expect(response.body).to include(%(value="#{Branding::Palette::STARTING.fetch(:brand_background)}" checked))
+      expect(response.body).to include(%(value="#{Branding::Palette::STARTING.fetch(:brand_600)}" checked))
     end
 
     it "fills the schedule with the 09:00 to 18:00 starting point on the first visit" do
@@ -370,6 +380,35 @@ RSpec.describe "Owner onboarding", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(%(data-onboarding-open-value="colors"))
+      expect(tenant.reload.onboarding_completed?).to be(false)
+    end
+
+    it "writes the T1 starting pair when the colors question is submitted untouched" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
+
+      post owner_onboarding_path, params: answers.merge(
+        branding: { brand_background: Branding::Palette::STARTING.fetch(:brand_background), brand_600: Branding::Palette::STARTING.fetch(:brand_600) }
+      )
+
+      expect(tenant.reload.onboarding_completed?).to be(true)
+      ActsAsTenant.with_tenant(tenant) do
+        expect(tenant.branding.brand_background).to eq(Branding::Palette::STARTING.fetch(:brand_background))
+        expect(tenant.branding.brand_600).to eq(Branding::Palette::STARTING.fetch(:brand_600))
+      end
+    end
+
+    it "refuses an accent that does not stand out on the chosen background and reopens the colors section" do
+      tenant = create(:tenant, :onboarding, subdomain: "abc123def456")
+      sign_in_owner(create(:user, :with_professional, tenant: tenant, name: "Ana Lima"))
+
+      post owner_onboarding_path, params: answers.merge(
+        branding: { brand_background: "#16324A", brand_600: "custom", brand_600_custom: "#1E3A55" }
+      )
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include(%(data-onboarding-open-value="colors"))
+      expect(response.body).to include(Branding::STANDS_OUT_MESSAGE)
       expect(tenant.reload.onboarding_completed?).to be(false)
     end
 

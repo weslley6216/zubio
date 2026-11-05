@@ -13,7 +13,7 @@ RSpec.describe Components::Owner::Onboarding::Screen, type: :component do
 
     segments = Nokogiri::HTML5.fragment(html).css("[data-progress-bar] > div")
     expect(segments.length).to eq(5)
-    expect(segments.take(4).map { |segment| segment["class"] }).to all(include("bg-brand-600"))
+    expect(segments.take(4).map { |segment| segment["class"] }).to all(include("bg-(--theme-accent)"))
     expect(segments.last["class"]).to include("bg-line")
   end
 
