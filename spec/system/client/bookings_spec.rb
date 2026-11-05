@@ -195,6 +195,30 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
     end
   end
 
+  it "outlines the selected slot when the accent is weak on the card, and not when it is strong" do
+    weak_tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    create(:branding, :with_background, tenant: weak_tenant)
+    weak_professional = create(:professional, tenant: weak_tenant)
+    weak_service = create(:service, tenant: weak_tenant, duration_minutes: 45)
+    tuesday = Date.current.next_week(:tuesday)
+    create(:working_hour, tenant: weak_tenant, professional: weak_professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+
+    visit "http://#{weak_tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(weak_service, day: tuesday.iso8601)}"
+    find("[data-slot]", match: :first).click
+
+    expect(computed("[data-slot][aria-pressed='true']", "boxShadow")).to match(/rgb\(\d+, \d+, \d+\) 0px 0px 0px 2px/)
+
+    strong_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    strong_professional = create(:professional, tenant: strong_tenant)
+    strong_service = create(:service, tenant: strong_tenant, duration_minutes: 45)
+    create(:working_hour, tenant: strong_tenant, professional: strong_professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+
+    visit "http://#{strong_tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(strong_service, day: tuesday.iso8601)}"
+    find("[data-slot]", match: :first).click
+
+    expect(computed("[data-slot][aria-pressed='true']", "boxShadow")).to include("rgba(0, 0, 0, 0) 0px 0px 0px 2px")
+  end
+
   it "keeps the typed name and phone across a day change" do
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
     professional = create(:professional, tenant: tenant)
