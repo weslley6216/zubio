@@ -95,11 +95,11 @@ RSpec.describe Branding, type: :model do
       expect(branding.errors[:brand_background]).to eq([ Branding::CONTRAST_MESSAGE ])
     end
 
-    it "refuses an accent lost on the background with the contrast message" do
+    it "refuses an accent lost on the background with the stands-out message" do
       branding = build(:branding, brand_background: "#16324A", brand_600: "#1E3A55")
 
       expect(branding).not_to be_valid
-      expect(branding.errors[:brand_600]).to eq([ Branding::CONTRAST_MESSAGE ])
+      expect(branding.errors[:brand_600]).to eq([ Branding::STANDS_OUT_MESSAGE ])
     end
 
     it "refuses a light accent with no background, since it would sit on the neutral" do
@@ -130,7 +130,7 @@ RSpec.describe Branding, type: :model do
       branding.brand_600 = "#EAB308"
 
       expect(branding).not_to be_valid
-      expect(branding.errors[:brand_600]).to eq([ Branding::CONTRAST_MESSAGE ])
+      expect(branding.errors[:brand_600]).to eq([ Branding::STANDS_OUT_MESSAGE ])
     end
 
     it "is invalid when logo content type is not png, jpeg or webp" do
