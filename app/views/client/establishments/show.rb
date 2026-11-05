@@ -48,7 +48,7 @@ class Views::Client::Establishments::Show < Views::Base
 
   def view_template
     render Views::Layouts::Application.new(title: @tenant.name, branding: @branding, social: social_meta, flash_in_content: true) do
-      div(class: PAGE_CLASS) do
+      div(class: PAGE_CLASS, data: { page: true }) do
         render_brand_bar
         main(class: SHEET_CLASS) do
           @services.empty? ? render_empty_state : render_catalog

@@ -17,6 +17,20 @@ RSpec.describe "Public establishment showcase appearance", type: :system, js: tr
     JS
   end
 
+  it "keeps the showcase background under prefers-color-scheme dark" do
+    tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    create(:branding, :with_background, tenant: tenant)
+    create(:service, tenant: tenant, name: "Corte")
+
+    visit "http://#{tenant.subdomain}.zubio.com.br/"
+    light_background = computed_hex("[data-page]", "backgroundColor")
+    emulate_color_scheme("dark")
+    visit "http://#{tenant.subdomain}.zubio.com.br/"
+
+    expect(computed_hex("[data-page]", "backgroundColor")).to eq(light_background)
+    expect(light_background).to eq("#16324A")
+  end
+
   it "fits the phone width with every service card a touch target" do
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
     create(:service, tenant: tenant, name: "Corte feminino")
