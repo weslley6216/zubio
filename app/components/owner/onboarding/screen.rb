@@ -11,14 +11,17 @@ class Components::Owner::Onboarding::Screen < Components::Base
   SEGMENT_FILLED_CLASS = "bg-(--theme-accent)".freeze
   SEGMENT_EMPTY_CLASS = "bg-line".freeze
 
-  BODY_CLASS = "flex flex-grow flex-col gap-3.5 overflow-y-auto px-6".freeze
+  BODY_CLASS = "flex flex-grow flex-col gap-3.5 overflow-y-auto".freeze
 
-  FOOTER_CLASS = "px-6 pb-5 pt-3".freeze
+  GUTTERS = {
+    regular: { body: "px-6", footer: "px-6 pt-3 pb-5" },
+    t1: { body: "px-5", footer: "px-5 pb-6" }
+  }.freeze
   PRIMARY_CLASS = "min-h-13 w-full rounded-xl bg-zubio text-base font-extrabold text-on-zubio".freeze
-  ACCENT_PRIMARY_CLASS = "min-h-13 w-full rounded-[14px] bg-(--theme-accent) text-base font-extrabold text-(--theme-on-accent)".freeze
+  ACCENT_PRIMARY_CLASS = "min-h-13 w-full rounded-[14px] bg-(--theme-accent) text-[16px] leading-[normal] font-extrabold text-(--theme-on-accent)".freeze
   SECONDARY_CLASS = "mt-2 min-h-10 w-full bg-none text-sm font-bold text-ink-muted".freeze
 
-  def initialize(section:, group:, position:, primary:, total: 5, submit: false, secondary: nil, count: false, hidden: false, accent_primary: false)
+  def initialize(section:, group:, position:, primary:, total: 5, submit: false, secondary: nil, count: false, hidden: false, accent_primary: false, gutter: :regular)
     @section = section
     @group = group
     @position = position
@@ -29,13 +32,14 @@ class Components::Owner::Onboarding::Screen < Components::Base
     @count = count
     @hidden = hidden
     @accent_primary = accent_primary
+    @gutter = GUTTERS.fetch(gutter)
   end
 
   def view_template
     section(class: "flex min-h-0 flex-grow flex-col", hidden: @hidden, data: section_data) do
       render_header
       render_bar
-      div(class: BODY_CLASS) { yield }
+      div(class: "#{BODY_CLASS} #{@gutter.fetch(:body)}") { yield }
       render_footer
     end
   end
@@ -65,7 +69,7 @@ class Components::Owner::Onboarding::Screen < Components::Base
   end
 
   def render_footer
-    div(class: FOOTER_CLASS) do
+    div(class: @gutter.fetch(:footer)) do
       render_primary
       button(type: "button", class: SECONDARY_CLASS, data: { action: "onboarding#next" }) { @secondary } if @secondary
     end

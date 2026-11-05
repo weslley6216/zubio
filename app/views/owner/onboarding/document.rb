@@ -81,7 +81,7 @@ class Views::Owner::Onboarding::Document < Views::Base
             action: "input->onboarding#save change->onboarding#save submit->onboarding#submit #{SUBMIT_LOCK_ACTIONS}"
           }) do
             render_welcome
-            render Components::Owner::Onboarding::Screen.new(section: "colors", group: BRAND_GROUP, position: 1, primary: CONTINUE_LABEL, accent_primary: true, hidden: @open_section != "colors") do
+            render Components::Owner::Onboarding::Screen.new(section: "colors", group: BRAND_GROUP, position: 1, primary: CONTINUE_LABEL, accent_primary: true, gutter: :t1, hidden: @open_section != "colors") do
               render Components::Owner::BrandQuestion::Colors.new(tenant: @tenant, branding: @branding)
             end
             render Components::Owner::Onboarding::Screen.new(section: "name", group: BRAND_GROUP, position: 2, primary: CONTINUE_LABEL, hidden: @open_section != "name") do
