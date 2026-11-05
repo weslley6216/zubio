@@ -2,8 +2,15 @@ class Components::Owner::AppointmentDetail < Components::Base
   include Phlex::Rails::Helpers::ButtonTo
 
   SHEET = Views::Client::Appointments::Show
+  SHEET_FRAME = Views::Client::Appointments::SheetFrame
 
   FRAME_ID = "appointment_detail".freeze
+
+  SHEET_CLASS = "#{SHEET_FRAME::SHEET_CLASS} bg-surface".freeze
+  SHEET_TITLE_CLASS = "#{SHEET_FRAME::TITLE_CLASS} text-ink".freeze
+  SHEET_NOTE_CLASS = "#{SHEET_FRAME::NOTE_CLASS} text-ink-muted".freeze
+  SHEET_CONFIRM_CLASS = "#{SHEET_FRAME::CONFIRM_CLASS} bg-danger text-on-danger".freeze
+  SHEET_KEEP_CLASS = "#{SHEET_FRAME::KEEP_CLASS} border-line-strong text-ink".freeze
 
   TITLE = "Agendamento".freeze
   BACK_LABEL = "Voltar para a agenda".freeze
@@ -162,14 +169,14 @@ class Components::Owner::AppointmentDetail < Components::Base
   end
 
   def render_sheet
-    dialog(class: SHEET::SHEET_CLASS, data: { dialog_target: "sheet" }) do
-      div(class: SHEET::GRABBER_CLASS)
-      div(class: SHEET::SHEET_TEXT_CLASS) do
-        span(class: SHEET::SHEET_TITLE_CLASS) { SHEET.confirm_prompt(@appointment) }
-        span(class: SHEET::SHEET_NOTE_CLASS) { SHEET::CONFIRM_NOTE }
+    dialog(class: SHEET_CLASS, data: { dialog_target: "sheet" }) do
+      div(class: SHEET_FRAME::GRABBER_CLASS)
+      div(class: SHEET_FRAME::TEXT_CLASS) do
+        span(class: SHEET_TITLE_CLASS) { SHEET.confirm_prompt(@appointment) }
+        span(class: SHEET_NOTE_CLASS) { SHEET::CONFIRM_NOTE }
       end
-      button_to(SHEET::CONFIRM_LABEL, owner_appointment_cancellation_path(@appointment), class: SHEET::CONFIRM_CLASS, form: agenda_frame_form)
-      button(type: "button", class: SHEET::KEEP_CLASS, data: { action: "dialog#close" }) { KEEP_LABEL }
+      button_to(SHEET::CONFIRM_LABEL, owner_appointment_cancellation_path(@appointment), class: SHEET_CONFIRM_CLASS, form: agenda_frame_form)
+      button(type: "button", class: SHEET_KEEP_CLASS, data: { action: "dialog#close" }) { KEEP_LABEL }
     end
   end
 
