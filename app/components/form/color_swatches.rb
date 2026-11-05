@@ -9,14 +9,13 @@ class Components::Form::ColorSwatches < Components::Base
   INVALID_HEX_MESSAGE = "não é uma cor válida".freeze
 
   FIELDSET_CLASS = "flex min-w-0 flex-col gap-2.5".freeze
-  LEGEND_CLASS = "flex flex-col gap-0.5".freeze
-  LABEL_CLASS = "text-sm font-extrabold text-ink".freeze
-  HINT_CLASS = "text-xs text-ink-muted".freeze
+  LEGEND_CLASS = "mb-2.5 flex w-full flex-col gap-0.5".freeze
+  LABEL_CLASS = "text-[14px] font-extrabold text-ink".freeze
+  HINT_CLASS = "text-[12px] text-ink-muted".freeze
   ROW_CLASS = "flex flex-wrap gap-2.5".freeze
   ROW_OPTION_CLASS = "block".freeze
   SWATCH_CLASS = "block h-11 w-11 rounded-xl shadow-[inset_0_0_0_1px_rgba(14,26,36,0.12)] peer-checked:shadow-[0_0_0_2px_#ffffff,0_0_0_4px_#0e1a24]".freeze
-  CUSTOM_CLASS = "grid h-11 w-11 place-items-center rounded-xl border-[1.5px] border-dashed border-ink-subtle".freeze
-  CUSTOM_CHAR_CLASS = "text-[20px] font-bold text-ink-muted".freeze
+  CUSTOM_CLASS = "grid h-11 w-11 place-items-center rounded-xl border-[1.5px] border-dashed border-ink-subtle text-[20px] font-bold text-ink-muted".freeze
   CUSTOMIZE_OPTION_CLASS = "block".freeze
   CUSTOMIZE_CLASS = "flex h-11 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line-strong bg-surface px-2 text-xs font-bold text-ink-muted peer-checked:border-solid peer-checked:text-ink peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-offset-canvas peer-checked:ring-ink".freeze
   PICKER_CLASS = "h-11 w-11 flex-none cursor-pointer rounded-lg border border-line".freeze
@@ -61,7 +60,7 @@ class Components::Form::ColorSwatches < Components::Base
     label(class: ROW_OPTION_CLASS, data: { row_option: true }) do
       input(type: "checkbox", checked: custom?, class: "peer sr-only", aria_label: "#{MORE_LABEL} (#{CUSTOM_SUMMARY})",
         data: { more_toggle: true })
-      span(class: CUSTOM_CLASS) { span(class: CUSTOM_CHAR_CLASS) { CUSTOM_SUMMARY } }
+      span(class: CUSTOM_CLASS) { CUSTOM_SUMMARY }
     end
   end
 

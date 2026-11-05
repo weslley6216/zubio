@@ -11,7 +11,7 @@ RSpec.describe Components::Form::ColorSwatches, type: :component do
     document = Nokogiri::HTML5.fragment(described_class.new(label: "Fundo", hint: "A cor que veste a página", attribute: :brand_background, selected: "#16324A").call)
 
     legend = document.at_css("legend")
-    expect(legend["class"]).to include("flex-col")
+    expect(legend["class"].split).to include("flex-col", "w-full", "mb-2.5")
     expect(legend.at_xpath(".//*[normalize-space(text())='Fundo']")["class"]).to include("text-ink")
     expect(legend.at_xpath(".//*[normalize-space(text())='A cor que veste a página']")["class"]).to include("text-ink-muted")
   end
@@ -132,7 +132,8 @@ RSpec.describe Components::Form::ColorSwatches, type: :component do
     document = Nokogiri::HTML5.fragment(described_class.new(label: "Destaque", hint: "hint", attribute: :brand_600, selected: Branding::Palette::SUGGESTIONS.fetch(:brand_600).first).call)
 
     plus = document.at_css("[data-more-toggle]").parent.at_css("span")
-    expect(plus["class"]).to include("h-11", "w-11", "border-dashed")
+    expect(plus["class"]).to include("h-11", "w-11", "border-dashed", "text-[20px]")
+    expect(plus.children.map(&:name)).to eq([ "text" ])
     expect(plus.text).to eq(described_class::CUSTOM_SUMMARY)
   end
 end

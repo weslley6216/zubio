@@ -13,16 +13,18 @@ class Components::Owner::BrandQuestion::Colors < Components::Base
   PREVIEW_BOOK = "Agendar".freeze
   PREVIEW_CAPTION = "Prévia: fundo, cartão gerado e destaque".freeze
 
+  ROOT_CLASS = "flex flex-col gap-3.5 leading-[normal]".freeze
   HEADING_BLOCK_CLASS = "flex flex-col gap-1.5".freeze
-  TITLE_CLASS = "text-[24px] leading-[1.2] font-extrabold tracking-[-0.02em] text-ink".freeze
-  SUBTITLE_CLASS = "text-sm leading-[1.5] text-ink-muted".freeze
+  TITLE_CLASS = "text-[24px] font-extrabold tracking-[-0.02em] text-ink".freeze
+  SUBTITLE_CLASS = "text-[14px] leading-[1.5] text-ink-muted".freeze
   GROUP_CARD_CLASS = "rounded-2xl border border-line bg-surface p-4".freeze
+  PREVIEW_CLASS = "flex flex-col gap-3.5".freeze
   PREVIEW_PANEL_CLASS = "flex items-center gap-3 rounded-2xl bg-(--theme-bg) p-3".freeze
   PREVIEW_CARD_CLASS = "flex-grow flex flex-col gap-2 rounded-xl bg-(--theme-card) p-3".freeze
   PREVIEW_NAME_CLASS = "block text-[13px] font-extrabold text-(--theme-on-card)".freeze
-  PREVIEW_META_CLASS = "block text-xs text-(--theme-on-card-muted)".freeze
+  PREVIEW_META_CLASS = "block text-[12px] text-(--theme-on-card-muted)".freeze
   PREVIEW_BOOK_CLASS = "flex min-h-11 flex-none items-center justify-center rounded-[10px] bg-(--theme-accent) px-3.5 text-[13px] font-extrabold text-(--theme-on-accent)".freeze
-  PREVIEW_CAPTION_CLASS = "text-center text-xs text-ink-muted".freeze
+  PREVIEW_CAPTION_CLASS = "text-center text-[12px] text-ink-muted".freeze
 
   def initialize(tenant:, branding:)
     @tenant = tenant
@@ -30,7 +32,7 @@ class Components::Owner::BrandQuestion::Colors < Components::Base
   end
 
   def view_template
-    div(data: { controller: "color-swatch" }) do
+    div(class: ROOT_CLASS, data: { controller: "color-swatch" }) do
       div(class: HEADING_BLOCK_CLASS) do
         h1(id: HEADING_ID, class: TITLE_CLASS) { TITLE }
         p(class: SUBTITLE_CLASS) { SUBTITLE }
@@ -51,7 +53,7 @@ class Components::Owner::BrandQuestion::Colors < Components::Base
   end
 
   def render_preview
-    div(data: { "color-swatch-target": "preview", preview_bg: preview_bg, preview_accent: @branding.brand_600 }) do
+    div(class: PREVIEW_CLASS, data: { "color-swatch-target": "preview", preview_bg: preview_bg, preview_accent: @branding.brand_600 }) do
       div(class: PREVIEW_PANEL_CLASS) do
         div(class: PREVIEW_CARD_CLASS) do
           span(class: PREVIEW_NAME_CLASS) { PREVIEW_SERVICE_NAME }

@@ -62,6 +62,14 @@ RSpec.describe Components::Owner::BrandQuestion::Colors, type: :component do
     expect(document.at_css("h1")["class"]).to include("text-[24px]")
   end
 
+  it "stacks the heading, the two groups and the preview 14px apart on the canvas normal line height" do
+    document = Nokogiri::HTML5.fragment(described_class.new(tenant: tenant, branding: build(:branding, :with_background, tenant: tenant)).call)
+
+    root = document.at_css("[data-controller='color-swatch']")
+    expect(root["class"].split).to include("flex", "flex-col", "gap-3.5", "leading-[normal]")
+    expect(document.at_css("h1")["class"]).not_to include("leading-")
+  end
+
   it "paints the preview panel, card and book action from the theme tokens, with the caption outside the panel" do
     document = Nokogiri::HTML5.fragment(described_class.new(tenant: tenant, branding: build(:branding, :with_background, tenant: tenant)).call)
 
@@ -75,5 +83,6 @@ RSpec.describe Components::Owner::BrandQuestion::Colors, type: :component do
     expect(book["class"]).to include("bg-(--theme-accent)", "text-(--theme-on-accent)")
     caption = document.at_css("[data-color-swatch-target='preview'] > p")
     expect(caption.text).to eq(described_class::PREVIEW_CAPTION)
+    expect(document.at_css("[data-color-swatch-target='preview']")["class"].split).to include("flex", "flex-col", "gap-3.5")
   end
 end

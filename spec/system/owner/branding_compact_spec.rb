@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "Owner branding on one screen", type: :system, js: true do
   it "fits each brand question on a phone screen without scrolling" do
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
-    create(:branding, tenant: tenant, brand_600: "#4F46E5")
+    create(:branding, :with_background, tenant: tenant)
     emulate_phone(width: 430, height: 800)
     sign_in_owner(create(:user, tenant: tenant))
 
