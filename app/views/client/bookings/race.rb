@@ -11,30 +11,31 @@ class Views::Client::Bookings::Race < Views::Base
   CONFIRM_LABEL = "Confirmar".freeze
   ANOTHER_DAY_LABEL = "Escolher outro dia".freeze
 
-  PAGE_CLASS = "mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-surface-2 leading-[normal] text-ink".freeze
-  HEADER_CLASS = "flex items-center gap-3 bg-brand-600 px-5 py-3.5 text-on-brand".freeze
-  HEADER_NAME_CLASS = "min-w-0 flex-grow truncate text-[15px] font-extrabold tracking-[-0.01em]".freeze
-  CONTENT_CLASS = "flex flex-grow flex-col gap-[18px] p-5".freeze
-  ALERT_CLASS = "flex gap-3 rounded-xl border border-danger bg-surface px-4 py-3.5".freeze
-  ALERT_ICON_CLASS = "h-5 w-5 flex-none text-danger".freeze
+  PAGE_CLASS = Views::Client::Frame::PAGE
+  HEADER_CLASS = Views::Client::Frame::HEADER
+  HEADER_NAME_CLASS = Views::Client::Frame::NAME
+  CONTENT_CLASS = "flex flex-grow flex-col gap-4 px-5 pt-1 pb-5".freeze
+  ALERT_CLASS = "flex gap-3 rounded-2xl bg-(--theme-card) px-4 py-3.5 ring-[1.5px] ring-(--theme-danger-on-card) ring-inset".freeze
+  ALERT_ICON_CLASS = "h-5 w-5 flex-none text-(--theme-danger-on-card)".freeze
   ALERT_TEXT_CLASS = "flex flex-col gap-[3px]".freeze
-  ALERT_TITLE_CLASS = "text-[14px] font-extrabold text-danger".freeze
-  ALERT_BODY_CLASS = "text-[13px] leading-[1.5] text-ink-muted".freeze
-  CARD_CLASS = "flex flex-col gap-2.5 rounded-xl border border-line bg-surface px-4 py-3.5".freeze
+  ALERT_TITLE_CLASS = "text-[14px] font-extrabold text-(--theme-danger-on-card)".freeze
+  ALERT_BODY_CLASS = "text-[13px] leading-[1.5] text-(--theme-on-card-muted)".freeze
+  CARD_CLASS = "flex flex-col gap-2.5 rounded-2xl bg-(--theme-card) px-4 py-3.5 text-(--theme-on-card)".freeze
   CARD_ROW_CLASS = "flex items-baseline justify-between gap-4".freeze
-  CARD_LABEL_CLASS = "flex-none text-[13px] text-ink-muted".freeze
-  CARD_VALUE_CLASS = "text-right text-[14px] font-bold tabular-nums".freeze
-  CARD_DIVIDER_CLASS = "h-px bg-line".freeze
-  LEFTOVERS_CLASS = "flex flex-col gap-2.5".freeze
-  LEFTOVERS_LABEL_CLASS = "text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted".freeze
+  CARD_LABEL_CLASS = "flex-none text-[13px] text-(--theme-on-card-muted)".freeze
+  CARD_VALUE_CLASS = "text-right text-[14px] font-extrabold tabular-nums".freeze
+  CARD_DIVIDER_CLASS = "h-px bg-(--theme-card-line)".freeze
+  LEFTOVERS_CLASS = "flex flex-col gap-4".freeze
+  SLOTS_PANEL_CLASS = "rounded-2xl bg-(--theme-card) p-3 text-(--theme-on-card)".freeze
+  LEFTOVERS_LABEL_CLASS = "text-[11px] font-bold uppercase tracking-[0.08em] text-(--theme-on-bg-muted)".freeze
   GRID_CLASS = "grid grid-cols-4 gap-2".freeze
-  SLOT_BASE_CLASS = "grid min-h-[50px] place-items-center rounded-xl text-[15px] font-bold tabular-nums".freeze
-  SLOT_FREE_CLASS = "border border-line bg-surface aria-pressed:border-transparent aria-pressed:bg-brand-600 aria-pressed:text-on-brand aria-pressed:shadow-[0_2px_6px_color-mix(in_srgb,var(--brand-600)_20%,transparent)]".freeze
-  SLOT_TAKEN_CLASS = "border border-dashed border-line-strong bg-surface-3 text-ink-subtle line-through".freeze
-  HINT_CLASS = "text-[12px] text-ink-subtle".freeze
+  SLOT_BASE_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] text-[15px] font-extrabold tabular-nums".freeze
+  SLOT_FREE_CLASS = "bg-(--theme-card-chip) text-(--theme-on-card) aria-pressed:bg-(--theme-accent) aria-pressed:text-(--theme-on-accent) aria-pressed:ring-2 aria-pressed:ring-inset aria-pressed:ring-[color:var(--theme-selected-ring,transparent)]".freeze
+  SLOT_TAKEN_CLASS = "box-content border-[1.5px] border-dashed border-(--theme-on-card-muted) bg-(--theme-card) text-(--theme-on-card-muted) line-through".freeze
+  HINT_CLASS = "text-[12px] text-(--theme-on-bg-muted)".freeze
   BAR_CLASS = "flex flex-col gap-2.5 px-5 pb-[calc(24px+env(safe-area-inset-bottom,0px))]".freeze
-  BUTTON_CLASS = "flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-[15px] font-extrabold text-on-brand disabled:bg-surface-3 disabled:text-ink-muted".freeze
-  ANOTHER_DAY_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-xl border border-line bg-surface text-[14px] font-bold text-ink-muted".freeze
+  BUTTON_CLASS = "flex min-h-[50px] w-full items-center justify-center gap-2 rounded-[14px] bg-(--theme-accent) text-[16px] font-extrabold text-(--theme-on-accent) disabled:bg-(--theme-card-chip) disabled:text-(--theme-on-card-muted)".freeze
+  ANOTHER_DAY_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-xl bg-(--theme-card) text-[14px] font-bold text-(--theme-on-card-muted)".freeze
 
   def initialize(tenant:, branding:, service:, professional:, selected_day:, slots:, taken_slots:, nearest:, client_name:, client_phone:, lost_time:)
     @tenant = tenant
@@ -77,7 +78,7 @@ class Views::Client::Bookings::Race < Views::Base
 
   def render_header
     header(class: HEADER_CLASS) do
-      render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :client, tone: :translucent)
+      render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :client, tone: :card)
       span(class: HEADER_NAME_CLASS) { @tenant.name }
     end
   end
@@ -117,8 +118,10 @@ class Views::Client::Bookings::Race < Views::Base
   def render_leftovers
     div(class: LEFTOVERS_CLASS) do
       span(class: LEFTOVERS_LABEL_CLASS) { LEFTOVERS_LABEL }
-      div(class: GRID_CLASS) do
-        (@slots + @taken_slots).sort.each { |slot| @taken_slots.include?(slot) ? render_taken_slot(slot) : render_free_slot(slot) }
+      div(class: SLOTS_PANEL_CLASS) do
+        div(class: GRID_CLASS) do
+          (@slots + @taken_slots).sort.each { |slot| @taken_slots.include?(slot) ? render_taken_slot(slot) : render_free_slot(slot) }
+        end
       end
       span(class: HINT_CLASS) { @nearest ? NEAREST_HINT : NO_SLOTS_HINT }
     end

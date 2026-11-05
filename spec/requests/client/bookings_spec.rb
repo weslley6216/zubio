@@ -17,6 +17,18 @@ RSpec.describe "Public booking day and time selection", type: :request do
     expect(response.body).to include("Design de sobrancelhas")
   end
 
+  it "themes the guest data fields with a visible focus ring" do
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, name: "Design de sobrancelhas")
+    create(:working_hour, tenant: tenant, professional: professional, weekday: Date.current.wday, opens_at: "09:00", closes_at: "18:00")
+    host! "#{tenant.subdomain}.zubio.com.br"
+
+    get new_client_service_booking_path(service)
+
+    expect(response.body).to include("(--theme-focus)")
+    expect(response.body).to include("(--theme-field-line)")
+  end
+
   it "disables native prefetch on the bookable day pills" do
     professional = create(:professional, tenant: tenant)
     service = create(:service, tenant: tenant, duration_minutes: 45)
@@ -393,7 +405,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
     expect(document.css("[data-slot-taken]").map { |slot| slot.text.strip }).to eq([ "10:30" ])
   end
 
-  it "paints the grid with brand tokens and never a demo token" do
+  it "paints the grid with theme tokens and never a demo token" do
     professional = create(:professional, tenant: tenant)
     service = create(:service, tenant: tenant, duration_minutes: 45)
     tuesday = Date.current.next_week(:tuesday)
@@ -402,7 +414,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
 
     get new_client_service_booking_path(service, day: tuesday.iso8601)
 
-    expect(response.body).to include("bg-brand-600")
+    expect(response.body).to include("(--theme-bg)")
     expect(response.body).to include("tabular-nums")
     expect(response.body).not_to include("demo")
   end
@@ -922,6 +934,20 @@ RSpec.describe "Public booking day and time selection", type: :request do
 
       expect(response.body).to include(client.name)
       expect(response.body).to include(client.phone_display)
+    end
+
+    it "shows the guest's typed phone formatted on the race screen" do
+      travel_to Time.zone.local(2026, 9, 8, 7, 0)
+      professional = create(:professional, tenant: tenant, display_name: "Mary")
+      service = create(:service, tenant: tenant, duration_minutes: 45)
+      create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+      host! "#{tenant.subdomain}.zubio.com.br"
+      starts_at = Date.new(2026, 9, 8).in_time_zone.change(hour: 9, min: 45)
+      create(:appointment, tenant: tenant, professional: professional, service: service, starts_at: starts_at)
+
+      post client_service_booking_path(service), params: { name: "Rafael Lima", phone: "11987654321", starts_at: starts_at.iso8601 }
+
+      expect(response.body).to include("(11) 98765-4321")
     end
   end
 end

@@ -14,6 +14,14 @@ RSpec.describe "Client session", type: :request do
       expect(response.body).to include("Entre para agendar", "Continuar com o Google", "Continuar sem conta")
       expect(response.body).to include(%(href="#{new_client_service_booking_path(service)}"))
     end
+
+    it "paints the logo-less initial on the theme card instead of the brand accent" do
+      get new_client_session_path(service_id: service.id)
+
+      initial = Nokogiri::HTML5(response.body).at_css("[data-brand-initial]")
+      expect(initial["class"]).to include("bg-(--theme-card)")
+      expect(initial["class"]).not_to include("bg-brand-accent")
+    end
   end
 
   describe "GET /session/new no modo lista" do

@@ -28,6 +28,13 @@ module ComputedStyle
     foreground.contrast_against(background)
   end
 
+  def contrast_against(selector, background_selector)
+    foreground = Branding::ColorScale.new(computed_hex(selector, "color"))
+    background = Branding::ColorScale.new(computed_hex(background_selector, "backgroundColor"))
+
+    foreground.contrast_against(background)
+  end
+
   def border_contrast_ratio(selector)
     border = Branding::ColorScale.new(computed_hex(selector, "borderTopColor"))
     background = Branding::ColorScale.new(computed_hex(selector, "backgroundColor"))

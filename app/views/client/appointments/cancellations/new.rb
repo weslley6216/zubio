@@ -23,7 +23,7 @@ class Views::Client::Appointments::Cancellations::New < Views::Base
 
   def render_band
     div(class: SHOW::BAND_CLASS) do
-      render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :client, tone: :translucent)
+      render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :client, tone: :card)
       span(class: SHOW::BAND_NAME_CLASS) { @tenant.name }
     end
   end

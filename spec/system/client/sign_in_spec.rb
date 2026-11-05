@@ -80,8 +80,8 @@ RSpec.describe "Client Google sign-in", type: :system, js: true do
 
       visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_session_path(service_id: service.id)}"
 
-      expect(opaque?("header")).to be(true)
-      expect(contrast_ratio("header")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(opaque?("[data-page]")).to be(true)
+      expect(contrast_against("header", "[data-page]")).to be >= Branding::ColorScale::MIN_CONTRAST
       expect(opaque?("[data-google-button]")).to be(true)
       expect(contrast_ratio("[data-google-button]")).to be >= Branding::ColorScale::MIN_CONTRAST
       expect(opaque?("[data-guest-button]")).to be(true)

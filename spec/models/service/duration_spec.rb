@@ -17,6 +17,14 @@ RSpec.describe Service::Duration do
     end
   end
 
+  describe ".compact_label" do
+    { 15 => "15 min", 40 => "40 min", 60 => "1h", 70 => "1h10", 125 => "2h05" }.each do |minutes, label|
+      it "abbreviates #{minutes} minutes as #{label.inspect}" do
+        expect(described_class.compact_label(minutes)).to eq(label)
+      end
+    end
+  end
+
   describe ".minutes_label" do
     { 45 => "45 min", 120 => "120 min" }.each do |minutes, label|
       it "spells #{minutes} minutes as #{label.inspect}" do

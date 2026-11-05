@@ -23,6 +23,16 @@ RSpec.describe Appointment::Labels do
     end
   end
 
+  describe "#compact_duration_label" do
+    it "abbreviates a duration past the hour and tells when it ends" do
+      tenant = create(:tenant)
+      service = create(:service, tenant: tenant, duration_minutes: 70)
+      appointment = create(:appointment, tenant: tenant, service: service, starts_at: Time.zone.local(2026, 11, 17, 10, 0))
+
+      expect(described_class.new(appointment).compact_duration_label).to eq("1h10 · termina 11:10")
+    end
+  end
+
   describe "#price_label" do
     it "shows the public price" do
       tenant = create(:tenant)

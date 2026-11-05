@@ -33,6 +33,31 @@ RSpec.describe Components::Client::Bookings::Grid, type: :component do
     end
   end
 
+  it "paints the selected slot with the accent and a ring fallback, free slots with the card chip" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+    slot = Time.zone.local(2026, 9, 8, 9, 0)
+
+    html = ActsAsTenant.with_tenant(tenant) { render_phlex(described_class.new(service: service, slots: [ slot ], taken_slots: [], reason: :bookable, selected_slot: slot)) }
+
+    expect(html).to include("(--theme-accent)")
+    expect(html).to include("(--theme-card-chip)")
+    expect(html).to include("(--theme-selected-ring,transparent)")
+    expect(html).not_to include("bg-brand-600")
+  end
+
+  it "shows the no-slots reason card in theme" do
+    travel_to Time.zone.local(2026, 9, 8, 7, 0)
+    tenant = create(:tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45)
+
+    html = ActsAsTenant.with_tenant(tenant) { render_phlex(described_class.new(service: service, slots: [], taken_slots: [], reason: :fully_booked, selected_slot: nil)) }
+
+    expect(html).to include("(--theme-card)")
+    expect(html).to include(Components::Client::Bookings::Grid::FULLY_BOOKED_MESSAGE)
+  end
+
   it "hides the grid hint under the wait and wires the revalidation reconcile" do
     travel_to Time.zone.local(2026, 9, 8, 7, 0)
     tenant = create(:tenant)

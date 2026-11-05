@@ -101,7 +101,7 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
     expect(page.evaluate_script("Math.round(document.querySelector('[data-confirm-bar]').parentElement.getBoundingClientRect().bottom)")).to eq(page.evaluate_script("window.innerHeight"))
   end
 
-  it "shows four days at a time on the phone, each a touch target" do
+  it "shows five days at a time on the phone, each a touch target" do
     tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
     professional = create(:professional, tenant: tenant)
     service = create(:service, tenant: tenant, duration_minutes: 60)
@@ -109,7 +109,7 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
 
     visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service)}"
 
-    expect(page.evaluate_script(<<~JS)).to eq(4)
+    expect(page.evaluate_script(<<~JS)).to eq(5)
       (() => {
         const strip = document.querySelector('[data-day-selector]').getBoundingClientRect();
         return [...document.querySelectorAll('[data-day-selector] [data-day]')]
@@ -183,8 +183,8 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
 
       visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: tuesday.iso8601)}"
 
-      expect(opaque?("header")).to be(true)
-      expect(contrast_ratio("header")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(opaque?("[data-page]")).to be(true)
+      expect(contrast_against("header", "[data-page]")).to be >= Branding::ColorScale::MIN_CONTRAST
       expect(opaque?("[data-slot]")).to be(true)
       expect(contrast_ratio("[data-slot]")).to be >= Branding::ColorScale::MIN_CONTRAST
       expect(opaque?("[data-day][aria-disabled='true']")).to be(true)
@@ -193,6 +193,49 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
       expect(opaque?("[data-confirm-bar]")).to be(true)
       expect(contrast_ratio("[data-confirm-bar]")).to be >= Branding::ColorScale::MIN_NON_TEXT_CONTRAST
     end
+  end
+
+  it "paints only the chosen day, the chosen time and the confirm button with the accent" do
+    tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    create(:branding, :with_background, tenant: tenant)
+    professional = create(:professional, tenant: tenant)
+    service = create(:service, tenant: tenant, duration_minutes: 45, price_cents: 7_000)
+    tuesday = Date.current.next_week(:tuesday)
+    create(:working_hour, tenant: tenant, professional: professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+
+    visit "http://#{tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(service, day: tuesday.iso8601)}"
+    find("[data-slot]", match: :first).click
+
+    painted = page.evaluate_script(<<~JS)
+      [...document.querySelectorAll("body *")]
+        .filter((element) => getComputedStyle(element).backgroundColor === "rgb(240, 97, 122)")
+        .map((element) => element.matches("[data-day]") ? "day" : element.matches("[data-slot]") ? "slot" : element.matches("[data-confirm-bar]") ? "confirm" : element.outerHTML.slice(0, 80))
+    JS
+    expect(painted).to contain_exactly("day", "slot", "confirm")
+  end
+
+  it "outlines the selected slot when the accent is weak on the card, and not when it is strong" do
+    weak_tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    create(:branding, :with_background, tenant: weak_tenant)
+    weak_professional = create(:professional, tenant: weak_tenant)
+    weak_service = create(:service, tenant: weak_tenant, duration_minutes: 45)
+    tuesday = Date.current.next_week(:tuesday)
+    create(:working_hour, tenant: weak_tenant, professional: weak_professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+
+    visit "http://#{weak_tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(weak_service, day: tuesday.iso8601)}"
+    find("[data-slot]", match: :first).click
+
+    expect(computed("[data-slot][aria-pressed='true']", "boxShadow")).to match(/rgb\(\d+, \d+, \d+\) 0px 0px 0px 2px/)
+
+    strong_tenant = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+    strong_professional = create(:professional, tenant: strong_tenant)
+    strong_service = create(:service, tenant: strong_tenant, duration_minutes: 45)
+    create(:working_hour, tenant: strong_tenant, professional: strong_professional, weekday: 2, opens_at: "09:00", closes_at: "12:00")
+
+    visit "http://#{strong_tenant.subdomain}.zubio.com.br#{new_client_service_booking_path(strong_service, day: tuesday.iso8601)}"
+    find("[data-slot]", match: :first).click
+
+    expect(computed("[data-slot][aria-pressed='true']", "boxShadow")).to include("rgba(0, 0, 0, 0) 0px 0px 0px 2px")
   end
 
   it "keeps the typed name and phone across a day change" do
@@ -385,8 +428,8 @@ RSpec.describe "Public booking interaction", type: :system, js: true do
       expect(contrast_ratio("[data-when]")).to be >= Branding::ColorScale::MIN_CONTRAST
       expect(opaque?("[data-receipt-invite] [data-google-button]")).to be(true)
       expect(contrast_ratio("[data-receipt-invite] [data-google-button]")).to be >= Branding::ColorScale::MIN_CONTRAST
-      expect(opaque?("[data-cancel-link]")).to be(true)
-      expect(contrast_ratio("[data-cancel-link]")).to be >= Branding::ColorScale::MIN_CONTRAST
+      expect(opaque?("[data-receipt]")).to be(true)
+      expect(contrast_against("[data-cancel-link]", "[data-receipt]")).to be >= Branding::ColorScale::MIN_CONTRAST
       expect(page).to fit_the_phone_width
     end
 

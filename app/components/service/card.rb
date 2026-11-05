@@ -10,12 +10,12 @@ class Components::Service::Card < Components::Base
   DURATION_CLASS = "text-xs leading-[normal] font-semibold tabular-nums text-ink-muted".freeze
   DISABLED_DURATION_CLASS = "text-xs leading-[normal] font-semibold tabular-nums text-ink-subtle".freeze
 
-  SHOWCASE_CARD_CLASS = "relative flex items-center gap-3 rounded-[14px] border border-line bg-surface p-4 shadow-[0_1px_3px_rgba(14,26,36,0.05)]".freeze
-  SHOWCASE_IDENTITY_CLASS = "grid min-w-0 grow gap-1".freeze
-  SHOWCASE_NAME_CLASS = "text-[15px] leading-[normal] font-bold text-ink after:absolute after:inset-0 after:rounded-[14px]".freeze
-  SHOWCASE_ASIDE_CLASS = "flex flex-none flex-col items-end gap-2".freeze
+  TILE_CARD_CLASS = "relative flex min-h-[142px] flex-col justify-between gap-2.5 rounded-2xl bg-(--theme-card) p-4 leading-[normal] text-(--theme-on-card)".freeze
+  TILE_NAME_CLASS = "text-[15px] leading-[1.3] font-extrabold text-pretty after:absolute after:inset-0 after:rounded-2xl".freeze
+  TILE_ROW_CLASS = "flex items-baseline justify-between gap-1.5 whitespace-nowrap".freeze
+  TILE_DURATION_CLASS = "text-[12px] text-(--theme-on-card-muted)".freeze
+  TILE_DESCRIPTION_CLASS = "text-xs leading-[normal] text-(--theme-on-card-muted)".freeze
   CLOCK_ICON_CLASS = "h-[13px] w-[13px] flex-none text-ink-subtle".freeze
-  CHEVRON_ICON_CLASS = "h-5 w-5 flex-none text-brand-600".freeze
 
   def initialize(service:, href:, variant: :panel, badges: [], description: nil)
     @service = service
@@ -26,16 +26,13 @@ class Components::Service::Card < Components::Base
   end
 
   def view_template
-    if @variant == :showcase
-      li(class: SHOWCASE_CARD_CLASS) do
-        div(class: SHOWCASE_IDENTITY_CLASS) do
-          a(href: @href, class: SHOWCASE_NAME_CLASS) { @service.name }
-          render_description
-          render_duration(DURATION_CLASS)
-        end
-        div(class: SHOWCASE_ASIDE_CLASS) do
+    if @variant == :tile
+      li(class: TILE_CARD_CLASS) do
+        a(href: @href, class: TILE_NAME_CLASS) { @service.name }
+        render_description(TILE_DESCRIPTION_CLASS)
+        div(class: TILE_ROW_CLASS) do
+          span(class: TILE_DURATION_CLASS) { ::Service::Duration.compact_label(@service.duration_minutes) }
           yield if block_given?
-          render_chevron_icon
         end
       end
     else
@@ -65,8 +62,8 @@ class Components::Service::Card < Components::Base
     a(href: @href, class: active? ? NAME_CLASS : DISABLED_NAME_CLASS) { @service.name }
   end
 
-  def render_description
-    span(class: DESCRIPTION_CLASS, data: { description: true }) { @description } if @description.present?
+  def render_description(description_class = DESCRIPTION_CLASS)
+    span(class: description_class, data: { description: true }) { @description } if @description.present?
   end
 
   def render_duration(duration_class)
@@ -78,9 +75,5 @@ class Components::Service::Card < Components::Base
 
   def render_clock_icon
     render Components::Icon.new(:clock, class: CLOCK_ICON_CLASS)
-  end
-
-  def render_chevron_icon
-    render Components::Icon.new(:chevron_right, stroke_width: "2.5", class: CHEVRON_ICON_CLASS)
   end
 end

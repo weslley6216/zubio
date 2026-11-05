@@ -52,10 +52,22 @@ RSpec.describe Views::Client::Appointments::Show, type: :component do
       Nokogiri::HTML5(render_phlex(described_class.new(tenant: appointment.tenant, branding: branding, appointment: appointment, service: appointment.service, professional: appointment.professional))).at_css("[data-appointment]").to_html
     end.join
 
-    expect(markup).to include("bg-surface")
-    expect(markup).to include("text-ink")
+    expect(markup).to include("(--theme-bg)")
+    expect(markup).to include("(--theme-card)")
     expect(markup).not_to match(/#[0-9a-f]{6}/i)
     expect(markup).not_to include("rgb(")
     expect(markup).not_to include("text-white")
+    expect(markup).not_to include("bg-brand")
+    expect(markup).not_to include("bg-surface")
+  end
+
+  it "confirms the cancellation with the card danger color, not the accent" do
+    appointment = create(:appointment)
+    branding = build(:branding, tenant: appointment.tenant)
+
+    html = Nokogiri::HTML5(render_phlex(described_class.new(tenant: appointment.tenant, branding: branding, appointment: appointment, service: appointment.service, professional: appointment.professional))).at_css("[data-appointment]").to_html
+
+    expect(html).to include("(--theme-danger-on-card)")
+    expect(html).not_to include("(--theme-accent)")
   end
 end

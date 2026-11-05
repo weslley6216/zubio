@@ -87,5 +87,22 @@ RSpec.describe Components::InstallInvite, type: :component do
       expect(action.text).to include("Agora não")
       expect(fragment.at_css("[data-controller='pwa-install']")["data-pwa-install-snooze-days-value"]).to eq("7")
     end
+
+    it "themes the client invite card, install accent and ghost dismiss" do
+      html = render_phlex(described_class.for_client(name: "Titiko Crochê", icon: nil, initial: "T"))
+
+      expect(html).to include("(--theme-card)")
+      expect(html).to include("(--theme-accent)")
+      expect(html).to include("(--theme-ghost)")
+      expect(html).not_to include("bg-brand-600")
+      expect(html).not_to include("text-on-brand")
+      expect(html).not_to include("bg-surface")
+    end
+
+    it "keeps the owner invite neutral" do
+      html = render_phlex(described_class.for_owner(name: "Barbearia do Zé", icon: nil, initial: "B"))
+
+      expect(html).not_to include("(--theme-")
+    end
   end
 end

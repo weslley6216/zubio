@@ -20,6 +20,10 @@ class Appointment::Labels
     "#{::Service::Duration.minutes_label(@appointment.service.duration_minutes)} · termina #{@appointment.ends_at.strftime("%H:%M")}"
   end
 
+  def compact_duration_label
+    "#{::Service::Duration.compact_label(@appointment.service.duration_minutes)} · termina #{@appointment.ends_at.strftime("%H:%M")}"
+  end
+
   def price_label
     ::Service::Price.label(@appointment.service.public_price_cents)
   end

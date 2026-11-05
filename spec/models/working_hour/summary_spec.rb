@@ -41,6 +41,24 @@ RSpec.describe WorkingHour::Summary do
     end
   end
 
+  describe "#showcase_line" do
+    it "joins the weekday band and the hours with a middle dot" do
+      summary = described_class.new((2..6).map { |weekday| build(:working_hour, weekday: weekday, opens_at: "09:00", closes_at: "18:00") })
+
+      expect(summary.showcase_line).to eq("Ter a Sáb · 09:00–18:00")
+    end
+
+    it "falls back to the attendance count when the days do not share the same hours" do
+      summary = described_class.new([ build(:working_hour, weekday: 2, opens_at: "09:00", closes_at: "18:00"), build(:working_hour, weekday: 3, opens_at: "10:00", closes_at: "16:00") ])
+
+      expect(summary.showcase_line).to eq("2 dias de atendimento")
+    end
+
+    it "has no line when nothing is scheduled" do
+      expect(described_class.new([]).showcase_line).to be_nil
+    end
+  end
+
   describe "#line" do
     it "bands weekdays and hours when every attended day shares the same envelope" do
       summary = described_class.new((2..6).map { |weekday| build(:working_hour, weekday: weekday) })

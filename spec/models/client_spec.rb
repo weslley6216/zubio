@@ -114,6 +114,16 @@ RSpec.describe Client, type: :model do
     end
   end
 
+  describe ".phone_display" do
+    it "formats typed digits the way the client sees a saved phone" do
+      expect(described_class.phone_display("11987654321")).to eq("(11) 98765-4321")
+    end
+
+    it "leaves a value that is not a phone as typed" do
+      expect(described_class.phone_display("123")).to eq("123")
+    end
+  end
+
   describe "#tel_href" do
     it "builds a call link with the country code" do
       client = build(:client, phone: "11988771234")
