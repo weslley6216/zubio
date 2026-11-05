@@ -203,7 +203,7 @@ RSpec.describe Branding::Theme do
         (text_on_bg + boundary_on_bg + text_on_card + boundary_on_card).map { |name| "#{swatch}: #{name}" }
       end
 
-      expect(Branding::Palette.swatches.size).to eq(24)
+      expect(Branding::Palette.swatches.size).to eq(9)
       expect(failures).to be_empty
     end
 
@@ -248,6 +248,25 @@ RSpec.describe Branding::Theme do
 
       expect(theme.css_variables).to start_with("--theme-bg:#16324A;--theme-on-bg:#ffffff;")
       expect(theme.css_variables).to end_with("--theme-selected-ring:#0e1a24;")
+    end
+  end
+
+  describe ".background_variables" do
+    it "carries the background-derived tokens, including the card, without touching the accent" do
+      css = described_class.background_variables("#16324A")
+
+      expect(css).to include("--theme-bg:#16324A;")
+      expect(css).to include("--theme-card:#e7f0f8;")
+      expect(css).not_to include("--theme-accent:")
+      expect(css).not_to include("--theme-on-accent:")
+    end
+  end
+
+  describe ".accent_variables" do
+    it "carries only the accent and its own text, without any background-derived token" do
+      css = described_class.accent_variables("#F0617A")
+
+      expect(css).to eq("--theme-accent:#F0617A;--theme-on-accent:#0e1a24;")
     end
   end
 end

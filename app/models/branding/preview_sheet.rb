@@ -1,18 +1,24 @@
 class Branding::PreviewSheet
-  def initialize(brand:, secondary:)
-    @brand = brand
-    @secondary = secondary
+  def initialize(bg:, accent:)
+    @bg = bg
+    @accent = accent
   end
 
   def stylesheet
-    rule("brand", @brand) + rule("secondary", @secondary)
+    bg_rule + accent_rule
   end
 
   private
 
-  def rule(prefix, hex)
-    return "" if hex.blank?
+  def bg_rule
+    return "" if @bg.blank?
 
-    %([data-preview-#{prefix}="#{hex}"]{#{Branding.ramp_variables(prefix, Branding::ColorScale.new(hex))}})
+    %([data-preview-bg="#{@bg}"]{#{Branding::Theme.background_variables(@bg)}})
+  end
+
+  def accent_rule
+    return "" if @accent.blank?
+
+    %([data-preview-accent="#{@accent}"]{#{Branding::Theme.accent_variables(@accent)}})
   end
 end

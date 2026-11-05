@@ -2,100 +2,74 @@ require "rails_helper"
 
 RSpec.describe Branding::Palette do
   describe ".swatches" do
-    it "offers two depths for each family" do
-      expect(described_class.swatches.size).to eq(described_class::FAMILIES.size * 2)
-    end
-
-    it "offers only colors the brand color validation accepts" do
-      rejected = described_class.swatches.reject { |hex| build(:branding, brand_600: hex).valid? }
-
-      expect(rejected).to be_empty
-    end
-
-    it "reaches beyond what a fixed white foreground would allow" do
-      only_on_dark = described_class.swatches.select do |hex|
-        Branding::ColorScale.new(hex).foreground == Branding::ColorScale::DARK_NEUTRAL
-      end
-
-      expect(only_on_dark).not_to be_empty
-    end
-
-    it "never repeats a color" do
-      expect(described_class.swatches.uniq).to eq(described_class.swatches)
-    end
-
-    it "keeps every derived depth darker than the family it came from" do
-      lightened = described_class::FAMILIES.select do |hex|
-        family = Branding::ColorScale.new(hex)
-
-        Branding::ColorScale.new(family.deepened_hex).luminance >= family.luminance
-      end
-
-      expect(lightened).to be_empty
+    it "unions the backgrounds and the accents, with no repeats" do
+      expect(described_class.swatches).to eq((described_class::BACKGROUNDS + described_class::ACCENTS).uniq)
+      expect(described_class.swatches.size).to eq(9)
     end
   end
 
   describe "SUGGESTIONS" do
-    it "suggests five brand colors, all drawn from the families" do
-      expect(described_class::SUGGESTIONS.fetch(:brand_600).size).to eq(5)
-      expect(described_class::SUGGESTIONS.fetch(:brand_600)).to all(be_in(described_class::FAMILIES))
+    it "offers the five literal backgrounds for the background attribute" do
+      expect(described_class::SUGGESTIONS.fetch(:brand_background)).to eq(described_class::BACKGROUNDS)
     end
 
-    it "opens the support suggestions with the none option and draws the rest from the families" do
-      support = described_class::SUGGESTIONS.fetch(:brand_secondary_600)
+    it "offers the four literal accents for the accent attribute" do
+      expect(described_class::SUGGESTIONS.fetch(:brand_600)).to eq(described_class::ACCENTS)
+    end
+  end
 
-      expect(support.first).to eq("")
-      expect(support.drop(1)).to all(be_in(described_class::FAMILIES))
+  describe "STARTING" do
+    it "is a background and accent pair drawn from the suggestions" do
+      expect(described_class::STARTING.fetch(:brand_background)).to be_in(described_class::BACKGROUNDS)
+      expect(described_class::STARTING.fetch(:brand_600)).to be_in(described_class::ACCENTS)
+    end
+
+    it "passes the full branding validation, including the stands-out rule" do
+      branding = build(:branding, brand_background: described_class::STARTING.fetch(:brand_background), brand_600: described_class::STARTING.fetch(:brand_600))
+
+      expect(branding).to be_valid
+    end
+  end
+
+  describe ".extras" do
+    it "offers nothing beyond the curated suggestions" do
+      expect(described_class.extras(:brand_background)).to eq([])
+      expect(described_class.extras(:brand_600)).to eq([])
     end
   end
 
   describe ".stylesheet" do
     it "carries one background rule per swatch, addressable by the swatch value" do
-      expect(described_class.stylesheet).to include(%([data-swatch="#{described_class::FAMILIES.first}"]))
+      expect(described_class.stylesheet).to include(%([data-swatch="#{described_class::BACKGROUNDS.first}"]))
       expect(described_class.stylesheet.scan("background:").size).to eq(described_class.swatches.size)
     end
 
-    it "carries a brand and a support preview ramp for each swatch" do
-      hex = described_class::FAMILIES.first
+    it "carries a background preview rule for each literal background" do
+      hex = described_class::BACKGROUNDS.first
 
-      expect(described_class.stylesheet).to include(%([data-preview-brand="#{hex}"]{))
-      expect(described_class.stylesheet).to include(%([data-preview-secondary="#{hex}"]{))
-      expect(described_class.stylesheet).to include("--brand-600:#{hex};")
+      expect(described_class.stylesheet).to include(%([data-preview-bg="#{hex}"]{))
+      expect(described_class.stylesheet).to include("--theme-bg:#{hex};")
     end
 
-    it "maps every support token to its brand counterpart under the none rule" do
-      rule = described_class.stylesheet[/\[data-preview-secondary="none"\]\{([^}]*)\}/, 1]
+    it "carries an accent preview rule for each literal accent" do
+      hex = described_class::ACCENTS.first
 
-      expect(rule).to include("--secondary-600:var(--brand-600);")
-      expect(rule).to include("--secondary-mark-light:var(--brand-mark-light);")
+      expect(described_class.stylesheet).to include(%([data-preview-accent="#{hex}"]{))
+      expect(described_class.stylesheet).to include("--theme-accent:#{hex};")
+    end
+
+    it "carries a none rule for the background, falling back to the neutral surface" do
+      expect(described_class.stylesheet).to include(%([data-preview-bg="none"]{))
+    end
+
+    it "never carries an accent none rule, because the accent has no empty state" do
+      expect(described_class.stylesheet).not_to include(%([data-preview-accent="none"]))
     end
   end
 
   describe ".stylesheet_digest" do
     it "is short enough to travel in a URL" do
       expect(described_class.stylesheet_digest.length).to eq(StylesheetProducer::DIGEST_LENGTH)
-    end
-  end
-
-  describe ".extras" do
-    it "offers every curated swatch that is not already a brand suggestion" do
-      extras = described_class.extras(:brand_600)
-
-      expect(extras).to match_array(described_class.swatches - described_class::SUGGESTIONS.fetch(:brand_600))
-      expect(extras).not_to be_empty
-    end
-
-    it "never repeats a suggestion in the brand extras" do
-      overlap = described_class.extras(:brand_600) & described_class::SUGGESTIONS.fetch(:brand_600)
-
-      expect(overlap).to be_empty
-    end
-
-    it "keeps the support extras off the support suggestions and off the none option" do
-      extras = described_class.extras(:brand_secondary_600)
-
-      expect(extras & described_class::SUGGESTIONS.fetch(:brand_secondary_600)).to be_empty
-      expect(extras).not_to include("")
     end
   end
 end

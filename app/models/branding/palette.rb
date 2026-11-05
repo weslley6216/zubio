@@ -1,41 +1,25 @@
 class Branding::Palette
   extend StylesheetProducer
 
-  FAMILIES = %w[
-    #4F46E5 #7E22CE #1E60C4 #0E7490 #0C6E64 #0B7658
-    #8C6B05 #B45309 #CF0006 #BE123C #FF00BB #334155
-  ].freeze
+  BACKGROUNDS = %w[#16324A #1F4D3A #2B2B2B #F6EEF2 #F4F6F8].freeze
+  ACCENTS = %w[#F0617A #F2B33D #4FB3A9 #FFFFFF].freeze
 
-  SUGGESTIONS = {
-    brand_600: %w[#4F46E5 #1E60C4 #0B7658 #BE123C #334155].freeze,
-    brand_secondary_600: ([ "" ] + %w[#CF0006 #B45309 #334155 #FF00BB]).freeze
-  }.freeze
+  SUGGESTIONS = { brand_background: BACKGROUNDS, brand_600: ACCENTS }.freeze
+  STARTING = { brand_background: "#16324A", brand_600: "#F0617A" }.freeze
 
   def self.swatches
-    @swatches ||= FAMILIES.flat_map { |hex| [ hex, Branding::ColorScale.new(hex).deepened_hex.upcase ] }.freeze
+    @swatches ||= (BACKGROUNDS + ACCENTS).uniq.freeze
   end
 
-  def self.extras(attribute)
-    swatches - SUGGESTIONS.fetch(attribute)
-  end
+  def self.extras(_attribute) = []
 
   def self.stylesheet
     @stylesheet ||= swatches.map { |hex| %([data-swatch="#{hex}"]{background:#{hex};color:#{hex}}) }.join + preview_rules
   end
 
   def self.preview_rules
-    swatches.map do |hex|
-      scale = Branding::ColorScale.new(hex)
-
-      %([data-preview-brand="#{hex}"]{#{Branding.ramp_variables("brand", scale)}}) +
-        %([data-preview-secondary="#{hex}"]{#{Branding.ramp_variables("secondary", scale)}})
-    end.join + secondary_none_rule
-  end
-
-  def self.secondary_none_rule
-    tokens = Branding.ramp_variables("secondary", Branding::ColorScale.new(Branding::DEFAULT_BRAND_600)).scan(/--([\w-]+):/).flatten
-    body = tokens.map { |token| "--#{token}:var(--#{token.sub("secondary", "brand")});" }.join
-
-    %([data-preview-secondary="none"]{#{body}})
+    BACKGROUNDS.map { |hex| %([data-preview-bg="#{hex}"]{#{Branding::Theme.background_variables(hex)}}) }.join +
+      ACCENTS.map { |hex| %([data-preview-accent="#{hex}"]{#{Branding::Theme.accent_variables(hex)}}) }.join +
+      %([data-preview-bg="none"]{#{Branding::Theme.background_variables(nil)}})
   end
 end
