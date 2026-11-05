@@ -393,7 +393,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
     expect(document.css("[data-slot-taken]").map { |slot| slot.text.strip }).to eq([ "10:30" ])
   end
 
-  it "paints the grid with brand tokens and never a demo token" do
+  it "paints the grid with theme tokens and never a demo token" do
     professional = create(:professional, tenant: tenant)
     service = create(:service, tenant: tenant, duration_minutes: 45)
     tuesday = Date.current.next_week(:tuesday)
@@ -402,7 +402,7 @@ RSpec.describe "Public booking day and time selection", type: :request do
 
     get new_client_service_booking_path(service, day: tuesday.iso8601)
 
-    expect(response.body).to include("bg-brand-600")
+    expect(response.body).to include("(--theme-bg)")
     expect(response.body).to include("tabular-nums")
     expect(response.body).not_to include("demo")
   end

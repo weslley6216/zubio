@@ -47,7 +47,7 @@ RSpec.describe "Public establishment showcase", type: :request do
     get root_path
 
     expect(response.body).to include("data-brand-initial")
-    expect(response.body).to include("bg-on-brand/20")
+    expect(response.body).to include("(--theme-bg-tint)")
     expect(response.body).not_to include("<img")
   end
 
@@ -144,14 +144,14 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(response.body).not_to include("Barba do Zé")
   end
 
-  it "paints the showcase with brand tokens and never a demo token" do
+  it "paints the showcase with theme tokens and never a demo token" do
     create(:service, tenant: tenant, name: "Corte feminino")
     host! "#{tenant.subdomain}.zubio.com.br"
 
     get root_path
 
-    expect(response.body).to include("bg-brand-600")
-    expect(response.body).to include("text-on-brand")
+    expect(response.body).to include("(--theme-bg)")
+    expect(response.body).to include("(--theme-card)")
     expect(response.body).not_to include("demo")
   end
 
@@ -359,7 +359,7 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(response.body).not_to include(Views::Client::Establishments::Show::TITLE)
   end
 
-  it "shows a service's description, duration in minutes with a clock icon, its short price and a chevron" do
+  it "shows a service's description, duration in minutes and its short price" do
     create(:service, tenant: tenant, name: "Design de sobrancelhas", duration_minutes: 45, price_cents: 6_000,
       description: "Medição, limpeza e finalização")
     host! "#{tenant.subdomain}.zubio.com.br"
@@ -369,7 +369,6 @@ RSpec.describe "Public establishment showcase", type: :request do
     expect(Nokogiri::HTML5(response.body).css("[data-catalog] [data-description]").map(&:text)).to include("Medição, limpeza e finalização")
     expect(response.body).to include("45 min")
     expect(response.body).to include("R$ 60")
-    expect(response.body).to include(%(data-icon="chevron-right"))
   end
 
   it "shows Sob consulta for a service with no fixed price, and the price for one that has it" do

@@ -11,30 +11,30 @@ class Views::Client::Bookings::Race < Views::Base
   CONFIRM_LABEL = "Confirmar".freeze
   ANOTHER_DAY_LABEL = "Escolher outro dia".freeze
 
-  PAGE_CLASS = "mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-surface-2 leading-[normal] text-ink".freeze
-  HEADER_CLASS = "flex items-center gap-3 bg-brand-600 px-5 py-3.5 text-on-brand".freeze
-  HEADER_NAME_CLASS = "min-w-0 flex-grow truncate text-[15px] font-extrabold tracking-[-0.01em]".freeze
+  PAGE_CLASS = Views::Client::Frame::PAGE
+  HEADER_CLASS = Views::Client::Frame::HEADER
+  HEADER_NAME_CLASS = Views::Client::Frame::NAME
   CONTENT_CLASS = "flex flex-grow flex-col gap-[18px] p-5".freeze
-  ALERT_CLASS = "flex gap-3 rounded-xl border border-danger bg-surface px-4 py-3.5".freeze
-  ALERT_ICON_CLASS = "h-5 w-5 flex-none text-danger".freeze
+  ALERT_CLASS = "flex gap-3 rounded-xl border border-(--theme-danger-on-card) bg-(--theme-card) px-4 py-3.5".freeze
+  ALERT_ICON_CLASS = "h-5 w-5 flex-none text-(--theme-danger-on-card)".freeze
   ALERT_TEXT_CLASS = "flex flex-col gap-[3px]".freeze
-  ALERT_TITLE_CLASS = "text-[14px] font-extrabold text-danger".freeze
-  ALERT_BODY_CLASS = "text-[13px] leading-[1.5] text-ink-muted".freeze
-  CARD_CLASS = "flex flex-col gap-2.5 rounded-xl border border-line bg-surface px-4 py-3.5".freeze
+  ALERT_TITLE_CLASS = "text-[14px] font-extrabold text-(--theme-danger-on-card)".freeze
+  ALERT_BODY_CLASS = "text-[13px] leading-[1.5] text-(--theme-on-card-muted)".freeze
+  CARD_CLASS = "flex flex-col gap-2.5 rounded-xl bg-(--theme-card) px-4 py-3.5 text-(--theme-on-card)".freeze
   CARD_ROW_CLASS = "flex items-baseline justify-between gap-4".freeze
-  CARD_LABEL_CLASS = "flex-none text-[13px] text-ink-muted".freeze
+  CARD_LABEL_CLASS = "flex-none text-[13px] text-(--theme-on-card-muted)".freeze
   CARD_VALUE_CLASS = "text-right text-[14px] font-bold tabular-nums".freeze
-  CARD_DIVIDER_CLASS = "h-px bg-line".freeze
+  CARD_DIVIDER_CLASS = "h-px bg-(--theme-card-line)".freeze
   LEFTOVERS_CLASS = "flex flex-col gap-2.5".freeze
-  LEFTOVERS_LABEL_CLASS = "text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted".freeze
+  LEFTOVERS_LABEL_CLASS = "text-[11px] font-bold uppercase tracking-[0.08em] text-(--theme-on-bg-muted)".freeze
   GRID_CLASS = "grid grid-cols-4 gap-2".freeze
   SLOT_BASE_CLASS = "grid min-h-[50px] place-items-center rounded-xl text-[15px] font-bold tabular-nums".freeze
-  SLOT_FREE_CLASS = "border border-line bg-surface aria-pressed:border-transparent aria-pressed:bg-brand-600 aria-pressed:text-on-brand aria-pressed:shadow-[0_2px_6px_color-mix(in_srgb,var(--brand-600)_20%,transparent)]".freeze
-  SLOT_TAKEN_CLASS = "border border-dashed border-line-strong bg-surface-3 text-ink-subtle line-through".freeze
-  HINT_CLASS = "text-[12px] text-ink-subtle".freeze
+  SLOT_FREE_CLASS = "border border-(--theme-card-line) bg-(--theme-card-chip) text-(--theme-on-card) aria-pressed:border-transparent aria-pressed:bg-(--theme-accent) aria-pressed:text-(--theme-on-accent) aria-pressed:ring-2 aria-pressed:ring-[color:var(--theme-selected-ring,transparent)]".freeze
+  SLOT_TAKEN_CLASS = "border border-dashed border-(--theme-card-line) bg-(--theme-card) text-(--theme-on-card-muted) line-through".freeze
+  HINT_CLASS = "text-[12px] text-(--theme-on-bg-muted)".freeze
   BAR_CLASS = "flex flex-col gap-2.5 px-5 pb-[calc(24px+env(safe-area-inset-bottom,0px))]".freeze
-  BUTTON_CLASS = "flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-[15px] font-extrabold text-on-brand disabled:bg-surface-3 disabled:text-ink-muted".freeze
-  ANOTHER_DAY_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-xl border border-line bg-surface text-[14px] font-bold text-ink-muted".freeze
+  BUTTON_CLASS = "flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-(--theme-accent) text-[15px] font-extrabold text-(--theme-on-accent) disabled:bg-(--theme-card-chip) disabled:text-(--theme-on-card-muted)".freeze
+  ANOTHER_DAY_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-xl bg-(--theme-card) text-[14px] font-bold text-(--theme-on-card-muted)".freeze
 
   def initialize(tenant:, branding:, service:, professional:, selected_day:, slots:, taken_slots:, nearest:, client_name:, client_phone:, lost_time:)
     @tenant = tenant

@@ -14,30 +14,30 @@ class Views::Client::Bookings::Receipt < Views::Base
   CANCEL_LABEL = "Desmarcar este horário".freeze
   FOOTER_NOTE = "Esta tela também é o comprovante.".freeze
 
-  PAGE_CLASS = "mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-surface-2 leading-[normal] text-ink".freeze
-  BAND_CLASS = "flex flex-col items-center gap-3.5 bg-brand-600 px-5 pt-[34px] pb-[44px] text-center text-on-brand".freeze
-  BADGE_CLASS = "grid h-16 w-16 place-items-center rounded-full bg-on-brand/20".freeze
+  PAGE_CLASS = "mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-(--theme-bg) leading-[normal] text-(--theme-on-bg)".freeze
+  BAND_CLASS = "flex flex-col items-center gap-3.5 px-5 pt-[34px] pb-[44px] text-center".freeze
+  BADGE_CLASS = "grid h-16 w-16 place-items-center rounded-full bg-(--theme-bg-tint)".freeze
   BADGE_ICON_CLASS = "h-[34px] w-[34px]".freeze
   BAND_TEXT_CLASS = "flex flex-col gap-[5px]".freeze
   TITLE_CLASS = "text-[22px] font-extrabold tracking-[-0.02em]".freeze
-  SUBTITLE_CLASS = "text-[14px] text-on-brand/[0.92]".freeze
-  CONTENT_CLASS = "-mt-6 flex flex-col gap-4 px-5 pb-6".freeze
-  DETAIL_CARD_CLASS = "flex flex-col gap-3.5 rounded-2xl border border-line bg-surface p-5 shadow-[0_4px_14px_rgba(14,26,36,0.07)]".freeze
-  DETAIL_DIVIDER_CLASS = "h-px bg-line".freeze
+  SUBTITLE_CLASS = "text-[14px] text-(--theme-on-bg-muted)".freeze
+  CONTENT_CLASS = "flex flex-col gap-4 px-5 pb-6".freeze
+  DETAIL_CARD_CLASS = "flex flex-col gap-3.5 rounded-2xl bg-(--theme-card) p-5 text-(--theme-on-card)".freeze
+  DETAIL_DIVIDER_CLASS = "h-px bg-(--theme-card-line)".freeze
   DETAIL_ROW_CLASS = "flex items-baseline gap-3".freeze
-  DETAIL_LABEL_CLASS = "w-[78px] flex-none text-[12px] font-bold uppercase tracking-[0.04em] text-ink-muted".freeze
-  DETAIL_VALUE_CLASS = "text-[15px] font-bold text-ink".freeze
-  LINK_CARD_CLASS = "flex flex-col gap-3 rounded-[14px] border-2 border-brand-600 bg-surface p-4".freeze
+  DETAIL_LABEL_CLASS = "w-[78px] flex-none text-[12px] font-bold uppercase tracking-[0.04em] text-(--theme-on-card-muted)".freeze
+  DETAIL_VALUE_CLASS = "text-[15px] font-bold".freeze
+  LINK_CARD_CLASS = "flex flex-col gap-3 rounded-[14px] border-2 border-(--theme-accent) bg-(--theme-card) p-4 text-(--theme-on-card)".freeze
   LINK_HEADER_CLASS = "flex items-center gap-2".freeze
-  LINK_ICON_CLASS = "h-[17px] w-[17px] text-brand-600".freeze
+  LINK_ICON_CLASS = "h-[17px] w-[17px] text-(--theme-accent)".freeze
   LINK_TITLE_CLASS = "text-[14px] font-extrabold".freeze
-  LINK_BODY_CLASS = "text-[13px] leading-[1.55] text-ink-muted".freeze
-  MY_APPOINTMENTS_LINK_CLASS = "flex min-h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-brand-600 text-[14px] font-bold text-on-brand".freeze
+  LINK_BODY_CLASS = "text-[13px] leading-[1.55] text-(--theme-on-card-muted)".freeze
+  MY_APPOINTMENTS_LINK_CLASS = "flex min-h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-(--theme-accent) text-[14px] font-bold text-(--theme-on-accent)".freeze
   BUTTON_ICON_CLASS = "h-[17px] w-[17px]".freeze
   ACTIONS_CLASS = "flex flex-col gap-2.5".freeze
-  REBOOK_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-line bg-surface text-[14px] font-bold text-ink-muted".freeze
-  CANCEL_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-danger-line bg-surface text-[14px] font-bold text-danger".freeze
-  FOOTER_CLASS = "text-center text-[12px] leading-[1.6] text-ink-subtle".freeze
+  REBOOK_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-(--theme-ghost) text-[14px] font-bold text-(--theme-on-bg)".freeze
+  CANCEL_LINK_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] border border-(--theme-danger-line-on-bg) text-[14px] font-bold text-(--theme-danger-on-bg)".freeze
+  FOOTER_CLASS = "text-center text-[12px] leading-[1.6] text-(--theme-on-bg-muted)".freeze
 
   def initialize(tenant:, branding:, service:, professional:, appointment:, signed_in:, app_installed: false)
     @tenant = tenant
@@ -129,7 +129,7 @@ class Views::Client::Bookings::Receipt < Views::Base
   def render_sent_body
     p(class: LINK_BODY_CLASS) do
       plain "Mandamos para "
-      strong(class: "text-ink") { @appointment.client.masked_email }
+      strong(class: "text-(--theme-on-card)") { @appointment.client.masked_email }
       plain SENT_BODY_TAIL
     end
   end

@@ -88,32 +88,40 @@ RSpec.describe Components::Service::Card, type: :component do
   end
 
   it "renders the description with the same class in both variants" do
-    showcase = described_class.new(service: service, href: "/x", variant: :showcase, description: "Inclui lavagem.").call
+    tile = described_class.new(service: service, href: "/x", variant: :tile, description: "Inclui lavagem.").call
     panel = described_class.new(service: service, href: "/x", description: "Inclui lavagem.").call
 
-    expect(showcase).to include(%(<span class="#{described_class::DESCRIPTION_CLASS}" data-description>))
+    expect(tile).to include(%(<span class="#{described_class::DESCRIPTION_CLASS}" data-description>))
     expect(panel).to include(%(<span class="#{described_class::DESCRIPTION_CLASS}" data-description>))
   end
 
-  it "renders the showcase variant's name and duration in minutes with a clock icon" do
-    html = described_class.new(service: service, href: "/x", variant: :showcase).call
+  it "renders the tile variant's name and duration in minutes without a clock icon" do
+    html = described_class.new(service: service, href: "/x", variant: :tile).call
 
-    expect(html).to include(%(<a href="/x" class="#{described_class::SHOWCASE_NAME_CLASS}">Corte feminino</a>))
+    expect(html).to include(%(<a href="/x" class="#{described_class::TILE_NAME_CLASS}">Corte feminino</a>))
     expect(html).to include("45 min")
-    expect(html).to include(%(data-icon="clock"))
+    expect(html).not_to include(%(data-icon="clock"))
   end
 
-  it "renders the description in the showcase variant too" do
-    html = described_class.new(service: service, href: "/x", variant: :showcase, description: "Inclui lavagem.").call
+  it "renders the description in the tile variant too" do
+    html = described_class.new(service: service, href: "/x", variant: :tile, description: "Inclui lavagem.").call
 
     expect(html).to include("data-description")
     expect(html).to include("Inclui lavagem.")
   end
 
-  it "wraps the caller's aside with a chevron in the showcase variant" do
-    html = described_class.new(service: service, href: "/x", variant: :showcase).call { "R$ 90" }
+  it "renders the caller's aside beside the duration in the tile variant" do
+    html = described_class.new(service: service, href: "/x", variant: :tile).call { "R$ 90" }
 
     expect(html).to include("R$ 90")
-    expect(html).to include(%(data-icon="chevron-right"))
+  end
+
+  it "paints the tile variant with theme-aware tokens only" do
+    html = described_class.new(service: service, href: "/x", variant: :tile).call
+
+    expect(html).to include("(--theme-card)")
+    expect(html).to include("(--theme-on-card)")
+    expect(html).not_to include("bg-surface")
+    expect(html).not_to include("text-ink")
   end
 end

@@ -13,23 +13,57 @@ class Components::InstallInvite < Components::Base
   CLIENT_DISMISS = "Agora não".freeze
   CLIENT_SNOOZE_DAYS = 7
 
-  CARD_CLASS = "grid gap-4 rounded-[18px] border border-line bg-surface p-5 shadow-[0_8px_24px_rgba(14,26,36,0.10)]".freeze
   IDENTITY_CLASS = "flex items-center gap-3.5".freeze
   ICON_CLASS = "h-13 w-13 flex-none rounded-[14px]".freeze
-  INITIAL_CLASS = "grid place-items-center bg-brand-600 text-[22px] leading-[normal] font-extrabold text-on-brand".freeze
   TEXT_COLUMN_CLASS = "grid flex-grow gap-[3px]".freeze
-  TITLE_CLASS = "text-base leading-[normal] font-extrabold tracking-[-0.01em] text-ink".freeze
-  HELPER_CLASS = "text-[13px] leading-[normal] text-ink-muted".freeze
   ACTIONS_CLASS = "flex gap-2".freeze
-  INSTALL_CLASS = "flex min-h-11 flex-grow items-center justify-center gap-2 rounded-[10px] bg-brand-600 text-sm leading-[normal] font-bold text-on-brand".freeze
-  DISMISS_CLASS = "inline-flex min-h-11 flex-none items-center rounded-[10px] border border-line bg-surface px-4 text-sm leading-[normal] font-bold text-ink-muted".freeze
   STEPS_CLASS = "grid gap-2.5".freeze
-  STEP_ROW_CLASS = "flex items-center gap-3 rounded-[10px] border border-line bg-surface-2 px-3.5 py-3".freeze
-  STEP_NUMBER_CLASS = "grid h-6 w-6 flex-none place-items-center rounded-full bg-brand-600 text-xs leading-[normal] font-extrabold text-on-brand".freeze
-  STEP_TEXT_CLASS = "flex-grow text-[13px] leading-[normal] text-ink".freeze
-  STEP_ICON_CLASS = "h-5 w-5 flex-none text-ink".freeze
   INSTALL_ICON_CLASS = "h-4.5 w-4.5".freeze
-  INSTALLED_CLASS = "inline-flex min-h-11 items-center justify-self-start rounded-[10px] border border-line bg-surface px-4 text-sm leading-[normal] font-bold text-ink-muted".freeze
+
+  CARD_CLASS = {
+    "owner" => "grid gap-4 rounded-[18px] border border-line bg-surface p-5 shadow-[0_8px_24px_rgba(14,26,36,0.10)]",
+    "client" => "grid gap-4 rounded-[18px] bg-(--theme-card) p-5 shadow-[0_8px_24px_rgba(14,26,36,0.10)]"
+  }.freeze
+  INITIAL_CLASS = {
+    "owner" => "grid place-items-center bg-brand-600 text-[22px] leading-[normal] font-extrabold text-on-brand",
+    "client" => "grid place-items-center bg-(--theme-accent) text-[22px] leading-[normal] font-extrabold text-(--theme-on-accent)"
+  }.freeze
+  TITLE_CLASS = {
+    "owner" => "text-base leading-[normal] font-extrabold tracking-[-0.01em] text-ink",
+    "client" => "text-base leading-[normal] font-extrabold tracking-[-0.01em] text-(--theme-on-card)"
+  }.freeze
+  HELPER_CLASS = {
+    "owner" => "text-[13px] leading-[normal] text-ink-muted",
+    "client" => "text-[13px] leading-[normal] text-(--theme-on-card-muted)"
+  }.freeze
+  INSTALL_CLASS = {
+    "owner" => "flex min-h-11 flex-grow items-center justify-center gap-2 rounded-[10px] bg-brand-600 text-sm leading-[normal] font-bold text-on-brand",
+    "client" => "flex min-h-11 flex-grow items-center justify-center gap-2 rounded-[10px] bg-(--theme-accent) text-sm leading-[normal] font-bold text-(--theme-on-accent)"
+  }.freeze
+  DISMISS_CLASS = {
+    "owner" => "inline-flex min-h-11 flex-none items-center rounded-[10px] border border-line bg-surface px-4 text-sm leading-[normal] font-bold text-ink-muted",
+    "client" => "inline-flex min-h-11 flex-none items-center rounded-[10px] border border-(--theme-ghost) px-4 text-sm leading-[normal] font-bold text-(--theme-on-card-muted)"
+  }.freeze
+  STEP_ROW_CLASS = {
+    "owner" => "flex items-center gap-3 rounded-[10px] border border-line bg-surface-2 px-3.5 py-3",
+    "client" => "flex items-center gap-3 rounded-[10px] bg-(--theme-card-chip) px-3.5 py-3"
+  }.freeze
+  STEP_NUMBER_CLASS = {
+    "owner" => "grid h-6 w-6 flex-none place-items-center rounded-full bg-brand-600 text-xs leading-[normal] font-extrabold text-on-brand",
+    "client" => "grid h-6 w-6 flex-none place-items-center rounded-full bg-(--theme-accent) text-xs leading-[normal] font-extrabold text-(--theme-on-accent)"
+  }.freeze
+  STEP_TEXT_CLASS = {
+    "owner" => "flex-grow text-[13px] leading-[normal] text-ink",
+    "client" => "flex-grow text-[13px] leading-[normal] text-(--theme-on-card)"
+  }.freeze
+  STEP_ICON_CLASS = {
+    "owner" => "h-5 w-5 flex-none text-ink",
+    "client" => "h-5 w-5 flex-none text-(--theme-on-card)"
+  }.freeze
+  INSTALLED_CLASS = {
+    "owner" => "inline-flex min-h-11 items-center justify-self-start rounded-[10px] border border-line bg-surface px-4 text-sm leading-[normal] font-bold text-ink-muted",
+    "client" => "inline-flex min-h-11 items-center justify-self-start rounded-[10px] border border-(--theme-ghost) px-4 text-sm leading-[normal] font-bold text-(--theme-on-card-muted)"
+  }.freeze
 
   def self.for_owner(name:, icon:, initial:)
     new(name: name, icon: icon, initial: initial,
@@ -72,27 +106,29 @@ class Components::InstallInvite < Components::Base
 
   private
 
+  def tone(key) = key.fetch(@audience)
+
   def render_action_card
-    div(class: CARD_CLASS, data: { pwa_install_target: "action" }, hidden: true) do
+    div(class: tone(CARD_CLASS), data: { pwa_install_target: "action" }, hidden: true) do
       render_identity(@action_helper)
       div(class: ACTIONS_CLASS) do
-        button(type: "button", class: INSTALL_CLASS, data: { action: "pwa-install#install" }) do
+        button(type: "button", class: tone(INSTALL_CLASS), data: { action: "pwa-install#install" }) do
           render_download_icon
           plain INSTALL_LABEL
         end
-        button(type: "button", class: DISMISS_CLASS, data: { action: "pwa-install#dismiss" }) { @dismiss_label }
+        button(type: "button", class: tone(DISMISS_CLASS), data: { action: "pwa-install#dismiss" }) { @dismiss_label }
       end
     end
   end
 
   def render_instructions_card
-    div(class: CARD_CLASS, data: { pwa_install_target: "instructions" }, hidden: true) do
+    div(class: tone(CARD_CLASS), data: { pwa_install_target: "instructions" }, hidden: true) do
       render_identity(IOS_HELPER)
       div(class: STEPS_CLASS) do
         render_step(1, STEP_ONE) { render_share_icon }
         render_step(2, STEP_TWO) { render_plus_square_icon }
       end
-      button(type: "button", class: INSTALLED_CLASS, data: { action: "pwa-install#dismiss", pwa_install_forever_param: true }) { INSTALLED_LABEL }
+      button(type: "button", class: tone(INSTALLED_CLASS), data: { action: "pwa-install#dismiss", pwa_install_forever_param: true }) { INSTALLED_LABEL }
     end
   end
 
@@ -100,8 +136,8 @@ class Components::InstallInvite < Components::Base
     div(class: IDENTITY_CLASS) do
       render_icon
       div(class: TEXT_COLUMN_CLASS) do
-        p(class: TITLE_CLASS) { @title }
-        p(class: HELPER_CLASS) { helper }
+        p(class: tone(TITLE_CLASS)) { @title }
+        p(class: tone(HELPER_CLASS)) { helper }
       end
     end
   end
@@ -110,15 +146,15 @@ class Components::InstallInvite < Components::Base
     if @icon
       img(src: rails_storage_proxy_path(@icon), alt: @name, class: "#{ICON_CLASS} object-cover")
     else
-      span(class: "#{ICON_CLASS} #{INITIAL_CLASS}", data: { brand_initial: true }) { @initial }
+      span(class: "#{ICON_CLASS} #{tone(INITIAL_CLASS)}", data: { brand_initial: true }) { @initial }
     end
   end
 
   def render_step(number, parts)
     prefix, highlight, suffix = parts
-    div(class: STEP_ROW_CLASS) do
-      span(class: STEP_NUMBER_CLASS) { number.to_s }
-      span(class: STEP_TEXT_CLASS) do
+    div(class: tone(STEP_ROW_CLASS)) do
+      span(class: tone(STEP_NUMBER_CLASS)) { number.to_s }
+      span(class: tone(STEP_TEXT_CLASS)) do
         plain prefix
         strong { highlight }
         plain suffix
@@ -132,10 +168,10 @@ class Components::InstallInvite < Components::Base
   end
 
   def render_share_icon
-    render Components::Icon.new(:share, class: STEP_ICON_CLASS)
+    render Components::Icon.new(:share, class: tone(STEP_ICON_CLASS))
   end
 
   def render_plus_square_icon
-    render Components::Icon.new(:square_plus, class: STEP_ICON_CLASS)
+    render Components::Icon.new(:square_plus, class: tone(STEP_ICON_CLASS))
   end
 end

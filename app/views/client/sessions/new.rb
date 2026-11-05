@@ -5,19 +5,19 @@ class Views::Client::Sessions::New < Views::Base
   GUEST_LABEL = "Continuar sem conta".freeze
   NOTE = "Com a conta, seus horários ficam salvos e você desmarca quando quiser.".freeze
 
-  PAGE_CLASS = "mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-surface-2 leading-[normal] text-ink".freeze
-  HEADER_CLASS = "flex items-center gap-3 bg-brand-600 px-5 py-3.5 text-on-brand".freeze
-  BACK_CLASS = "grid h-10 w-10 flex-none place-items-center rounded-[10px] bg-white/18".freeze
-  BACK_ICON_CLASS = "h-5 w-5".freeze
-  NAME_CLASS = "grow truncate text-[15px] font-extrabold tracking-[-0.01em]".freeze
+  PAGE_CLASS = Views::Client::Frame::PAGE
+  HEADER_CLASS = Views::Client::Frame::HEADER
+  BACK_CLASS = Views::Client::Frame::BACK
+  BACK_ICON_CLASS = Views::Client::Frame::BACK_ICON
+  NAME_CLASS = Views::Client::Frame::NAME
   MAIN_CLASS = "flex grow flex-col gap-[22px] px-6 pt-12 pb-6".freeze
   IDENTITY_CLASS = "flex flex-col items-center gap-3.5 text-center".freeze
   HEADING_BLOCK_CLASS = "flex flex-col gap-1.5".freeze
   HEADING_CLASS = "text-[24px] leading-[normal] font-extrabold tracking-[-0.02em]".freeze
-  SUBTITLE_CLASS = "text-[14px] leading-[1.5] text-pretty text-ink-muted".freeze
-  CARD_CLASS = "flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5".freeze
-  GUEST_CLASS = "flex min-h-[44px] w-full items-center justify-center rounded-[10px] bg-surface text-[14px] font-bold text-ink-muted".freeze
-  NOTE_CLASS = "text-center text-[12px] leading-[1.5] text-ink-muted".freeze
+  SUBTITLE_CLASS = "text-[14px] leading-[1.5] text-pretty text-(--theme-on-bg-muted)".freeze
+  CARD_CLASS = "flex flex-col gap-3 rounded-2xl bg-(--theme-card) p-5 text-(--theme-on-card)".freeze
+  GUEST_CLASS = "flex min-h-[44px] w-full items-center justify-center rounded-[10px] text-[14px] font-bold text-(--theme-on-card-muted)".freeze
+  NOTE_CLASS = "text-center text-[12px] leading-[1.5] text-(--theme-on-card-muted)".freeze
 
   def initialize(tenant:, branding:, service: nil)
     @tenant = tenant

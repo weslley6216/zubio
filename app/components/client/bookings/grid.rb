@@ -8,13 +8,13 @@ class Components::Client::Bookings::Grid < Components::Base
   GRID_HINT = "A grade anda de %<minutes>d em %<minutes>d porque o serviço dura %<minutes>d.".freeze
   REASON_MESSAGES = { no_working_day: NO_SERVICE_MESSAGE, day_off: NO_SERVICE_MESSAGE, fully_booked: FULLY_BOOKED_MESSAGE }.freeze
 
-  HINT_CLASS = "text-[12px] text-ink-subtle".freeze
+  HINT_CLASS = "text-[12px] text-(--theme-on-bg-muted)".freeze
   WRAPPER_CLASS = "relative".freeze
   GRID_CLASS = "grid grid-cols-4 gap-2".freeze
   SLOT_BASE_CLASS = "grid min-h-[46px] place-items-center rounded-[10px] text-[13px] font-bold tabular-nums".freeze
-  SLOT_FREE_CLASS = "border border-line bg-surface aria-pressed:border-transparent aria-pressed:bg-brand-600 aria-pressed:text-on-brand aria-pressed:shadow-[0_2px_6px_color-mix(in_srgb,var(--brand-600)_20%,transparent)]".freeze
-  SLOT_TAKEN_CLASS = "border border-dashed border-line-strong bg-surface-3 text-ink-subtle line-through".freeze
-  REASON_CLASS = "rounded-xl border border-line bg-surface p-6 text-[14px] text-ink-muted".freeze
+  SLOT_FREE_CLASS = "border border-(--theme-card-line) bg-(--theme-card-chip) text-(--theme-on-card) aria-pressed:border-transparent aria-pressed:bg-(--theme-accent) aria-pressed:text-(--theme-on-accent) aria-pressed:ring-2 aria-pressed:ring-[color:var(--theme-selected-ring,transparent)]".freeze
+  SLOT_TAKEN_CLASS = "border border-dashed border-(--theme-card-line) bg-(--theme-card) text-(--theme-on-card-muted) line-through".freeze
+  REASON_CLASS = "rounded-xl bg-(--theme-card) p-6 text-[14px] text-(--theme-on-card-muted)".freeze
   SKELETON_CLASS = "#{GRID_CLASS} absolute inset-0 grid-rows-[repeat(auto-fill,46px)] auto-rows-[0px] overflow-hidden".freeze
   SKELETON_SLOT_CLASS = "rounded-[10px] bg-line-strong motion-safe:animate-pulse".freeze
   SKELETON_PIECES = 8

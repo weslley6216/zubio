@@ -65,11 +65,11 @@ RSpec.describe Components::Owner::Emblem, type: :component do
     expect(html).to include("text-on-brand-accent")
   end
 
-  it "paints the initial translucent on-brand when asked for that tone" do
+  it "paints the initial with theme-aware tokens when asked for the translucent tone" do
     html = described_class.new(tenant: tenant, branding: branding, size: :showcase, tone: :translucent).call
 
-    expect(html).to include("bg-on-brand/20")
-    expect(html).to include("text-on-brand")
+    expect(html).to include("(--theme-bg-tint)")
+    expect(html).to include("(--theme-on-bg)")
     expect(html).not_to include("bg-brand-accent")
   end
 

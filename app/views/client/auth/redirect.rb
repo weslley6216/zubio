@@ -2,8 +2,8 @@ class Views::Client::Auth::Redirect < Views::Base
   TITLE = "Entrando com o Google…".freeze
   BUTTON_LABEL = "Continuar com o Google".freeze
 
-  PAGE_CLASS = "mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-4 px-6 text-center text-ink".freeze
-  BUTTON_CLASS = "min-h-[44px] rounded-lg bg-brand-600 px-5 text-[15px] font-extrabold text-on-brand".freeze
+  PAGE_CLASS = "mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-4 px-6 text-center text-(--theme-on-bg)".freeze
+  BUTTON_CLASS = "min-h-[44px] rounded-lg bg-(--theme-accent) px-5 text-[15px] font-extrabold text-(--theme-on-accent)".freeze
 
   def initialize(state:)
     @state = state
