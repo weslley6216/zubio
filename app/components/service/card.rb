@@ -10,9 +10,9 @@ class Components::Service::Card < Components::Base
   DURATION_CLASS = "text-xs leading-[normal] font-semibold tabular-nums text-ink-muted".freeze
   DISABLED_DURATION_CLASS = "text-xs leading-[normal] font-semibold tabular-nums text-ink-subtle".freeze
 
-  TILE_CARD_CLASS = "relative flex min-h-[120px] flex-col justify-between gap-2.5 rounded-2xl border border-(--theme-card-line) bg-(--theme-card) p-4 text-(--theme-on-card)".freeze
+  TILE_CARD_CLASS = "relative flex min-h-[142px] flex-col justify-between gap-2.5 rounded-2xl bg-(--theme-card) p-4 leading-[normal] text-(--theme-on-card)".freeze
   TILE_NAME_CLASS = "text-[15px] leading-[1.3] font-extrabold text-pretty after:absolute after:inset-0 after:rounded-2xl".freeze
-  TILE_ROW_CLASS = "flex items-baseline justify-between gap-1.5".freeze
+  TILE_ROW_CLASS = "flex items-baseline justify-between gap-1.5 whitespace-nowrap".freeze
   TILE_DURATION_CLASS = "text-[12px] text-(--theme-on-card-muted)".freeze
   TILE_DESCRIPTION_CLASS = "text-xs leading-[normal] text-(--theme-on-card-muted)".freeze
   CLOCK_ICON_CLASS = "h-[13px] w-[13px] flex-none text-ink-subtle".freeze
@@ -31,7 +31,7 @@ class Components::Service::Card < Components::Base
         a(href: @href, class: TILE_NAME_CLASS) { @service.name }
         render_description(TILE_DESCRIPTION_CLASS)
         div(class: TILE_ROW_CLASS) do
-          span(class: TILE_DURATION_CLASS) { ::Service::Duration.minutes_label(@service.duration_minutes) }
+          span(class: TILE_DURATION_CLASS) { ::Service::Duration.compact_label(@service.duration_minutes) }
           yield if block_given?
         end
       end

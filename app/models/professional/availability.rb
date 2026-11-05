@@ -30,16 +30,6 @@ class Professional::Availability
     appointments.reject { |appointment| appointment.cancelled? || appointment.past? || within_hours?(appointment) }
   end
 
-  def open_until(moment)
-    @dates ||= moment.to_date..moment.to_date
-    windows = open_windows(moment.to_date)
-    return if windows.empty?
-
-    opening = windows.map(&:first).min
-    closing = windows.map(&:last).max
-    closing if opening <= moment && moment < closing
-  end
-
   def offers?(moment)
     return false unless moment
 

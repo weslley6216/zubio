@@ -25,5 +25,7 @@ class Professional < ApplicationRecord
     replace_working_hours!(weekdays.index_with { segments })
   end
 
+  def showcase_hours = WorkingHour::Summary.new(working_hours.ordered.to_a).showcase_line
+
   def working_hours_summary = WorkingHour::Summary.new(working_hours.ordered.to_a).line
 end

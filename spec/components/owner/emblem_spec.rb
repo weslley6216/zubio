@@ -36,8 +36,8 @@ RSpec.describe Components::Owner::Emblem, type: :component do
   it "gives the showcase size the public page's square and initial" do
     showcase = described_class.new(tenant: tenant, branding: branding, size: :showcase).call
 
-    expect(showcase).to include("h-14 w-14")
-    expect(showcase).to include("rounded-[16px]")
+    expect(showcase).to include("h-13 w-13")
+    expect(showcase).to include("rounded-[14px]")
     expect(showcase).to include("text-[24px]")
   end
 
@@ -65,14 +65,6 @@ RSpec.describe Components::Owner::Emblem, type: :component do
     expect(html).to include("text-on-brand-accent")
   end
 
-  it "paints the initial with theme-aware tokens when asked for the translucent tone" do
-    html = described_class.new(tenant: tenant, branding: branding, size: :showcase, tone: :translucent).call
-
-    expect(html).to include("(--theme-bg-tint)")
-    expect(html).to include("(--theme-on-bg)")
-    expect(html).not_to include("bg-brand-accent")
-  end
-
   it "paints the initial on the theme card when asked for the card tone" do
     html = described_class.new(tenant: tenant, branding: branding, size: :login, tone: :card).call
 
@@ -81,10 +73,10 @@ RSpec.describe Components::Owner::Emblem, type: :component do
     expect(html).not_to include("bg-brand-accent")
   end
 
-  it "still shows the logo image in the translucent tone when there is one" do
+  it "still shows the logo image in the card tone when there is one" do
     logo_branding = create(:branding, :with_logo, tenant: tenant)
 
-    html = render_phlex(described_class.new(tenant: tenant, branding: logo_branding, size: :showcase, tone: :translucent))
+    html = render_phlex(described_class.new(tenant: tenant, branding: logo_branding, size: :showcase, tone: :card))
 
     expect(html).to include("<img")
   end

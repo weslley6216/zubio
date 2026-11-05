@@ -41,7 +41,7 @@ RSpec.describe "Public establishment showcase appearance", type: :system, js: tr
     expect(page.evaluate_script("document.querySelector('[data-catalog] li').getBoundingClientRect().height")).to be >= 44
   end
 
-  it "fills the showcase emblem with the logo cover-cropped at 56px with the canvas radius" do
+  it "fills the showcase emblem with the logo cover-cropped at 52px with the canvas radius" do
     tenant = create(:tenant, subdomain: "mary-sombracelhas", name: "Mary Sombracelhas")
     create(:branding, :with_wide_logo, tenant: tenant)
     create(:service, tenant: tenant, name: "Design de sobrancelhas")
@@ -50,8 +50,8 @@ RSpec.describe "Public establishment showcase appearance", type: :system, js: tr
 
     emblem = find("[data-brand-logo]")
     expect(emblem.evaluate_script("getComputedStyle(this).objectFit")).to eq("cover")
-    expect(emblem.evaluate_script("this.getBoundingClientRect().width")).to be_within(0.5).of(56)
-    expect(emblem.evaluate_script("this.getBoundingClientRect().height")).to be_within(0.5).of(56)
-    expect(emblem.evaluate_script("getComputedStyle(this).borderTopLeftRadius")).to eq("16px")
+    expect(emblem.evaluate_script("this.getBoundingClientRect().width")).to be_within(0.5).of(52)
+    expect(emblem.evaluate_script("this.getBoundingClientRect().height")).to be_within(0.5).of(52)
+    expect(emblem.evaluate_script("getComputedStyle(this).borderTopLeftRadius")).to eq("14px")
   end
 end

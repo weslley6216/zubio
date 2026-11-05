@@ -2,6 +2,7 @@ class WorkingHour::Summary
   RANGE_SEPARATOR = "–".freeze
   DAY_SEPARATOR = ", ".freeze
   BAND_JOINER = " a ".freeze
+  SHOWCASE_SEPARATOR = " · ".freeze
   TIME_FORMAT = "%H:%M".freeze
   NO_HOURS = "Nenhum horário definido".freeze
   ATTENDANCE_COUNT = "%<count>d dias de atendimento".freeze
@@ -15,6 +16,13 @@ class WorkingHour::Summary
     return "#{weekdays_label}, #{hours_label}" if uniform_hours?
 
     format(ATTENDANCE_COUNT, count: @working_hours.map(&:weekday).uniq.length)
+  end
+
+  def showcase_line
+    return if @working_hours.empty?
+    return line unless uniform_hours?
+
+    "#{weekdays_label}#{SHOWCASE_SEPARATOR}#{hours_label}"
   end
 
   def weekdays_label

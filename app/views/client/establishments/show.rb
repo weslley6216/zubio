@@ -4,43 +4,39 @@ class Views::Client::Establishments::Show < Views::Base
   SHARE_DESCRIPTION = "Agende seu horário online — %s.".freeze
   TITLE = "Escolha o serviço".freeze
   SUBTITLE = "Depois você escolhe o dia e o horário.".freeze
-  OPEN_UNTIL_LABEL = "Aberto até %s".freeze
-  CONFIRMATION_LABEL = "Confirmação na hora".freeze
 
   MY_APPOINTMENTS_LABEL = "Meus horários".freeze
 
   PAGE_CLASS = "flex min-h-dvh flex-col bg-(--theme-bg) text-(--theme-on-bg)".freeze
   BAR_CLASS = "px-5 pt-6 pb-2".freeze
-  BAR_COLUMN_CLASS = "mx-auto flex w-full max-w-2xl flex-col gap-3.5".freeze
-  IDENTITY_ROW_CLASS = "flex items-center gap-3.5".freeze
-  NAME_CLASS = "flex-grow text-[21px] leading-[normal] font-extrabold tracking-[-0.02em]".freeze
-  BADGES_ROW_CLASS = "flex flex-wrap items-center gap-1.5".freeze
-  BADGE_CLASS = "rounded-full bg-(--theme-bg-tint) px-3 py-1.5 text-[11px] leading-[normal] font-bold text-(--theme-on-bg)".freeze
-  MY_APPOINTMENTS_MOBILE_CLASS = "flex md:hidden flex-none flex-col items-center gap-1 leading-[normal]".freeze
-  MY_APPOINTMENTS_DESKTOP_CLASS = "hidden md:flex ml-1.5 flex-none flex-col items-center gap-1 leading-[normal]".freeze
-  MY_APPOINTMENTS_ICON_WRAP_CLASS = "relative grid h-11 w-11 place-items-center rounded-full bg-(--theme-bg-tint)".freeze
+  IDENTITY_ROW_CLASS = "mx-auto flex w-full max-w-2xl items-center gap-3".freeze
+  IDENTITY_TEXT_CLASS = "flex min-w-0 flex-grow flex-col gap-0.5 leading-[normal]".freeze
+  NAME_CLASS = "text-[20px] font-extrabold tracking-[-0.02em]".freeze
+  HOURS_CLASS = "text-[13px] text-(--theme-on-bg-muted)".freeze
+  MY_APPOINTMENTS_CLASS = "flex flex-none flex-col items-center gap-1 leading-[normal]".freeze
+  MY_APPOINTMENTS_ICON_WRAP_CLASS = "relative grid h-11 w-11 place-items-center rounded-xl bg-(--theme-bg-tint)".freeze
   MY_APPOINTMENTS_ICON_CLASS = "h-5 w-5".freeze
   MY_APPOINTMENTS_BADGE_CLASS = "absolute top-[-3px] right-[-3px] min-w-[18px] h-[18px] rounded-full bg-(--theme-accent) px-[5px] text-center text-[11px] leading-[18px] font-extrabold text-(--theme-on-accent) tabular-nums".freeze
   MY_APPOINTMENTS_CAPTION_CLASS = "text-[11px] font-bold".freeze
   LIST_CLASS = "grid grid-cols-2 gap-3".freeze
-  SHEET_CLASS = "mx-auto grid w-full max-w-2xl gap-4 px-5 pt-3.5 pb-6".freeze
-  TITLE_BLOCK_CLASS = "grid gap-1".freeze
+  SHEET_CLASS = "mx-auto grid w-full max-w-2xl gap-3.5 px-5 pt-3.5 pb-5".freeze
+  TITLE_BLOCK_CLASS = "grid gap-[3px] pt-2.5".freeze
   TITLE_CLASS = "text-xl leading-[normal] font-extrabold tracking-[-0.02em]".freeze
   SUBTITLE_CLASS = "text-[13px] leading-[normal] text-(--theme-on-bg-muted)".freeze
   EMPTY_CLASS = "grid gap-2 rounded-2xl bg-(--theme-card) p-6 text-(--theme-on-card)".freeze
   EMPTY_TITLE_CLASS = "text-lg font-bold".freeze
   EMPTY_BODY_CLASS = "text-sm text-(--theme-on-card-muted)".freeze
-  PRICE_CLASS = "text-[14px] leading-[normal] font-extrabold tabular-nums".freeze
+  PRICE_CLASS = "text-[14px] leading-[normal] font-extrabold".freeze
   UNPRICED_CLASS = "text-xs leading-[normal] font-bold text-(--theme-on-card-muted)".freeze
-  NOTICE_CLASS = "flex items-start gap-2.5 rounded-2xl border border-(--theme-danger-on-card) bg-(--theme-card) px-3.5 py-3 text-(--theme-danger-on-card)".freeze
-  NOTICE_ICON_CLASS = "h-[18px] w-[18px] flex-none".freeze
+  NOTICE_CLASS = "flex items-start gap-2.5 rounded-2xl bg-(--theme-card) px-3.5 py-3 text-(--theme-on-card) ring-[1.5px] ring-(--theme-danger-on-card) ring-inset".freeze
+  NOTICE_ICON_CLASS = "h-[18px] w-[18px] flex-none text-(--theme-danger-on-card)".freeze
   NOTICE_TEXT_CLASS = "text-[13px] leading-[1.5]".freeze
 
-  def initialize(tenant:, branding:, services:, open_until: nil, authenticated: false, my_appointments_count: nil, app_installed: false)
+  def initialize(tenant:, branding:, services:, hours: nil, authenticated: false, my_appointments_count: nil, app_installed: false)
     @tenant = tenant
     @branding = branding
     @services = services
-    @open_until = open_until
+    @hours = hours
     @authenticated = authenticated
     @my_appointments_count = my_appointments_count
     @app_installed = app_installed
@@ -62,23 +58,19 @@ class Views::Client::Establishments::Show < Views::Base
 
   def render_brand_bar
     header(class: BAR_CLASS) do
-      div(class: BAR_COLUMN_CLASS) do
-        div(class: IDENTITY_ROW_CLASS) do
-          render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :showcase, tone: :translucent)
+      div(class: IDENTITY_ROW_CLASS) do
+        render Components::Owner::Emblem.new(tenant: @tenant, branding: @branding, size: :showcase, tone: :card)
+        div(class: IDENTITY_TEXT_CLASS) do
           h1(class: NAME_CLASS) { @tenant.name }
-          render_my_appointments_button(MY_APPOINTMENTS_MOBILE_CLASS)
+          span(class: HOURS_CLASS, data: { opening_hours: true }) { @hours } if @hours
         end
-        div(class: BADGES_ROW_CLASS) do
-          span(class: BADGE_CLASS) { OPEN_UNTIL_LABEL % open_until_text } if @open_until
-          span(class: BADGE_CLASS) { CONFIRMATION_LABEL }
-          render_my_appointments_button(MY_APPOINTMENTS_DESKTOP_CLASS)
-        end
+        render_my_appointments_button
       end
     end
   end
 
-  def render_my_appointments_button(visibility_class)
-    a(href: my_appointments_href, aria_label: button_aria, data: { my_appointments_button: true }, class: visibility_class) do
+  def render_my_appointments_button
+    a(href: my_appointments_href, aria_label: button_aria, data: { my_appointments_button: true }, class: MY_APPOINTMENTS_CLASS) do
       div(class: MY_APPOINTMENTS_ICON_WRAP_CLASS) do
         render_my_appointments_icon
         span(class: MY_APPOINTMENTS_BADGE_CLASS, data: { my_appointments_badge: true }) { @my_appointments_count.to_s } if badge?
@@ -99,10 +91,6 @@ class Views::Client::Establishments::Show < Views::Base
     return "Meus agendamentos" unless badge?
 
     "Meus agendamentos, #{@my_appointments_count} #{@my_appointments_count == 1 ? "próximo" : "próximos"}"
-  end
-
-  def open_until_text
-    @open_until.min.zero? ? "#{@open_until.hour}h" : Kernel.format("%dh%02d", @open_until.hour, @open_until.min)
   end
 
   def social_meta

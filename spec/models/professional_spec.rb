@@ -208,6 +208,18 @@ RSpec.describe Professional, type: :model do
     end
   end
 
+  describe "#showcase_hours" do
+    it "reads the saved week as the showcase line" do
+      tenant = create(:tenant)
+      professional = create(:professional, :without_user, tenant: tenant)
+      ActsAsTenant.with_tenant(tenant) { professional.replace_working_hours!((2..6).index_with { [ [ "09:00", "18:00" ] ] }) }
+
+      line = ActsAsTenant.with_tenant(tenant) { professional.showcase_hours }
+
+      expect(line).to eq("Ter a Sáb · 09:00–18:00")
+    end
+  end
+
   describe "#working_hours_summary" do
     it "reads the saved week as a single summary line" do
       tenant = create(:tenant)
