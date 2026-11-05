@@ -56,10 +56,15 @@ class Client < ApplicationRecord
     digits
   end
 
-  def phone_display
-    local = phone.length == 11 ? "#{phone[2, 5]}-#{phone[7, 4]}" : "#{phone[2, 4]}-#{phone[6, 4]}"
-    "(#{phone[0, 2]}) #{local}"
+  def self.phone_display(raw)
+    digits = normalize(raw)
+    return raw.to_s unless PHONE_DIGITS.include?(digits.length)
+
+    local = digits.length == 11 ? "#{digits[2, 5]}-#{digits[7, 4]}" : "#{digits[2, 4]}-#{digits[6, 4]}"
+    "(#{digits[0, 2]}) #{local}"
   end
+
+  def phone_display = self.class.phone_display(phone)
 
   def tel_href = "tel:+#{COUNTRY_CODE}#{phone}"
 

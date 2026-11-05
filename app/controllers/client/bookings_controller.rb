@@ -76,7 +76,7 @@ class Client::BookingsController < Client::BaseController
       tenant: ActsAsTenant.current_tenant, branding: current_branding, service: service, professional: professional,
       selected_day: day, slots: availability.slots_by_date.fetch(day), taken_slots: availability.taken_slots_by_date.fetch(day),
       nearest: availability.nearest_free(starts_at), client_name: current_client&.name || params[:name].to_s,
-      client_phone: current_client&.phone_display || params[:phone].to_s, lost_time: starts_at
+      client_phone: current_client&.phone_display || Client.phone_display(params[:phone]), lost_time: starts_at
     ), status: :unprocessable_content
   end
 
