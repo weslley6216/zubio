@@ -47,6 +47,22 @@ RSpec.describe "Owner brand color tones", type: :request do
       end
     end
 
+    it "answers the same tones on any establishment's host, reading nothing of its brand" do
+      aurora = create(:tenant, subdomain: "estudio-aurora", name: "Estúdio Aurora")
+      create(:branding, tenant: aurora, brand_600: "#F2B33D", brand_background: "#1F4D3A")
+      create(:branding, :with_background, tenant: tenant)
+      sign_in_owner(create(:user, tenant: aurora, email: "ana@example.com", password: "s3cr3t123"))
+      get owner_brand_color_tones_path(role: "brand_600", bg: "#0000FF", hue: 0)
+      on_aurora = response.body
+      sign_in_owner(owner)
+
+      get owner_brand_color_tones_path(role: "brand_600", bg: "#0000FF", hue: 0)
+
+      expect(response.body).to eq(on_aurora)
+      expect(response.body).to include("data-tone=")
+      expect(response.body).not_to include("#F2B33D", "#1F4D3A", "#16324A", "#F0617A")
+    end
+
     it "brings the swatch sheet that colors the tones it returns" do
       sign_in_owner(owner)
 
