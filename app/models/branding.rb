@@ -23,8 +23,8 @@ class Branding < ApplicationRecord
   LOGO_MAX_PIXELS = 4096
   INVALID_IMAGE_MESSAGE = "não é uma imagem válida".freeze
   OVERSIZED_IMAGE_MESSAGE = "excede as dimensões máximas de #{LOGO_MAX_PIXELS}×#{LOGO_MAX_PIXELS} pixels".freeze
-  CONTRAST_MESSAGE = "não tem contraste suficiente com o texto que vai sobre ela (mínimo 4.5:1)".freeze
-  STANDS_OUT_MESSAGE = "não se destaca do fundo (mínimo 3:1)".freeze
+  CONTRAST_MESSAGE = "deixa o texto difícil de ler".freeze
+  STANDS_OUT_MESSAGE = "não aparece sobre o fundo escolhido".freeze
   CUSTOM_COLOR_CHOICE = "custom".freeze
 
   validates :brand_600, presence: true, format: { with: ColorScale::HEX }
@@ -133,7 +133,7 @@ class Branding < ApplicationRecord
   def brand_600_stands_out_on_background
     return unless hex?(brand_600)
     return if brand_background.present? && !hex?(brand_background)
-    return if Theme.new(background: brand_background.presence, accent: brand_600).accent_stands_out?
+    return if Tones.new(role: :brand_600, background: brand_background).stands_out?(brand_600)
 
     errors.add(:brand_600, STANDS_OUT_MESSAGE)
   end
@@ -141,7 +141,7 @@ class Branding < ApplicationRecord
   def validate_contrast(attribute)
     value = public_send(attribute)
     return unless hex?(value)
-    return if ColorScale.new(value).contrast_against_foreground >= ColorScale::MIN_CONTRAST
+    return if Tones.new(role: attribute).text_legible?(value)
 
     errors.add(attribute, CONTRAST_MESSAGE)
   end

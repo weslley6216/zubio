@@ -26,10 +26,6 @@ class Branding::Tones
     text_legible?(hex) && (role != :brand_600 || stands_out?(hex))
   end
 
-  private
-
-  attr_reader :role, :background
-
   def text_legible?(hex)
     Branding::ColorScale.new(hex).contrast_against_foreground >= Branding::ColorScale::MIN_CONTRAST
   end
@@ -37,6 +33,10 @@ class Branding::Tones
   def stands_out?(hex)
     Branding::Theme.new(background: background.presence, accent: hex).accent_stands_out?
   end
+
+  private
+
+  attr_reader :role, :background
 
   def candidates(hue)
     if hue == NEUTRAL

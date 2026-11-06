@@ -102,6 +102,29 @@ RSpec.describe Branding, type: :model do
       expect(branding.errors[:brand_600]).to eq([ Branding::STANDS_OUT_MESSAGE ])
     end
 
+    it "refuses the exact production bug pair and does not persist it" do
+      branding = build(:branding, brand_background: "#0000FF", brand_600: "#FF0000")
+
+      expect(branding.save).to be false
+      expect(branding.errors[:brand_600]).to include(Branding::STANDS_OUT_MESSAGE)
+    end
+
+    it "persists a pair the selector would have offered for the same background" do
+      background = "#0000FF"
+      accent = Branding::Tones.new(role: :brand_600, background: background).options(0).first
+      branding = build(:branding, brand_background: background, brand_600: accent)
+
+      expect(branding.save).to be true
+    end
+
+    it "rejects exactly what Tones.valid? rejects for the same role and background" do
+      tones = Branding::Tones.new(role: :brand_600, background: "#0000FF")
+      branding = build(:branding, brand_background: "#0000FF", brand_600: "#FF0000")
+
+      expect(tones.valid?("#FF0000")).to be false
+      expect(branding).not_to be_valid
+    end
+
     it "refuses a light accent with no background, since it would sit on the neutral" do
       branding = build(:branding, brand_600: "#F2B33D")
 
@@ -382,7 +405,7 @@ RSpec.describe Branding, type: :model do
     it "gives every swatch, as brand, a label and an underline that read on every neutral and a light pair that reads, in both themes" do
       stylesheets = Branding::Palette.swatches.map { |hex| build(:branding, brand_600: hex).css_variables }
 
-      expect(Branding::Palette.swatches.size).to eq(9)
+      expect(Branding::Palette.swatches.size).to eq(10)
       expect(stylesheets).to all(have_legible_roles("brand"))
     end
 
