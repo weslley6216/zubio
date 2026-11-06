@@ -29,7 +29,7 @@ docker compose run --rm app bundle exec rubocop
 docker compose run --rm app bundle install            # após alterar o Gemfile
 ```
 
-O mínimo de 100% de cobertura só é exigido com `COVERAGE_GATE=1` (ligado no CI), para que rodar um arquivo isolado não falhe por cobertura. A suíte completa é provada pelo CI da branch: todo push dispara o CI, e o `/ship` só faz merge com o run do SHA atual verde. Bancos paralelos (`zubio_test2..N`): `RAILS_ENV=test bin/rails parallel:create parallel:load_schema`, uma vez e depois de cada migration.
+O mínimo de 100% de cobertura só é exigido com `COVERAGE_GATE=1` (ligado no CI), para que rodar um arquivo isolado não falhe por cobertura. A suíte completa roda uma vez por entrega, localmente, no `/ship` (em background, enquanto os gates de leitura acontecem). O `/execute` roda só os specs da tarefa e não dá push. A branch só sobe depois da suíte local verde, e o CI reconfirma o mesmo SHA: o `/ship` só faz merge com o run do SHA atual verde e nenhum run vermelho da branch sem causa reproduzida. Bancos paralelos (`zubio_test2..N`): `RAILS_ENV=test bin/rails parallel:create parallel:load_schema`, uma vez e depois de cada migration.
 
 `config/database.yml` lê `POSTGRES_HOST`/`POSTGRES_USER`/`POSTGRES_PASSWORD` do `.env` (default local: `localhost`/`postgres`/`postgres`, coerente com o app rodando fora do compose se preciso). CI usa o mesmo `database.yml` com um serviço `postgres:16-alpine` e essas variáveis.
 
