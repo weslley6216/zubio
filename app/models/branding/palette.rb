@@ -13,6 +13,11 @@ class Branding::Palette
 
   def self.extras(_attribute) = []
 
+  def self.accent_suggestions(background:)
+    tones = Branding::Tones.new(role: :brand_600, background: background)
+    ACCENTS.map { |hex| tones.nearest_valid(hex) }
+  end
+
   def self.stylesheet
     @stylesheet ||= swatches.map { |hex| %([data-swatch="#{hex}"]{background:#{hex};color:#{hex}}) }.join + preview_rules
   end

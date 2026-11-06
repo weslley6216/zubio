@@ -42,6 +42,8 @@ Rails.application.routes.draw do
     resources :services, only: %i[index new create edit update]
     resources :clients, only: :index
     resource :brand_colors, only: %i[edit update]
+    get "brand_color_tones", to: "brand_color_tones#show"
+    get "brand_accent_swatches", to: "brand_color_tones#accent"
     resource :brand_name, only: %i[edit update]
     resource :brand_logo, only: %i[edit update]
     resource :settings, only: :show
