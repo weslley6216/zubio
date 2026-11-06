@@ -57,6 +57,25 @@ RSpec.describe "Owner brand colors tones selector", type: :system, js: true do
     expect(computed_hex("[data-preview-role='book']", "backgroundColor")).to eq(adjusted)
   end
 
+  it "adjusts a typed accent whose hue is fractional and saves it without a contrast error" do
+    tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    create(:branding, tenant: tenant, brand_background: "#F6EEF2", brand_600: "#8E4B6B")
+    adjusted = Branding::Tones.new(role: :brand_600, background: "#F6EEF2").nearest_valid("#F0617A")
+    sign_in_owner(create(:user, tenant: tenant))
+    visit "http://barbearia-do-ze.zubio.com.br#{edit_owner_brand_colors_path}"
+    within(%(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::ACCENT_LABEL}"])) do
+      find("[data-more-toggle]", visible: :all).ancestor("label").click
+      choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
+      fill_in "branding[brand_600_custom]", with: "#F0617A"
+    end
+    find(%(turbo-frame#tones-brand_600 input[value="#{adjusted}"]:checked), visible: :all)
+
+    click_on Views::Owner::BrandQuestions::Edit::SUBMIT_LABEL
+
+    expect(page).to have_text(Owner::BrandQuestionsController::NOTICE)
+    ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq(adjusted) }
+  end
+
   it "reajusts the chosen accent when the background turns light, keeping the samples, and saves without error" do
     tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
     create(:branding, :with_background, tenant: tenant)

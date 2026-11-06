@@ -3,6 +3,11 @@ class Branding::Tones
   SATURATIONS = [ 0.82, 0.42 ].freeze
   NEUTRAL = :neutral
 
+  def self.hue_of(hex)
+    scale = Branding::ColorScale.new(hex)
+    scale.saturation.zero? ? NEUTRAL : scale.hue.round
+  end
+
   def initialize(role:, background: nil)
     @role = role
     @background = background
@@ -15,11 +20,9 @@ class Branding::Tones
   def nearest_valid(hex)
     return hex.upcase if valid?(hex)
 
-    scale = Branding::ColorScale.new(hex)
-    hue = scale.saturation.zero? ? NEUTRAL : scale.hue
-    target = scale.luminance
+    target = Branding::ColorScale.new(hex).luminance
 
-    options(hue).min_by { |candidate| (Branding::ColorScale.new(candidate).luminance - target).abs }
+    options(self.class.hue_of(hex)).min_by { |candidate| (Branding::ColorScale.new(candidate).luminance - target).abs }
   end
 
   def valid?(hex)

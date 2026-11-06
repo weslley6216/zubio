@@ -50,6 +50,25 @@ RSpec.describe Branding::Tones do
 
       expect(tones.nearest_valid("#F0617A")).to eq("#F0617A")
     end
+
+    it "lands on one of the tones offered for the hex's own hue, even when that hue is fractional" do
+      tones = described_class.new(role: :brand_600, background: "#F6EEF2")
+
+      result = tones.nearest_valid("#F0617A")
+
+      expect(result).not_to eq("#F0617A")
+      expect(tones.options(described_class.hue_of("#F0617A"))).to include(result)
+    end
+  end
+
+  describe ".hue_of" do
+    it "rounds a fractional hue to the whole degree the hue bar offers" do
+      expect(described_class.hue_of("#F0617A")).to eq(Branding::ColorScale.new("#F0617A").hue.round)
+    end
+
+    it "answers neutral for a gray" do
+      expect(described_class.hue_of("#767676")).to eq(described_class::NEUTRAL)
+    end
   end
 
   describe "role brand_background" do

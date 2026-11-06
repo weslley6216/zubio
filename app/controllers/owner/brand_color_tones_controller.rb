@@ -17,7 +17,7 @@ class Owner::BrandColorTonesController < Owner::BaseController
       return head :not_found unless (hex = hex_param)
 
       nearest = tones.nearest_valid(hex)
-      respond_with_tones(options: tones.options(hue_of(hex)), selected: nearest, advise: nearest != hex.upcase)
+      respond_with_tones(options: tones.options(Branding::Tones.hue_of(hex)), selected: nearest, advise: nearest != hex.upcase)
     else
       head :not_found
     end
@@ -40,11 +40,6 @@ class Owner::BrandColorTonesController < Owner::BaseController
   def respond_with_tones(options:, selected:, advise:)
     expires_in(CACHE_WINDOW, public: true)
     render Components::Form::ColorTones.new(role: role, tones: options, selected: selected, advise: advise)
-  end
-
-  def hue_of(hex)
-    scale = Branding::ColorScale.new(hex)
-    scale.saturation.zero? ? Branding::Tones::NEUTRAL : scale.hue.round
   end
 
   def valid_role? = ROLES.include?(params[:role])

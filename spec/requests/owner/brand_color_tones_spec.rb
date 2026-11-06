@@ -85,6 +85,16 @@ RSpec.describe "Owner brand color tones", type: :request do
       expect(document.at_css(%([data-tone-advice]))).to be_present
     end
 
+    it "checks the adjusted tone among the offered ones when the typed hex has a fractional hue" do
+      sign_in_owner(owner)
+
+      get owner_brand_color_tones_path(role: "brand_600", bg: "#F6EEF2", hex: "#F0617A")
+
+      document = Nokogiri::HTML5.fragment(response.body)
+      expect(document.at_css(%(input[type="radio"][checked]))["value"]).to eq(Branding::Tones.new(role: :brand_600, background: "#F6EEF2").nearest_valid("#F0617A"))
+      expect(document.at_css(%([data-tone-advice]))).to be_present
+    end
+
     it "does not advertise an adjustment when the given hex is already valid" do
       sign_in_owner(owner)
 

@@ -145,11 +145,9 @@ class Components::Form::ColorSwatches < Components::Base
 
   def hue_source = hex?(resolved) ? resolved : normalized(@fallback) || Branding::DEFAULT_BRAND_600
 
-  def resolved_scale = @resolved_scale ||= Branding::ColorScale.new(hue_source)
+  def hue_or_neutral = @hue_or_neutral ||= Branding::Tones.hue_of(hue_source)
 
-  def hue_value = resolved_scale.saturation.zero? ? 0 : resolved_scale.hue.round
-
-  def hue_or_neutral = resolved_scale.saturation.zero? ? Branding::Tones::NEUTRAL : hue_value
+  def hue_value = hue_or_neutral == Branding::Tones::NEUTRAL ? 0 : hue_or_neutral
 
   def initial_tones = tones.options(hue_or_neutral)
 
