@@ -26,7 +26,7 @@ RSpec.describe "Owner brand colors tones selector", type: :system, js: true do
     visit "http://barbearia-do-ze.zubio.com.br#{edit_owner_brand_colors_path}"
 
     within(%(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::BACKGROUND_LABEL}"])) { choose(option: "#F6EEF2", allow_label_click: true) }
-    expect(page).to have_css("turbo-frame#accent-swatches[complete]")
+    find("turbo-frame#accent-swatches[complete]", visible: :all)
     within(%(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::ACCENT_LABEL}"])) { choose(option: "#8E4B6B", allow_label_click: true) }
     click_on Views::Owner::BrandQuestions::Edit::SUBMIT_LABEL
 
@@ -65,7 +65,7 @@ RSpec.describe "Owner brand colors tones selector", type: :system, js: true do
     visit "http://barbearia-do-ze.zubio.com.br#{edit_owner_brand_colors_path}"
 
     within(%(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::BACKGROUND_LABEL}"])) { choose(option: "#F4F6F8", allow_label_click: true) }
-    expect(page).to have_css(%(turbo-frame#accent-swatches input[value="#{reajusted}"]:checked), visible: :all)
+    find(%(turbo-frame#accent-swatches input[value="#{reajusted}"]:checked), visible: :all)
     click_on Views::Owner::BrandQuestions::Edit::SUBMIT_LABEL
 
     expect(reajusted).not_to eq("#F0617A")
@@ -81,7 +81,7 @@ RSpec.describe "Owner brand colors tones selector", type: :system, js: true do
     sign_in_owner(create(:user, tenant: tenant))
     visit "http://barbearia-do-ze.zubio.com.br#{edit_owner_brand_colors_path}"
     within(%(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::BACKGROUND_LABEL}"])) { choose(option: "#F4F6F8", allow_label_click: true) }
-    expect(page).to have_css(%(turbo-frame#accent-swatches input[value="#{reajusted}"]:checked), visible: :all)
+    find(%(turbo-frame#accent-swatches input[value="#{reajusted}"]:checked), visible: :all)
 
     within(%(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::BACKGROUND_LABEL}"])) { choose(option: "#16324A", allow_label_click: true) }
 
