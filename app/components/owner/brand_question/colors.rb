@@ -32,7 +32,7 @@ class Components::Owner::BrandQuestion::Colors < Components::Base
   end
 
   def view_template
-    div(class: ROOT_CLASS, data: { controller: "color-swatch" }) do
+    div(class: ROOT_CLASS, data: { controller: "color-swatch", action: "turbo:frame-load->color-swatch#arrive" }) do
       div(class: HEADING_BLOCK_CLASS) do
         h1(id: HEADING_ID, class: TITLE_CLASS) { TITLE }
         p(class: SUBTITLE_CLASS) { SUBTITLE }

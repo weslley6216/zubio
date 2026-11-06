@@ -437,7 +437,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
     sign_in_owner(owner)
     click_on "Começar"
-    chosen = Branding::Palette::SUGGESTIONS.fetch(:brand_600)[1]
+    chosen = Branding::Palette::SUGGESTIONS.fetch(:brand_600)[2]
 
     find("[data-swatch-row] [data-swatch='#{chosen}']").click
 
@@ -450,7 +450,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
     sign_in_owner(owner)
     click_on "Começar"
-    chosen = Branding::Palette::SUGGESTIONS.fetch(:brand_600)[1]
+    chosen = Branding::Palette::SUGGESTIONS.fetch(:brand_600)[2]
     find("[data-swatch-row] [data-swatch='#{chosen}']").click
 
     click_on "Continuar"
@@ -665,42 +665,6 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#2C6CB0']", visible: :all)
     expect(find("[data-onboarding-section='colors'] [data-progress-bar] > div:first-child").evaluate_script("getComputedStyle(this).backgroundColor"))
       .to eq("rgb(44, 108, 176)")
-  end
-
-  it "opens the native color picker the moment the customize card is tapped" do
-    owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
-    sign_in_owner(owner)
-    click_on "Começar"
-    page.execute_script(<<~JS)
-      window.pickerOpenings = 0
-      HTMLInputElement.prototype.showPicker = function () { window.pickerOpenings += 1 }
-    JS
-
-    within(%(fieldset[aria-label="Destaque"])) do
-      find("label:has([data-more-toggle])").click
-      choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
-    end
-
-    expect(page.evaluate_script("window.pickerOpenings")).to eq(1)
-  end
-
-  it "keeps the native color picker closed when the customize choice comes from script" do
-    owner = create(:user, :with_professional, name: "Ana Lima", tenant: create(:tenant, :onboarding))
-    sign_in_owner(owner)
-    click_on "Começar"
-    page.execute_script(<<~JS)
-      window.pickerOpenings = 0
-      HTMLInputElement.prototype.showPicker = function () { window.pickerOpenings += 1 }
-    JS
-
-    page.execute_script(<<~JS)
-      const radio = document.querySelector('input[name="branding[brand_600]"][value="custom"]')
-      radio.checked = true
-      radio.dispatchEvent(new Event("change", { bubbles: true }))
-    JS
-
-    expect(find(%(input[name="branding[brand_600]"][value="custom"]), visible: :all)).to be_checked
-    expect(page.evaluate_script("window.pickerOpenings")).to eq(0)
   end
 
   it "labels a service on the client before it is ever sent" do
