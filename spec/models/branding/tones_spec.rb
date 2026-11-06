@@ -50,6 +50,15 @@ RSpec.describe Branding::Tones do
 
       expect(tones.nearest_valid("#F0617A")).to eq("#F0617A")
     end
+
+    it "falls back to a valid neutral when no tone of the hue stands out on the background" do
+      tones = described_class.new(role: :brand_600, background: "#F0617A")
+
+      result = tones.nearest_valid("#4FB3A9")
+
+      expect(tones.options(Branding::ColorScale.new("#4FB3A9").hue)).to be_empty
+      expect(tones.valid?(result)).to be true
+    end
   end
 
   describe "role brand_background" do

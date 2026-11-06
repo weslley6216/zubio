@@ -19,7 +19,7 @@ class Branding::Tones
     hue = scale.saturation.zero? ? NEUTRAL : scale.hue
     target = scale.luminance
 
-    options(hue).min_by { |candidate| (Branding::ColorScale.new(candidate).luminance - target).abs }
+    (options(hue).presence || options(NEUTRAL)).min_by { |candidate| (Branding::ColorScale.new(candidate).luminance - target).abs }
   end
 
   def valid?(hex)
