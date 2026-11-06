@@ -546,7 +546,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     page.refresh
 
     expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#4FB3A9']", visible: :all)
-    wait_until { computed("[data-onboarding-section='colors'] [data-progress-bar] > div:first-child", "backgroundColor") == "rgb(79, 179, 169)" }
+    find("turbo-frame#accent-swatches[complete]", visible: :all)
     expect(computed("[data-onboarding-section='colors'] [data-progress-bar] > div:first-child", "backgroundColor")).to eq("rgb(79, 179, 169)")
   end
 
@@ -565,7 +565,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
     page.refresh
 
     expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#4A90D9']", visible: :all)
-    wait_until { computed("[data-onboarding-section='colors'] [data-progress-bar] > div:first-child", "backgroundColor") == "rgb(74, 144, 217)" }
+    find("turbo-frame#accent-swatches[complete]", visible: :all)
     expect(computed("[data-onboarding-section='colors'] [data-progress-bar] > div:first-child", "backgroundColor")).to eq("rgb(74, 144, 217)")
   end
 

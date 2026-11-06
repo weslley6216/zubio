@@ -89,21 +89,23 @@ export default class extends Controller {
   }
 
   #refreshAccent() {
-    const background = this.#currentBackground()
-    if (!background) return
+    queueMicrotask(() => {
+      const background = this.#currentBackground()
+      if (!background) return
 
-    const accentCustom = this.element.querySelector(`input[name="${ACCENT}"][value="custom"]`)
-    if (accentCustom?.checked) {
-      const code = accentCustom.closest("fieldset").querySelector("[data-code]")
-      if (HEX.test(code.value)) this.#loadTones(accentCustom.closest("fieldset"), { hex: code.value.toUpperCase() })
-    }
+      const accentCustom = this.element.querySelector(`input[name="${ACCENT}"][value="custom"]`)
+      if (accentCustom?.checked) {
+        const code = accentCustom.closest("fieldset").querySelector("[data-code]")
+        if (HEX.test(code.value)) this.#loadTones(accentCustom.closest("fieldset"), { hex: code.value.toUpperCase() })
+      }
 
-    const frame = this.element.querySelector("turbo-frame#accent-swatches")
-    if (!frame) return
-    const params = new URLSearchParams({ bg: background })
-    const chosen = frame.querySelector('input[type="radio"]:checked')
-    if (chosen) params.set("selected", chosen.dataset.accent)
-    frame.src = `${ACCENT_PATH}?${params}`
+      const frame = this.element.querySelector("turbo-frame#accent-swatches")
+      if (!frame) return
+      const params = new URLSearchParams({ bg: background })
+      const chosen = frame.querySelector('input[type="radio"]:checked')
+      if (chosen) params.set("selected", chosen.dataset.accent)
+      frame.src = `${ACCENT_PATH}?${params}`
+    })
   }
 
   #currentBackground() {
