@@ -146,6 +146,14 @@ RSpec.describe "Owner brand color tones", type: :request do
       expect(response).to have_http_status(:not_found)
     end
 
+    it "answers not found when asked for neither a hue nor a hex" do
+      sign_in_owner(owner)
+
+      get owner_brand_color_tones_path(role: "brand_600", bg: "#0000FF")
+
+      expect(response).to have_http_status(:not_found)
+    end
+
     it "rejects a hue outside the 0..359 range" do
       sign_in_owner(owner)
 
