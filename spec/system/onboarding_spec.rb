@@ -496,11 +496,11 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
       choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
     end
 
-    fill_in "branding[brand_600_custom]", with: "#2C6CB0"
+    fill_in "branding[brand_600_custom]", with: "#4A90D9"
 
-    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#2C6CB0']", visible: :all)
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#4A90D9']", visible: :all)
     expect(find("[data-onboarding-section='colors'] [data-progress-bar] > div:first-child").evaluate_script("getComputedStyle(this).backgroundColor"))
-      .to eq("rgb(44, 108, 176)")
+      .to eq("rgb(74, 144, 217)")
   end
 
   it "uses the typed background color for the preview panel" do
@@ -525,15 +525,15 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
       find("label:has([data-more-toggle])").click
       choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
     end
-    fill_in "branding[brand_600_custom]", with: "#2C6CB0"
-    find("[data-controller='onboarding'][data-preview-accent='#2C6CB0']", visible: :all)
+    fill_in "branding[brand_600_custom]", with: "#4A90D9"
+    find("[data-controller='onboarding'][data-preview-accent='#4A90D9']", visible: :all)
 
     fill_in "branding[brand_600_custom]", with: "#ZZZ123"
 
     expect(find(%(input[name="branding[brand_600_custom]"]))["aria-invalid"]).to eq("true")
     expect(find(%(input[name="branding[brand_600_custom]"]))["aria-describedby"]).to eq("brand_600-color-error")
     expect(find("#brand_600-color-error")).to be_visible
-    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#2C6CB0']", visible: :all)
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#4A90D9']", visible: :all)
   end
 
   it "repaints the screen from a restored swatch after a reload" do
@@ -558,15 +558,15 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
       find("label:has([data-more-toggle])").click
       choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
     end
-    fill_in "branding[brand_600_custom]", with: "#2C6CB0"
-    find("[data-controller='onboarding'][data-preview-accent='#2C6CB0']", visible: :all)
+    fill_in "branding[brand_600_custom]", with: "#4A90D9"
+    find("[data-controller='onboarding'][data-preview-accent='#4A90D9']", visible: :all)
     click_on "Continuar"
 
     page.refresh
 
-    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#2C6CB0']", visible: :all)
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#4A90D9']", visible: :all)
     expect(find("[data-onboarding-section='colors'] [data-progress-bar] > div:first-child", visible: :all).evaluate_script("getComputedStyle(this).backgroundColor"))
-      .to eq("rgb(44, 108, 176)")
+      .to eq("rgb(74, 144, 217)")
   end
 
   it "opens the plus without repainting the screen" do
@@ -599,13 +599,13 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
       document.addEventListener("load", record("loaded"), true)
       document.addEventListener("error", record("failed"), true)
     JS
-    fill_in "branding[brand_600_custom]", with: "#2C6CB0"
-    wait_until { held.any? { |request| request.url.include?("2C6CB0") } }
+    fill_in "branding[brand_600_custom]", with: "#4A90D9"
+    wait_until { held.any? { |request| request.url.include?("4A90D9") } }
     find("[data-swatch-row] [data-swatch='#4FB3A9']").click
     find("[data-controller='onboarding'][data-preview-accent='#4FB3A9']", visible: :all)
 
     held.each(&:continue)
-    wait_until { page.evaluate_script("window.previewSheets").any? { |entry| entry.start_with?("loaded") && entry.include?("%232C6CB0") } }
+    wait_until { page.evaluate_script("window.previewSheets").any? { |entry| entry.start_with?("loaded") && entry.include?("%234A90D9") } }
     page.evaluate_async_script("setTimeout(arguments[0], 0)")
 
     expect(find("[data-controller='onboarding']", visible: :all)["data-preview-accent"]).to eq("#4FB3A9")
@@ -620,7 +620,7 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
       choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
     end
     page.driver.browser.network.intercept(pattern: "*preview.css*")
-    page.driver.browser.on(:request) { |request| request.url.include?("2C6CB0") ? request.abort : request.continue }
+    page.driver.browser.on(:request) { |request| request.url.include?("4A90D9") ? request.abort : request.continue }
     page.execute_script(<<~JS)
       window.previewSheets = []
       const record = (state) => (event) => {
@@ -630,8 +630,8 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
       document.addEventListener("error", record("failed"), true)
     JS
 
-    fill_in "branding[brand_600_custom]", with: "#2C6CB0"
-    wait_until { page.evaluate_script("window.previewSheets").any? { |entry| entry.start_with?("failed") && entry.include?("%232C6CB0") } }
+    fill_in "branding[brand_600_custom]", with: "#4A90D9"
+    wait_until { page.evaluate_script("window.previewSheets").any? { |entry| entry.start_with?("failed") && entry.include?("%234A90D9") } }
     page.evaluate_async_script("setTimeout(arguments[0], 0)")
 
     expect(find("[data-controller='onboarding']", visible: :all)["data-preview-accent"]).to eq(Branding::Palette::STARTING.fetch(:brand_600))
@@ -656,15 +656,15 @@ RSpec.describe "Onboarding journey", type: :system, js: true do
       document.addEventListener("load", record("loaded"), true)
       document.addEventListener("error", record("failed"), true)
     JS
-    fill_in "branding[brand_600_custom]", with: "#2C6CB0"
-    wait_until { page.evaluate_script("window.previewSheets").any? { |entry| entry.start_with?("failed") && entry.include?("%232C6CB0") } }
+    fill_in "branding[brand_600_custom]", with: "#4A90D9"
+    wait_until { page.evaluate_script("window.previewSheets").any? { |entry| entry.start_with?("failed") && entry.include?("%234A90D9") } }
     page.evaluate_async_script("setTimeout(arguments[0], 0)")
 
-    fill_in "branding[brand_600_custom]", with: "#2C6CB0"
+    fill_in "branding[brand_600_custom]", with: "#4A90D9"
 
-    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#2C6CB0']", visible: :all)
+    expect(page).to have_css("[data-controller='onboarding'][data-preview-accent='#4A90D9']", visible: :all)
     expect(find("[data-onboarding-section='colors'] [data-progress-bar] > div:first-child").evaluate_script("getComputedStyle(this).backgroundColor"))
-      .to eq("rgb(44, 108, 176)")
+      .to eq("rgb(74, 144, 217)")
   end
 
   it "labels a service on the client before it is ever sent" do
