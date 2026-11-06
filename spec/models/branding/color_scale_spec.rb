@@ -124,6 +124,16 @@ RSpec.describe Branding::ColorScale do
     end
   end
 
+  describe "#saturation" do
+    it "is zero for an achromatic color" do
+      expect(described_class.new("#808080").saturation).to eq(0.0)
+    end
+
+    it "is close to full saturation for a maximally saturated color" do
+      expect(described_class.new("#FF0000").saturation).to be_within(0.01).of(1.0)
+    end
+  end
+
   describe "#hue" do
     it "returns the hue of a saturated color" do
       expect(described_class.new("#FF0000").hue).to be_within(1).of(0)

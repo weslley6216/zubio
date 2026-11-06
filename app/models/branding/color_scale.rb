@@ -59,6 +59,10 @@ class Branding::ColorScale
     to_hsl.first
   end
 
+  def saturation
+    to_hsl.second
+  end
+
   def luminance
     r, g, b = rgb
     0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b)
