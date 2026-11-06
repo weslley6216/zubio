@@ -1,6 +1,6 @@
 class Components::ColorChip < Components::Base
   FILLS = {
-    brand_600: "bg-brand-600 text-brand-600",
+    brand_600: "bg-(--theme-accent) text-(--theme-accent)",
     brand_secondary_600: "bg-secondary-600 text-secondary-600",
     brand_background: "bg-(--theme-bg) text-(--theme-bg)"
   }.freeze
