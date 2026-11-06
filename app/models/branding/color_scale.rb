@@ -34,6 +34,35 @@ class Branding::ColorScale
     new(hex).luminance
   end
 
+  def self.from_hsl(hue, saturation, lightness)
+    c = (1 - (2 * lightness - 1).abs) * saturation
+    x = c * (1 - ((hue / 60.0) % 2 - 1).abs)
+    m = lightness - c / 2.0
+
+    r, g, b =
+      case hue
+      when 0...60 then [ c, x, 0 ]
+      when 60...120 then [ x, c, 0 ]
+      when 120...180 then [ 0, c, x ]
+      when 180...240 then [ 0, x, c ]
+      when 240...300 then [ x, 0, c ]
+      else [ c, 0, x ]
+      end
+
+    [ r, g, b ]
+      .map { |channel| ((channel + m) * 255).round.clamp(0, 255) }
+      .map { |value| value.to_s(16).rjust(2, "0") }
+      .then { |parts| "##{parts.join}" }
+  end
+
+  def hue
+    to_hsl.first
+  end
+
+  def saturation
+    to_hsl.second
+  end
+
   def luminance
     r, g, b = rgb
     0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b)
@@ -79,7 +108,7 @@ class Branding::ColorScale
 
   def hex_at_lightness(lightness)
     hue, saturation, = to_hsl
-    from_hsl(hue, saturation, lightness)
+    self.class.from_hsl(hue, saturation, lightness)
   end
 
   def to_hsl
@@ -102,27 +131,6 @@ class Branding::ColorScale
       end
 
     [ hue, saturation, lightness ]
-  end
-
-  def from_hsl(hue, saturation, lightness)
-    c = (1 - (2 * lightness - 1).abs) * saturation
-    x = c * (1 - ((hue / 60.0) % 2 - 1).abs)
-    m = lightness - c / 2.0
-
-    r, g, b =
-      case hue
-      when 0...60 then [ c, x, 0 ]
-      when 60...120 then [ x, c, 0 ]
-      when 120...180 then [ 0, c, x ]
-      when 180...240 then [ 0, x, c ]
-      when 240...300 then [ x, 0, c ]
-      else [ c, 0, x ]
-      end
-
-    [ r, g, b ]
-      .map { |channel| ((channel + m) * 255).round.clamp(0, 255) }
-      .map { |value| value.to_s(16).rjust(2, "0") }
-      .then { |parts| "##{parts.join}" }
   end
 
   def linearize(channel)

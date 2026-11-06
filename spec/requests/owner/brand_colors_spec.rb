@@ -18,12 +18,13 @@ RSpec.describe "Owner brand colors", type: :request do
     end
 
     it "reaches the custom code field through the plus, without JavaScript" do
-      create(:branding, :with_background, tenant: tenant)
+      branding = create(:branding, :with_background, tenant: tenant)
       sign_in_owner(owner)
 
       get edit_owner_brand_colors_path
 
-      Branding::Palette::SUGGESTIONS.fetch(:brand_600).each { |hex| expect(response.body).to include(%(data-swatch="#{hex}")) }
+      Branding::Palette.accent_suggestions(background: branding.brand_background)
+        .each { |hex| expect(response.body).to include(%(data-swatch="#{hex}")) }
       Branding::Palette::SUGGESTIONS.fetch(:brand_background).each { |hex| expect(response.body).to include(%(data-swatch="#{hex}")) }
       expect(response.body).to include(%(name="branding[brand_600_custom]"))
       expect(response.body).to include(%(name="branding[brand_background_custom]"))
@@ -45,7 +46,7 @@ RSpec.describe "Owner brand colors", type: :request do
 
       Branding::Palette::SUGGESTIONS.fetch(:brand_600).each { |hex| expect(response.body).to include(%(data-swatch="#{hex}")) }
       expect(response.body).to include(Components::Form::ColorSwatches::CUSTOM_SUMMARY)
-      expect(response.body).to include("bg-brand-600")
+      expect(response.body).to include("bg-(--theme-accent)")
       expect(response.body).not_to include(%(data-swatch="#2C6CB0"))
       expect(response.body).to include(%(value="custom" checked))
     end

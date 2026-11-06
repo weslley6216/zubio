@@ -203,7 +203,7 @@ RSpec.describe Branding::Theme do
         (text_on_bg + boundary_on_bg + text_on_card + boundary_on_card).map { |name| "#{swatch}: #{name}" }
       end
 
-      expect(Branding::Palette.swatches.size).to eq(9)
+      expect(Branding::Palette.swatches.size).to eq(10)
       expect(failures).to be_empty
     end
 

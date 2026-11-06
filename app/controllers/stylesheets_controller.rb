@@ -24,6 +24,14 @@ class StylesheetsController < ApplicationController
     render plain: sheet.stylesheet, content_type: "text/css"
   end
 
+  def swatches
+    sheet = Branding::SwatchSheet.new(params[:colors])
+    return head :not_found if sheet.stylesheet.empty?
+
+    expires_in(CACHE_WINDOW, public: true)
+    render plain: sheet.stylesheet, content_type: "text/css"
+  end
+
   private
 
   def browser_restricted? = false

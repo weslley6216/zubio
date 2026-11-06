@@ -112,6 +112,38 @@ RSpec.describe Branding::ColorScale do
     end
   end
 
+  describe ".from_hsl" do
+    it "returns a well-formed hex" do
+      expect(described_class.from_hsl(210, 0.5, 0.5)).to match(described_class::HEX)
+    end
+
+    it "round-trips the hue of a known color" do
+      hex = described_class.from_hsl(0, 0.82, 0.52)
+
+      expect(described_class.new(hex).hue).to be_within(1).of(0)
+    end
+  end
+
+  describe "#saturation" do
+    it "is zero for an achromatic color" do
+      expect(described_class.new("#808080").saturation).to eq(0.0)
+    end
+
+    it "is close to full saturation for a maximally saturated color" do
+      expect(described_class.new("#FF0000").saturation).to be_within(0.01).of(1.0)
+    end
+  end
+
+  describe "#hue" do
+    it "returns the hue of a saturated color" do
+      expect(described_class.new("#FF0000").hue).to be_within(1).of(0)
+    end
+
+    it "is zero for an achromatic color" do
+      expect(described_class.new("#808080").hue).to eq(0.0)
+    end
+  end
+
   describe "#first_step_reaching" do
     it "returns the first step that reaches the minimum, not the one with the most contrast" do
       color_scale = described_class.new("#2C6CB0")

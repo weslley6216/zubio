@@ -186,6 +186,27 @@ RSpec.describe "Generated stylesheets", type: :request do
     end
   end
 
+  describe "GET /swatches.css" do
+    it "paints the given swatches, public and cacheable" do
+      host! "zubio.com.br"
+
+      get "/swatches.css", params: { colors: "1E3A55-F0617A" }
+
+      expect(response.media_type).to eq("text/css")
+      expect(response.body).to include(%([data-swatch="#1E3A55"]{background:#1E3A55;color:#1E3A55}))
+      expect(response.headers["Cache-Control"]).to include("public", "max-age=31536000")
+    end
+
+    it "answers not found and never echoes an injection payload" do
+      host! "zubio.com.br"
+
+      get "/swatches.css", params: { colors: "fff;}body{background:red" }
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.body).not_to include("body{")
+    end
+  end
+
   describe "GET /preview.css" do
     it "serves the background tokens for a valid hex, public and cacheable" do
       host! "zubio.com.br"

@@ -1,11 +1,11 @@
 require "rails_helper"
 
 RSpec.describe Components::ColorChip, type: :component do
-  it "paints the brand chip with the brand token" do
+  it "paints the brand chip with the chosen accent token, not the saved brand token" do
     html = described_class.new(attribute: :brand_600, size: :small).call
 
-    expect(html).to include("bg-brand-600")
-    expect(html).not_to include("bg-secondary-600")
+    expect(html).to include("bg-(--theme-accent)")
+    expect(html).not_to include("bg-brand-600")
   end
 
   it "paints the background chip with the theme background token" do
