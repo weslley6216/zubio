@@ -59,6 +59,9 @@ export default class extends Controller {
   }
 
   #arriveTones(frame) {
+    const hue = frame.querySelector("[data-tone-row]")?.dataset.toneHue
+    if (hue && hue !== "neutral") frame.closest("fieldset").querySelector("input[data-hue]").value = hue
+
     const tone = frame.querySelector("[data-tone]:checked")
     if (tone) this.#takeTone(tone)
   }

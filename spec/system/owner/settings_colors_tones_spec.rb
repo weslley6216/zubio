@@ -69,7 +69,7 @@ RSpec.describe "Owner brand colors tones selector", type: :system, js: true do
 
     expect(adjusted).not_to eq("#FF0000")
     expect(page).to have_field("branding[brand_600_custom]", with: adjusted)
-    expect(page).to have_css("[data-tone-advice]", text: Components::Form::ColorTones::ADVICE_MESSAGE)
+    expect(page).to have_css("[data-tone-advice]", text: "Ajustamos o tom para o texto ficar legível e o botão aparecer no fundo.")
     expect(page).to have_css(%([data-color-swatch-target="preview"][data-preview-accent="#{adjusted}"]))
     expect(computed_hex("[data-preview-role='book']", "backgroundColor")).to eq(adjusted)
   end
@@ -91,6 +91,22 @@ RSpec.describe "Owner brand colors tones selector", type: :system, js: true do
 
     expect(page).to have_text(Owner::BrandQuestionsController::NOTICE)
     ActsAsTenant.with_tenant(tenant) { expect(tenant.reload.branding.brand_600).to eq(adjusted) }
+  end
+
+  it "moves the hue bar to the hue of the typed code" do
+    tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    create(:branding, tenant: tenant, brand_background: "#F6EEF2", brand_600: "#8E4B6B")
+    sign_in_owner(create(:user, tenant: tenant))
+    visit "http://barbearia-do-ze.zubio.com.br#{edit_owner_brand_colors_path}"
+    within(%(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::ACCENT_LABEL}"])) do
+      find("[data-more-toggle]", visible: :all).ancestor("label").click
+      choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
+    end
+
+    fill_in "branding[brand_600_custom]", with: "#F0617A"
+
+    expect(page).to have_field("branding[brand_600_custom]", with: Branding::Tones.new(role: :brand_600, background: "#F6EEF2").nearest_valid("#F0617A"))
+    expect(find(%(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::ACCENT_LABEL}"] input[data-hue])).value).to eq(Branding::Tones.hue_of("#F0617A").to_s)
   end
 
   it "reajusts the chosen accent when the background turns light, keeping the samples, and saves without error" do

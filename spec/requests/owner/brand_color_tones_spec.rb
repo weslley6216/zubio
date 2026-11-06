@@ -95,6 +95,24 @@ RSpec.describe "Owner brand color tones", type: :request do
       expect(document.at_css(%([data-tone-advice]))).to be_present
     end
 
+    it "tells the hue of a typed hex, so the hue bar can follow the code" do
+      sign_in_owner(owner)
+
+      get owner_brand_color_tones_path(role: "brand_600", bg: "#F6EEF2", hex: "#F0617A")
+
+      document = Nokogiri::HTML5.fragment(response.body)
+      expect(document.at_css("[data-tone-row]")["data-tone-hue"]).to eq(Branding::Tones.hue_of("#F0617A").to_s)
+    end
+
+    it "does not tell a hue back when the hue bar asked for it" do
+      sign_in_owner(owner)
+
+      get owner_brand_color_tones_path(role: "brand_600", bg: "#0000FF", hue: 0)
+
+      document = Nokogiri::HTML5.fragment(response.body)
+      expect(document.at_css("[data-tone-row]")["data-tone-hue"]).to be_nil
+    end
+
     it "does not advertise an adjustment when the given hex is already valid" do
       sign_in_owner(owner)
 
