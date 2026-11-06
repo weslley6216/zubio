@@ -42,7 +42,7 @@ class Components::Form::ColorSwatches < Components::Base
       end
       div(class: "group contents") do
         div(class: ROW_CLASS, data: { swatch_row: true }) do
-          suggestions.each { |hex| render_row_option(hex) }
+          render_suggestions
           render_more_toggle
         end
         render_disclosure
@@ -51,6 +51,12 @@ class Components::Form::ColorSwatches < Components::Base
   end
 
   private
+
+  def render_suggestions
+    return render Components::Form::AccentSwatches.new(tones: suggestions, selected: custom? ? nil : selected) if @attribute == :brand_600
+
+    suggestions.each { |hex| render_row_option(hex) }
+  end
 
   def render_row_option(hex)
     label(class: ROW_OPTION_CLASS, data: { row_option: true }) do
@@ -131,7 +137,7 @@ class Components::Form::ColorSwatches < Components::Base
 
   def resolved = normalized(@selected) || normalized(@fallback) || Branding::DEFAULT_BRAND_600
 
-  def custom? = normalized(@selected).present? && !Branding::Palette.swatches.include?(normalized(@selected))
+  def custom? = normalized(@selected).present? && !suggestions.include?(normalized(@selected))
 
   def hex?(value) = value.to_s.match?(Branding::ColorScale::HEX)
 

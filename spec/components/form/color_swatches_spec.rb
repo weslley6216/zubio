@@ -47,6 +47,43 @@ RSpec.describe Components::Form::ColorSwatches, type: :component do
     expect(values).not_to include("#F0617A")
   end
 
+  it "wraps the accent suggestions in the frame the background swaps, each remembering its palette slot" do
+    html = render_phlex(described_class.new(label: "Destaque", hint: "hint", attribute: :brand_600, selected: "#F0617A", background: "#0000FF"))
+
+    radios = Nokogiri::HTML5.fragment(html).css("turbo-frame#accent-swatches input[type=radio]")
+
+    expect(radios.map { |radio| radio["value"] }).to eq(Branding::Palette.accent_suggestions(background: "#0000FF"))
+    expect(radios.map { |radio| radio["data-accent"] }).to eq(Branding::Palette::ACCENTS)
+  end
+
+  it "keeps the background suggestions out of the accent frame" do
+    html = render_phlex(described_class.new(label: "Fundo", hint: "hint", attribute: :brand_background, selected: "#16324A"))
+
+    expect(Nokogiri::HTML5.fragment(html).at_css("turbo-frame#accent-swatches")).to be_nil
+  end
+
+  it "colors the reajusted suggestions and the tones through the swatch sheet, since no inline style is allowed" do
+    html = render_phlex(described_class.new(label: "Destaque", hint: "hint", attribute: :brand_600, selected: "#F0617A", background: "#0000FF"))
+
+    document = Nokogiri::HTML5.fragment(html)
+    accent_sheet = document.at_css("turbo-frame#accent-swatches link[rel=stylesheet]")["href"]
+    tones = document.css("turbo-frame#tones-brand_600 [data-tone]").map { |radio| radio["value"] }
+    tones_sheet = document.at_css("turbo-frame#tones-brand_600 link[rel=stylesheet]")["href"]
+
+    expect(accent_sheet).to eq("/swatches.css?colors=#{Branding::SwatchSheet.param(Branding::Palette.accent_suggestions(background: "#0000FF"))}")
+    expect(tones_sheet).to eq("/swatches.css?colors=#{Branding::SwatchSheet.param(tones)}")
+  end
+
+  it "marks a saved reajusted suggestion in the row instead of reopening the customize card" do
+    reajusted = Branding::Palette.accent_suggestions(background: "#0000FF").first
+
+    document = Nokogiri::HTML5.fragment(render_phlex(described_class.new(label: "Destaque", hint: "hint", attribute: :brand_600, selected: reajusted, background: "#0000FF")))
+
+    expect(reajusted).not_to eq(Branding::Palette::ACCENTS.first)
+    expect(document.at_css(%(turbo-frame#accent-swatches input[value="#{reajusted}"])).key?("checked")).to be(true)
+    expect(document.at_css(%(input[value="custom"])).key?("checked")).to be(false)
+  end
+
   it "marks no suggestion when nothing is stored, with the plus closed" do
     document = Nokogiri::HTML5.fragment(render_phlex(described_class.new(label: "Fundo", hint: "hint", attribute: :brand_background, selected: nil)))
 

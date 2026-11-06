@@ -16,6 +16,7 @@ class Components::Form::ColorTones < Components::Base
 
   def view_template
     turbo_frame_tag(frame_id) do
+      link(rel: "stylesheet", href: swatch_stylesheet_path(colors: Branding::SwatchSheet.param(@tones))) if @tones.any?
       div(class: ROW_CLASS, data: { tone_row: true }) { @tones.each { |hex| render_tone(hex) } }
       p(class: ADVICE_CLASS, data: { tone_advice: true }) { ADVICE_MESSAGE } if @advise
     end

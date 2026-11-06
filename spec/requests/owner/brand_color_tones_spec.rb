@@ -47,6 +47,16 @@ RSpec.describe "Owner brand color tones", type: :request do
       end
     end
 
+    it "brings the swatch sheet that colors the tones it returns" do
+      sign_in_owner(owner)
+
+      get owner_brand_color_tones_path(role: "brand_600", bg: "#0000FF", hue: 0)
+
+      document = Nokogiri::HTML5.fragment(response.body)
+      tones = document.css("[data-tone]").map { |radio| radio["value"] }
+      expect(document.at_css("turbo-frame#tones-brand_600 link[rel=stylesheet]")["href"]).to eq("/swatches.css?colors=#{Branding::SwatchSheet.param(tones)}")
+    end
+
     it "advertises the nearest valid tone, selected, when given an invalid hex instead of a hue" do
       sign_in_owner(owner)
 
@@ -133,6 +143,16 @@ RSpec.describe "Owner brand color tones", type: :request do
       checked = document.at_css(%(input[type="radio"][checked]))
       expect(checked).to be_present
       expect(checked["value"]).not_to eq("#F0617A")
+    end
+
+    it "keeps each sample's palette slot, so a second background change still finds the chosen one" do
+      sign_in_owner(owner)
+
+      get owner_brand_accent_swatches_path(bg: "#F0617A", selected: "#F0617A")
+
+      document = Nokogiri::HTML5.fragment(response.body)
+      expect(document.css(%(input[type="radio"])).map { |radio| radio["data-accent"] }).to eq(Branding::Palette::ACCENTS)
+      expect(document.at_css("turbo-frame#accent-swatches link[rel=stylesheet]")["href"]).to start_with("/swatches.css?colors=")
     end
 
     it "caches the response publicly" do
