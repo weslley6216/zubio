@@ -1,8 +1,8 @@
 class Branding::Palette
   extend StylesheetProducer
 
-  BACKGROUNDS = %w[#16324A #1F4D3A #2B2B2B #F6EEF2 #F4F6F8].freeze
-  ACCENTS = %w[#F0617A #F2B33D #4FB3A9 #FFFFFF].freeze
+  BACKGROUNDS = %w[#16324A #F6EEF2 #1F4D3A #2B2B2B #F4F6F8].freeze
+  ACCENTS = %w[#F0617A #8E4B6B #F2B33D #4FB3A9 #FFFFFF].freeze
 
   SUGGESTIONS = { brand_background: BACKGROUNDS, brand_600: ACCENTS }.freeze
   STARTING = { brand_background: "#16324A", brand_600: "#F0617A" }.freeze
