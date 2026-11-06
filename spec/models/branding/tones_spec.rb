@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe Branding::Tones do
   describe "#options" do
-    backgrounds = %w[#16324A #F6EEF2 #0000FF]
+    backgrounds = Branding::Palette.swatches + %w[#0000FF #767676]
     hues = (0...360).step(30).to_a + [ described_class::NEUTRAL ]
 
     backgrounds.each do |background|
@@ -49,15 +49,6 @@ RSpec.describe Branding::Tones do
       tones = described_class.new(role: :brand_600, background: "#16324A")
 
       expect(tones.nearest_valid("#F0617A")).to eq("#F0617A")
-    end
-
-    it "falls back to a valid neutral when no tone of the hue stands out on the background" do
-      tones = described_class.new(role: :brand_600, background: "#F0617A")
-
-      result = tones.nearest_valid("#4FB3A9")
-
-      expect(tones.options(Branding::ColorScale.new("#4FB3A9").hue)).to be_empty
-      expect(tones.valid?(result)).to be true
     end
   end
 

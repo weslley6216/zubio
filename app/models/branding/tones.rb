@@ -1,5 +1,5 @@
 class Branding::Tones
-  LIGHTNESSES = [ 0.22, 0.32, 0.42, 0.52, 0.62, 0.72, 0.82, 0.92 ].freeze
+  LIGHTNESSES = [ 0.12, 0.22, 0.32, 0.42, 0.52, 0.62, 0.72, 0.82, 0.92 ].freeze
   SATURATIONS = [ 0.82, 0.42 ].freeze
   NEUTRAL = :neutral
 
@@ -19,7 +19,7 @@ class Branding::Tones
     hue = scale.saturation.zero? ? NEUTRAL : scale.hue
     target = scale.luminance
 
-    (options(hue).presence || options(NEUTRAL)).min_by { |candidate| (Branding::ColorScale.new(candidate).luminance - target).abs }
+    options(hue).min_by { |candidate| (Branding::ColorScale.new(candidate).luminance - target).abs }
   end
 
   def valid?(hex)
