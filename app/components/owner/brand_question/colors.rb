@@ -47,7 +47,8 @@ class Components::Owner::BrandQuestion::Colors < Components::Base
 
   def render_group(attribute, label, hint, selected, fallback:)
     div(class: GROUP_CARD_CLASS, data: { action: "change->color-swatch#choose" }) do
-      render Components::Form::ColorSwatches.new(label: label, hint: hint, attribute: attribute, selected: selected, fallback: fallback)
+      render Components::Form::ColorSwatches.new(label: label, hint: hint, attribute: attribute, selected: selected, fallback: fallback,
+        background: attribute == :brand_600 ? @branding.brand_background : nil)
       render Components::Form::Errors.new(messages: @branding.errors[attribute])
     end
   end

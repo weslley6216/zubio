@@ -51,7 +51,7 @@ RSpec.describe "Owner settings", type: :request do
       expect(document.at_css("[data-setting='logo']").at_css("img")).to be_nil
       expect(document.at_css("[data-setting='logo']").css("span").map(&:text)).to include("B")
       expect(document.at_css("[data-setting='colors'] [data-summary]").text).to eq("Fundo #16324A · Destaque #F0617A")
-      expect(document.at_css("[data-setting='colors']").to_html).to include("bg-(--theme-bg)", "bg-brand-600")
+      expect(document.at_css("[data-setting='colors']").to_html).to include("bg-(--theme-bg)", "bg-(--theme-accent)")
       expect(document.at_css("[data-setting='colors']").to_html).not_to include("bg-secondary-600", "apoio")
       expect(document.at_css("[data-setting='colors']").css("[data-chip]").map { |chip| chip["data-chip"] }).to eq(%w[background accent])
       expect(document.at_css("[data-setting='address'] [data-summary]").text).to eq("barbearia-do-ze.zubio.com.br")
