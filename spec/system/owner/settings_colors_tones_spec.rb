@@ -19,6 +19,23 @@ RSpec.describe "Owner brand colors tones selector", type: :system, js: true do
     expect(page).to fit_the_phone_width
   end
 
+  it "gives the hue bar and the neutral point a touch target of at least 44px" do
+    tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
+    create(:branding, :with_background, tenant: tenant)
+    sign_in_owner(create(:user, tenant: tenant))
+    visit "http://barbearia-do-ze.zubio.com.br#{edit_owner_brand_colors_path}"
+
+    within(%(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::ACCENT_LABEL}"])) do
+      find("[data-more-toggle]", visible: :all).ancestor("label").click
+      choose(option: Branding::CUSTOM_COLOR_CHOICE, allow_label_click: true)
+    end
+
+    accent = %(fieldset[aria-label="#{Components::Owner::BrandQuestion::Colors::ACCENT_LABEL}"])
+    expect(page.evaluate_script(%(document.querySelector('#{accent} input[data-hue]').getBoundingClientRect().height))).to be >= 44
+    expect(page.evaluate_script(%(document.querySelector('#{accent} [data-neutral-point]').getBoundingClientRect().height))).to be >= 44
+    expect(page.evaluate_script(%(document.querySelector('#{accent} [data-neutral-point]').getBoundingClientRect().width))).to be >= 44
+  end
+
   it "saves the pink background with the plum accent exactly as chosen from the swatches" do
     tenant = create(:tenant, subdomain: "barbearia-do-ze", name: "Barbearia do Zé")
     create(:branding, :with_background, tenant: tenant)

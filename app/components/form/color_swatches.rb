@@ -22,8 +22,10 @@ class Components::Form::ColorSwatches < Components::Base
   PANEL_CLASS = "mt-2 hidden w-full flex-col gap-2 group-has-[input[value='custom']:checked]:flex".freeze
   ERROR_CLASS = "mt-1 text-sm text-danger".freeze
   HUE_ROW_CLASS = "flex items-center gap-2".freeze
-  HUE_RANGE_CLASS = "h-2 flex-1 cursor-pointer appearance-none rounded-full bg-[linear-gradient(to_right,red,yellow,lime,cyan,blue,magenta,red)]".freeze
-  NEUTRAL_BUTTON_CLASS = "shrink-0 text-xs font-bold text-ink-muted".freeze
+  HUE_RANGE_CLASS = "h-11 min-w-0 flex-1 cursor-pointer appearance-none bg-transparent " \
+    "[&::-webkit-slider-runnable-track]:h-2 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,red,yellow,lime,cyan,blue,magenta,red)] " \
+    "[&::-moz-range-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-[linear-gradient(to_right,red,yellow,lime,cyan,blue,magenta,red)]".freeze
+  NEUTRAL_BUTTON_CLASS = "h-11 min-w-11 shrink-0 px-2 text-xs font-bold text-ink-muted".freeze
 
   def initialize(label:, hint:, attribute:, selected:, fallback: Branding::DEFAULT_BRAND_600, background: nil)
     @label = label
